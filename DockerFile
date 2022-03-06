@@ -1,0 +1,29 @@
+FROM php:fpm
+
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    libpng-dev \
+    libonig-dev \
+    libxml2-dev \
+    zip \
+    unzip
+
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql sockets mbstring exif pcntl bcmath gd
+
+RUN docker-php-ext-install mysqli
+
+RUN pecl install xdebug && docker-php-ext-enable xdebug
+
+WORKDIR /thecliniclaravel
+
+COPY . .
+
+EXPOSE 5000
+
+CMD bash -c "composer install && php artisan serve --host 0.0.0.0 --port 5000"

@@ -1,0 +1,58 @@
+version: "3"
+networks:
+    "thenetwork":
+services:
+    web:
+        image: nginx:latest
+        container_name: ${APP_NAME}_nginx
+        ports:
+            - "80:80"
+        links:
+            - app
+        volumes:
+            - ./docker/logs/nginx:/var/logs/nginx
+            - ./docker/nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+            - .:/thecliniclaravel
+        networks:
+            - thenetwork
+        depends_on:
+            - app
+            - mysql
+    app:
+        build:
+            context: .
+            dockerfile: DockerFile
+        container_name: ${APP_NAME}
+        ports:
+            - "5000:5000"
+        volumes:
+            - .:/thecliniclaravel
+        networks:
+            - thenetwork
+    mysql:
+        image: mysql
+        container_name: ${APP_NAME}_mysql
+        command: --default-authentication-plugin=mysql_native_password
+        restart: unless-stopped
+        ports:
+            - 3306:3306
+        volumes:
+            - mysqldata:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_DATABASE: ${DB_DATABASE}
+        networks:
+            - thenetwork
+    phpmyadmin:
+        image: phpmyadmin
+        container_name: ${APP_NAME}_phpmyadmin
+        ports:
+            - "1000:80"
+        environment:
+            - PMA_ARBITRARY=1
+        networks:
+            - thenetwork
+volumes:
+    mysqldata: {}
