@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Rule;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -17,21 +18,26 @@ class UserFactory extends Factory
      */
     public function definition()
     {
+        $gender = $this->faker->randomElement(['Male', 'Female']);
+
         return [
-            'name' => $this->faker->name(),
-            'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'firstname' => $this->faker->firstname($gender),
+            'lastname' => $this->faker->lastname($gender),
+            'username' => $this->faker->username(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+            'gender' => $gender,
+
+            'email' => $this->faker->unique()->safeEmail(),
+            'email_verified_at' => now(new \DateTimeZone('UTC')),
+
+            'phonenumber' => $this->faker->unique()->phoneNumber(),
+            'phonenumber_verified_at' => now(new \DateTimeZone('UTC')),
+
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     *
-     * @return static
-     */
-    public function unverified()
+    public function emailUnverified(): static
     {
         return $this->state(function (array $attributes) {
             return [
@@ -39,4 +45,15 @@ class UserFactory extends Factory
             ];
         });
     }
+
+    public function fk(string $fk): static
+    {
+        return $this->state(function (array $attributes) use($fk) {
+            return [
+                strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey() => $fk,
+            ];
+        });
+    }
+
+    
 }
