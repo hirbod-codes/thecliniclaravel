@@ -11,7 +11,7 @@ trait HasUsername
     {
         return $this->belongsTo(
             Username::class,
-            strtolower(class_basename(Username::class)) . '_' . (new Username)->getKey(),
+            strtolower(class_basename(Username::class)) . '_' . (new Username)->getKeyName(),
             (new Username)->getKey()
         );
     }

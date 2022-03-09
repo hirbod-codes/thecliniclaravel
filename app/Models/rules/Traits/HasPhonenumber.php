@@ -11,8 +11,8 @@ trait HasPhonenumber
     {
         return $this->belongsTo(
             Phonenumber::class,
-            strtolower(class_basename(Phonenumber::class)) . '_' . (new Phonenumber)->getKey(),
-            (new Phonenumber)->getKey()
+            strtolower(class_basename(Phonenumber::class)) . '_' . (new Phonenumber)->getKeyName(),
+            (new Phonenumber)->getKeyName()
         );
     }
 

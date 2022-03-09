@@ -25,8 +25,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (Blueprint $table) {
-            $fkPrivilege = strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKey();
-            $fkRule = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey();
+            $fkPrivilege = strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKeyName();
+            $fkRule = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName();
 
             $table->id();
 
@@ -35,14 +35,14 @@ return new class extends Migration
             $table->unsignedBigInteger($fkPrivilege)->unique();
             $table->foreign($fkPrivilege, 'belongsTo_' . (new Privilege)->getTable())
                 ->on((new Privilege)->getTable())
-                ->references((new Privilege)->getKey())
+                ->references((new Privilege)->getKeyName())
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
             $table->unsignedBigInteger($fkRule)->unique();
             $table->foreign($fkRule, 'belongsTo_' . (new Rule)->getTable())
                 ->on((new Rule)->getTable())
-                ->references((new Rule)->getKey())
+                ->references((new Rule)->getKeyName())
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 

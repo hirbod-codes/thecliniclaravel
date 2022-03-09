@@ -28,7 +28,7 @@ return new class extends Migration
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
 
-            $this->createBaseUserColumns($table);
+            $this->createBaseUserColumns($table, $this->table);
 
             $table->timestamps();
         });

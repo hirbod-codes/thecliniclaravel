@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Phonenumber;
+use App\Models\Email;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +12,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->table = (new Phonenumber)->getTable();
+        $this->table = (new Email)->getTable();
     }
 
     /**
@@ -25,8 +25,8 @@ return new class extends Migration
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
 
-            $table->string(strtolower(class_basename(Phonenumber::class)))->unique();
-            $table->timestamp(strtolower(class_basename(Phonenumber::class)) . '_verified_at');
+            $table->string(strtolower(class_basename(Email::class)))->unique();
+            $table->timestamp(strtolower(class_basename(Email::class)).'_verified_at')->index();
 
             $table->timestamps();
         });

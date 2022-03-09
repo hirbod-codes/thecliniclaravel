@@ -10,7 +10,7 @@ class PrivilegeValue extends Model
 {
     use HasFactory;
 
-    protected $table = "privileges";
+    protected $table = "privilegeValues";
 
     protected $guarded = ['*'];
 
@@ -18,8 +18,8 @@ class PrivilegeValue extends Model
     {
         return $this->belongsTo(
             Privilege::class,
-            strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKey(),
-            (new Privilege)->getKey()
+            strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKeyName(),
+            (new Privilege)->getKeyName()
         );
     }
 
@@ -27,8 +27,8 @@ class PrivilegeValue extends Model
     {
         return $this->belongsTo(
             Rule::class,
-            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey(),
-            (new Rule)->getKey()
+            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName(),
+            (new Rule)->getKeyName()
         );
     }
 }

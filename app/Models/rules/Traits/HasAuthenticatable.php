@@ -16,7 +16,7 @@ trait HasAuthenticatable
     private function getFK(): string
     {
         if (static::class === Rule::class) {
-            return strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey();
+            return strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName();
         } else {
             return strtolower(class_basename(static::class));
         }
@@ -27,7 +27,7 @@ trait HasAuthenticatable
         return $this->hasOne(
             AdminRule::class,
             $this->getFK(),
-            (new AdminRule)->getKey()
+            (new AdminRule)->getKeyName()
         );
     }
 
@@ -36,7 +36,7 @@ trait HasAuthenticatable
         return $this->hasOne(
             DoctorRule::class,
             $this->getFK(),
-            (new DoctorRule)->getKey()
+            (new DoctorRule)->getKeyName()
         );
     }
 
@@ -45,7 +45,7 @@ trait HasAuthenticatable
         return $this->hasOne(
             SecretaryRule::class,
             $this->getFK(),
-            (new SecretaryRule)->getKey()
+            (new SecretaryRule)->getKeyName()
         );
     }
 
@@ -54,7 +54,7 @@ trait HasAuthenticatable
         return $this->hasOne(
             OperatorRule::class,
             $this->getFK(),
-            (new OperatorRule)->getKey()
+            (new OperatorRule)->getKeyName()
         );
     }
 
@@ -63,7 +63,7 @@ trait HasAuthenticatable
         return $this->hasOne(
             PatientRule::class,
             $this->getFK(),
-            (new PatientRule)->getKey()
+            (new PatientRule)->getKeyName()
         );
     }
 
@@ -72,7 +72,7 @@ trait HasAuthenticatable
         return $this->hasOne(
             User::class,
             $this->getFK(),
-            (new User)->getKey()
+            (new User)->getKeyName()
         );
     }
 }

@@ -11,8 +11,8 @@ trait BelongsToRule
     {
         return $this->belongsTo(
             Rule::class,
-            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey(),
-            (new Rule)->getKey()
+            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName(),
+            (new Rule)->getKeyName()
         );
     }
 

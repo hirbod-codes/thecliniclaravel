@@ -11,7 +11,7 @@ trait HasEmail
     {
         return $this->belongsTo(
             Email::class,
-            strtolower(class_basename(Email::class)) . '_' . (new Email)->getKey(),
+            strtolower(class_basename(Email::class)) . '_' . (new Email)->getKeyName(),
             (new Email)->getKey()
         );
     }

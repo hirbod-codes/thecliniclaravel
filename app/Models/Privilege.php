@@ -17,8 +17,8 @@ class Privilege extends Model
     {
         return $this->hasOne(
             PrivilegeValue::class,
-            strtolower(class_basename(static::class)) . '_' . (new static)->getKey(),
-            $this->getKey()
+            strtolower(class_basename(static::class)) . '_' . (new static)->getKeyName(),
+            $this->getKeyName()
         );
     }
 }
