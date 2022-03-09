@@ -2,6 +2,7 @@
 
 use App\Models\Privilege;
 use App\Models\PrivilegeValue;
+use App\Models\Rule;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -24,14 +25,26 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (Blueprint $table) {
-            $fk = strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKey();
+            $fkPrivilege = strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKey();
+            $fkRule = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey();
 
             $table->id();
-            $table->unsignedBigInteger($fk)->nullable();
 
             $table->longText('value');
 
-            $table->foreign($fk, 'belongsTo_' . (new Privilege)->getTable())->on((new Privilege)->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->unsignedBigInteger($fkPrivilege)->unique();
+            $table->foreign($fkPrivilege, 'belongsTo_' . (new Privilege)->getTable())
+                ->on((new Privilege)->getTable())
+                ->references((new Privilege)->getKey())
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
+
+            $table->unsignedBigInteger($fkRule)->unique();
+            $table->foreign($fkRule, 'belongsTo_' . (new Rule)->getTable())
+                ->on((new Rule)->getTable())
+                ->references((new Rule)->getKey())
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
 
             $table->timestamps();
         });

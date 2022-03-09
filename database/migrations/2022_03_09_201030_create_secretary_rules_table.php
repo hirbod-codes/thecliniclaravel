@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\Rule;
+use App\Models\rules\SecretaryRule;
+use Database\Migrations\TraitCreateBaseUserColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -8,11 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use TraitCreateBaseUserColumns;
+
     private string $table;
 
     public function __construct()
     {
-        $this->table = (new Rule)->getTable();
+        $this->table = (new SecretaryRule)->getTable();
     }
 
     /**
@@ -24,7 +27,8 @@ return new class extends Migration
     {
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+
+            $this->createBaseUserColumns($table);
 
             $table->timestamps();
         });

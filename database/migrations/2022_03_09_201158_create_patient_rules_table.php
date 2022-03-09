@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Models\rules\PatientRule;
 use Database\Migrations\TraitCreateBaseUserColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,7 +15,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->table = (new User)->getTable();
+        $this->table = (new PatientRule)->getTable();
     }
 
     /**

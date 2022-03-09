@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
     {
         (new DatabasePrivilegesSeeder)->run();
         (new DatabaseRulesSeeder)->run();
+        (new DatabasePrivilegeValueSeeder)->run();
         (new DatabaseUsersSeeder)->run();
     }
 }

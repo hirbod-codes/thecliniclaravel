@@ -14,8 +14,8 @@ return [
     */
 
     'defaults' => [
-        'guard' => 'web',
-        'passwords' => 'users',
+        'guard' => 'patient',
+        'passwords' => 'patient',
     ],
 
     /*
@@ -36,9 +36,29 @@ return [
     */
 
     'guards' => [
-        'web' => [
+        'custom' => [
             'driver' => 'session',
             'provider' => 'users',
+        ],
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admin_rule',
+        ],
+        'doctor' => [
+            'driver' => 'session',
+            'provider' => 'doctor_rule',
+        ],
+        'secretary' => [
+            'driver' => 'session',
+            'provider' => 'secretary_rule',
+        ],
+        'operator' => [
+            'driver' => 'session',
+            'provider' => 'operator_rule',
+        ],
+        'patient' => [
+            'driver' => 'session',
+            'provider' => 'patient_rule',
         ],
     ],
 
@@ -63,6 +83,26 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
+        ],
+        'admin_rule' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\rule\AdminRule::class,
+        ],
+        'doctor_rule' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\rule\DoctorRule::class,
+        ],
+        'secretary_rule' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\rule\SecretaryRule::class,
+        ],
+        'operator_rule' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\rule\OperatorRule::class,
+        ],
+        'patient_rule' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\rule\PatientRule::class,
         ],
 
         // 'users' => [
@@ -90,7 +130,37 @@ return [
         'users' => [
             'provider' => 'users',
             'table' => 'password_resets',
-            'expire' => 60,
+            'expire' => 2,
+            'throttle' => 60,
+        ],
+        'admin' => [
+            'provider' => 'admin_rule',
+            'table' => 'password_resets',
+            'expire' => 2,
+            'throttle' => 60,
+        ],
+        'doctor' => [
+            'provider' => 'doctor_rule',
+            'table' => 'password_resets',
+            'expire' => 2,
+            'throttle' => 60,
+        ],
+        'secretary' => [
+            'provider' => 'secretary_rule',
+            'table' => 'password_resets',
+            'expire' => 2,
+            'throttle' => 60,
+        ],
+        'operator' => [
+            'provider' => 'operator_rule',
+            'table' => 'password_resets',
+            'expire' => 2,
+            'throttle' => 60,
+        ],
+        'patient' => [
+            'provider' => 'patient_rule',
+            'table' => 'password_resets',
+            'expire' => 2,
             'throttle' => 60,
         ],
     ],
@@ -106,6 +176,6 @@ return [
     |
     */
 
-    'password_timeout' => 10800,
+    'password_timeout' => 120,
 
 ];

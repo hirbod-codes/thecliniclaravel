@@ -15,5 +15,6 @@ class DatabaseRulesSeeder extends Seeder
         Rule::factory()->name('secretary')->craete();
         Rule::factory()->name('operator')->craete();
         Rule::factory()->name('patient')->craete();
+        Rule::factory()->name('custom')->craete();
     }
 }

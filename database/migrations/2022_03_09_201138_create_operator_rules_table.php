@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\PrivilegeValue;
-use App\Models\Rule;
+use App\Models\rules\OperatorRule;
+use Database\Migrations\TraitCreateBaseUserColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -9,11 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use TraitCreateBaseUserColumns;
+
     private string $table;
 
     public function __construct()
     {
-        $this->table = (new Rule)->getTable() . '_' . (new PrivilegeValue)->getTable();
+        $this->table = (new OperatorRule)->getTable();
     }
 
     /**
@@ -24,15 +26,9 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (Blueprint $table) {
-            $fkRule = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey();
-            $fkPrivilege = strtolower(class_basename(PrivilegeValue::class)) . '_' . (new PrivilegeValue())->getKey();
-
             $table->id();
-            $table->unsignedBigInteger($fkRule);
-            $table->unsignedBigInteger($fkPrivilege);
 
-            $table->foreign($fkRule, 'belongsToMany_' . (new Rule)->getTable())->on((new Rule)->getTable())->onUpdate('cascade')->onDelete('cascade');
-            $table->foreign($fkPrivilege, 'belongsToMany_' . (new PrivilegeValue)->getTable())->on((new PrivilegeValue)->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $this->createBaseUserColumns($table);
 
             $table->timestamps();
         });

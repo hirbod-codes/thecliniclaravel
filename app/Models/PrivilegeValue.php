@@ -2,45 +2,33 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PrivilegeValue extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['value'];
+    protected $table = "privileges";
 
-    protected $table = "privileges_value";
+    protected $guarded = ['*'];
 
-    public function rules(): BelongsToMany
+    public function privilege(): BelongsTo
     {
-        return $this->belongsToMany(
+        return $this->belongsTo(
+            Privilege::class,
+            strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKey(),
+            (new Privilege)->getKey()
+        );
+    }
+
+    public function rule(): BelongsTo
+    {
+        return $this->belongsTo(
             Rule::class,
-            (new Rule)->getTable() . '_' . (new static)->getTable(),
-            strtolower(class_basename(static::class)) . '_' . (new static)->getKey(),
-            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey()
-        )->withTimestamps();
-    }
-
-    // Mutators
-    public function value(): Attribute
-    {
-        return Attribute::make(get: function ($value) {
-            return $this->getValue($value);
-        });
-    }
-
-    private function getValue(mixed $value): mixed
-    {
-        if (in_array($value, ['true', 'false'])) {
-            return boolval($value);
-        } elseif (is_numeric($value)) {
-            return intval($value);
-        } else {
-            return strval($value);
-        }
+            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey(),
+            (new Rule)->getKey()
+        );
     }
 }

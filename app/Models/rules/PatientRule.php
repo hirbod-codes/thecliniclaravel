@@ -1,8 +1,7 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\rules;
 
-use App\Http\Controllers\CheckAuthentication;
 use App\Models\Auth\User as Authenticatable;
 use App\Models\rules\Traits\BelongsToRule;
 use App\Models\rules\Traits\HasDataStructure;
@@ -12,8 +11,9 @@ use App\Models\rules\Traits\HasUsername;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use TheClinicDataStructures\DataStructures\User\DSPatient;
 
-class User extends Authenticatable
+class PatientRule extends Authenticatable
 {
     use HasApiTokens,
         HasFactory,
@@ -24,26 +24,11 @@ class User extends Authenticatable
         BelongsToRule,
         HasDataStructure;
 
-    protected $table = "users";
+    protected $table = "Patient_rule";
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
+    protected $guarded = [];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [];
-
-    private string $DS = DSCustom::class;
+    private string $DS = DSPatient::class;
 
     public function __construct(array $attributes = [])
     {
@@ -61,16 +46,5 @@ class User extends Authenticatable
         $this->guarded[] = 'updated_at';
 
         parent::__construct($attributes);
-    }
-
-    public function getDataStructure(array $additionalArgs = []): DSCustom
-    {
-        $DS = $this->DS;
-
-        return new $DS(...array_merge(
-            $this->toArrayWithoutRelations(),
-            $additionalArgs,
-            ['ICheckAuthentication' => new CheckAuthentication, 'ruleName' => $this->rule()->first()->name]
-        ));
     }
 }

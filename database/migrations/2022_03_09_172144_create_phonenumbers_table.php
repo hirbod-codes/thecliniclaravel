@@ -1,7 +1,6 @@
 <?php
 
-use App\Models\Rule;
-use App\Models\rules\Patient;
+use App\Models\Phonenumber;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -13,7 +12,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->table = (new Patient)->getTable();
+        $this->table = (new Phonenumber)->getTable();
     }
 
     /**
@@ -24,12 +23,10 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (Blueprint $table) {
-            $fk = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey();
-
             $table->id();
-            $table->unsignedBigInteger($fk);
 
-            $table->foreign($fk, 'belongsTo_' . (new Rule)->getTable())->on((new Rule)->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $table->string(strtolower(class_basename(Phonenumber::class)))->unique();
+            $table->timestamp(strtolower(class_basename(Phonenumber::class)) . '_verified_at');
 
             $table->timestamps();
         });

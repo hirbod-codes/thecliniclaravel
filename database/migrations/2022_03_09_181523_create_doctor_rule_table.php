@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Rule;
-use App\Models\rules\Operator;
+use App\Models\rules\DoctorRule;
+use Database\Migrations\TraitCreateBaseUserColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -9,11 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use TraitCreateBaseUserColumns;
+
     private string $table;
 
     public function __construct()
     {
-        $this->table = (new Operator)->getTable();
+        $this->table = (new DoctorRule)->getTable();
     }
 
     /**
@@ -24,12 +26,9 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (Blueprint $table) {
-            $fk = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey();
-
             $table->id();
-            $table->unsignedBigInteger($fk);
 
-            $table->foreign($fk, 'belongsTo_' . (new Rule)->getTable())->on((new Rule)->getTable())->onUpdate('cascade')->onDelete('cascade');
+            $this->createBaseUserColumns($table);
 
             $table->timestamps();
         });

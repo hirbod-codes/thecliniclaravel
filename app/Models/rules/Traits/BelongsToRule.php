@@ -1,19 +1,12 @@
 <?php
 
-namespace App\Models\rules;
+namespace App\Models\rules\Traits;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Model;
 use App\Models\Rule;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Secretary extends Model
+trait BelongsToRule
 {
-    use HasFactory;
-
-    protected $table = "secretaries";
-
     public function rule(): BelongsTo
     {
         return $this->belongsTo(
@@ -21,5 +14,10 @@ class Secretary extends Model
             strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKey(),
             (new Rule)->getKey()
         );
+    }
+
+    public function guardRuleForeignKey(): void
+    {
+        $this->guarded[] = strtolower(class_basename(Rule::class)) . '_verified_at';
     }
 }
