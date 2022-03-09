@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Controllers\CheckAuthentication;
 use App\Models\Auth\User as Authenticatable;
+use App\Models\rules\DSCustom;
 use App\Models\rules\Traits\BelongsToRule;
 use App\Models\rules\Traits\HasDataStructure;
 use App\Models\rules\Traits\HasEmail;
