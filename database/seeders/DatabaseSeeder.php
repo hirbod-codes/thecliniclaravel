@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 class DatabaseSeeder extends Seeder
 {
@@ -14,9 +15,18 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        (new DatabasePrivilegesSeeder)->run();
-        (new DatabaseRulesSeeder)->run();
-        (new DatabasePrivilegeValueSeeder)->run();
-        (new DatabaseUsersSeeder)->run();
+        try {
+            DB::beginTransaction();
+
+            (new DatabasePrivilegesSeeder)->run();
+            (new DatabaseRulesSeeder)->run();
+            (new DatabasePrivilegeValueSeeder)->run();
+            (new DatabaseUsersSeeder)->run();
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            dd($e);
+        }
     }
 }

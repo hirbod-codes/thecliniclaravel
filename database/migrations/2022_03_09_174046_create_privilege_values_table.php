@@ -32,14 +32,14 @@ return new class extends Migration
 
             $table->longText('value');
 
-            $table->unsignedBigInteger($fkPrivilege)->unique();
+            $table->unsignedBigInteger($fkPrivilege);
             $table->foreign($fkPrivilege, 'belongsTo_' . (new Privilege)->getTable())
                 ->on((new Privilege)->getTable())
                 ->references((new Privilege)->getKeyName())
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
-            $table->unsignedBigInteger($fkRule)->unique();
+            $table->unsignedBigInteger($fkRule);
             $table->foreign($fkRule, 'belongsTo_' . (new Rule)->getTable())
                 ->on((new Rule)->getTable())
                 ->references((new Rule)->getKeyName())

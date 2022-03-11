@@ -10,11 +10,11 @@ class DatabaseRulesSeeder extends Seeder
 {
     public function run(): void
     {
-        Rule::factory()->name('admin')->craete();
-        Rule::factory()->name('doctor')->craete();
-        Rule::factory()->name('secretary')->craete();
-        Rule::factory()->name('operator')->craete();
-        Rule::factory()->name('patient')->craete();
-        Rule::factory()->name('custom')->craete();
+        Rule::factory()->name('admin')->create();
+        Rule::factory()->name('doctor')->create();
+        Rule::factory()->name('secretary')->create();
+        Rule::factory()->name('operator')->create();
+        Rule::factory()->name('patient')->create();
+        Rule::factory()->name('custom')->create();
     }
 }

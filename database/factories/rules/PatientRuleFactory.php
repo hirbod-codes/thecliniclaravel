@@ -1,6 +1,8 @@
 <?php
 
-namespace Database\Factories;
+namespace Database\Factories\rules;
+
+use Database\Factories\UserFactory;
 
 class PatientRuleFactory extends UserFactory
 {
