@@ -34,18 +34,22 @@ class Model extends EloquentModel
      *
      * @return array<string, mixed>
      */
-    public function toArrayWithoutRelations(): array
+    public function toArrayWithoutRelations(array $excludedColumns = [], bool $excludeForeignKeys = false): array
     {
         $columns = Schema::getColumnListing($this->getTable());
 
-        $visibleAttributes = array_diff($columns, $this->hidden);
-
-        $instanceAttributes = $this->attributesToArray();
+        $fkColumns = $this->getForeignKeys();
 
         $attributes = [];
-        foreach ($visibleAttributes as $visibleAttribute) {
-            $attributes[$visibleAttribute] = isset($instanceAttributes[$visibleAttribute]) ? $instanceAttributes[$visibleAttribute] : null;
+        foreach ($columns as $column) {
+            if (in_array($column, array_merge($this->hidden, $excludeForeignKeys ? array_values($fkColumns) : [], $excludedColumns))) {
+                continue;
+            }
+
+            $attributes[$column] = $this->getAttributeValue($column);
         }
+
+        $visibleAttributes = array_diff($columns, $this->hidden, $excludeForeignKeys ? array_values($fkColumns) : [], $excludedColumns);
 
         return $attributes;
     }
