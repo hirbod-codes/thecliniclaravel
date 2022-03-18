@@ -17,4 +17,16 @@ class User extends Model implements
     CanResetPasswordContract
 {
     use Authenticatable, Authorizable, CanResetPassword, MustVerifyEmail;
+
+    protected $guarded = [];
+
+    public function __construct(array $attributes = [])
+    {
+        $this->guarded[] = 'id';
+        $this->guarded[] = 'remember_token';
+        $this->guarded[] = 'created_at';
+        $this->guarded[] = 'updated_at';
+
+        parent::__construct($attributes);
+    }
 }
