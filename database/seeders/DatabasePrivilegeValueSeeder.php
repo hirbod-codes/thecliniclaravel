@@ -20,51 +20,51 @@ class DatabasePrivilegeValueSeeder extends Seeder
         foreach (Rule::all() as $rule) {
             switch ($rule->name) {
                 case 'admin':
-                    foreach (DSAdmin::getUserPrivileges() as $privilege => $value) {
+                    foreach (DSAdmin::getUserPrivileges() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
                             ->for(Privilege::where('name', $privilege)->first(), 'privilege')
                             ->for($rule, 'rule')
-                            ->value(strval($value))
+                            ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
                     }
                     break;
 
                 case 'doctor':
-                    foreach (DSDoctor::getUserPrivileges() as $privilege => $value) {
+                    foreach (DSDoctor::getUserPrivileges() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
                             ->for(Privilege::where('name', $privilege)->first(), 'privilege')
                             ->for($rule, 'rule')
-                            ->value(strval($value))
+                            ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
                     }
                     break;
 
                 case 'secretary':
-                    foreach (DSSecretary::getUserPrivileges() as $privilege => $value) {
+                    foreach (DSSecretary::getUserPrivileges() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
                             ->for(Privilege::where('name', $privilege)->first(), 'privilege')
                             ->for($rule, 'rule')
-                            ->value(strval($value))
+                            ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
                     }
                     break;
 
                 case 'operator':
-                    foreach (DSOperator::getUserPrivileges() as $privilege => $value) {
+                    foreach (DSOperator::getUserPrivileges() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
                             ->for(Privilege::where('name', $privilege)->first(), 'privilege')
                             ->for($rule, 'rule')
-                            ->value(strval($value))
+                            ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
                     }
                     break;
 
                 case 'patient':
-                    foreach (DSPatient::getUserPrivileges() as $privilege => $value) {
+                    foreach (DSPatient::getUserPrivileges() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
                             ->for(Privilege::where('name', $privilege)->first(), 'privilege')
                             ->for($rule, 'rule')
-                            ->value(strval($value))
+                            ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
                     }
                     break;
@@ -74,7 +74,7 @@ class DatabasePrivilegeValueSeeder extends Seeder
                         PrivilegeValue::factory()
                             ->for($privilege, 'privilege')
                             ->for($rule, 'rule')
-                            ->value('false')
+                            ->privilegeValue('false')
                             ->create();
                     }
                     break;
