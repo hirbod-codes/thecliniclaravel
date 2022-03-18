@@ -22,6 +22,7 @@ class User extends Model implements
         MustVerifyEmail,
         BelongsToEmail,
         BelongsToUsername,
+        BelongsToPhonenumber,
 
     protected $guarded = [];
 
@@ -31,6 +32,11 @@ class User extends Model implements
         $this->addEmailVerifiedAtForeignKey();
         $this->guardEmailVerification();
         $this->castEmailVerificationToDatetime();
+
+        $this->addPhonenumberForeignKey();
+        $this->addPhonenumberVerifiedAtForeignKey();
+        $this->guardPhonenumberVerification();
+        $this->castPhonenumberVerificationToDatetime();
 
         $this->addUsernameForeignKey();
 
