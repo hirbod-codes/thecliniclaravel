@@ -30,7 +30,7 @@ return new class extends Migration
 
             $table->id();
 
-            $table->longText('value');
+            $table->longText('privilegeValue');
 
             $table->unsignedBigInteger($fkPrivilege);
             $table->foreign($fkPrivilege, 'belongsTo_' . (new Privilege)->getTable())
