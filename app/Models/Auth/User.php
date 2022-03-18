@@ -18,6 +18,7 @@ use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -102,5 +103,27 @@ class User extends Model implements
         array_push($excludedColumns, $fkColumn);
 
         return $this->toArrayWithoutRelations($excludedColumns);
+    }
+
+    protected function emailVerifiedAt(): Attribute
+    {
+        return Attribute::make(get: function ($value) {
+            if (gettype($value) === "string") {
+                return new \DateTime($value);
+            } elseif ($value instanceof Carbon) {
+                return new \DateTime($value->toDateTimeString());
+            }
+        });
+    }
+
+    protected function phonenumberVerifiedAt(): Attribute
+    {
+        return Attribute::make(get: function ($value) {
+            if (gettype($value) === "string") {
+                return new \DateTime($value);
+            } elseif ($value instanceof Carbon) {
+                return new \DateTime($value->toDateTimeString());
+            }
+        });
     }
 }
