@@ -2,6 +2,8 @@
 
 namespace App\Models\Auth;
 
+use Illuminate\Support\Str;
+use App\Http\Controllers\CheckAuthentication;
 use App\Models\Model;
 use App\Models\rules\Traits\BelongsToEmail;
 use App\Models\rules\Traits\BelongsToPhonenumber;
@@ -17,6 +19,8 @@ use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Support\Carbon;
+use TheClinicDataStructures\DataStructures\User\DSUser;
 
 class User extends Model implements
     AuthenticatableContract,
@@ -71,5 +75,32 @@ class User extends Model implements
         $this->guarded[] = 'updated_at';
 
         parent::__construct($attributes);
+    }
+
+    public function getDataStructure(array $additionalArgs = [],): DSUser
+    {
+        $DS = $this->DS;
+
+        $args = array_merge(
+            $this->toArrayWithoutRelationsAndRuleRelation(),
+            $additionalArgs,
+            ['ICheckAuthentication' => new CheckAuthentication, 'visits' => null, 'orders' => null]
+        );
+
+        $formattedArgs = [];
+        array_map(function (string $key, $value) use (&$formattedArgs) {
+            $formattedArgs[Str::camel($key)] = $value;
+        }, array_keys($args), array_values($args));
+
+        return new $DS(...$formattedArgs);
+    }
+
+    public function toArrayWithoutRelationsAndRuleRelation(array $excludedColumns = [], bool $excludeForeignKeys = false): array
+    {
+        $fkColumn = $this->getForeignKeys()[lcfirst(class_basename(Rule::class))];
+
+        array_push($excludedColumns, $fkColumn);
+
+        return $this->toArrayWithoutRelations($excludedColumns);
     }
 }
