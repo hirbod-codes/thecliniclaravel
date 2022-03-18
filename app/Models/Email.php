@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\rules\Traits\HasAuthenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Model;
 
 class Email extends Model
 {
