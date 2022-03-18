@@ -16,12 +16,21 @@ class User extends Model implements
     AuthorizableContract,
     CanResetPasswordContract
 {
-    use Authenticatable, Authorizable, CanResetPassword, MustVerifyEmail;
+    use Authenticatable,
+        Authorizable,
+        CanResetPassword,
+        MustVerifyEmail,
+        BelongsToEmail,
 
     protected $guarded = [];
 
     public function __construct(array $attributes = [])
     {
+        $this->addEmailForeignKey();
+        $this->addEmailVerifiedAtForeignKey();
+        $this->guardEmailVerification();
+        $this->castEmailVerificationToDatetime();
+
         $this->guarded[] = 'id';
         $this->guarded[] = 'remember_token';
         $this->guarded[] = 'created_at';
