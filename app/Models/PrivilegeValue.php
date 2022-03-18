@@ -3,16 +3,22 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PrivilegeValue extends Model
 {
     use HasFactory;
 
-    protected $table = "privilegeValues";
+    protected $table = "privilege_values";
 
-    protected $guarded = ['*'];
+    public function __construct(array $attributes = [])
+    {
+        $this->foreignKeys[lcfirst(class_basename(Privilege::class))] = (new Privilege)->getForeignKey();
+
+        $this->foreignKeys[lcfirst(class_basename(Rule::class))] = (new Rule)->getForeignKey();
+
+        parent::__construct($attributes);
+    }
 
     public function privilege(): BelongsTo
     {
