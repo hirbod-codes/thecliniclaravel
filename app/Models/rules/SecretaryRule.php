@@ -5,9 +5,9 @@ namespace App\Models\rules;
 use App\Models\Auth\User as Authenticatable;
 use App\Models\rules\Traits\BelongsToRule;
 use App\Models\rules\Traits\HasDataStructure;
-use App\Models\rules\Traits\HasEmail;
-use App\Models\rules\Traits\HasPhonenumber;
-use App\Models\rules\Traits\HasUsername;
+use App\Models\rules\Traits\BelongsToEmail;
+use App\Models\rules\Traits\BelongsToPhonenumber;
+use App\Models\rules\Traits\BelongsToUsername;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -17,34 +17,9 @@ class SecretaryRule extends Authenticatable
 {
     use HasApiTokens,
         HasFactory,
-        Notifiable,
-        HasEmail,
-        HasUsername,
-        HasPhonenumber,
-        BelongsToRule,
-        HasDataStructure;
+        Notifiable;
 
     protected $table = "secretary_rule";
 
-    protected $guarded = [];
-
-    private string $DS = DSSecretary::class;
-
-    public function __construct(array $attributes = [])
-    {
-        $this->guardEmailVerification();
-        $this->castEmailVerificationToDatetime();
-
-        $this->guardPhonenumberVerification();
-        $this->castPhonenumberVerificationToDatetime();
-
-        $this->guardRuleForeignKey();
-
-        $this->guarded[] = 'id';
-        $this->guarded[] = 'remember_token';
-        $this->guarded[] = 'created_at';
-        $this->guarded[] = 'updated_at';
-
-        parent::__construct($attributes);
-    }
+    protected string $DS = DSSecretary::class;
 }

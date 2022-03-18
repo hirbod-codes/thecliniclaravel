@@ -3,11 +3,9 @@
 namespace App\Models\rules;
 
 use App\Models\Privilege;
+use App\Models\Rule;
 use App\Models\User;
-use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicDataStructures\DataStructures\User\ICheckAuthentication;
-use TheClinicDataStructures\DataStructures\Visit\DSVisits;
 use TheClinicDataStructures\Exceptions\DataStructures\User\NoPrivilegeFoundException;
 
 class DSCustom extends DSUser
@@ -16,25 +14,12 @@ class DSCustom extends DSUser
 
     private array $customData;
 
-    public function __construct(
-        string $ruleName,
-        ICheckAuthentication $iCheckAuthentication,
-        int $id,
-        string $firstname,
-        string $lastname,
-        string $username,
-        string $gender,
-        DSVisits|null $visits = null,
-        DSOrders|null $orders = null,
-        \DateTime $createdAt,
-        \DateTime $updatedAt,
-    ) {
-        $args = func_get_args();
+    public function __construct(...$args)
+    {
+        $this->ruleName = $args['ruleName'];
         unset($args['ruleName']);
 
         parent::__construct(...$args);
-
-        $this->ruleName = $ruleName;
     }
 
     public function setData(array $data): static
@@ -58,11 +43,12 @@ class DSCustom extends DSUser
         }
     }
 
-    public function getUserPrivileges(): array
+    public static function getUserPrivileges(): array
     {
         $privileges = [];
-        foreach (User::where('id', $this->id)->fisrt()->rule()->get()[0]->privileges()->get() as $privilege) {
-            $privileges[$privilege->name] = $privilege->value;
+
+        foreach (Rule::where('name', 'custom')->first()->privilegeValue()->get() as $privilegeValue) {
+            $privileges[$privilegeValue->privilege()->first()->name] = $privilegeValue->value;
         }
 
         return $privileges;
