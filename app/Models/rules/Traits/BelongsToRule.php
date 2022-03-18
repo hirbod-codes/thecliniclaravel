@@ -11,13 +11,18 @@ trait BelongsToRule
     {
         return $this->belongsTo(
             Rule::class,
-            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName(),
+            (new Rule)->getForeignKey(),
             (new Rule)->getKeyName()
         );
     }
 
     public function guardRuleForeignKey(): void
     {
-        $this->guarded[] = strtolower(class_basename(Rule::class)) . '_verified_at';
+        $this->guarded[] = (new Rule)->getForeignKey();
+    }
+
+    private function addRuleForeignKey(): void
+    {
+        $this->foreignKeys[lcfirst(class_basename(Rule::class))] = (new Rule)->getForeignKey();
     }
 }
