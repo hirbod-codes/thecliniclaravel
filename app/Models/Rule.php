@@ -4,8 +4,7 @@ namespace App\Models;
 
 use App\Models\rules\Traits\HasAuthenticatable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Rule extends Model
 {
@@ -15,11 +14,11 @@ class Rule extends Model
 
     protected $guarded = ['*'];
 
-    public function privilegeValue(): HasOne
+    public function privilegeValue(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             PrivilegeValue::class,
-            strtolower(class_basename(static::class)) . '_' . (new static)->getKeyName(),
+            $this->getForeignKey(),
             $this->getKeyName()
         );
     }
