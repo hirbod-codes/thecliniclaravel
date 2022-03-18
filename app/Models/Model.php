@@ -8,6 +8,31 @@ use Illuminate\Support\Facades\Schema;
 
 class Model extends EloquentModel
 {
+    /**
+     * @var array<string, string> ['relationship_name' => 'foreign_key_name', ...]
+     */
+    protected array $foreignKeys = [];
+
+    public function getForeignKeys(): array
+    {
+        return $this->foreignKeys;
+    }
+
+    public function getAllForeignKeys(): array
+    {
+        $fkColumns = [];
+
+        $foreignKeyConstraints = Schema::getConnection()
+            ->getDoctrineSchemaManager()
+            ->listTableForeignKeys($this->getTable(), env('DB_DATABASE'));
+
+        array_map(function (ForeignKeyConstraint $foreignKeyConstraint) use (&$fkColumns) {
+            return array_push($fkColumns, ...$foreignKeyConstraint->getLocalColumns());
+        }, $foreignKeyConstraints);
+
+        return $fkColumns;
+    }
+
     public function getAllModelsFullname(): array
     {
         return $this->getModelsFullnameInDirectory(__DIR__);
