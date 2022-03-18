@@ -8,6 +8,11 @@ use Illuminate\Support\Facades\Schema;
 
 class Model extends EloquentModel
 {
+    public function getAllModelsFullname(): array
+    {
+        return $this->getModelsFullnameInDirectory(__DIR__);
+    }
+
     public function getModelsFullnameInDirectory(string $dir): array
     {
         $modelFullnames = [];
