@@ -17,7 +17,7 @@ class UsernameFactory extends Factory
     public function definition()
     {
         return [
-            strtolower(class_basename(Username::class)) => $this->faker->unique()->username(),
+            'username' => $this->faker->unique()->username(),
         ];
     }
 }
