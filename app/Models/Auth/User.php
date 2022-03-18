@@ -23,6 +23,7 @@ class User extends Model implements
         BelongsToEmail,
         BelongsToUsername,
         BelongsToPhonenumber,
+        BelongsToRule,
 
     protected $guarded = [];
 
@@ -39,6 +40,10 @@ class User extends Model implements
         $this->castPhonenumberVerificationToDatetime();
 
         $this->addUsernameForeignKey();
+
+        $this->addRuleForeignKey();
+
+        $this->guardRuleForeignKey();
 
         $this->guarded[] = 'id';
         $this->guarded[] = 'remember_token';
