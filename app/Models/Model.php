@@ -2,8 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Auth\User;
+use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 
 class Model extends EloquentModel
@@ -12,6 +16,11 @@ class Model extends EloquentModel
      * @var array<string, string> ['relationship_name' => 'foreign_key_name', ...]
      */
     protected array $foreignKeys = [];
+
+    protected $casts = [
+        'craeted_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
     public function getForeignKeys(): array
     {
