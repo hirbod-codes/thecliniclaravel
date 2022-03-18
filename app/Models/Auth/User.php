@@ -21,6 +21,7 @@ class User extends Model implements
         CanResetPassword,
         MustVerifyEmail,
         BelongsToEmail,
+        BelongsToUsername,
 
     protected $guarded = [];
 
@@ -30,6 +31,8 @@ class User extends Model implements
         $this->addEmailVerifiedAtForeignKey();
         $this->guardEmailVerification();
         $this->castEmailVerificationToDatetime();
+
+        $this->addUsernameForeignKey();
 
         $this->guarded[] = 'id';
         $this->guarded[] = 'remember_token';
