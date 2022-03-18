@@ -17,8 +17,8 @@ class PhonenumberFactory extends Factory
     public function definition()
     {
         return [
-            strtolower(class_basename(Phonenumber::class)) => $this->faker->unique()->phoneNumber(),
-            strtolower(class_basename(Phonenumber::class)) . '_verified_at' => now(new \DateTimeZone('UTC')),
+            'phonenumber' => $this->faker->unique()->phoneNumber(),
+            'phonenumber_verified_at' => now(new \DateTimeZone('UTC')),
         ];
     }
 }
