@@ -36,12 +36,13 @@ class DatabaseUsersSeeder extends Seeder
             AdminRule::factory()
                 ->for(Rule::where('name', 'admin')->first(), 'rule')
                 ->state([
-                    strtolower(class_basename(Username::class)) => $username->{strtolower(class_basename(Username::class))},
-                    strtolower(class_basename(Email::class)) => $email->{strtolower(class_basename(Email::class))},
-                    strtolower(class_basename(Email::class)) . '_verified_at' => $email->{strtolower(class_basename(Email::class)) . '_verified_at'},
-                    strtolower(class_basename(Phonenumber::class)) => $phonenumber->{strtolower(class_basename(Phonenumber::class))},
-                    strtolower(class_basename(Phonenumber::class)) . '_verified_at' => $phonenumber->{strtolower(class_basename(Phonenumber::class)) . '_verified_at'},
-                ]);
+                    'username' => $username->username,
+                    'email' => $email->email,
+                    'email_verified_at' => $email->email_verified_at,
+                    'phonenumber' => $phonenumber->phonenumber,
+                    'phonenumber_verified_at' => $phonenumber->phonenumber_verified_at,
+                ])
+                ->create();
         }
     }
 
@@ -54,12 +55,13 @@ class DatabaseUsersSeeder extends Seeder
             DoctorRule::factory()
                 ->for(Rule::where('name', 'doctor')->first(), 'rule')
                 ->state([
-                    strtolower(class_basename(Username::class)) => $username->{strtolower(class_basename(Username::class))},
-                    strtolower(class_basename(Email::class)) => $email->{strtolower(class_basename(Email::class))},
-                    strtolower(class_basename(Email::class)) . '_verified_at' => $email->{strtolower(class_basename(Email::class)) . '_verified_at'},
-                    strtolower(class_basename(Phonenumber::class)) => $phonenumber->{strtolower(class_basename(Phonenumber::class))},
-                    strtolower(class_basename(Phonenumber::class)) . '_verified_at' => $phonenumber->{strtolower(class_basename(Phonenumber::class)) . '_verified_at'},
-                ]);
+                    'username' => $username->username,
+                    'email' => $email->email,
+                    'email_verified_at' => $email->email_verified_at,
+                    'phonenumber' => $phonenumber->phonenumber,
+                    'phonenumber_verified_at' => $phonenumber->phonenumber_verified_at,
+                ])
+                ->create();
         }
     }
 
@@ -72,12 +74,13 @@ class DatabaseUsersSeeder extends Seeder
             SecretaryRule::factory()
                 ->for(Rule::where('name', 'secretary')->first(), 'rule')
                 ->state([
-                    strtolower(class_basename(Username::class)) => $username->{strtolower(class_basename(Username::class))},
-                    strtolower(class_basename(Email::class)) => $email->{strtolower(class_basename(Email::class))},
-                    strtolower(class_basename(Email::class)) . '_verified_at' => $email->{strtolower(class_basename(Email::class)) . '_verified_at'},
-                    strtolower(class_basename(Phonenumber::class)) => $phonenumber->{strtolower(class_basename(Phonenumber::class))},
-                    strtolower(class_basename(Phonenumber::class)) . '_verified_at' => $phonenumber->{strtolower(class_basename(Phonenumber::class)) . '_verified_at'},
-                ]);
+                    'username' => $username->username,
+                    'email' => $email->email,
+                    'email_verified_at' => $email->email_verified_at,
+                    'phonenumber' => $phonenumber->phonenumber,
+                    'phonenumber_verified_at' => $phonenumber->phonenumber_verified_at,
+                ])
+                ->create();
         }
     }
 
@@ -90,12 +93,13 @@ class DatabaseUsersSeeder extends Seeder
             OperatorRule::factory()
                 ->for(Rule::where('name', 'operator')->first(), 'rule')
                 ->state([
-                    strtolower(class_basename(Username::class)) => $username->{strtolower(class_basename(Username::class))},
-                    strtolower(class_basename(Email::class)) => $email->{strtolower(class_basename(Email::class))},
-                    strtolower(class_basename(Email::class)) . '_verified_at' => $email->{strtolower(class_basename(Email::class)) . '_verified_at'},
-                    strtolower(class_basename(Phonenumber::class)) => $phonenumber->{strtolower(class_basename(Phonenumber::class))},
-                    strtolower(class_basename(Phonenumber::class)) . '_verified_at' => $phonenumber->{strtolower(class_basename(Phonenumber::class)) . '_verified_at'},
-                ]);
+                    'username' => $username->username,
+                    'email' => $email->email,
+                    'email_verified_at' => $email->email_verified_at,
+                    'phonenumber' => $phonenumber->phonenumber,
+                    'phonenumber_verified_at' => $phonenumber->phonenumber_verified_at,
+                ])
+                ->create();
         }
     }
 
@@ -108,12 +112,13 @@ class DatabaseUsersSeeder extends Seeder
             PatientRule::factory()
                 ->for(Rule::where('name', 'patient')->first(), 'rule')
                 ->state([
-                    strtolower(class_basename(Username::class)) => $username->{strtolower(class_basename(Username::class))},
-                    strtolower(class_basename(Email::class)) => $email->{strtolower(class_basename(Email::class))},
-                    strtolower(class_basename(Email::class)) . '_verified_at' => $email->{strtolower(class_basename(Email::class)) . '_verified_at'},
-                    strtolower(class_basename(Phonenumber::class)) => $phonenumber->{strtolower(class_basename(Phonenumber::class))},
-                    strtolower(class_basename(Phonenumber::class)) . '_verified_at' => $phonenumber->{strtolower(class_basename(Phonenumber::class)) . '_verified_at'},
-                ]);
+                    'username' => $username->username,
+                    'email' => $email->email,
+                    'email_verified_at' => $email->email_verified_at,
+                    'phonenumber' => $phonenumber->phonenumber,
+                    'phonenumber_verified_at' => $phonenumber->phonenumber_verified_at,
+                ])
+                ->create();
         }
     }
 
@@ -126,12 +131,13 @@ class DatabaseUsersSeeder extends Seeder
             User::factory()
                 ->for(Rule::where('name', 'custom')->first(), 'rule')
                 ->state([
-                    strtolower(class_basename(Username::class)) => $username->{strtolower(class_basename(Username::class))},
-                    strtolower(class_basename(Email::class)) => $email->{strtolower(class_basename(Email::class))},
-                    strtolower(class_basename(Email::class)) . '_verified_at' => $email->{strtolower(class_basename(Email::class)) . '_verified_at'},
-                    strtolower(class_basename(Phonenumber::class)) => $phonenumber->{strtolower(class_basename(Phonenumber::class))},
-                    strtolower(class_basename(Phonenumber::class)) . '_verified_at' => $phonenumber->{strtolower(class_basename(Phonenumber::class)) . '_verified_at'},
-                ]);
+                    'username' => $username->username,
+                    'email' => $email->email,
+                    'email_verified_at' => $email->email_verified_at,
+                    'phonenumber' => $phonenumber->phonenumber,
+                    'phonenumber_verified_at' => $phonenumber->phonenumber_verified_at,
+                ])
+                ->create();
         }
     }
 }
