@@ -12,10 +12,8 @@ trait TraitCreateBaseUserColumns
 {
     public function createBaseUserColumns(Blueprint $table, string $tableName): void
     {
-        $fkRule = strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName();
-
-        $table->unsignedBigInteger($fkRule)->unique();
-        $table->foreign($fkRule, $tableName . '_belongsTo_' . (new Rule)->getTable())
+        $table->unsignedBigInteger((new Rule)->getForeignKey());
+        $table->foreign((new Rule)->getForeignKey(), $tableName . '_belongsTo_' . (new Rule)->getTable())
             ->references((new Rule)->getKeyName())
             ->on((new Rule)->getTable())
             ->onUpdate('cascade')
@@ -24,38 +22,38 @@ trait TraitCreateBaseUserColumns
         $table->string('firstname');
         $table->string('lastname');
 
-        $table->string(strtolower(class_basename(Username::class)))->unique();
-        $table->foreign(strtolower(class_basename(Username::class)), $tableName . '_belongsTo_' . (new Username)->getTable())
+        $table->string('username')->unique();
+        $table->foreign('username', $tableName . '_belongsTo_' . (new Username)->getTable())
             ->on((new Username)->getTable())
-            ->references(strtolower(class_basename(Username::class)))
+            ->references('username')
             ->onUpdate('cascade')
             ->onDelete('cascade');
 
         $table->string('password');
 
-        $table->string(strtolower(class_basename(Email::class)))->unique()->nullable();
-        $table->foreign(strtolower(class_basename(Email::class)), $tableName . '_belongsTo_' . (new Email)->getTable() . '_' . strtolower(class_basename(Email::class)))
+        $table->string('email')->unique()->nullable();
+        $table->foreign('email', $tableName . '_belongsTo_' . (new Email)->getTable() . '_' . 'email')
             ->on((new Email)->getTable())
-            ->references(strtolower(class_basename(Email::class)))
+            ->references('email')
             ->onUpdate('cascade')
             ->onDelete('cascade');
-        $table->timestamp(strtolower(class_basename(Email::class)) . '_verified_at')->nullable();
-        $table->foreign(strtolower(class_basename(Email::class)) . '_verified_at', $tableName . '_belongsTo_' . (new Email)->getTable() . '_' . strtolower(class_basename(Email::class)) . '_verified_at')
+        $table->timestamp('email_verified_at')->nullable();
+        $table->foreign('email_verified_at', $tableName . '_belongsTo_' . (new Email)->getTable() . '_' . 'email_verified_at')
             ->on((new Email)->getTable())
-            ->references(strtolower(class_basename(Email::class)) . '_verified_at')
+            ->references('email_verified_at')
             ->onUpdate('cascade')
             ->onDelete('cascade');
 
-        $table->string(strtolower(class_basename(Phonenumber::class)))->unique();
-        $table->foreign(strtolower(class_basename(Phonenumber::class)), $tableName . '_belongsTo_' . (new Phonenumber)->getTable() . '_' . strtolower(class_basename(Phonenumber::class)))
+        $table->string('phonenumber')->unique();
+        $table->foreign('phonenumber', $tableName . '_belongsTo_' . (new Phonenumber)->getTable() . '_' . 'phonenumber')
             ->on((new Phonenumber)->getTable())
-            ->references(strtolower(class_basename(Phonenumber::class)))
+            ->references('phonenumber')
             ->onUpdate('cascade')
             ->onDelete('cascade');
-        $table->timestamp(strtolower(class_basename(Phonenumber::class)) . '_verified_at');
-        $table->foreign(strtolower(class_basename(Phonenumber::class)) . '_verified_at', $tableName . '_belongsTo_' . (new Phonenumber)->getTable() . '_' . strtolower(class_basename(Phonenumber::class)) . '_verified_at')
+        $table->timestamp('phonenumber_verified_at');
+        $table->foreign('phonenumber_verified_at', $tableName . '_belongsTo_' . (new Phonenumber)->getTable() . '_' . 'phonenumber_verified_at')
             ->on((new Phonenumber)->getTable())
-            ->references(strtolower(class_basename(Phonenumber::class)) . '_verified_at')
+            ->references('phonenumber_verified_at')
             ->onUpdate('cascade')
             ->onDelete('cascade');
 
