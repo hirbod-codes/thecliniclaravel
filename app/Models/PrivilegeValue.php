@@ -24,8 +24,9 @@ class PrivilegeValue extends Model
     {
         return $this->belongsTo(
             Privilege::class,
-            strtolower(class_basename(Privilege::class)) . '_' . (new Privilege)->getKeyName(),
-            (new Privilege)->getKeyName()
+            (new Privilege)->getForeignKey(),
+            (new Privilege)->getKeyName(),
+            __FUNCTION__
         );
     }
 
@@ -33,8 +34,9 @@ class PrivilegeValue extends Model
     {
         return $this->belongsTo(
             Rule::class,
-            strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName(),
-            (new Rule)->getKeyName()
+            (new Rule)->getForeignKey(),
+            (new Rule)->getKeyName(),
+            __FUNCTION__
         );
     }
 }
