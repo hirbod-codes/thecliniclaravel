@@ -58,4 +58,15 @@ class PrivilegeValue extends Model
             return $value;
         }
     }
+
+    public function convertPrivilegeValueToString(mixed $value): string
+    {
+        if (gettype($value) == 'boolean') {
+            return $value ? 'true' : 'false';
+        } elseif ($value instanceof \DateTime) {
+            return $value->format('Y-m-d H:i:s');
+        } else {
+            return strval($value);
+        }
+    }
 }
