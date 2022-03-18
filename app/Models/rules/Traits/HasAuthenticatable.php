@@ -2,77 +2,69 @@
 
 namespace App\Models\rules\Traits;
 
-use App\Models\Rule;
 use App\Models\rules\AdminRule;
 use App\Models\rules\DoctorRule;
 use App\Models\rules\OperatorRule;
 use App\Models\rules\PatientRule;
 use App\Models\rules\SecretaryRule;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 trait HasAuthenticatable
 {
-    private function getFK(): string
-    {
-        if (static::class === Rule::class) {
-            return strtolower(class_basename(Rule::class)) . '_' . (new Rule)->getKeyName();
-        } else {
-            return strtolower(class_basename(static::class));
-        }
-    }
+    use AuthenticatableKeys;
 
-    public function adminRule(): HasOne
+    public function adminRule(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             AdminRule::class,
-            $this->getFK(),
-            (new AdminRule)->getKeyName()
+            $this->getAuthenticatableForeignKey(),
+            $this->getAuthenticatableLocalKey()
         );
     }
 
-    public function doctorRule(): HasOne
+    public function doctorRule(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             DoctorRule::class,
-            $this->getFK(),
-            (new DoctorRule)->getKeyName()
+            $this->getAuthenticatableForeignKey(),
+            $this->getAuthenticatableLocalKey()
         );
     }
 
-    public function secretaryRule(): HasOne
+    public function secretaryRule(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             SecretaryRule::class,
-            $this->getFK(),
-            (new SecretaryRule)->getKeyName()
+            $this->getAuthenticatableForeignKey(),
+            $this->getAuthenticatableLocalKey()
         );
     }
 
-    public function operatorRule(): HasOne
+    public function operatorRule(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             OperatorRule::class,
-            $this->getFK(),
-            (new OperatorRule)->getKeyName()
+            $this->getAuthenticatableForeignKey(),
+            $this->getAuthenticatableLocalKey()
         );
     }
 
-    public function patientRule(): HasOne
+    public function patientRule(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             PatientRule::class,
-            $this->getFK(),
-            (new PatientRule)->getKeyName()
+            $this->getAuthenticatableForeignKey(),
+            $this->getAuthenticatableLocalKey()
         );
     }
 
-    public function user(): HasOne
+    public function user(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             User::class,
-            $this->getFK(),
-            (new User)->getKeyName()
+            $this->getAuthenticatableForeignKey(),
+            $this->getAuthenticatableLocalKey()
         );
     }
 }
