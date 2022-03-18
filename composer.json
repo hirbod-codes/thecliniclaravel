@@ -6,9 +6,10 @@
     "license": "MIT",
     "require": {
         "php": "^8.0.2",
+        "doctrine/dbal": "^3.3",
+        "guzzlehttp/guzzle": "^7.2",
         "hirbod-codes/theclinicdatastructures": "^1.0",
         "hirbod-codes/theclinicusecases": "^1.0",
-        "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^9.2",
         "laravel/sanctum": "^2.14.1",
         "laravel/tinker": "^2.7"
@@ -26,8 +27,9 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/",
-            "Database\\dbgateways\\": "database/dbgateways/",
-            "Database\\Migrations\\": "database/migrations/"
+            "Database\\Interactions\\": "database/interactions/",
+            "Database\\Migrations\\": "database/migrations/",
+            "Database\\Traits\\": "database/Traits/"
         }
     },
     "autoload-dev": {
