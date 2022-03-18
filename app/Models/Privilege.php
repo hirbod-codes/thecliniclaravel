@@ -3,21 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Privilege extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name'];
-
     protected $table = "privileges";
 
-    public function privilegeValue(): HasOne
+    public function privilegeValue(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             PrivilegeValue::class,
-            strtolower(class_basename(static::class)) . '_' . (new static)->getKeyName(),
+            $this->getForeignKey(),
             $this->getKeyName()
         );
     }
