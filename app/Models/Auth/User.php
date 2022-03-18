@@ -3,6 +3,13 @@
 namespace App\Models\Auth;
 
 use App\Models\Model;
+use App\Models\rules\Traits\BelongsToEmail;
+use App\Models\rules\Traits\BelongsToPhonenumber;
+use App\Models\rules\Traits\BelongsToRule;
+use App\Models\rules\Traits\BelongsToUsername;
+use App\Models\rules\Traits\MorphOneEmail;
+use App\Models\rules\Traits\MorphOnePhonenumber;
+use App\Models\rules\Traits\MorphOneUsername;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -24,6 +31,9 @@ class User extends Model implements
         BelongsToUsername,
         BelongsToPhonenumber,
         BelongsToRule,
+        MorphOneEmail,
+        MorphOneUsername,
+        MorphOnePhonenumber;
 
     protected $guarded = [];
 
