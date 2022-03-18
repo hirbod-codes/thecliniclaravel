@@ -17,8 +17,8 @@ class EmailFactory extends Factory
     public function definition()
     {
         return [
-            strtolower(class_basename(Email::class)) => $this->faker->unique()->safeEmail(),
-            strtolower(class_basename(Email::class)) . '_verified_at' => now(new \DateTimeZone('UTC')),
+            'email' => $this->faker->unique()->safeEmail(),
+            'email_verified_at' => now(new \DateTimeZone('UTC')),
         ];
     }
 }
