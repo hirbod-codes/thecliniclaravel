@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -38,5 +39,23 @@ class PrivilegeValue extends Model
             (new Rule)->getKeyName(),
             __FUNCTION__
         );
+    }
+
+    public function privilegeValue(): Attribute
+    {
+        return Attribute::make(get: function ($value) {
+            return $this->findPrivilegeValueTypeAndConvert($value);
+        });
+    }
+
+    public function findPrivilegeValueTypeAndConvert(string $value): mixed
+    {
+        if (in_array($value, ['true', 'false'])) {
+            return boolval($value);
+        } elseif (is_numeric($value)) {
+            return intval($value);
+        } else {
+            return $value;
+        }
     }
 }
