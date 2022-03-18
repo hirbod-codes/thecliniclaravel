@@ -19,8 +19,8 @@ class PrivilegeValueFactory extends Factory
         return [];
     }
 
-    public function value(string $value): static
+    public function privilegeValue(string $value): static
     {
-        return $this->state(['value' => $value]);
+        return $this->state(['privilegeValue' => $value]);
     }
 }
