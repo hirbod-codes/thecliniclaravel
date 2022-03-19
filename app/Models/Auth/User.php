@@ -3,7 +3,7 @@
 namespace App\Models\Auth;
 
 use Illuminate\Support\Str;
-use App\Http\Controllers\CheckAuthentication;
+use App\Auth\CheckAuthentication;
 use App\Models\Model;
 use App\Models\rules\Traits\BelongsToEmail;
 use App\Models\rules\Traits\BelongsToPhonenumber;
