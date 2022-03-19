@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Auth\CheckAuthentication;
 use App\Models\PrivilegeValue;
-use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
