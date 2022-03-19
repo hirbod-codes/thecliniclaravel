@@ -31,7 +31,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
         $ruleName = $input["rule"];
         unset($input["rule"]);
 
-        $dsUser = $this->databaseUsersSeeder->{'create' . ucfirst($ruleName)}(1, $input)->getDataStructure();
+        $dsUser = $this->databaseUsersSeeder->{'create' . ucfirst($ruleName)}(1, $input)[0]->getDataStructure();
 
         DB::commit();
 

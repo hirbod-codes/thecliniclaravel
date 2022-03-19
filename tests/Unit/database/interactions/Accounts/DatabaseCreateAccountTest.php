@@ -42,7 +42,7 @@ class DatabaseCreateAccountTest extends TestCase
                 $databaseUsersSeeder = Mockery::mock(DatabaseUsersSeeder::class);
                 $databaseUsersSeeder->shouldReceive('create' . ucfirst($ruleName))
                     ->with(1, ['firstname' => $input['firstname'], 'lastname' => $input['lastname']])
-                    ->andReturn($authenticatable);
+                    ->andReturn([$authenticatable]);
 
                 $dsUser = (new DataBaseCreateAccount($databaseUsersSeeder))->createAccount($input);
 
