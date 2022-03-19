@@ -108,7 +108,6 @@ class AccountsControllerTest extends TestCase
 
     public function testsRun()
     {
-        $this->users = $this->getAuthenticatables();
         $methods = [
             'testIndex',
             'testCreate',
@@ -122,21 +121,22 @@ class AccountsControllerTest extends TestCase
             'testDestroyWithSameId'
         ];
 
+        $this->users = $this->getAuthenticatables();
+
         foreach ($methods as $method) {
-            foreach ($this->users as $ruleName => $user) {
-                $this->ruleName = $ruleName;
+            // because of perfomance i chose a random user from $this->users.
+            $this->ruleName = $this->faker->randomElement(array_keys($this->users));
 
-                $this->user = $user;
+            $this->user = $this->users[$this->ruleName];
 
-                $this->dsUser = $this->user->getDataStructure();
+            $this->dsUser = $this->user->getDataStructure();
 
-                /** @var \App\Http\Controllers\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
-                $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
-                $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($this->dsUser);
-                $this->checkAuthentication->shouldReceive("getAuthenticated")->andReturn($this->user);
+            /** @var \App\Http\Controllers\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
+            $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
+            $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($this->dsUser);
+            $this->checkAuthentication->shouldReceive("getAuthenticated")->andReturn($this->user);
 
-                $this->{$method}();
-            }
+            $this->{$method}();
         }
     }
 
