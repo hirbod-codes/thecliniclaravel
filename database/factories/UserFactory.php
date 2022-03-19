@@ -26,16 +26,16 @@ class UserFactory extends Factory
         return [
             'firstname' => $this->faker->firstname($gender),
             'lastname' => $this->faker->lastname($gender),
-            strtolower(class_basename(Username::class)) => $this->faker->unique()->username(),
+            'username' => $this->faker->unique()->username(),
             'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
 
             'gender' => $gender,
 
-            strtolower(class_basename(Email::class)) => $this->faker->unique()->safeEmail(),
-            strtolower(class_basename(Email::class)) . '_verified_at' => now(new \DateTimeZone('UTC')),
+            'email' => $this->faker->unique()->safeEmail(),
+            'email_verified_at' => new \DateTime('now', new \DateTimeZone('UTC')),
 
-            strtolower(class_basename(Phonenumber::class)) => $this->faker->unique()->phoneNumber(),
-            strtolower(class_basename(Phonenumber::class)) . '_verified_at' => now(new \DateTimeZone('UTC')),
+            'phonenumber' => $this->faker->unique()->phoneNumber(),
+            'phonenumber_verified_at' => new \DateTime('now', new \DateTimeZone('UTC')),
 
             'remember_token' => Str::random(10),
         ];
@@ -45,7 +45,7 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                strtolower(class_basename(Email::class)) . '_verified_at' => null,
+                'email_verified_at' => null,
             ];
         });
     }
