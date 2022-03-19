@@ -44,7 +44,7 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
     {
         $theModelFullName = $this->resolveRuleModelFullName($ruleName);
 
-        if (($authenticatable = $theModelFullName::where('id', $id)->first()) === null) {
+        if (($authenticatable = $theModelFullName::where((new $theModelFullName)->getKeyName(), $id)->first()) === null) {
             throw new ModelNotFoundException("The user not found.", 404);
         }
 
