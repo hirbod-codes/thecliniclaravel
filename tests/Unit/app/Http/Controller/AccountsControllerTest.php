@@ -5,15 +5,9 @@ namespace Tests\Unit\app\Http\Controller;
 use App\Http\Controllers\AccountsController;
 use TheClinicUseCases\Accounts\Authentication;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
-use App\Http\Controllers\CheckAuthentication;
+use App\Auth\CheckAuthentication;
 use App\Models\Auth\User as AuthUser;
 use App\Models\Privilege;
-use App\Models\rules\AdminRule;
-use App\Models\rules\DoctorRule;
-use App\Models\rules\OperatorRule;
-use App\Models\rules\PatientRule;
-use App\Models\rules\SecretaryRule;
-use App\Models\User;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
@@ -32,13 +26,14 @@ use TheClinicUseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Tests\TestCase;
+use Tests\Unit\Traits\GetAuthenticatables;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
 use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToUpdateAdminException;
 
 class AccountsControllerTest extends TestCase
 {
-    use ResolveUserModel;
+    use ResolveUserModel, GetAuthenticatables;
 
     private Generator $faker;
 
@@ -111,51 +106,9 @@ class AccountsControllerTest extends TestCase
         );
     }
 
-    private function makeAuthenticatable(string $ruleName): AuthUser
-    {
-        return $this->makeAuthenticatables(true)[$ruleName];
-    }
-
-    private function makeAuthenticatables(bool $randomId = false): array
-    {
-        $adminRuleId = (new AdminRule)->getKeyName();
-        $doctorRuleId = (new DoctorRule)->getKeyName();
-        $secretaryRuleId = (new SecretaryRule)->getKeyName();
-        $operatorRuleId = (new OperatorRule)->getKeyName();
-        $patientRuleId = (new PatientRule)->getKeyName();
-        $userId = (new User)->getKeyName();
-
-        return [
-            'admin' => AdminRule::where(
-                $adminRuleId,
-                $randomId ? $this->faker->numberBetween(2, AdminRule::orderBy($adminRuleId, 'desc')->first()->{$adminRuleId}) : 1
-            )->first(),
-            'doctor' => DoctorRule::where(
-                $doctorRuleId,
-                $randomId ? $this->faker->numberBetween(2, DoctorRule::orderBy($doctorRuleId, 'desc')->first()->{$doctorRuleId}) : 1
-            )->first(),
-            'secretary' => SecretaryRule::where(
-                $secretaryRuleId,
-                $randomId ? $this->faker->numberBetween(2, SecretaryRule::orderBy($secretaryRuleId, 'desc')->first()->{$secretaryRuleId}) : 1
-            )->first(),
-            'operator' => OperatorRule::where(
-                $operatorRuleId,
-                $randomId ? $this->faker->numberBetween(2, OperatorRule::orderBy($operatorRuleId, 'desc')->first()->{$operatorRuleId}) : 1
-            )->first(),
-            'patient' => PatientRule::where(
-                $patientRuleId,
-                $randomId ? $this->faker->numberBetween(2, PatientRule::orderBy($patientRuleId, 'desc')->first()->{$patientRuleId}) : 1
-            )->first(),
-            'custom' => User::where(
-                $userId,
-                $randomId ? $this->faker->numberBetween(2, User::orderBy($userId, 'desc')->first()->{$userId}) : 1
-            )->first(),
-        ];
-    }
-
     public function testsRun()
     {
-        $this->users = $this->makeAuthenticatables();
+        $this->users = $this->getAuthenticatables();
         $methods = [
             'testIndex',
             'testCreate',
@@ -194,7 +147,7 @@ class AccountsControllerTest extends TestCase
         $count = $this->faker->numberBetween(1, 30);
         $lastAccountId = $this->faker->numberBetween(1, 1000);
 
-        $newDSUser = $this->makeAuthenticatable($this->ruleName)->getDataStructure();
+        $newDSUser = $this->getAuthenticatable($this->ruleName)->getDataStructure();
 
         $this->accountsManagement->shouldReceive("getAccounts")
             ->once()
@@ -229,7 +182,7 @@ class AccountsControllerTest extends TestCase
     private function testStore(): void
     {
         $input = [];
-        $authenticatables = $this->makeAuthenticatables();
+        $authenticatables = $this->getAuthenticatables();
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
             /** @var \Illuminate\Http\Request|\Mockery\MockInterface $request */
@@ -263,7 +216,7 @@ class AccountsControllerTest extends TestCase
 
     private function testShow(): void
     {
-        $authenticatables = $this->makeAuthenticatables();
+        $authenticatables = $this->getAuthenticatables();
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
             $dsNewUser = $authenticatable->getDataStructure();
@@ -297,7 +250,7 @@ class AccountsControllerTest extends TestCase
 
     private function testShowWithSameId(): void
     {
-        $authenticatables = $this->makeAuthenticatables();
+        $authenticatables = $this->getAuthenticatables();
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
             $dsNewUser = $authenticatable->getDataStructure();
@@ -348,7 +301,7 @@ class AccountsControllerTest extends TestCase
     private function testUpdate(): void
     {
         $input = ['input'];
-        $authenticatables = $this->makeAuthenticatables(true);
+        $authenticatables = $this->getAuthenticatables(true);
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
             $dsNewAuthenticatable = $authenticatable->getDataStructure();
@@ -371,7 +324,7 @@ class AccountsControllerTest extends TestCase
                     }
                     return false;
                 }), $this->dsUser, \Mockery::type(IDataBaseUpdateAccount::class))
-                ->andReturn($anotherDSNewUser = $this->makeAuthenticatable($ruleName)->getDataStructure());
+                ->andReturn($anotherDSNewUser = $this->getAuthenticatable($ruleName)->getDataStructure());
 
             $accountsController = $this->instantiate();
 
@@ -421,7 +374,7 @@ class AccountsControllerTest extends TestCase
         $this->accountsManagement
             ->shouldReceive('updateSelfAccount')
             ->with(0, 'input', $this->dsUser, \Mockery::type(IDataBaseUpdateAccount::class))
-            ->andReturn($anotherDSNewUser = $this->makeAuthenticatable($this->ruleName)->getDataStructure());
+            ->andReturn($anotherDSNewUser = $this->getAuthenticatable($this->ruleName)->getDataStructure());
 
         $accountsController = $this->instantiate();
 
@@ -452,7 +405,7 @@ class AccountsControllerTest extends TestCase
 
     private function testDestroy(): void
     {
-        $authenticatables = $this->makeAuthenticatables(true);
+        $authenticatables = $this->getAuthenticatables(true);
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
             $dsNewAuthenticatable = $authenticatable->getDataStructure();
