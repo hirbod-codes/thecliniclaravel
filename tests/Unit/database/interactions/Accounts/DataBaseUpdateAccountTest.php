@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interaction\Accounts;
+namespace Tests\Unit\database\interactions\Accounts;
 
 use Database\Interactions\Accounts\DataBaseUpdateAccount;
 use Database\Traits\ResolveUserModel;
