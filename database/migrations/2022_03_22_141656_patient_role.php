@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\Email;
+use App\Models\roles\PatientRole;
+use Database\Migrations\TraitBaseUserRoleColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -8,11 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use TraitBaseUserRoleColumns;
+
     private string $table;
 
     public function __construct()
     {
-        $this->table = (new Email)->getTable();
+        $this->table = (new PatientRole)->getTable();
     }
 
     /**
@@ -22,13 +25,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create($this->table, function (Blueprint $table) {
-            $table->id();
+        $this->createBaseUserRoleColumns($this->table, 'patient');
 
-            $table->string(strtolower(class_basename(Email::class)))->unique();
-            $table->timestamp(strtolower(class_basename(Email::class)).'_verified_at')->index();
-
-            $table->timestamps();
+        Schema::table($this->table, function (BluePrint $table) {
         });
     }
 

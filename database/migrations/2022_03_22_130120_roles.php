@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Rule;
+use App\Models\Role;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +12,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->table = (new Rule())->getTable();
+        $this->table = (new Role)->getTable();
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\User;
-use Database\Migrations\TraitCreateBaseUserColumns;
+use App\Models\roles\SecretaryRole;
+use Database\Migrations\TraitBaseUserRoleColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -9,13 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    use TraitCreateBaseUserColumns;
+    use TraitBaseUserRoleColumns;
 
     private string $table;
 
     public function __construct()
     {
-        $this->table = (new User)->getTable();
+        $this->table = (new SecretaryRole)->getTable();
     }
 
     /**
@@ -25,12 +25,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create($this->table, function (Blueprint $table) {
-            $table->id();
+        $this->createBaseUserRoleColumns($this->table, 'secretary');
 
-            $this->createBaseUserColumns($table, $this->table);
-
-            $table->timestamps();
+        Schema::table($this->table, function (BluePrint $table) {
         });
     }
 

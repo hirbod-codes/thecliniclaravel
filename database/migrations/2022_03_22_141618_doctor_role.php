@@ -1,6 +1,7 @@
 <?php
 
-use App\Models\Username;
+use App\Models\roles\DoctorRole;
+use Database\Migrations\TraitBaseUserRoleColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -8,11 +9,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    use TraitBaseUserRoleColumns;
+
     private string $table;
 
     public function __construct()
     {
-        $this->table = (new Username)->getTable();
+        $this->table = (new DoctorRole)->getTable();
     }
 
     /**
@@ -22,12 +25,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create($this->table, function (Blueprint $table) {
-            $table->id();
+        $this->createBaseUserRoleColumns($this->table, 'doctor');
 
-            $table->string(strtolower(class_basename(Username::class)))->unique();
-
-            $table->timestamps();
+        Schema::table($this->table, function (BluePrint $table) {
         });
     }
 
