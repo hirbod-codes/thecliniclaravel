@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models\rules;
+namespace App\Models\roles;
 
 use App\Models\Privilege;
 use App\Models\Rule;

@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Privilege;
 use App\Models\PrivilegeValue;
-use App\Models\Rule;
+use App\Models\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use TheClinicDataStructures\DataStructures\User\DSAdmin;
@@ -17,7 +17,7 @@ class DatabasePrivilegeValueSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach (Rule::all() as $rule) {
+        foreach (Role::all() as $rule) {
             switch ($rule->name) {
                 case 'admin':
                     foreach (DSAdmin::getUserPrivileges() as $privilege => $privilegeValue) {

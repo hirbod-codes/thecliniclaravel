@@ -5,13 +5,7 @@ namespace App\Models\Auth;
 use Illuminate\Support\Str;
 use App\Auth\CheckAuthentication;
 use App\Models\Model;
-use App\Models\rules\Traits\BelongsToEmail;
-use App\Models\rules\Traits\BelongsToPhonenumber;
-use App\Models\rules\Traits\BelongsToRule;
-use App\Models\rules\Traits\BelongsToUsername;
-use App\Models\rules\Traits\MorphOneEmail;
-use App\Models\rules\Traits\MorphOnePhonenumber;
-use App\Models\rules\Traits\MorphOneUsername;
+use App\Models\roles\Traits\BelongsToRole;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -21,6 +15,7 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
+use Laravel\Passport\HasApiTokens;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 
 class User extends Model implements
@@ -32,13 +27,8 @@ class User extends Model implements
         Authorizable,
         CanResetPassword,
         MustVerifyEmail,
-        BelongsToEmail,
-        BelongsToUsername,
-        BelongsToPhonenumber,
-        BelongsToRule,
-        MorphOneEmail,
-        MorphOneUsername,
-        MorphOnePhonenumber;
+        HasApiTokens,
+        BelongsToRole;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -54,21 +44,8 @@ class User extends Model implements
 
     public function __construct(array $attributes = [])
     {
-        $this->addEmailForeignKey();
-        $this->addEmailVerifiedAtForeignKey();
-        $this->guardEmailVerification();
-        $this->castEmailVerificationToDatetime();
-
-        $this->addPhonenumberForeignKey();
-        $this->addPhonenumberVerifiedAtForeignKey();
-        $this->guardPhonenumberVerification();
-        $this->castPhonenumberVerificationToDatetime();
-
-        $this->addUsernameForeignKey();
-
-        $this->addRuleForeignKey();
-
-        $this->guardRuleForeignKey();
+        $this->addRoleForeignKey();
+        $this->guardRoleForeignKey();
 
         $this->guarded[] = 'id';
         $this->guarded[] = 'remember_token';
@@ -83,7 +60,7 @@ class User extends Model implements
         $DS = $this->DS;
 
         $args = array_merge(
-            $this->toArrayWithoutRelationsAndRuleRelation(),
+            $this->toArrayWithoutRelationsAndRoleRelation(),
             $additionalArgs,
             ['ICheckAuthentication' => new CheckAuthentication, 'visits' => null, 'orders' => null]
         );
@@ -96,9 +73,9 @@ class User extends Model implements
         return new $DS(...$formattedArgs);
     }
 
-    public function toArrayWithoutRelationsAndRuleRelation(array $excludedColumns = [], bool $excludeForeignKeys = false): array
+    public function toArrayWithoutRelationsAndRoleRelation(array $excludedColumns = [], bool $excludeForeignKeys = false): array
     {
-        $fkColumn = $this->getForeignKeys()[lcfirst(class_basename(Rule::class))];
+        $fkColumn = $this->getForeignKeys()[lcfirst(class_basename(Role::class))];
 
         array_push($excludedColumns, $fkColumn);
 

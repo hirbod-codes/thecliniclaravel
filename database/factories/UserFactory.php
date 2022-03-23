@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Email;
 use App\Models\Phonenumber;
+use App\Models\Role;
 use App\Models\Rule;
 use App\Models\Username;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -46,6 +47,15 @@ class UserFactory extends Factory
         return $this->state(function (array $attributes) {
             return [
                 'email_verified_at' => null,
+            ];
+        });
+    }
+
+    public function usersRolesForeignKey(string $value): static
+    {
+        return $this->state(function (array $attributes) use ($value) {
+            return [
+                (new Role)->getForeignKey() => $value,
             ];
         });
     }

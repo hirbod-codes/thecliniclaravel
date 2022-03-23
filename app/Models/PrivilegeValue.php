@@ -16,7 +16,7 @@ class PrivilegeValue extends Model
     {
         $this->foreignKeys[lcfirst(class_basename(Privilege::class))] = (new Privilege)->getForeignKey();
 
-        $this->foreignKeys[lcfirst(class_basename(Rule::class))] = (new Rule)->getForeignKey();
+        $this->foreignKeys[lcfirst(class_basename(Role::class))] = (new Role)->getForeignKey();
 
         parent::__construct($attributes);
     }
@@ -34,9 +34,9 @@ class PrivilegeValue extends Model
     public function rule(): BelongsTo
     {
         return $this->belongsTo(
-            Rule::class,
-            (new Rule)->getForeignKey(),
-            (new Rule)->getKeyName(),
+            Role::class,
+            (new Role)->getForeignKey(),
+            (new Role)->getKeyName(),
             __FUNCTION__
         );
     }

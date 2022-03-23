@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Rule;
+use App\Models\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -10,11 +10,11 @@ class DatabaseRulesSeeder extends Seeder
 {
     public function run(): void
     {
-        Rule::factory()->name('admin')->create();
-        Rule::factory()->name('doctor')->create();
-        Rule::factory()->name('secretary')->create();
-        Rule::factory()->name('operator')->create();
-        Rule::factory()->name('patient')->create();
-        Rule::factory()->name('custom')->create();
+        Role::factory()->name('admin')->create();
+        Role::factory()->name('doctor')->create();
+        Role::factory()->name('secretary')->create();
+        Role::factory()->name('operator')->create();
+        Role::factory()->name('patient')->create();
+        Role::factory()->name('custom')->create();
     }
 }
