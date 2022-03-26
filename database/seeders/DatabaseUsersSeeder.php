@@ -2,11 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\roles\AdminRole;
 use App\Models\roles\DoctorRole;
 use App\Models\roles\OperatorRole;
 use App\Models\roles\PatientRole;
 use App\Models\roles\SecretaryRole;
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -14,10 +16,56 @@ class DatabaseUsersSeeder extends Seeder
 {
     public function run(): void
     {
-        AdminRole::factory()->count(3)->create();
-        DoctorRole::factory()->count(2)->create();
-        SecretaryRole::factory()->count(4)->create();
-        OperatorRole::factory()->count(5)->create();
-        PatientRole::factory()->count(30)->create();
+        for ($i = 0; $i < 3; $i++) {
+            $user = $this->createUser('admin');
+
+            AdminRole::factory()
+                ->usersForeignKey($user->{(new User)->getKeyName()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->create();
+        }
+
+        for ($i = 0; $i < 2; $i++) {
+            $user = $this->createUser('doctor');
+
+            DoctorRole::factory()
+                ->usersForeignKey($user->{(new User)->getKeyName()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->create();
+        }
+
+        for ($i = 0; $i < 4; $i++) {
+            $user = $this->createUser('secretary');
+
+            SecretaryRole::factory()
+                ->usersForeignKey($user->{(new User)->getKeyName()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->create();
+        }
+
+        for ($i = 0; $i < 5; $i++) {
+            $user = $this->createUser('operator');
+
+            OperatorRole::factory()
+                ->usersForeignKey($user->{(new User)->getKeyName()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->create();
+        }
+
+        for ($i = 0; $i < 30; $i++) {
+            $user = $this->createUser('patient');
+
+            PatientRole::factory()
+                ->usersForeignKey($user->{(new User)->getKeyName()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->create();
+        }
+    }
+
+    private function createUser(string $roleName): User
+    {
+        return User::factory()
+            ->usersRolesForeignKey($roleName)
+            ->create();
     }
 }
