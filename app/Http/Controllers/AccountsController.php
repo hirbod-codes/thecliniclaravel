@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Models\PrivilegeValue;
+use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
@@ -57,6 +58,8 @@ class AccountsController extends Controller
         $this->dataBaseCreateAccount = $dataBaseCreateAccount ?: new DataBaseCreateAccount;
         $this->dataBaseUpdateAccount = $dataBaseUpdateAccount ?: new DataBaseUpdateAccount;
         $this->dataBaseDeleteAccount = $dataBaseDeleteAccount ?: new DataBaseDeleteAccount;
+
+        parent::__construct();
     }
 
     public function index(string $ruleName, ?int $lastAccountId = null, int $count): JsonResponse
@@ -70,7 +73,7 @@ class AccountsController extends Controller
         return response()->json($array);
     }
 
-    public function create(): JsonResponse
+    public function privileges(int $accountId): JsonResponse
     {
         /** @var \App\Models\Auth\User $authenticated */
         $authenticated = $this->checkAuthentication->getAuthenticated();
@@ -83,20 +86,22 @@ class AccountsController extends Controller
         return response()->json($userPrivileges);
     }
 
+    // public function create(): JsonResponse
+    // {
+    // }
+
     public function store(Request $request): JsonResponse
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        $theModelClassFulname = $this->resolveRuleModelFullName($request->rule);
-
         $username = $this->accountsManagement->createAccount($request->all(), $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();
 
         /** @var \App\Models\Auth\User $newAccount */
-        if (($newAccount = $theModelClassFulname::where('username', $username)->first()) === null) {
+        if (($newAccount = User::where('username', $username)->first()) === null) {
             throw new ModelNotFoundException('Failed to find created account!', 404);
         }
 
-        return response()->json($newAccount->getDataStructure()->toArray());
+        return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
     }
 
     public function show(int $accountId, string $ruleName): JsonResponse
@@ -114,25 +119,16 @@ class AccountsController extends Controller
         $username = $dsAuthenticated->getUsername();
 
         /** @var \App\Models\Auth\User $newAccount */
-        if (($newAccount = $theModelClassFulname::where('username', $username)->first()) === null) {
+        if (($newAccount = User::where('username', $username)->first()) === null) {
             throw new ModelNotFoundException('Failed to find created account!', 404);
         }
 
-        return response()->json($newAccount->getDataStructure()->toArray());
+        return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
     }
 
-    public function edit(int $accountId): JsonResponse
-    {
-        /** @var \App\Models\Auth\User $authenticated */
-        $authenticated = $this->checkAuthentication->getAuthenticated();
-
-        $userPrivileges = [];
-        array_map(function (PrivilegeValue $privilegeValue) use (&$userPrivileges) {
-            $userPrivileges[$privilegeValue->privilege()->first()->name] = $privilegeValue->privilegeValue;
-        }, $authenticated->rule()->first()->privilegeValue()->get()->all());
-
-        return response()->json($userPrivileges);
-    }
+    // public function edit(int $accountId): JsonResponse
+    // {
+    // }
 
     public function update(Request $request, int $accountId): JsonResponse|Response
     {
@@ -156,11 +152,11 @@ class AccountsController extends Controller
         $username = $dsUpdatedAuthenticated->getUsername();
 
         /** @var \App\Models\Auth\User $updatedAccount */
-        if (($updatedAccount = $theModelClassFullname::where('username', $username)->first()) === null) {
+        if (($updatedAccount = User::where('username', $username)->first()) === null) {
             throw new ModelNotFoundException('Failed to find created account!', 404);
         }
 
-        return response()->json($updatedAccount->getDataStructure()->toArray());
+        return response()->json($updatedAccount->authenticatableRole()->getDataStructure()->toArray());
     }
 
     public function destroy(int $accountId, string $ruleName): Response
