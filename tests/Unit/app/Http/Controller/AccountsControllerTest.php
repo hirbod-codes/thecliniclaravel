@@ -7,7 +7,6 @@ use TheClinicUseCases\Accounts\Authentication;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Models\Auth\User as AuthUser;
-use App\Models\Privilege;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
@@ -106,15 +105,15 @@ class AccountsControllerTest extends TestCase
         );
     }
 
-    public function testsRun()
+    public function testRun()
     {
         $methods = [
             'testIndex',
-            'testCreate',
+            // 'testCreate',
             'testStore',
             'testShow',
             'testShowWithSameId',
-            'testEdit',
+            // 'testEdit',
             'testUpdate',
             'testUpdateWithSameId',
             'testDestroy',
@@ -164,20 +163,20 @@ class AccountsControllerTest extends TestCase
         $this->assertEquals($newDSUser->toArray(), $jsonResponse->original[0]);
     }
 
-    private function testCreate(): void
-    {
-        $accountsController = $this->instantiate();
+    // private function testCreate(): void
+    // {
+        // $accountsController = $this->instantiate();
 
-        $jsonResponse = $accountsController->create();
-        $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-        $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count(Privilege::all()), $jsonResponse->original);
+        // $jsonResponse = $accountsController->create();
+        // $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
+        // $this->assertIsArray($jsonResponse->original);
+        // $this->assertCount(count(Privilege::all()), $jsonResponse->original);
 
-        foreach ($jsonResponse->original as $privilegeName => $privilege) {
-            $this->assertIsString($privilegeName);
-            $this->assertNotNull($privilege);
-        }
-    }
+        // foreach ($jsonResponse->original as $privilegeName => $privilege) {
+        //     $this->assertIsString($privilegeName);
+        //     $this->assertNotNull($privilege);
+        // }
+    // }
 
     private function testStore(): void
     {
@@ -281,22 +280,22 @@ class AccountsControllerTest extends TestCase
         }
     }
 
-    private function testEdit(): void
-    {
-        $id = $this->faker->numberBetween(1, 1000);
+    // private function testEdit(): void
+    // {
+        // $id = $this->faker->numberBetween(1, 1000);
 
-        $accountsController = $this->instantiate();
+        // $accountsController = $this->instantiate();
 
-        $jsonResponse = $accountsController->edit($id);
-        $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-        $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count(Privilege::all()), $jsonResponse->original);
+        // $jsonResponse = $accountsController->edit($id);
+        // $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
+        // $this->assertIsArray($jsonResponse->original);
+        // $this->assertCount(count(Privilege::all()), $jsonResponse->original);
 
-        foreach ($jsonResponse->original as $privilegeName => $privilege) {
-            $this->assertIsString($privilegeName);
-            $this->assertNotNull($privilege);
-        }
-    }
+        // foreach ($jsonResponse->original as $privilegeName => $privilege) {
+        //     $this->assertIsString($privilegeName);
+        //     $this->assertNotNull($privilege);
+        // }
+    // }
 
     private function testUpdate(): void
     {
