@@ -82,3 +82,8 @@ Artisan::command('initialize', function () {
 
     $this->comment("\n\nApplication initializing finished.");
 });
+
+Artisan::command('consoleTest', function () {
+    (new ConsoleTest)->runTests();
+    $this->comment('Console test has finished.');
+});
