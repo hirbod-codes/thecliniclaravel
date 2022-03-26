@@ -27,6 +27,9 @@ class Model extends EloquentModel
         return $this->foreignKeys;
     }
 
+    /**
+     * @return string[]
+     */
     public function getAllForeignKeys(): array
     {
         $fkColumns = [];
