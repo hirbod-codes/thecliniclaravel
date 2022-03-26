@@ -3,6 +3,7 @@
 namespace Database\Migrations;
 
 use App\Models\Role;
+use App\Models\roles\AdminRole;
 use App\Models\User;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -26,7 +27,7 @@ trait TraitBaseUserRoleColumns
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
-            $fkUserRole = strtolower(class_basename(User::class)) . '_' . (new Role)->getForeignKey();
+            $fkUserRole = (new AdminRole)->getUserRoleNameFKColumnName();
 
             $table->string($fkUserRole);
             $table->foreign($fkUserRole, $tableName . '_' . $userTable . '_' . $fkUserRole)
@@ -38,9 +39,19 @@ trait TraitBaseUserRoleColumns
             $table->timestamps();
         });
 
-        // DB::statement('ALTER TABLE ' . $tableName . ' ADD CONSTRAINT check_' . $fkUserRole . ' CHECK (' . $fkUserRole . ' = 1);');
         DB::statement(
             'CREATE TRIGGER before_' . $this->table . '_insert BEFORE INSERT ON ' . $this->table . '
+                        FOR EACH ROW
+                        BEGIN
+                            IF NEW.' . $fkUserRole . ' <> \'' . $roleName . '\' THEN
+                            signal sqlstate \'45000\'
+                            SET MESSAGE_TEXT = "Mysql trigger";
+                            END IF;
+                        END;'
+        );
+
+        DB::statement(
+            'CREATE TRIGGER before_' . $this->table . '_update BEFORE UPDATE ON ' . $this->table . '
                         FOR EACH ROW
                         BEGIN
                             IF NEW.' . $fkUserRole . ' <> \'' . $roleName . '\' THEN
