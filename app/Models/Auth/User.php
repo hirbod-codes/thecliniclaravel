@@ -5,7 +5,9 @@ namespace App\Models\Auth;
 use Illuminate\Support\Str;
 use App\Auth\CheckAuthentication;
 use App\Models\Model;
+use App\Models\Role;
 use App\Models\roles\Traits\BelongsToRole;
+use App\Models\User as ModelsUser;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -53,6 +55,11 @@ class User extends Model implements
         $this->guarded[] = 'updated_at';
 
         parent::__construct($attributes);
+    }
+
+    public function getUserRoleNameFKColumnName(): string
+    {
+        return strtolower(class_basename(ModelsUser::class)) . '_' . (new Role)->getForeignKey();
     }
 
     public function getDataStructure(array $additionalArgs = [],): DSUser
