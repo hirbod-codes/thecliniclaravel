@@ -17,7 +17,7 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
      * @param string $ruleName
      * @return \TheClinic\DataStructures\User\DSUser[]
      */
-    public function getAccounts(?int $lastAccountId = null, int $count, string $ruleName): array
+    public function getAccounts(int $count, string $ruleName, ?int $lastAccountId = null): array
     {
         $theModelFullName = $this->resolveRuleModelFullName($ruleName);
 
