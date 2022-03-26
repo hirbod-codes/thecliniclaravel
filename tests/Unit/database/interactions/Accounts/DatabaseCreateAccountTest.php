@@ -2,8 +2,12 @@
 
 namespace Tests\Unit\database\interactions\Accounts;
 
+use App\Models\Model;
+use App\Models\Role;
+use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Seeders\DatabaseUsersSeeder;
+use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
@@ -12,10 +16,11 @@ use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
 use TheClinicDataStructures\DataStructures\User\DSUser;
+use Illuminate\Support\Str;
 
 class DatabaseCreateAccountTest extends TestCase
 {
-    use GetAuthenticatables;
+    use GetAuthenticatables, ResolveUserModel;
 
     private Generator $faker;
 
@@ -28,29 +33,66 @@ class DatabaseCreateAccountTest extends TestCase
 
     public function testCreateAccount()
     {
-        try {
-            DB::beginTransaction();
+        foreach ($this->getAuthenticatables() as $roleName => $authenticatable) {
+            try {
+                DB::beginTransaction();
 
-            foreach ($this->getAuthenticatables() as $ruleName => $authenticatable) {
-                $input = [
-                    'firstname' => $this->faker->firstName(),
-                    'lastname' => $this->faker->lastName(),
-                    'rule' => $ruleName
-                ];
+                $roleModelFullname = $this->resolveRuleModelFullName($roleName);
 
-                /** @var DatabaseUsersSeeder|MockInterface $databaseUsersSeeder */
-                $databaseUsersSeeder = Mockery::mock(DatabaseUsersSeeder::class);
-                $databaseUsersSeeder->shouldReceive('create' . ucfirst($ruleName))
-                    ->with(1, ['firstname' => $input['firstname'], 'lastname' => $input['lastname']])
-                    ->andReturn([$authenticatable]);
+                User::factory()->definition();
+                /** @var \App\Models\Model $userModel */
+                $userModel = User::factory()
+                    ->usersRolesForeignKey($roleName)
+                    ->make();
 
-                $dsUser = (new DataBaseCreateAccount($databaseUsersSeeder))->createAccount($input);
+                /** @var \App\Models\Model $roleModel */
+                $roleModel = new $roleModelFullname;
+                $roleModel->{(new User)->getForeignKey()} = $userModel->{(new User)->getKeyName()};
+                $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKey()};
+
+                $input = array_merge(
+                    User::factory()->definition(),
+                    $roleModelFullname::factory()->definition(),
+                    ['role' => $roleName],
+                );
+
+                $dsUser = (new DataBaseCreateAccount)->createAccount($input);
+                $dsUserArray = $dsUser->toArray();
+
+                $DSFullname = $this->resolveRuleDataStructureFullName($roleName);
 
                 $this->assertInstanceOf(DSUser::class, $dsUser);
-                $this->assertEquals($authenticatable->getDataStructure(), $dsUser);
+                $this->assertInstanceOf($DSFullname, $dsUser);
+
+                foreach ($authenticatable->getDataStructure()->toArray() as $key => $value) {
+                    $this->assertNotFalse(array_search($key, array_keys($dsUserArray)));
+                    if (array_search(Str::snake($key), $userModelArray = $userModel->toArray()) !== false) {
+                        $this->assertEquals($userModelArray[Str::snake($key)], $dsUserArray[$key]);
+                    }
+                    // $this->assertEquals($value, $dsUserArray[$key]);
+                }
+
+                $this->assertDatabaseHas((new $roleModelFullname)->getTable(), [(new $roleModelFullname)->getKeyName() => $dsUser->getId()]);
+                $this->assertDatabaseHas((new User)->getTable(), ['username' => $dsUser->getUsername()]);
+
+                $randomUser = User::first();
+                $input['firstname'] = $randomUser->firstname;
+                $input['lastname'] = $randomUser->lastname;
+
+                try {
+                    $dsUser = (new DataBaseCreateAccount)->createAccount($input);
+
+                    throw new \RuntimeException('Failure!!!');
+                } catch (\Throwable $th) {
+                    $this->assertEquals('A user with same first name and last name already exists.', $th->getMessage());
+                    $this->assertEquals(500, $th->getCode());
+                }
+
+                DB::rollback();
+            } catch (\Throwable $th) {
+                DB::rollback();
+                throw $th;
             }
-        } finally {
-            DB::rollback();
         }
     }
 }

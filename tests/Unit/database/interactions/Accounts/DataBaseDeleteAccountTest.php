@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\database\interactions\Accounts;
 
+use App\Models\User;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Traits\ResolveUserModel;
 use Faker\Factory;
@@ -23,22 +24,31 @@ class DataBaseDeleteAccountTest extends TestCase
         $this->faker = Factory::create();
     }
 
-    public function testFeleteAccount()
+    public function testDeleteAccount()
     {
-        try {
-            DB::beginTransaction();
+        foreach ($this->getAuthenticatables() as $ruleName => $authenticatable) {
+            try {
+                DB::beginTransaction();
 
-            foreach ($this->getAuthenticatables() as $ruleName => $authenticatable) {
-                (new DataBaseDeleteAccount)->deleteAccount($authenticatable->getDatastructure());
+                $dsAuthenticatable = $authenticatable->getDatastructure();
+
+                (new DataBaseDeleteAccount)->deleteAccount($dsAuthenticatable);
 
                 $theModelClassFullName = $this->resolveRuleModelFullName($ruleName);
 
                 $this->assertDatabaseMissing((new $theModelClassFullName)->getTable(), [
-                    (new $theModelClassFullName)->getKeyName() => $authenticatable->{(new $theModelClassFullName)->getKeyName()}
+                    (new $theModelClassFullName)->getKeyName() => $dsAuthenticatable->getId()
                 ]);
+
+                $this->assertDatabaseMissing((new User)->getTable(), [
+                    'username' => $dsAuthenticatable->getUsername()
+                ]);
+
+                DB::rollback();
+            } catch (\Throwable $th) {
+                DB::rollback();
+                throw $th;
             }
-        } finally {
-            DB::rollback();
         }
     }
 }

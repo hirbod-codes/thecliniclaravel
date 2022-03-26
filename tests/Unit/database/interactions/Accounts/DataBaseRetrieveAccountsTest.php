@@ -39,7 +39,7 @@ class DataBaseRetrieveAccountsTest extends TestCase
             $this->faker->numberBetween($count + 1, $maxId)
         ]);
 
-        $accounts = (new DataBaseRetrieveAccounts)->getAccounts($lastAccountId, $count, $ruleName);
+        $accounts = (new DataBaseRetrieveAccounts)->getAccounts($count, $ruleName, $lastAccountId);
 
         $this->assertIsArray($accounts);
         $this->assertCount($count, $accounts);
