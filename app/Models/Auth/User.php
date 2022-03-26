@@ -57,19 +57,34 @@ class User extends Model implements
 
     public function getDataStructure(array $additionalArgs = [],): DSUser
     {
-        $DS = $this->DS;
+        if (static::class === ModelsUser::class) {
+            throw new \RuntimeException('It\'s not possible to call this method: ' . __FUNCTION__ . 'from class: ' . static::class, 500);
+        }
+
+        $userAttributes = $this->user()->first()->toArrayWithoutRelationsAndRoleRelation();
+        unset($userAttributes[(new ModelsUser)->getKeyName()]);
+        unset($userAttributes['created_at']);
+        unset($userAttributes['updated_at']);
 
         $args = array_merge(
+            $userAttributes,
             $this->toArrayWithoutRelationsAndRoleRelation(),
             $additionalArgs,
             ['ICheckAuthentication' => new CheckAuthentication, 'visits' => null, 'orders' => null]
         );
+
+        array_map(function ($fkColumn) use (&$args) {
+            if (isset($args[$fkColumn])) {
+                unset($args[$fkColumn]);
+            }
+        }, $fkColumns = $this->getAllForeignKeys());
 
         $formattedArgs = [];
         array_map(function (string $key, $value) use (&$formattedArgs) {
             $formattedArgs[Str::camel($key)] = $value;
         }, array_keys($args), array_values($args));
 
+        $DS = $this->DS;
         return new $DS(...$formattedArgs);
     }
 
