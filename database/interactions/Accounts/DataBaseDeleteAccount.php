@@ -13,7 +13,7 @@ class DataBaseDeleteAccount implements IDataBaseDeleteAccount
 
     public function deleteAccount(DSUser $user): void
     {
-        $theModelClassFullName = $this->resolveRuleModelFullName(strtolower(str_replace('DS', '', class_basename(get_class($user)))));
+        $theModelClassFullName = $this->resolveRuleModelFullName($this->resolveRuleName($user));
 
         $theModel = $theModelClassFullName::where((new $theModelClassFullName)->getKeyName(), $user->getId())->first();
 
@@ -21,6 +21,9 @@ class DataBaseDeleteAccount implements IDataBaseDeleteAccount
             throw new ModelNotFoundException('Failed to find the user.', 404);
         }
 
+        $theUserModel = $theModel->user()->first();
+
         $theModel->delete();
+        $theUserModel->delete();
     }
 }
