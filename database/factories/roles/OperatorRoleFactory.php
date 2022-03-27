@@ -3,7 +3,6 @@
 namespace Database\Factories\roles;
 
 use App\Models\roles\OperatorRole;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class OperatorRoleFactory extends Factory
@@ -17,7 +16,7 @@ class OperatorRoleFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($value) {
             return [
-                (new User)->getForeignKey() => $value,
+                (new OperatorRole)->getKeyName() => $value,
             ];
         });
     }

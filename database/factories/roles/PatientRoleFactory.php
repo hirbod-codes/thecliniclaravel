@@ -3,7 +3,6 @@
 namespace Database\Factories\roles;
 
 use App\Models\roles\PatientRole;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class PatientRoleFactory extends Factory
@@ -17,7 +16,7 @@ class PatientRoleFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($value) {
             return [
-                (new User)->getForeignKey() => $value,
+                (new PatientRole)->getKeyName() => $value,
             ];
         });
     }

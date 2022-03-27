@@ -3,7 +3,6 @@
 namespace Database\Factories\roles;
 
 use App\Models\roles\SecretaryRole;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SecretaryRoleFactory extends Factory
@@ -17,7 +16,7 @@ class SecretaryRoleFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($value) {
             return [
-                (new User)->getForeignKey() => $value,
+                (new SecretaryRole)->getKeyName() => $value,
             ];
         });
     }

@@ -2,9 +2,7 @@
 
 namespace Database\Factories\roles;
 
-use App\Models\Role;
 use App\Models\roles\AdminRole;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AdminRoleFactory extends Factory
@@ -18,7 +16,7 @@ class AdminRoleFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($value) {
             return [
-                (new User)->getForeignKey() => $value,
+                (new AdminRole)->getKeyName() => $value,
             ];
         });
     }
