@@ -57,6 +57,11 @@ class User extends Model implements
         parent::__construct($attributes);
     }
 
+    public function getDS(): string
+    {
+        return $this->DS;
+    }
+
     public function getUserRoleNameFKColumnName(): string
     {
         return strtolower(class_basename(ModelsUser::class)) . '_' . (new Role)->getForeignKey();
