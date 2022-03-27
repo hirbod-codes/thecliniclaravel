@@ -16,7 +16,7 @@ class DatabaseUsersSeeder extends Seeder
 {
     public function run(): void
     {
-        for ($i = 0; $i < 3; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $user = $this->createUser('admin');
 
             AdminRole::factory()
@@ -25,7 +25,7 @@ class DatabaseUsersSeeder extends Seeder
                 ->create();
         }
 
-        for ($i = 0; $i < 2; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $user = $this->createUser('doctor');
 
             DoctorRole::factory()
@@ -34,7 +34,7 @@ class DatabaseUsersSeeder extends Seeder
                 ->create();
         }
 
-        for ($i = 0; $i < 4; $i++) {
+        for ($i = 0; $i < 15; $i++) {
             $user = $this->createUser('secretary');
 
             SecretaryRole::factory()
@@ -43,7 +43,7 @@ class DatabaseUsersSeeder extends Seeder
                 ->create();
         }
 
-        for ($i = 0; $i < 5; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             $user = $this->createUser('operator');
 
             OperatorRole::factory()
@@ -52,7 +52,7 @@ class DatabaseUsersSeeder extends Seeder
                 ->create();
         }
 
-        for ($i = 0; $i < 30; $i++) {
+        for ($i = 0; $i < 40; $i++) {
             $user = $this->createUser('patient');
 
             PatientRole::factory()
