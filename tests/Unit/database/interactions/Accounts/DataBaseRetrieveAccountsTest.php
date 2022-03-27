@@ -30,13 +30,17 @@ class DataBaseRetrieveAccountsTest extends TestCase
 
         $theModelClassFullName = $this->resolveRuleModelFullName($ruleName);
         $theModelClassPrimeryKey = (new $theModelClassFullName)->getKeyName();
-        $maxId = $theModelClassFullName::orderBy($theModelClassPrimeryKey, 'desc')->first()->{$theModelClassPrimeryKey};
 
         $theDataStructureClassFullName = $this->resolveRuleDataStructureFullName($ruleName);
 
+        $ids = $this->getRandomId('patient');
+        for ($i = 0; $i < $count; $i++) {
+            array_pop($ids);
+        }
+
         $lastAccountId = $this->faker->randomElement([
             null,
-            $this->faker->numberBetween($count + 1, $maxId)
+            $this->faker->randomElement($ids)
         ]);
 
         $accounts = (new DataBaseRetrieveAccounts)->getAccounts($count, $ruleName, $lastAccountId);
@@ -46,7 +50,6 @@ class DataBaseRetrieveAccountsTest extends TestCase
 
         for ($i = 0; $i < $count; $i++) {
             $this->assertInstanceOf($theDataStructureClassFullName, $accounts[$i]);
-            $this->assertEquals(($lastAccountId ? $lastAccountId - 1 : $maxId) - $i, $accounts[$i]->getId());
         }
     }
 
