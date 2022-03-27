@@ -20,6 +20,6 @@ class AdminRole extends Authenticatable
 
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class, (new User)->getForeignKey(), (new User)->getKeyName(), __FUNCTION__);
+        return $this->belongsTo(User::class, $this->getKeyName(), (new User)->getKeyName(), __FUNCTION__);
     }
 }
