@@ -141,8 +141,6 @@ class AccountsControllerTest extends TestCase
 
     private function testIndex(): void
     {
-        $ruleName = 'admin';
-
         $count = $this->faker->numberBetween(1, 30);
         $lastAccountId = $this->faker->numberBetween(1, 1000);
 
@@ -150,12 +148,12 @@ class AccountsControllerTest extends TestCase
 
         $this->accountsManagement->shouldReceive("getAccounts")
             ->once()
-            ->with($lastAccountId, $count, $ruleName, $this->dsUser, $this->dataBaseRetrieveAccounts)
+            ->with($lastAccountId, $count, $this->ruleName, $this->dsUser, $this->dataBaseRetrieveAccounts)
             ->andReturn([$newDSUser]);
 
         $accountsController = $this->instantiate();
 
-        $jsonResponse = $accountsController->index($ruleName, $lastAccountId, $count);
+        $jsonResponse = $accountsController->index($this->ruleName, $lastAccountId, $count);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
 
         $this->assertIsArray($jsonResponse->original);
