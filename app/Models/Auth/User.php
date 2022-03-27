@@ -81,7 +81,7 @@ class User extends Model implements
         );
 
         array_map(function ($fkColumn) use (&$args) {
-            if (isset($args[$fkColumn])) {
+            if (isset($args[$fkColumn]) && $fkColumn !== $this->getKeyName()) {
                 unset($args[$fkColumn]);
             }
         }, $fkColumns = $this->getAllForeignKeys());
