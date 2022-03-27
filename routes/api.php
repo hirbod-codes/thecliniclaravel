@@ -1,6 +1,8 @@
 <?php
 
+use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\RolesController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,6 +32,12 @@ Route::group(['middleware' => ['web', 'auth']], function ($router) {
 
 $authMiddleware = 'auth:' . implode(', ', array_keys(app()['config']['auth.guards']));
 
+Route::controller(AuthController::class)->group(function () use ($authMiddleware) {
+    Route::middleware('guest')->put('/register', 'register')->name('auth.register');
+
+    Route::middleware($authMiddleware)->get('/logout', 'logout')->name('auth.logout');
+});
+
 Route::controller(AccountsController::class)
     ->middleware($authMiddleware)
     ->group(function () {
@@ -50,8 +58,16 @@ Route::controller(AccountsController::class)
         Route::delete('/accounts/{accountId}', 'destroy')->name('accounts.destroy');
     });
 
-Route::controller(AuthController::class)->group(function () use ($authMiddleware) {
-    Route::middleware('guest')->put('/register', 'register')->name('auth.register');
+Route::controller(RolesController::class)
+    ->middleware($authMiddleware)
+    ->group(function () {
+        Route::get('/roles', 'index')->name('roles.index');
 
-    Route::middleware($authMiddleware)->get('/logout', 'logout')->name('auth.logout');
+        Route::post('/roles', 'store')->name('roles.store');
+
+        Route::get('/roles/{self?}/{accountId?}', 'show')->name('roles.show');
+    });
+
+Route::middleware($authMiddleware)->get('privileges', function () {
+    return response()->json((new CheckAuthentication)->getAuthenticatedDSUser()::getUserPrivileges());
 });
