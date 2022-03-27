@@ -9,9 +9,12 @@ use App\Models\roles\OperatorRole;
 use App\Models\roles\PatientRole;
 use App\Models\roles\SecretaryRole;
 use App\Models\User;
+use Database\Traits\ResolveUserModel;
 
 trait GetAuthenticatables
 {
+    use ResolveUserModel;
+
     private function getAuthenticatable(string $roleName): Authenticatable
     {
         return $this->getAuthenticatables(true)[$roleName];
@@ -26,26 +29,50 @@ trait GetAuthenticatables
         $patientRoleId = (new PatientRole())->getKeyName();
 
         return [
-            'admin' => AdminRole::where(
-                $adminRoleId,
-                $randomId ? $this->faker->numberBetween(2, AdminRole::orderBy($adminRoleId, 'desc')->first()->{$adminRoleId}) : 1
-            )->first(),
-            'doctor' => DoctorRole::where(
-                $doctorRoleId,
-                $randomId ? $this->faker->numberBetween(2, DoctorRole::orderBy($doctorRoleId, 'desc')->first()->{$doctorRoleId}) : 1
-            )->first(),
-            'secretary' => SecretaryRole::where(
-                $secretaryRoleId,
-                $randomId ? $this->faker->numberBetween(2, SecretaryRole::orderBy($secretaryRoleId, 'desc')->first()->{$secretaryRoleId}) : 1
-            )->first(),
-            'operator' => OperatorRole::where(
-                $operatorRoleId,
-                $randomId ? $this->faker->numberBetween(2, OperatorRole::orderBy($operatorRoleId, 'desc')->first()->{$operatorRoleId}) : 1
-            )->first(),
-            'patient' => PatientRole::where(
-                $patientRoleId,
-                $randomId ? $this->faker->numberBetween(2, PatientRole::orderBy($patientRoleId, 'desc')->first()->{$patientRoleId}) : 1
-            )->first(),
+            'admin' => $randomId ? AdminRole::query()
+                ->where(
+                    $adminRoleId,
+                    '=',
+                    $this->faker->randomElement($this->getRandomId('admin'))
+                )->first() : AdminRole::orderBy($adminRoleId, 'desc')->first(),
+            'doctor' => $randomId ? DoctorRole::query()
+                ->where(
+                    $doctorRoleId,
+                    '=',
+                    $this->faker->randomElement($this->getRandomId('doctor'))
+                )->first() : DoctorRole::orderBy($doctorRoleId, 'desc')->first(),
+            'secretary' => $randomId ? SecretaryRole::query()
+                ->where(
+                    $secretaryRoleId,
+                    '=',
+                    $this->faker->randomElement($this->getRandomId('secretary'))
+                )->first() : SecretaryRole::orderBy($secretaryRoleId, 'desc')->first(),
+            'operator' => $randomId ? OperatorRole::query()
+                ->where(
+                    $operatorRoleId,
+                    '=',
+                    $this->faker->randomElement($this->getRandomId('operator'))
+                )->first() : OperatorRole::orderBy($operatorRoleId, 'desc')->first(),
+            'patient' => $randomId ? PatientRole::query()
+                ->where(
+                    $patientRoleId,
+                    '=',
+                    $this->faker->randomElement($this->getRandomId('patient'))
+                )->first() : PatientRole::orderBy($patientRoleId, 'desc')->first(),
         ];
+    }
+
+    private function getRandomId(string $roleName): array
+    {
+        $modelFullname = $this->resolveRuleModelFullName($roleName);
+        $modelPrimaryKey = (new $modelFullname)->getKeyName();
+
+        $ids = array_map(function ($array) use ($modelPrimaryKey) {
+            return $array[$modelPrimaryKey];
+        }, $modelFullname::query()->orderBy($modelPrimaryKey, 'desc')->get([$modelPrimaryKey])->toArray());
+
+        array_shift($ids);
+
+        return $ids;
     }
 }
