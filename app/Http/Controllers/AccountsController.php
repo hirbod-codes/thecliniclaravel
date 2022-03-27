@@ -29,9 +29,9 @@ class AccountsController extends Controller
 {
     use ResolveUserModel;
 
-    private CheckAuthentication|null $checkAuthentication;
+    private CheckAuthentication $checkAuthentication;
 
-    private AccountsManagement|null $accountsManagement;
+    private AccountsManagement $accountsManagement;
 
     private IDataBaseRetrieveAccounts $dataBaseRetrieveAccounts;
 
