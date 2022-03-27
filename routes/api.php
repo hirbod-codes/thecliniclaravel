@@ -33,7 +33,7 @@ $authMiddleware = 'auth:' . implode(', ', array_keys(app()['config']['auth.guard
 Route::controller(AccountsController::class)
     ->middleware($authMiddleware)
     ->group(function () {
-        Route::get('/accounts/ruleName/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
+        Route::get('/accounts/{ruleName}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
         Route::get('/accounts/{accountId}/privileges', 'privileges')->name('accounts.privileges');
 
