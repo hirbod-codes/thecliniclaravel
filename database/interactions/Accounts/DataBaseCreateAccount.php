@@ -45,7 +45,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
 
             /** @var Authenticatable $roleModel */
             $roleModel = new $modelFullName;
-            $roleModel->{(new User)->getForeignKey()} = $userModel->{(new User)->getKeyName()};
+            $roleModel->{(new $modelFullName)->getKeyName()} = $userModel->{(new User)->getKeyName()};
             $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKey()};
             if (!$roleModel->fill($input)->save()) {
                 DB::rollback();
