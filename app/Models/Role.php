@@ -34,6 +34,6 @@ class Role extends Model
 
     public function getForeignKey(): string
     {
-        return strtolower(class_basename(static::class)) . '_name';
+        return strtolower(class_basename(static::class)) . 'name';
     }
 }
