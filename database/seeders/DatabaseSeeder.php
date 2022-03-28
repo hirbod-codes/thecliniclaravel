@@ -24,6 +24,9 @@ class DatabaseSeeder extends Seeder
 
             (new DatabaseUsersSeeder)->run();
 
+            (new DatabasePartsSeeder)->run();
+            (new DatabasePackagesSeeder)->run();
+
             (new DatabaseOrdersSeeder)->run();
 
             DB::commit();
