@@ -11,6 +11,7 @@ return new class extends Migration
 
     public function __construct()
     {
+        // In case you want to change this table's name, don't forget to also change it's name in role tables triggers.
         $this->table = 'users_guard';
     }
 
@@ -22,7 +23,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (BluePrint $table) {
-            $table->id();
+            // In case you want to change this column's name, don't forget to also change it's name in role tables triggers.
+            $table->unsignedBigInteger('id')->unique();
 
             $table->timestamps();
         });
