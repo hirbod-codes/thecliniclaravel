@@ -13,13 +13,13 @@ use Illuminate\Support\Facades\Schema;
 trait TraitBaseUserRoleColumns
 {
     use ResolveUserModel;
-    
+
     public function createBaseUserRoleColumns(string $tableName, string $roleName): void
     {
         $fkUserRole = '';
-        Schema::create($tableName, function (BluePrint $table) use (&$fkUserRole, $roleName, $tableName) {
-            $modelFullname = $this->resolveRuleModelFullname($roleName);
+        $modelFullname = $this->resolveRuleModelFullname($roleName);
 
+        Schema::create($tableName, function (BluePrint $table) use (&$fkUserRole, $modelFullname, $tableName) {
             $table->id((new $modelFullname)->getKeyName());
 
             $userTable = (new User)->getTable();
@@ -27,6 +27,12 @@ trait TraitBaseUserRoleColumns
             $table->foreign((new $modelFullname)->getKeyName(), $tableName . '_' . $userTable . '_' . (new $modelFullname)->getKeyName())
                 ->references((new User)->getKeyName())
                 ->on($userTable)
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
+
+            $table->foreign((new $modelFullname)->getKeyName(), $tableName . '_users_guard_' . (new $modelFullname)->getKeyName())
+                ->references('id')
+                ->on("users_guard")
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
@@ -50,6 +56,8 @@ trait TraitBaseUserRoleColumns
                             signal sqlstate \'45000\'
                             SET MESSAGE_TEXT = "Mysql trigger";
                             END IF;
+
+                            INSERT INTO users_guard (id) VALUES (NEW.' . (new $modelFullname)->getKeyName() . ');
                         END;'
         );
 
