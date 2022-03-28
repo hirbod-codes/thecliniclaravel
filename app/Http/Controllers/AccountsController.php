@@ -73,19 +73,6 @@ class AccountsController extends Controller
         return response()->json($array);
     }
 
-    public function privileges(int $accountId): JsonResponse
-    {
-        /** @var \App\Models\Auth\User $authenticated */
-        $authenticated = $this->checkAuthentication->getAuthenticated();
-
-        $userPrivileges = [];
-        array_map(function (PrivilegeValue $privilegeValue) use (&$userPrivileges) {
-            $userPrivileges[$privilegeValue->privilege()->first()->name] = $privilegeValue->privilegeValue;
-        }, $authenticated->rule()->first()->privilegeValue()->get()->all());
-
-        return response()->json($userPrivileges);
-    }
-
     // public function create(): JsonResponse
     // {
     // }
