@@ -43,8 +43,6 @@ Route::controller(AccountsController::class)
     ->group(function () {
         Route::get('/accounts/{ruleName}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-        Route::get('/accounts/{accountId}/privileges', 'privileges')->name('accounts.privileges');
-
         // Route::get('/accounts/create', 'create')->name('accounts.create');
 
         Route::post('/accounts', 'store')->name('accounts.store');
