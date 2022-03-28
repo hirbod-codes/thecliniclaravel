@@ -73,10 +73,9 @@ Artisan::command('installPassport', function () {
     $s = $t[1];
 
     Artisan::call('passport:install');
-    $this->info(Artisan::output());
+    $this->info($output = Artisan::output());
 
     // Add personal access client and password grant client id and secret to .env file
-    $output = Artisan::output();
     $envStr = file_get_contents(__DIR__ . '/../.env');
     $envStr = explode('PASSPORT_PERSONAL_ACCESS_CLIENT_ID', $envStr)[0];
     $personalAccessPassed = false;
