@@ -17,35 +17,63 @@ use Tests\ConsoleTest;
 |
 */
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+Artisan::command('initialize', function () {
+    $t = explode(' ', microtime());
+    $ms = $t[0];
+    $s = $t[1];
+
+    if (env('APP_ENV') !== 'local') {
+        $this->comment("Application is not in local environment.");
+        return;
+    }
+
+    $this->call('emptyThenMigrate');
+
+    $this->call('installPassport');
+
+    $this->call('dbSeed');
+
+    $this->newLine();
+    $this->newLine();
+    $this->info("Application initializing has finished.");
+
+    $t = explode(' ', microtime());
+    $ms1 = $t[0];
+    $s1 = $t[1];
+    $this->info("Total duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+});
 
 Artisan::command('emptyThenMigrate', function () {
+    $t = explode(' ', microtime());
+    $ms = $t[0];
+    $s = $t[1];
+
     DB::statement('SET FOREIGN_KEY_CHECKS = 0');
     foreach (DB::select('SHOW TABLES') as $table) {
         Schema::dropIfExists($table->{'Tables_in_' . env('DB_DATABASE')});
     }
     DB::statement('SET FOREIGN_KEY_CHECKS = 1');
 
-    $this->comment("Database tables dropped successfully.");
+    $this->info("Database tables dropped successfully.");
 
-    Artisan::call('migrate');
+    $this->call('migrate');
 
-    $this->comment("Database tables migrated successfully.");
-})->purpose('Drop all the tables in your app env(DB_DATABASE).');
+    $t = explode(' ', microtime());
+    $ms1 = $t[0];
+    $s1 = $t[1];
+    $this->newLine();
+    $this->info("The command emptyThenMigrate duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+    $this->newLine();
+    $this->newLine();
+})->purpose('Drop all the tables in your app env(DB_DATABASE), Then run: php artisan migrate.');
 
-Artisan::command('initialize', function () {
-    if (env('APP_ENV') !== 'local') {
-        $this->comment("Application is not in local environment.");
-        return;
-    }
-
-    Artisan::call('emptyThenMigrate');
-    $this->comment(Artisan::output());
+Artisan::command('installPassport', function () {
+    $t = explode(' ', microtime());
+    $ms = $t[0];
+    $s = $t[1];
 
     Artisan::call('passport:install');
-    $this->comment(Artisan::output());
+    $this->info(Artisan::output());
 
     // Add personal access client and password grant client id and secret to .env file
     $output = Artisan::output();
@@ -74,16 +102,40 @@ Artisan::command('initialize', function () {
     }
     file_put_contents(__DIR__ . '/../.env', $envStr . $result);
 
-    Artisan::call('passport:keys');
-    $this->comment(Artisan::output());
+    $this->call('passport:keys');
 
-    Artisan::call('db:seed');
-    $this->comment(Artisan::output());
+    $this->info("Passport package installation has finished.");
+    $t = explode(' ', microtime());
+    $ms1 = $t[0];
+    $s1 = $t[1];
+    $this->newLine();
+    $this->info("The command installPassport duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+    $this->newLine();
+    $this->newLine();
+});
 
-    $this->comment("\n\nApplication initializing finished.");
+Artisan::command('dbSeed', function () {
+    $t = explode(' ', microtime());
+    $ms = $t[0];
+    $s = $t[1];
+
+    $this->call('db:seed');
+
+    $t = explode(' ', microtime());
+    $ms1 = $t[0];
+    $s1 = $t[1];
+
+    $this->newLine();
+    $this->info("The command db:seed duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+    $this->newLine();
+    $this->newLine();
 });
 
 Artisan::command('consoleTest', function () {
     (new ConsoleTest)->runTests();
-    $this->comment('Console test has finished.');
+    $this->info('Console test has finished.');
+    // $this->line('line');
+    // $this->info('info');
+    // $this->warn('warn');
+    // $this->warn('error');
 });
