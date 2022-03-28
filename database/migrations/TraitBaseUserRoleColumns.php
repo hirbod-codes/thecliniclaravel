@@ -18,19 +18,20 @@ trait TraitBaseUserRoleColumns
     {
         $fkUserRole = '';
         $modelFullname = $this->resolveRuleModelFullname($roleName);
+        $fk = (new $modelFullname)->getKeyName();
 
-        Schema::create($tableName, function (BluePrint $table) use (&$fkUserRole, $modelFullname, $tableName) {
-            $table->id((new $modelFullname)->getKeyName());
+        Schema::create($tableName, function (BluePrint $table) use (&$fkUserRole, $fk, $modelFullname, $tableName) {
+            $table->id($fk);
 
             $userTable = (new User)->getTable();
 
-            $table->foreign((new $modelFullname)->getKeyName(), $tableName . '_' . $userTable . '_' . (new $modelFullname)->getKeyName())
+            $table->foreign($fk, $tableName . '_' . $userTable . '_' . $fk)
                 ->references((new User)->getKeyName())
                 ->on($userTable)
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
-            $table->foreign((new $modelFullname)->getKeyName(), $tableName . '_users_guard_' . (new $modelFullname)->getKeyName())
+            $table->foreign($fk, $tableName . '_users_guard_' . $fk)
                 ->references('id')
                 ->on("users_guard")
                 ->onUpdate('cascade')
@@ -57,7 +58,7 @@ trait TraitBaseUserRoleColumns
                             SET MESSAGE_TEXT = "Mysql trigger";
                             END IF;
 
-                            INSERT INTO users_guard (id) VALUES (NEW.' . (new $modelFullname)->getKeyName() . ');
+                            INSERT INTO users_guard (id) VALUES (NEW.' . $fk . ');
                         END;'
         );
 
