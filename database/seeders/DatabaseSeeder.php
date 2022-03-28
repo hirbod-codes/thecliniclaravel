@@ -21,12 +21,15 @@ class DatabaseSeeder extends Seeder
             (new DatabasePrivilegesSeeder)->run();
             (new DatabaseRulesSeeder)->run();
             (new DatabasePrivilegeValueSeeder)->run();
+
             (new DatabaseUsersSeeder)->run();
+
+            (new DatabaseOrdersSeeder)->run();
 
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            dd($e);
+            throw $e;
         }
     }
 }
