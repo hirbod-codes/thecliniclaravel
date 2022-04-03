@@ -51,49 +51,6 @@ class OrdersController extends Controller
 
     private IDataBaseRetrieveRegularOrders $iDataBaseRetrieveRegularOrders;
 
-    public function indexx()
-    {
-        /** @var User $user */
-        $user = User::first();
-        dd($user->orders[1]->laserOrder->getDSLaserOrder());
-
-        $laserOrders = Order::query()
-            ->where('user_id', '=', 1)
-            ->whereHas('laserOrder', function ($query) {
-                $query
-                    ->where('price', '>', 10000000)
-                    //
-                ;
-            })
-            ->with(['laserOrder.parts', 'laserOrder.packages'])
-            ->get()
-            ->all()
-            //
-        ;
-
-        $regularOrders = Order::query()
-            ->where('user_id', '=', 1)
-            ->whereHas('regularOrder', function ($query) {
-                $query
-                    ->where('price', '>', 10000000)
-                    //
-                ;
-            })
-            ->with(['regularOrder'])
-            ->get()
-            ->all()
-            //
-        ;
-
-
-        dd(
-            ['$laserOrders' => $laserOrders],
-            ['$regularOrders' => $regularOrders],
-            ['merged' => array_merge($laserOrders, $regularOrders)],
-        );
-        return $laserOrders;
-    }
-
     public function __construct(
         null|CheckAuthentication $checkAuthentication = null,
         null|RegularOrderRetrieval $regularOrderRetrieval = null,
