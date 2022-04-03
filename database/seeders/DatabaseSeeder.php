@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
         try {
             DB::beginTransaction();
 
+            (new DatabaseBusinessDefaultSeeder)->run();
+
             (new DatabasePrivilegesSeeder)->run();
             (new DatabaseRulesSeeder)->run();
             (new DatabasePrivilegeValueSeeder)->run();
