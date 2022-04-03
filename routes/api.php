@@ -2,6 +2,7 @@
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +67,15 @@ Route::controller(RolesController::class)
         Route::get('/roles/{self?}/{accountId?}', 'show')->name('roles.show');
     });
 
-Route::middleware($authMiddleware)->get('privileges', function () {
-    return response()->json((new CheckAuthentication)->getAuthenticatedDSUser()::getUserPrivileges());
-});
+Route::controller(OrdersController::class)
+    ->middleware($authMiddleware)
+    ->group(function () {
+        Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
+        Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+
+        Route::post('/orders', 'store')->name('orders.store');
+
+        Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
+
+        Route::delete('/orders/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+    });
