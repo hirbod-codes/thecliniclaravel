@@ -8,6 +8,7 @@ use App\Models\Model;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\LaserOrderPackage;
 use App\Models\Part\Part;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use TheClinicDataStructures\DataStructures\Order\DSPackage;
 use TheClinicDataStructures\DataStructures\Order\DSPackages;
@@ -50,13 +51,11 @@ class Package extends Model
         array_map(function (\ReflectionParameter $parameter) use (&$args) {
             $parameterName = $parameter->getName();
             if ($parameterName === 'parts') {
-                $args[$parameterName] = Part::getDSParts($this->parts()->get()->all(), $this->getAttributeFromArray('gender'));
+                $args[$parameterName] = Part::getDSParts($this->parts->all(), $this->gender);
             } elseif ($parameterName === 'id') {
-                $args[$parameterName] = $this->getAttributeFromArray($this->getKeyName());
-            } elseif ($parameter->getType()->getName() === 'DateTime') {
-                $args[$parameterName] = new \DateTime($this->getAttributeFromArray(Str::snake($parameterName)));
+                $args[$parameterName] = $this->{$this->getKeyName()};
             } else {
-                $args[$parameterName] = $this->getAttributeFromArray(Str::snake($parameterName));
+                $args[$parameterName] = $this->{Str::snake($parameterName)};
             }
         }, (new \ReflectionClass(DSPackage::class))->getConstructor()->getParameters());
 
@@ -65,13 +64,16 @@ class Package extends Model
     }
 
     /**
-     * @param \App\Models\Package\Package[] $packages
+     * @param self[]|Collection $packages
      * @return DSPackages
      */
-    public static function getDSPackages(array $packages, string $gender): DSPackages
+    public static function getDSPackages(array|Collection $packages, string $gender): DSPackages
     {
         $dsPackages = new DSPackages($gender);
         foreach ($packages as $package) {
+            if (!($package instanceof Package)) {
+                throw new \InvalidArgumentException('The variable $package must be of type: ' . Package::class, 500);
+            }
             $dsPackages[] = $package->getDSPackage();
         }
 
