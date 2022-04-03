@@ -20,6 +20,8 @@ class Part extends Model
 
     protected $table = "parts";
 
+    protected $hidden = ['pivot'];
+
     public function laserOrders(): BelongsToMany
     {
         return $this->belongsToMany(

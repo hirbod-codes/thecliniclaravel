@@ -19,6 +19,8 @@ class Package extends Model
 
     protected $table = "packages";
 
+    protected $hidden = ['pivot'];
+
     public function laserOrders(): BelongsToMany
     {
         return $this->belongsToMany(
