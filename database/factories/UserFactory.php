@@ -23,6 +23,14 @@ class UserFactory extends Factory
     public function definition()
     {
         $gender = $this->faker->randomElement(['Male', 'Female']);
+        
+        if ($this->faker->randomElement([0, 1]) === 1) {
+            $email = $this->faker->unique()->phoneNumber();
+            $email_verified_at = new \DateTime('now', new \DateTimeZone('UTC'));
+        } else {
+            $email = null;
+            $email_verified_at = null;
+        }
 
         return [
             'firstname' => $this->faker->firstname($gender),
@@ -32,8 +40,8 @@ class UserFactory extends Factory
 
             'gender' => $gender,
 
-            'email' => $this->faker->unique()->safeEmail(),
-            'email_verified_at' => new \DateTime('now', new \DateTimeZone('UTC')),
+            'email' => $email,
+            'email_verified_at' => $email_verified_at,
 
             'phonenumber' => $this->faker->unique()->phoneNumber(),
             'phonenumber_verified_at' => new \DateTime('now', new \DateTimeZone('UTC')),
