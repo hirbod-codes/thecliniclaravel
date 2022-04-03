@@ -6,12 +6,16 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Str;
 
 class Order extends Model
 {
     use HasFactory;
 
     protected $table = "orders";
+
+    public $hasPartsAndPackages = true;
 
     public function user(): BelongsTo
     {
@@ -23,17 +27,53 @@ class Order extends Model
         );
     }
 
-    public function orderable(): Model
+    public function orderable(): HasOne
     {
-        foreach (scandir(__DIR__) as $filename) {
-            $filename = str_replace('.php', '', array_pop(explode('/', str_replace('\\', '', $filename))));
-
-            if ($filename === 'Order') {
+        /** @var \ReflectionMethod $method */
+        foreach ($this->getHasOneRelationsNames() as $methodName) {
+            if (($hasOne = $this->{$methodName}())->getResults() === null) {
                 continue;
             }
 
-            if (($order = $this->hasOne('App\\Models\\Order\\' . $filename, $this->getForeignKey(), $this->getKeyName(), __FUNCTION__)->first()) === null) {
+            return $hasOne;
+        }
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getHasOneRelationsNames(): array
+    {
+        $names = [];
+        /** @var \ReflectionMethod $method */
+        foreach ((new \ReflectionClass(static::class))->getMethods() as $method) {
+            if ($method->getReturnType()->getName() !== HasOne::class || !Str::contains($method->getName(), 'Order')) {
                 continue;
+            }
+
+            $names[] = $method->getName();
+        }
+
+        return $names;
+    }
+
+    public function laserOrder(): HasOne
+    {
+        return $this->hasOne(
+            LaserOrder::class,
+            $this->getForeignKey(),
+            $this->getKeyName()
+        );
+    }
+
+    public function regularOrder(): HasOne
+    {
+        return $this->hasOne(
+            RegularOrder::class,
+            $this->getForeignKey(),
+            $this->getKeyName()
+        );
+    }
             }
 
             return $order;
