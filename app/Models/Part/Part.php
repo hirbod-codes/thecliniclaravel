@@ -9,6 +9,7 @@ use App\Models\Order\LaserOrder;
 use App\Models\Order\LaserOrderPart;
 use App\Models\Package\Package;
 use App\Models\Package\PartPackage;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use TheClinicDataStructures\DataStructures\Order\DSPart;
 use TheClinicDataStructures\DataStructures\Order\DSParts;
@@ -50,11 +51,9 @@ class Part extends Model
         $args = [];
         array_map(function (\ReflectionParameter $parameter) use (&$args) {
             if (($parameterName = $parameter->getName()) === 'id') {
-                $args[$parameterName] = $this->getAttributeFromArray($this->getKeyName());
-            } elseif ($parameter->getType()->getName() === 'DateTime') {
-                $args[$parameterName] = new \DateTime($this->getAttributeFromArray(Str::snake($parameterName)));
+                $args[$parameterName] = $this->{$this->getKeyName()};
             } else {
-                $args[$parameterName] = $this->getAttributeFromArray(Str::snake($parameterName));
+                $args[$parameterName] = $this->{Str::snake($parameterName)};
             }
         }, (new \ReflectionClass(DSPart::class))->getConstructor()->getParameters());
 
@@ -63,13 +62,16 @@ class Part extends Model
     }
 
     /**
-     * @param \App\Models\Part\Part[] $parts
+     * @param self[]|Collection $parts
      * @return DSParts
      */
-    public static function getDSParts(array $parts, string $gender): DSParts
+    public static function getDSParts(array|Collection $parts, string $gender): DSParts
     {
         $dsParts = new DSParts($gender);
         foreach ($parts as $part) {
+            if (!($part instanceof Part)) {
+                throw new \InvalidArgumentException('The variable $part must be of type: ' . Part::class, 500);
+            }
             $dsParts[] = $part->getDSPart();
         }
 
