@@ -25,7 +25,7 @@ return new class extends Migration
         Schema::create($this->table, function (BluePrint $table) {
             $table->id();
 
-            $table->string('name');
+            $table->string('name')->unique();
             $table->string('gender');
 
             $table->integer('price');
