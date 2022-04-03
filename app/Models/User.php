@@ -7,7 +7,7 @@ use App\Models\Order\Order;
 use App\Models\rules\DSCustom;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Schema;
 
@@ -40,9 +40,9 @@ class User extends Authenticatable
         return null;
     }
 
-    public function order(): HasOne
+    public function orders(): HasMany
     {
-        return $this->hasOne(
+        return $this->hasMany(
             Order::class,
             $this->getForeignKey(),
             $this->getKeyName(),
