@@ -5,9 +5,15 @@ namespace App\Models\Auth;
 use Illuminate\Support\Str;
 use App\Auth\CheckAuthentication;
 use App\Models\Model;
+use App\Models\Order\LaserOrder;
+use App\Models\Order\Order;
+use App\Models\Order\RegularOrder;
 use App\Models\Role;
 use App\Models\roles\Traits\BelongsToRole;
 use App\Models\User as ModelsUser;
+use App\Models\Visit\LaserVisit;
+use App\Models\Visit\RegularVisit;
+use App\Models\Visit\Visit;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -15,10 +21,14 @@ use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
 use Laravel\Passport\HasApiTokens;
+use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\User\DSUser;
+use TheClinicDataStructures\DataStructures\User\ICheckAuthentication;
+use TheClinicDataStructures\DataStructures\Visit\DSVisits;
 
 class User extends Model implements
     AuthenticatableContract,
@@ -67,37 +77,72 @@ class User extends Model implements
         return strtolower(class_basename(ModelsUser::class)) . '_' . (new Role)->getForeignKey();
     }
 
-    public function getDataStructure(array $additionalArgs = [],): DSUser
+    public function getDataStructure(): DSUser
     {
         if (static::class === ModelsUser::class) {
             throw new \RuntimeException('It\'s not possible to call this method: ' . __FUNCTION__ . 'from class: ' . static::class, 500);
         }
 
-        $userAttributes = $this->user()->first()->toArrayWithoutRelationsAndRoleRelation();
-        unset($userAttributes[(new ModelsUser)->getKeyName()]);
-        unset($userAttributes['created_at']);
-        unset($userAttributes['updated_at']);
-
-        $args = array_merge(
-            $userAttributes,
-            $this->toArrayWithoutRelationsAndRoleRelation(),
-            $additionalArgs,
-            ['ICheckAuthentication' => new CheckAuthentication, 'visits' => null, 'orders' => null]
-        );
-
-        array_map(function ($fkColumn) use (&$args) {
-            if (isset($args[$fkColumn]) && $fkColumn !== $this->getKeyName()) {
-                unset($args[$fkColumn]);
-            }
-        }, $fkColumns = $this->getAllForeignKeys());
-
-        $formattedArgs = [];
-        array_map(function (string $key, $value) use (&$formattedArgs) {
-            $formattedArgs[Str::camel($key)] = $value;
-        }, array_keys($args), array_values($args));
-
         $DS = $this->DS;
-        return new $DS(...$formattedArgs);
+        $args = [];
+        array_map(function (\ReflectionParameter $parameter) use (&$args) {
+            $parameterName = $parameter->getName();
+
+            $this->collectDSArgs($args, $parameterName);
+        }, (new \ReflectionClass($DS))->getConstructor()->getParameters());
+
+        return new $DS(...$args);
+    }
+
+    private function collectDSArgs(array &$args, string $parameterName)
+    {
+        $user = $this->user;
+
+        if ($parameterName === 'id') {
+            $args[$parameterName] = $user->{$this->getKeyName()};
+        } elseif ($parameterName === 'iCheckAuthentication') {
+            $args[$parameterName] = new CheckAuthentication;
+        } elseif ($parameterName === 'orders') {
+            if ($user->orders === null || empty($user->orders)) {
+                $args[$parameterName] = null;
+            } else {
+                $args[$parameterName] = Order::getMixedDSOrders($user->orders);
+            }
+        } else {
+            $args[$parameterName] = $user->{Str::snake($parameterName)};
+        }
+    }
+
+    /**
+     * @param Order[]|Collection $orders
+     * @return DSVisits|null
+     */
+    private function getDSVisits(Collection|array $orders): DSVisits|null
+    {
+        if (count($orders) === 0) {
+            throw new \InvalidArgumentException('$orders variable can not be empty.', 500);
+        }
+
+        if ($orders instanceof Collection) {
+            $orders = $orders->all();
+        }
+
+        $laserVisits = $regularVisits = [];
+        foreach ($orders as $order) {
+            if ($order->laserOrder !== null) {
+                array_merge($laserVisits, ...$order->laserOrder->laserVisits->all());
+            } elseif ($order->regularOrder !== null) {
+                array_merge($regularVisits, ...$order->regularOrder->regularVisits->all());
+            }
+        }
+
+        $visits = Visit::getMixeDDSVisits(array_merge($laserVisits, $regularVisits));
+
+        if (count($visits) === 0) {
+            return null;
+        } else {
+            return $visits;
+        }
     }
 
     public function toArrayWithoutRelationsAndRoleRelation(array $excludedColumns = [], bool $excludeForeignKeys = false): array
