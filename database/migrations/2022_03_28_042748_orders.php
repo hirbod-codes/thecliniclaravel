@@ -30,10 +30,10 @@ return new class extends Migration
 
             $table->unsignedBigInteger($fk);
             $table->foreign($fk, $this->table . '_' . (new User)->getTable() . '_' . $fk)
-            ->references((new User)->getKeyName())
-            ->on((new User)->getTable())
-            ->onDelete('cascade')
-            ->onUpdate('cascade');
+                ->references((new User)->getKeyName())
+                ->on((new User)->getTable())
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
 
             $table->timestamps();
         });
