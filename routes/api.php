@@ -49,12 +49,15 @@ Route::controller(AccountsController::class)
         Route::post('/accounts', 'store')->name('accounts.store');
 
         Route::get('/accounts/{accountId}', 'show')->name('accounts.show');
+        Route::get('/accounts', 'showSelf')->name('accounts.showSelf');
 
         // Route::get('/accounts/{accountId}/edit', 'edit')->name('accounts.edit');
 
         Route::put('/accounts/{accountId}', 'update')->name('accounts.update');
+        Route::put('/accounts', 'updateSelf')->name('accounts.updateSelf');
 
         Route::delete('/accounts/{accountId}', 'destroy')->name('accounts.destroy');
+        Route::delete('/accounts', 'destroySelf')->name('accounts.destroySelf');
     });
 
 Route::controller(RolesController::class)
@@ -77,5 +80,5 @@ Route::controller(OrdersController::class)
 
         Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
 
-        Route::delete('/orders/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+        Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
     });
