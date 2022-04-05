@@ -35,7 +35,7 @@ class RolesController extends Controller
         return response()->json($this->privilegesManagement->getPrivileges($authenticated));
     }
 
-    public function store(Request $request)
+    public function update(Request $request)
     {
         $authenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
