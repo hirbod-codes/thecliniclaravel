@@ -73,7 +73,7 @@ class DatabaseVisitsSeeder extends Seeder
                 $time,
                 $futureVisits,
                 BusinessDefault::first()->work_schedule,
-                BusinessDefault::first()->down_time,
+                BusinessDefault::first()->down_times,
                 new SearchingBetweenDownTimes(new SearchingBetweenTimeRange, new DownTime),
                 new WorkSchedule,
                 new DownTime
