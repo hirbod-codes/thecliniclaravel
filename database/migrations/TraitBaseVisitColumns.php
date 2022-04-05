@@ -2,7 +2,6 @@
 
 namespace Database\Migrations;
 
-use App\Models\Order\LaserOrder;
 use App\Models\Visit\Visit;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -29,10 +28,10 @@ trait TraitBaseVisitColumns
                 ->onDelete('cascade')
                 ->onUpdate('cascade');
 
-            $table->unsignedBigInteger('visitTimestamp')->unique();
-            $table->integer('consumingTime');
-            $table->json('weekDaysPeriods');
-            $table->json('dateTimePeriod');
+            $table->unsignedBigInteger('visit_timestamp')->unique();
+            $table->integer('consuming_time');
+            $table->json('week_days_periods')->nullable();
+            $table->json('date_time_period')->nullable();
 
             $table->timestamps();
         });
