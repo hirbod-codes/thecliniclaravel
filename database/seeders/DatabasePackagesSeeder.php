@@ -9,7 +9,6 @@ use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use TheClinic\Order\Laser\Calculations\PriceCalculator;
-use TheClinicDataStructures\DataStructures\Order\DSPackage;
 use TheClinicDataStructures\DataStructures\Order\DSPackages;
 
 class DatabasePackagesSeeder extends Seeder
@@ -25,7 +24,7 @@ class DatabasePackagesSeeder extends Seeder
 
         for ($i = 0; $i < 10; $i++) {
             $gender = $faker->randomElement(['Male', 'Female']);
-            
+
             $parts = Part::query()->where('gender', '=', $gender)->inRandomOrder()->take($faker->numberBetween(2, 5))->get()->all();
 
             $price = (new PriceCalculator)->calculate(Part::getDSParts($parts, $gender), new DSPackages($gender));
