@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
-use App\Models\PrivilegeValue;
 use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
@@ -24,6 +23,8 @@ use TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
 use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToUpdateAdminException;
+use TheClinicUseCases\Exceptions\AdminModificationByUserException;
+use TheClinicUseCases\Exceptions\AdminsCollisionException;
 
 class AccountsController extends Controller
 {
@@ -84,33 +85,29 @@ class AccountsController extends Controller
         $username = $this->accountsManagement->createAccount($request->all(), $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();
 
         /** @var \App\Models\Auth\User $newAccount */
-        if (($newAccount = User::where('username', $username)->first()) === null) {
+        if (($newAccount = User::where('username', '=', $username)->first()) === null) {
             throw new ModelNotFoundException('Failed to find created account!', 404);
         }
 
         return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
     }
 
-    public function show(int $accountId, string $ruleName): JsonResponse
+    public function show(string $username): JsonResponse
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        if ($accountId === $dsAuthenticated->getId()) {
-            $dsAuthenticated = $this->accountsManagement->getSelfAccount($ruleName, $dsAuthenticated, $this->dataBaseRetrieveAccounts);
-        } else {
-            $dsAuthenticated = $this->accountsManagement->getAccount($accountId, $ruleName, $dsAuthenticated, $this->dataBaseRetrieveAccounts);
-        }
+        $dsUser = $this->accountsManagement->getAccount($username, $dsAuthenticated, $this->dataBaseRetrieveAccounts);
 
-        $theModelClassFulname = $this->resolveRuleModelFullName($dsAuthenticated->getRuleName());
+        return response()->json($dsUser->toArray());
+    }
 
-        $username = $dsAuthenticated->getUsername();
+    public function showSelf(): JsonResponse
+    {
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        /** @var \App\Models\Auth\User $newAccount */
-        if (($newAccount = User::where('username', $username)->first()) === null) {
-            throw new ModelNotFoundException('Failed to find created account!', 404);
-        }
+        $dsAuthenticated = $this->accountsManagement->getAccount($dsAuthenticated->getUsername(), $dsAuthenticated, $this->dataBaseRetrieveAccounts);
 
-        return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
+        return response()->json($dsAuthenticated->toArray());
     }
 
     // public function edit(int $accountId): JsonResponse
@@ -122,44 +119,67 @@ class AccountsController extends Controller
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         try {
-            if ($accountId === $dsAuthenticated->getId()) {
-                $dsUpdatedAuthenticated = $this->accountsManagement->updateSelfAccount(array_key_first($request->all()), $request->all()[array_key_first($request->all())], $dsAuthenticated, $this->dataBaseUpdateAccount);
-            } else {
-                $theModelClassFullname = $this->resolveRuleModelFullName($request->rule);
-                $targetDSUser = $theModelClassFullname::where((new $theModelClassFullname)->getKeyName(), $accountId)->first()->getDataStructure();
+            /** @var User $targetUser*/
+            $targetUser = User::query()->whereKey($accountId)->first();
 
-                $dsUpdatedAuthenticated = $this->accountsManagement->updateAccount($request->all(), $targetDSUser, $dsAuthenticated, $this->dataBaseUpdateAccount);
-            }
-        } catch (AdminTemptsToUpdateAdminException $e) {
+            $dsUpdatedUser = $this->accountsManagement->massUpdateAccount(
+                $request->all(),
+                $targetUser->authenticatableRole()->getDataStructure(),
+                $dsAuthenticated,
+                $this->dataBaseUpdateAccount
+            );
+        } catch (AdminsCollisionException $e) {
             return response($e->getMessage(), $e->getCode());
         }
 
-        $theModelClassFullname = $this->resolveRuleModelFullName($dsUpdatedAuthenticated->getRuleName());
-
-        $username = $dsUpdatedAuthenticated->getUsername();
-
-        /** @var \App\Models\Auth\User $updatedAccount */
-        if (($updatedAccount = User::where('username', $username)->first()) === null) {
-            throw new ModelNotFoundException('Failed to find created account!', 404);
-        }
-
-        return response()->json($updatedAccount->authenticatableRole()->getDataStructure()->toArray());
+        return response()->json($dsUpdatedUser->toArray());
     }
 
-    public function destroy(int $accountId, string $ruleName): Response
+    public function updateSelf(Request $request): JsonResponse|Response
+    {
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+
+        try {
+            $dsUpdatedAuthenticated = $this->accountsManagement->massUpdateAccount(
+                $request->all(),
+                $dsAuthenticated,
+                $dsAuthenticated,
+                $this->dataBaseUpdateAccount
+            );
+        } catch (AdminsCollisionException $e) {
+            return response($e->getMessage(), $e->getCode());
+        }
+
+        return response()->json($dsUpdatedAuthenticated->toArray());
+    }
+
+    public function destroy(int $accountId): Response
     {
         $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
 
         try {
-            if ($accountId === $dsUser->getId()) {
-                $this->accountsManagement->deleteSelfAccount($dsUser, $this->dataBaseDeleteAccount);
-            } else {
-                $theModelClassFullname = $this->resolveRuleModelFullName($ruleName);
-                $targetDSUser = $theModelClassFullname::where((new $theModelClassFullname)->getKeyName(), $accountId)->first()->getDataStructure();
+            /** @var User $targetUser*/
+            $targetUser = User::query()->whereKey($accountId)->first();
 
-                $this->accountsManagement->deleteAccount($targetDSUser, $dsUser, $this->dataBaseDeleteAccount);
-            }
+            $this->accountsManagement->deleteAccount($targetUser->authenticatableRole()->getDataStructure(), $dsUser, $this->dataBaseDeleteAccount);
         } catch (AdminTemptsToDeleteAdminException $e) {
+            return response($e->getMessage(), $e->getCode());
+        } catch (AdminModificationByUserException $e) {
+            return response($e->getMessage(), $e->getCode());
+        }
+
+        return response('The user successfuly deleted.');
+    }
+
+    public function destroySelf(): Response
+    {
+        $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
+
+        try {
+            $this->accountsManagement->deleteAccount($dsUser, $dsUser, $this->dataBaseDeleteAccount);
+        } catch (AdminTemptsToDeleteAdminException $e) {
+            return response($e->getMessage(), $e->getCode());
+        } catch (AdminModificationByUserException $e) {
             return response($e->getMessage(), $e->getCode());
         }
 
