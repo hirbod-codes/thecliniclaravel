@@ -31,6 +31,8 @@ class DatabaseSeeder extends Seeder
 
             (new DatabaseOrdersSeeder)->run();
 
+            (new DatabaseVisitsSeeder)->run();
+
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
