@@ -28,6 +28,9 @@ return new class extends Migration
             $table->integer('default_regular_order_price');
             $table->integer('default_regular_order_time_consumption');
 
+            $table->json('work_schedule');
+            $table->json('down_times');
+
             $table->timestamps();
         });
     }
