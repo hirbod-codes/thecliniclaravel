@@ -5,25 +5,35 @@ namespace App\Http\Controllers\Orders;
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Controller;
 use App\Models\Auth\User as Authenticatable;
+use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
+use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
 use App\Models\User;
 use Database\Interactions\Orders\Creation\DatabaseCreateDefaultRegularOrder;
 use Database\Interactions\Orders\Creation\DatabaseCreateLaserOrder;
 use Database\Interactions\Orders\Creation\DatabaseCreateRegularOrder;
+use Database\Interactions\Orders\Deletion\DataBaseDeleteLaserOrder;
+use Database\Interactions\Orders\Deletion\DataBaseDeleteRegularOrder;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveLaserOrders;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveRegularOrders;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
 use TheClinicDataStructures\DataStructures\User\DSAdmin;
 use TheClinicUseCases\Orders\Creation\LaserOrderCreation;
 use TheClinicUseCases\Orders\Creation\RegularOrderCreation;
+use TheClinicUseCases\Orders\Deletion\LaserOrderDeletion;
+use TheClinicUseCases\Orders\Deletion\RegularOrderDeletion;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateRegularOrder;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
+use TheClinicUseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
+use TheClinicUseCases\Orders\Interfaces\IDataBaseDeleteRegularOrder;
 use TheClinicUseCases\Orders\Retrieval\LaserOrderRetrieval;
 use TheClinicUseCases\Orders\Retrieval\RegularOrderRetrieval;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
@@ -51,6 +61,14 @@ class OrdersController extends Controller
 
     private IDataBaseRetrieveRegularOrders $iDataBaseRetrieveRegularOrders;
 
+    private RegularOrderDeletion $regularOrderDeletion;
+
+    private LaserOrderDeletion $laserOrderDeletion;
+
+    private IDataBaseDeleteLaserOrder $iDataBaseDeleteLaserOrder;
+
+    private IDataBaseDeleteRegularOrder $iDataBaseDeleteRegularOrder;
+
     public function __construct(
         null|CheckAuthentication $checkAuthentication = null,
         null|RegularOrderRetrieval $regularOrderRetrieval = null,
@@ -61,7 +79,11 @@ class OrdersController extends Controller
         null|IDataBaseCreateLaserOrder $iDataBaseCreateLaserOrder = null,
         null|IDataBaseRetrieveLaserOrders $iDataBaseRetrieveLaserOrders = null,
         null|IDataBaseRetrieveRegularOrders $iDataBaseRetrieveRegularOrders = null,
-        null|IDataBaseCreateDefaultRegularOrder $iDataBaseCreateDefaultRegularOrder = null
+        null|IDataBaseCreateDefaultRegularOrder $iDataBaseCreateDefaultRegularOrder = null,
+        null|RegularOrderDeletion $regularOrderDeletion = null,
+        null|LaserOrderDeletion $laserOrderDeletion = null,
+        null|IDataBaseDeleteLaserOrder $iDataBaseDeleteLaserOrder = null,
+        null|IDataBaseDeleteRegularOrder $iDataBaseDeleteRegularOrder = null
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
 
@@ -75,6 +97,11 @@ class OrdersController extends Controller
         $this->iDataBaseCreateLaserOrder = $iDataBaseCreateLaserOrder ?: new DataBaseCreateLaserOrder;
         $this->iDataBaseCreateRegularOrder = $iDataBaseCreateRegularOrder ?: new DatabaseCreateRegularOrder;
         $this->iDataBaseCreateDefaultRegularOrder = $iDataBaseCreateDefaultRegularOrder ?: new DatabaseCreateDefaultRegularOrder;
+
+        $this->regularOrderDeletion = $regularOrderDeletion ?: new RegularOrderDeletion;
+        $this->laserOrderDeletion = $laserOrderDeletion ?: new LaserOrderDeletion;
+        $this->iDataBaseDeleteLaserOrder = $iDataBaseDeleteLaserOrder ?: new DataBaseDeleteLaserOrder;
+        $this->iDataBaseDeleteRegularOrder = $iDataBaseDeleteRegularOrder ?: new DataBaseDeleteRegularOrder;
     }
 
     public function laserIndex(
@@ -199,13 +226,19 @@ class OrdersController extends Controller
 
     public function show(string $businessName, int $accountId, int $childOrderId): JsonResponse
     {
-        if ($businessName === 'laser') {
-            return $this->laserShow($accountId, $childOrderId);
-        } elseif ($businessName === 'regular') {
-            return $this->regularShow($accountId, $childOrderId);
-        }
+        switch (strtolower($businessName)) {
+            case 'laser':
+                return $this->laserShow($accountId, $childOrderId);
+                break;
 
-        throw new \LogicException('Failed to find business', 404);
+            case 'regular':
+                return $this->regularShow($accountId, $childOrderId);
+                break;
+
+            default:
+                throw new \LogicException('Failed to find business', 404);
+                break;
+        }
     }
 
     private function laserShow(int $accountId, int $laserOrderId): JsonResponse
@@ -246,5 +279,57 @@ class OrdersController extends Controller
         }
 
         return response()->json($regularOrder->toArray());
+    }
+
+    public function destroy(string $businessName, int $accountId, int $childOrderId): Response|ResponseFactory
+    {
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+
+        $found = false;
+        switch (strtolower($businessName)) {
+            case 'regular':
+                /**
+                 * @var User $user
+                 * @var Order $order
+                 * */
+                foreach (($user = User::query()->whereKey($accountId)->first())->orders as $order) {
+                    /** @var RegularOrder $regularOrder */
+                    if (($regularOrder = $order->regularOrder) !== null && $regularOrder->getKey() === $childOrderId) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    throw new \LogicException('Failed to find the requested order.', 404);
+                }
+
+                $this->regularOrderDeletion->deleteRegularOrder($regularOrder->getDSRegularOrder(), $user->authenticatableRole()->getDataStructure(), $dsAuthenticated, $this->iDataBaseDeleteRegularOrder);
+                break;
+
+            case 'laser':
+                /**
+                 * @var User $user
+                 * @var Order $order
+                 * */
+                foreach (($user = User::query()->whereKey($accountId)->first())->orders as $order) {
+                    /** @var LaserOrder $laserOrder */
+                    if (($laserOrder = $order->laserOrder) !== null && $laserOrder->getKey() === $childOrderId) {
+                        $found = true;
+                        break;
+                    }
+                }
+                if (!$found) {
+                    throw new \LogicException('Failed to find the requested order.', 404);
+                }
+
+                $this->laserOrderDeletion->deleteLaserOrder($laserOrder->getDSLaserOrder(), $user->authenticatableRole()->getDataStructure(), $dsAuthenticated, $this->iDataBaseDeleteLaserOrder);
+                break;
+
+            default:
+                throw new \LogicException('Failed to find business.', 404);
+                break;
+        }
+
+        return response();
     }
 }
