@@ -65,9 +65,9 @@ Route::controller(RolesController::class)
     ->group(function () {
         Route::get('/roles', 'index')->name('roles.index');
 
-        Route::post('/roles', 'store')->name('roles.store');
-
         Route::get('/roles/{self?}/{accountId?}', 'show')->name('roles.show');
+
+        Route::put('/roles', 'update')->name('roles.update');
     });
 
 Route::controller(OrdersController::class)
