@@ -17,6 +17,9 @@ class BusinessDefault extends Model
     protected function workSchedule(): Attribute
     {
         return Attribute::make(
+            get: function (string $workSchedule): DSWorkSchedule {
+                return DSWorkSchedule::toObject(json_decode($workSchedule, true));
+            },
             set: function (DSWorkSchedule $value) {
                 return json_encode($value->toArray());
             }
@@ -26,6 +29,9 @@ class BusinessDefault extends Model
     protected function downTimes(): Attribute
     {
         return Attribute::make(
+            get: function (string $downTimes): DSDownTimes {
+                return $t=DSDownTimes::toObject(json_decode($downTimes, true));
+            },
             set: function (DSDownTimes $value) {
                 return json_encode($value->toArray());
             }
