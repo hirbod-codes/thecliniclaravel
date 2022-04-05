@@ -12,9 +12,9 @@ use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 
 class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegularOrder
 {
-    public function createDefaultRegularOrder(DSUser $user): DSRegularOrder
+    public function createDefaultRegularOrder(DSUser $targetUser): DSRegularOrder
     {
-        $userModel = User::query()->where('username', $user->getUsername())->first();
+        $userModel = User::query()->where('username', $targetUser->getUsername())->first();
 
         DB::beginTransaction();
 

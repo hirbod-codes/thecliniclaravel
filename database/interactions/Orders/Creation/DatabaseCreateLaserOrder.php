@@ -21,14 +21,14 @@ use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
 class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
 {
     public function createLaserOrder(
-        DSUser $user,
+        DSUser $targetUser,
         int $price,
         int $timeConsumption,
         int $priceWithoutDiscount,
         ?DSParts $parts = null,
         ?DSPackages $packages = null
     ): DSLaserOrder {
-        if (($userModel = User::query()->where('username', $user->getUsername())->first()) === null) {
+        if (($userModel = User::query()->where('username', $targetUser->getUsername())->first()) === null) {
             throw new ModelNotFoundException('', 404);
         }
 

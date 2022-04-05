@@ -12,11 +12,11 @@ use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateRegularOrder;
 class DatabaseCreateRegularOrder implements IDataBaseCreateRegularOrder
 {
     public function createRegularOrder(
-        DSUser $user,
+        DSUser $targetUser,
         int $price,
         int $timeConsumption
     ): DSRegularOrder {
-        $userModel = User::query()->where('username', $user->getUsername())->first();
+        $userModel = User::query()->where('username', $targetUser->getUsername())->first();
 
         DB::beginTransaction();
 
