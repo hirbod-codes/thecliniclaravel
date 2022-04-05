@@ -2,6 +2,7 @@
 
 namespace Database\Interactions\Accounts;
 
+use App\Models\User;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -40,14 +41,13 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
         return $authenticatables;
     }
 
-    public function getAccount(int $id, string $ruleName): DSUser
+    public function getAccount(string $targetUserUsername): DSUser
     {
-        $theModelFullName = $this->resolveRuleModelFullName($ruleName);
-
-        if (($authenticatable = $theModelFullName::where((new $theModelFullName)->getKeyName(), $id)->first()) === null) {
+        /** @var User $user */
+        if (($user = User::query()->where('username', $targetUserUsername)->first()) === null) {
             throw new ModelNotFoundException("The user not found.", 404);
         }
 
-        return $authenticatable->getDataStructure();
+        return $user->authenticatableRole()->getDataStructure();
     }
 }
