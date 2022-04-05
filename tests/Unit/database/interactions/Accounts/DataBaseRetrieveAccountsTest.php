@@ -59,14 +59,9 @@ class DataBaseRetrieveAccountsTest extends TestCase
 
         $authenticatable = $this->getAuthenticatable($ruleName);
 
-        $theModelClassFullName = $this->resolveRuleModelFullName($ruleName);
-        $theModelClassPrimeryKey = (new $theModelClassFullName)->getKeyName();
+        $account = (new DataBaseRetrieveAccounts)->getAccount($authenticatable->getDataStructure()->getUsername());
 
-        $theDataStructureClassFullName = $this->resolveRuleDataStructureFullName($ruleName);
-
-        $account = (new DataBaseRetrieveAccounts)->getAccount($authenticatable->{$theModelClassPrimeryKey}, $ruleName);
-
-        $this->assertInstanceOf($theDataStructureClassFullName, $account);
+        $this->assertInstanceOf(get_class($authenticatable->getDataStructure()), $account);
         $this->assertEquals($authenticatable->getDataStructure()->getUsername(), $account->getUsername());
     }
 }
