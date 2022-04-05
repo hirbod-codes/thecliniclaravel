@@ -12,8 +12,10 @@ use App\Models\Part\Part;
 use App\Models\roles\PatientRole;
 use Faker\Factory;
 use Faker\Generator;
+use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Mockery;
 use Mockery\MockInterface;
@@ -31,9 +33,13 @@ use TheClinicDataStructures\DataStructures\User\DSAdmin;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Orders\Creation\LaserOrderCreation;
 use TheClinicUseCases\Orders\Creation\RegularOrderCreation;
+use TheClinicUseCases\Orders\Deletion\LaserOrderDeletion;
+use TheClinicUseCases\Orders\Deletion\RegularOrderDeletion;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateRegularOrder;
+use TheClinicUseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
+use TheClinicUseCases\Orders\Interfaces\IDataBaseDeleteRegularOrder;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
 use TheClinicUseCases\Orders\Retrieval\LaserOrderRetrieval;
@@ -977,7 +983,7 @@ class OrdersControllerTest extends TestCase
         );
     }
 
-    public function testLaserStore()
+    public function testLaserStore(): void
     {
         $user = $this->getAuthenticatable('admin');
         $dsUser = $user->getDataStructure();
@@ -1086,7 +1092,7 @@ class OrdersControllerTest extends TestCase
         $this->assertCount(0, $response->original);
     }
 
-    public function testRegularStore()
+    public function testRegularStore(): void
     {
         $user = $this->getAuthenticatable('admin');
         $dsUser = $user->getDataStructure();
@@ -1169,7 +1175,7 @@ class OrdersControllerTest extends TestCase
         $this->assertCount(0, $response->original);
     }
 
-    public function testDefaultRegularStore()
+    public function testDefaultRegularStore(): void
     {
         $user = $this->getAuthenticatable('patient');
         $dsUser = $user->getDataStructure();
@@ -1248,5 +1254,139 @@ class OrdersControllerTest extends TestCase
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
         $this->assertCount(0, $response->original);
+    }
+
+    public function testRegularDestroy(): void
+    {
+        $businessName = 'regular';
+
+        $authenticated = $this->getAuthenticatable('admin');
+        $dsAuthenticated = $authenticated->getDataStructure();
+
+        $authenticatable = $this->getAuthenticatable('patient');
+        $dsAuthenticatable = $authenticatable->getDataStructure();
+        $accountId = $authenticatable->{$authenticatable->getKeyName()};
+
+        /** @var Order $order */
+        foreach ($authenticatable->user->orders->all() as $order) {
+            /** @var RegularOrder $regularOrder */
+            if (($regularOrder = $order->regularOrder) !== null) {
+                /** @var int $childOrderId */
+                $childOrderId = $regularOrder->getKey();
+                break;
+            }
+        }
+
+        /** @var CheckAuthentication|MockInterface $checkAuthentication */
+        $checkAuthentication = Mockery::mock(CheckAuthentication::class);
+        $checkAuthentication
+            ->shouldReceive('getAuthenticatedDSUser')
+            ->andReturn($dsAuthenticated)
+            //
+        ;
+
+        /** @var IDataBaseDeleteRegularOrder|MockInterface $iDataBaseDeleteRegularOrder */
+        $iDataBaseDeleteRegularOrder = Mockery::mock(IDataBaseDeleteRegularOrder::class);
+
+        /** @var RegularOrderDeletion|MockInterface $regularOrderDeletion */
+        $regularOrderDeletion = Mockery::mock(RegularOrderDeletion::class);
+        $regularOrderDeletion
+            ->shouldReceive('deleteRegularOrder')
+            ->with(
+                Mockery::on(function (DSRegularOrder $value) use ($regularOrder) {
+                    if ($value->getId() === $regularOrder->getDSRegularOrder()->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSUser $value) use ($dsAuthenticatable) {
+                    if ($value->getId() === $dsAuthenticatable->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                $dsAuthenticated,
+                $iDataBaseDeleteRegularOrder
+            )
+            //
+        ;
+
+        /** @var array $controllerArgs */
+        $controllerArgs = [
+            'checkAuthentication' => $checkAuthentication,
+            'regularOrderDeletion' => $regularOrderDeletion,
+            'iDataBaseDeleteRegularOrder' => $iDataBaseDeleteRegularOrder
+        ];
+
+        $response = (new OrdersController(...$controllerArgs))->destroy($businessName, $accountId, $childOrderId);
+
+        $this->assertInstanceOf(ResponseFactory::class, $response);
+    }
+
+    public function testLaserDestroy(): void
+    {
+        $businessName = 'laser';
+
+        $authenticated = $this->getAuthenticatable('admin');
+        $dsAuthenticated = $authenticated->getDataStructure();
+
+        $authenticatable = $this->getAuthenticatable('patient');
+        $dsAuthenticatable = $authenticatable->getDataStructure();
+        $accountId = $authenticatable->{$authenticatable->getKeyName()};
+
+        /** @var Order $order */
+        foreach ($authenticatable->user->orders->all() as $order) {
+            /** @var LaserOrder $laserOrder */
+            if (($laserOrder = $order->laserOrder) !== null) {
+                /** @var int $childOrderId */
+                $childOrderId = $laserOrder->getKey();
+                break;
+            }
+        }
+
+        /** @var CheckAuthentication|MockInterface $checkAuthentication */
+        $checkAuthentication = Mockery::mock(CheckAuthentication::class);
+        $checkAuthentication
+            ->shouldReceive('getAuthenticatedDSUser')
+            ->andReturn($dsAuthenticated)
+            //
+        ;
+
+        /** @var IDataBaseDeleteLaserOrder|MockInterface $iDataBaseDeleteLaserOrder */
+        $iDataBaseDeleteLaserOrder = Mockery::mock(IDataBaseDeleteLaserOrder::class);
+
+        /** @var LaserOrderDeletion|MockInterface $laserOrderDeletion */
+        $laserOrderDeletion = Mockery::mock(LaserOrderDeletion::class);
+        $laserOrderDeletion
+            ->shouldReceive('deleteLaserOrder')
+            ->with(
+                Mockery::on(function (DSLaserOrder $value) use ($laserOrder) {
+                    if ($value->getId() === $laserOrder->getDSLaserOrder()->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSUser $value) use ($dsAuthenticatable) {
+                    if ($value->getId() === $dsAuthenticatable->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                $dsAuthenticated,
+                $iDataBaseDeleteLaserOrder
+            )
+            //
+        ;
+
+        /** @var array $controllerArgs */
+        $controllerArgs = [
+            'checkAuthentication' => $checkAuthentication,
+            'laserOrderDeletion' => $laserOrderDeletion,
+            'iDataBaseDeleteLaserOrder' => $iDataBaseDeleteLaserOrder
+        ];
+
+        $response = (new OrdersController(...$controllerArgs))->destroy($businessName, $accountId, $childOrderId);
+
+        $this->assertInstanceOf(ResponseFactory::class, $response);
     }
 }
