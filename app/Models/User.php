@@ -19,8 +19,6 @@ class User extends Authenticatable
 
     protected $table = "users";
 
-    protected string $DS = DSCustom::class;
-
     public function authenticatableRole(): Authenticatable|null
     {
         foreach ($roles = Role::all() as $role) {
