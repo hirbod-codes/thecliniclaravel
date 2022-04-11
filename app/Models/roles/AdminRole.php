@@ -14,7 +14,7 @@ class AdminRole extends Authenticatable
     use HasFactory,
         Notifiable;
 
-    protected $table = "admin_role";
+    protected $table = "admin_roles";
 
     protected string $DS = DSAdmin::class;
 

@@ -14,7 +14,7 @@ class OperatorRole extends Authenticatable
     use HasFactory,
         Notifiable;
 
-    protected $table = "operator_role";
+    protected $table = "operator_roles";
 
     protected string $DS = DSOperator::class;
 

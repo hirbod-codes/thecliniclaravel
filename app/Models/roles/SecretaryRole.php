@@ -15,7 +15,7 @@ class SecretaryRole extends Authenticatable
     use HasFactory,
         Notifiable;
 
-    protected $table = "secretary_role";
+    protected $table = "secretary_roles";
 
     protected string $DS = DSSecretary::class;
 

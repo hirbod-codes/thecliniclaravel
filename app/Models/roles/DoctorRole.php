@@ -14,7 +14,7 @@ class DoctorRole extends Authenticatable
     use HasFactory,
         Notifiable;
 
-    protected $table = "doctor_role";
+    protected $table = "doctor_roles";
 
     protected string $DS = DSDoctor::class;
 

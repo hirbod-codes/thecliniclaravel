@@ -14,7 +14,7 @@ class PatientRole extends Authenticatable
     use HasFactory,
         Notifiable;
 
-    protected $table = "Patient_role";
+    protected $table = "Patient_roles";
 
     protected string $DS = DSPatient::class;
 
