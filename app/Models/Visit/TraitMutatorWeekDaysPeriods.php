@@ -10,7 +10,13 @@ trait TraitMutatorWeekDaysPeriods
     protected function weekDaysPeriods(): Attribute
     {
         return Attribute::make(
-            set: function (DSWeekDaysPeriods|array|string $value) {
+            get: function (string|null $weekDaysPeriods) {
+                if (is_null($weekDaysPeriods)) {
+                    return null;
+                }
+                return DSWeekDaysPeriods::toObject(json_decode($weekDaysPeriods, true));
+            },
+            set: function (DSWeekDaysPeriods|array|string|null $value) {
                 if ($value instanceof DSWeekDaysPeriods) {
                     return json_encode($value->toArray());
                 } elseif (gettype($value) === 'array') {
