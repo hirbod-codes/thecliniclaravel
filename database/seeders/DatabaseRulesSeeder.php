@@ -15,6 +15,5 @@ class DatabaseRulesSeeder extends Seeder
         Role::factory()->name('secretary')->create();
         Role::factory()->name('operator')->create();
         Role::factory()->name('patient')->create();
-        Role::factory()->name('custom')->create();
     }
 }
