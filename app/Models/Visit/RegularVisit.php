@@ -117,11 +117,7 @@ class RegularVisit extends Model
             if ($first && $userSpecific) {
                 $first = false;
 
-                $dsRegularVisits = new DSRegularVisits(
-                    $sort,
-                    $regularVisit->regularOrder->order->user->authenticatableRole()->getDataStructure(),
-                    $regularVisit->regularOrder->getDSRegularOrder()
-                );
+                $dsRegularVisits = new DSRegularVisits($sort);
             }
 
             $dsRegularVisits[] = $regularVisit->getDSRegularVisit();

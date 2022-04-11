@@ -3,6 +3,8 @@
 namespace App\Models\Visit;
 
 use App\Models\Order\LaserOrder;
+use App\Models\Traits\TraitDSDateTimePeriod;
+use App\Models\Traits\TraitDSWeekDaysPeriods;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +15,11 @@ use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
 
 class LaserVisit extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        TraitDSWeekDaysPeriods,
+        TraitDSDateTimePeriod,
+        TraitMutatorDateTimePeriod,
+        TraitMutatorWeekDaysPeriods;
 
     protected $table = 'laser_visits';
 
@@ -111,11 +117,7 @@ class LaserVisit extends Model
             if ($first && $userSpecific) {
                 $first = false;
 
-                $dsLaserVisits = new DSLaserVisits(
-                    $sort,
-                    $laserVisit->LaserOrder->order->user->authenticatableRole()->getDataStructure(),
-                    $laserVisit->LaserOrder->getDSLaserOrder()
-                );
+                $dsLaserVisits = new DSLaserVisits($sort);
             }
 
             $dsLaserVisits[] = $laserVisit->getDSLaserVisit();
