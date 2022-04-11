@@ -16,6 +16,7 @@ use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
 use TheClinicDataStructures\DataStructures\User\DSUser;
+use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 
 class RolesControllerTest extends TestCase
@@ -39,6 +40,8 @@ class RolesControllerTest extends TestCase
 
     private CheckAuthentication|MockInterface $checkAuthentication;
 
+    private IDataBaseCreateRole|MockInterface $iDataBaseCreateRole;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,11 +50,14 @@ class RolesControllerTest extends TestCase
 
         /** @var \TheClinicUseCases\Privileges\PrivilegesManagement|\Mockery\MockInterface $privilegesManagement */
         $this->privilegesManagement = Mockery::mock(PrivilegesManagement::class);
+
+        /** @var IDataBaseCreateRole|\Mockery\MockInterface $iDataBaseCreateRole */
+        $this->iDataBaseCreateRole = Mockery::mock(IDataBaseCreateRole::class);
     }
 
     private function instantiate(): RolesController
     {
-        return new RolesController($this->checkAuthentication, $this->privilegesManagement);
+        return new RolesController($this->checkAuthentication, $this->privilegesManagement, $this->iDataBaseCreateRole);
     }
 
     public function testRun()
@@ -59,6 +65,7 @@ class RolesControllerTest extends TestCase
         $methods = [
             'testIndex',
             'testStore',
+            'testUpdate',
             'testShow',
         ];
 
@@ -83,6 +90,19 @@ class RolesControllerTest extends TestCase
         }
     }
 
+    private function testStore(): void
+    {
+        /** @var Request|\Mockery\Mockinterface $request */
+        $request = Mockery::mock(Request::class);
+        $request->customRoleName = '';
+        $request->privilegeValue = '';
+
+        $response = $this->instantiate()->store($request);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals('New role successfully created.', $response->original);
+    }
+
     private function testIndex()
     {
         $user = $this->users['admin'];
@@ -101,7 +121,7 @@ class RolesControllerTest extends TestCase
         $this->assertCount(0, $jsonResponse->original);
     }
 
-    private function testStore(): void
+    private function testUpdate(): void
     {
         $privilege = 'privilege';
         $value = 'value';
@@ -127,7 +147,7 @@ class RolesControllerTest extends TestCase
                 return false;
             }), $privilege, $value);
 
-        $result = $this->instantiate()->store($request);
+        $result = $this->instantiate()->update($request);
         $this->assertInstanceOf(Response::class, $result);
         $this->assertEquals('The privilege successfully changed.', $result->original);
     }
