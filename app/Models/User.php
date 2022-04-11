@@ -4,18 +4,18 @@ namespace App\Models;
 
 use App\Models\Auth\User as Authenticatable;
 use App\Models\Order\Order;
-use App\Models\rules\DSCustom;
+use App\Models\roles\Traits\BelongsToRole;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Schema;
 
 class User extends Authenticatable
 {
     use HasFactory,
         Notifiable,
-        ResolveUserModel;
+        ResolveUserModel,
+        BelongsToRole;
 
     protected $table = "users";
 
