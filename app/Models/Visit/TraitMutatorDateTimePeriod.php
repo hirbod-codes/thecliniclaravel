@@ -10,7 +10,13 @@ trait TraitMutatorDateTimePeriod
     protected function dateTimePeriod(): Attribute
     {
         return Attribute::make(
-            set: function (DSDateTimePeriod|array|string $value) {
+            get: function (string|null $dateTiemPeriod) {
+                if (is_null($dateTiemPeriod)) {
+                    return null;
+                }
+                return DSDateTimePeriod::toObject(json_decode($dateTiemPeriod, true));
+            },
+            set: function (DSDateTimePeriod|array|string|null $value) {
                 if ($value instanceof DSDateTimePeriod) {
                     return json_encode($value->toArray());
                 } elseif (gettype($value) === 'array') {
