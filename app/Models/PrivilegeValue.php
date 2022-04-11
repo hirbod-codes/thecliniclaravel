@@ -31,7 +31,7 @@ class PrivilegeValue extends Model
         );
     }
 
-    public function rule(): BelongsTo
+    public function role(): BelongsTo
     {
         return $this->belongsTo(
             Role::class,
