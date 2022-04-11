@@ -12,7 +12,7 @@ trait BelongsToRole
         return $this->belongsTo(
             Role::class,
             (new Role)->getForeignKey(),
-            (new Role)->getKeyName(),
+            'name',
             __FUNCTION__
         );
     }
