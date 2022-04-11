@@ -3,14 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
-use App\Models\Auth\User as Authenticatable;
-use App\Models\Role;
 use App\Models\User;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
+use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
 
 class RolesController extends Controller
 {
@@ -22,10 +20,13 @@ class RolesController extends Controller
 
     public function __construct(
         CheckAuthentication|null $checkAuthentication = null,
-        PrivilegesManagement|null $privilegesManagement = null
+        PrivilegesManagement|null $privilegesManagement = null,
+        IDataBaseCreateRole|null $iDataBaseCreateRole = null
+
     ) {
         $this->privilegesManagement = $privilegesManagement ?: new PrivilegesManagement;
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
+        $this->iDataBaseCreateRole = $iDataBaseCreateRole ?: new IDataBaseCreateRole;
     }
 
     public function index(): JsonResponse
@@ -33,6 +34,15 @@ class RolesController extends Controller
         $authenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         return response()->json($this->privilegesManagement->getPrivileges($authenticated));
+    }
+
+    public function store(Request $request)
+    {
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+
+        $this->privilegesManagement->createRole($dsAuthenticated, $request->customRoleName, $request->privilegeValue, $this->iDataBaseCreateRole);
+
+        return response('New role successfully created.');
     }
 
     public function update(Request $request)
