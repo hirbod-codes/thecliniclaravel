@@ -11,7 +11,7 @@ class Privilege extends Model
 
     protected $table = "privileges";
 
-    public function privilegeValue(): HasMany
+    public function privilegeValues(): HasMany
     {
         return $this->hasMany(
             PrivilegeValue::class,

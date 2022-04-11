@@ -14,7 +14,7 @@ class Role extends Model
 
     protected $guarded = ['*'];
 
-    public function privilegeValue(): HasMany
+    public function privilegeValues(): HasMany
     {
         return $this->hasMany(
             PrivilegeValue::class,
