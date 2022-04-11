@@ -3,21 +3,23 @@
 namespace App\Models\roles;
 
 use App\Models\Privilege;
-use App\Models\Rule;
+use App\Models\PrivilegeValue;
+use App\Models\Role;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\Exceptions\DataStructures\User\NoPrivilegeFoundException;
 
 class DSCustom extends DSUser
 {
-    private string $ruleName;
+    private string $roleName;
 
     private array $customData;
 
     public function __construct(...$args)
     {
-        $this->ruleName = $args['ruleName'];
-        unset($args['ruleName']);
+        $this->roleName = $args['roleName'];
+        unset($args['roleName']);
 
         parent::__construct(...$args);
     }
@@ -31,7 +33,7 @@ class DSCustom extends DSUser
 
     public function getRuleName(): string
     {
-        return $this->ruleName;
+        return $this->roleName;
     }
 
     public function getPrivilege(string $privilege): mixed
@@ -47,8 +49,9 @@ class DSCustom extends DSUser
     {
         $privileges = [];
 
-        foreach (Rule::where('name', 'custom')->first()->privilegeValue()->get() as $privilegeValue) {
-            $privileges[$privilegeValue->privilege()->first()->name] = $privilegeValue->value;
+        /** @var PrivilegeValue $privilegeValue */
+        foreach (Role::query()->where('name', '=', self::$roleName)->first()->privilegeValues as $privilegeValue) {
+            $privileges[$privilegeValue->privilege->name] = $privilegeValue->value;
         }
 
         return $privileges;
@@ -56,7 +59,7 @@ class DSCustom extends DSUser
 
     public function setPrivilege(string $privilege, mixed $value): void
     {
-        $privilegeModel = $this->getPrivilegModel($privilege);
+        $privilegeModel = $this->getPrivilegModel($privilege)->privilegeValues;
         $privilegeModel->value = strval($value);
 
         if (!$privilegeModel->save()) {
@@ -79,7 +82,13 @@ class DSCustom extends DSUser
 
     public function getPrivilegModel(string $privilege): Privilege
     {
-        return User::where('id', $this->id)->fisrt()->rule()->privileges()->where('name', $privilege)->get()[0];
+        foreach (User::query()->whereKey($this->id)->fisrt()->rule->privilegeValues as $privilegeValue) {
+            if (($privilegeModel = $privilegeValue->privilege)->name === $privilege) {
+                return $privilegeModel;
+            }
+        }
+
+        throw new ModelNotFoundException();
     }
 
     public function __get(string $attribute)
