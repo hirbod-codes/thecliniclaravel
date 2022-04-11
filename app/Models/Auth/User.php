@@ -5,14 +5,9 @@ namespace App\Models\Auth;
 use Illuminate\Support\Str;
 use App\Auth\CheckAuthentication;
 use App\Models\Model;
-use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
-use App\Models\Order\RegularOrder;
 use App\Models\Role;
-use App\Models\roles\Traits\BelongsToRole;
 use App\Models\User as ModelsUser;
-use App\Models\Visit\LaserVisit;
-use App\Models\Visit\RegularVisit;
 use App\Models\Visit\Visit;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
@@ -25,9 +20,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
 use Laravel\Passport\HasApiTokens;
-use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicDataStructures\DataStructures\User\ICheckAuthentication;
 use TheClinicDataStructures\DataStructures\Visit\DSVisits;
 
 class User extends Model implements
@@ -39,8 +32,7 @@ class User extends Model implements
         Authorizable,
         CanResetPassword,
         MustVerifyEmail,
-        HasApiTokens,
-        BelongsToRole;
+        HasApiTokens;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -56,9 +48,6 @@ class User extends Model implements
 
     public function __construct(array $attributes = [])
     {
-        $this->addRoleForeignKey();
-        $this->guardRoleForeignKey();
-
         $this->guarded[] = 'id';
         $this->guarded[] = 'remember_token';
         $this->guarded[] = 'created_at';
@@ -79,7 +68,7 @@ class User extends Model implements
 
     public function getDataStructure(): DSUser
     {
-        if (static::class === ModelsUser::class) {
+        if (static::class === ModelsUser::class|| static::class === User::class) {
             throw new \RuntimeException('It\'s not possible to call this method: ' . __FUNCTION__ . 'from class: ' . static::class, 500);
         }
 
