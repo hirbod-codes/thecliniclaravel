@@ -31,7 +31,7 @@ return new class extends Migration
         Schema::table($this->table, function (Blueprint $table) {
             $orderFK = (new RegularOrder)->getForeignKey();
 
-            $table->unsignedBigInteger($orderFK)->unique();
+            $table->unsignedBigInteger($orderFK);
             $table->foreign($orderFK, $this->table . '_' . (new RegularOrder)->getTable() . '_' . $orderFK)
                 ->references((new RegularOrder)->getKeyName())
                 ->on((new RegularOrder)->getTable())
