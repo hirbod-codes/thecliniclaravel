@@ -20,7 +20,7 @@ class PartFactory extends Factory
             'name' => $this->faker->lexify(),
             'gender' => $this->faker->randomElement(['Male', 'Female']),
             'price' => $this->faker->numberBetween(1000000, 3000000),
-            'needed_time' => $this->faker->numberBetween(600, 2700),
+            'needed_time' => $this->faker->numberBetween(600, 1200),
         ];
     }
 }
