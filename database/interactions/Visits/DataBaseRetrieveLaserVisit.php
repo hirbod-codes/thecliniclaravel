@@ -1,0 +1,98 @@
+<?php
+
+namespace Database\Interactions\Visits;
+
+use App\Models\Order\LaserOrder;
+use App\Models\Order\Order;
+use App\Models\User;
+use App\Models\Visit\LaserVisit;
+use Illuminate\Support\Facades\DB;
+use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
+use TheClinicDataStructures\DataStructures\User\DSUser;
+use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
+use TheClinicUseCases\Visits\Interfaces\IDataBaseRetrieveLaserVisits;
+
+class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
+{
+    public function getVisitsByUser(DSUser $dsTargetUser, string $sortByTimestamp): DSLaserVisits
+    {
+        $laserVisits = DB::table(($laserVisit = new LaserVisit)->getTable())
+            ->join(
+                ($laserOrder = new LaserOrder)->getTable(),
+                $laserOrder->getTable() . '.' . $laserOrder->getKeyName(),
+                '=',
+                $laserVisit->getTable() . '.' . $laserVisit->{$laserOrder->getForeignKey()}
+            )
+            ->join(
+                ($order = new Order)->getTable(),
+                $order->getTable() . '.' . $order->getKeyName(),
+                '=',
+                $laserOrder->getTable() . '.' . $laserOrder->{$order->getForeignKey()}
+            )
+            ->join(
+                ($user = new User)->getTable(),
+                $user->getTable() . '.' . $user->getKeyName(),
+                '=',
+                $order->getTable() . '.' . $order->{$user->getForeignKey()}
+            )
+            ->orderBy($laserVisit->getTable() . 'visit_timestamp', strtolower($sortByTimestamp))
+            ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
+            ->get()
+            ->all()
+            //
+        ;
+
+        $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+
+        return $dsLaserVisits;
+    }
+
+    public function getVisitsByOrder(DSUser $dsTargetUser, DSLaserOrder $dsLaserOrder, string $sortByTimestamp): DSLaserVisits
+    {
+        $laserVisits = DB::table(($laserVisit = new LaserVisit)->getTable())
+            ->join(
+                ($laserOrder = new LaserOrder)->getTable(),
+                $laserOrder->getTable() . '.' . $laserOrder->getKeyName(),
+                '=',
+                $laserVisit->getTable() . '.' . $laserVisit->{$laserOrder->getForeignKey()}
+            )
+            ->join(
+                ($order = new Order)->getTable(),
+                $order->getTable() . '.' . $order->getKeyName(),
+                '=',
+                $laserOrder->getTable() . '.' . $laserOrder->{$order->getForeignKey()}
+            )
+            ->join(
+                ($user = new User)->getTable(),
+                $user->getTable() . '.' . $user->getKeyName(),
+                '=',
+                $order->getTable() . '.' . $order->{$user->getForeignKey()}
+            )
+            ->orderBy($laserVisit->getTable() . 'visit_timestamp', strtolower($sortByTimestamp))
+            ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
+            ->where($order->getTable() . '.' . $order->getKeyName(), '=', $dsLaserOrder->getId())
+            ->get()
+            ->all()
+            //
+        ;
+
+        $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+
+        return $dsLaserVisits;
+    }
+
+    public function getVisitsByTimestamp(string $operator, int $timestamp, string $sortByTimestamp): DSLaserVisits
+    {
+        $laserVisits = LaserVisit::query()
+            ->orderBy('visit_timestamp', strtolower($sortByTimestamp))
+            ->where('visit_timestamp', $operator, $timestamp)
+            ->get()
+            ->all()
+            //
+        ;
+
+        $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+
+        return $dsLaserVisits;
+    }
+}
