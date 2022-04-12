@@ -4,6 +4,7 @@ use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
+use App\Http\Controllers\Visits\VisitsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -81,4 +82,20 @@ Route::controller(OrdersController::class)
         Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
 
         Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+    });
+
+Route::controller(VisitsController::class)
+    ->middleware($authMiddleware)
+    ->group(function () {
+        Route::get('/visits/Laser/{accountId}/{sortByTimestamp}/{laserOrderId?}/{timestamp?}', 'laserIndex')->name('visits.laserIndex');
+        Route::get('/visits/Regular/{accountId}/{sortByTimestamp}/{regularOrderId?}/{timestamp?}', 'regularIndex')->name('visits.regularIndex');
+
+        Route::post('/visits/regular', 'laserStore')->name('visits.laserStore');
+        Route::post('/visits/laser', 'regularStore')->name('visits.regularStore');
+
+        Route::get('/visits/Laser/{timestamp}', 'laserShow')->name('visits.laserShow');
+        Route::get('/visits/Regular/{timestamp}', 'regularShow')->name('visits.regularShow');
+
+        Route::delete('/visits/laser/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+        Route::delete('/visits/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
     });
