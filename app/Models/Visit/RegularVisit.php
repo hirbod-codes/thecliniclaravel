@@ -101,7 +101,7 @@ class RegularVisit extends Model
      */
     public static function getDSRegularVisitsConditionally(array|Collection $regularVisits, string $sort, bool $userSpecific): DSRegularVisits
     {
-        $dsRegularVisits = new DSRegularVisits($sort);
+        $dsRegularVisits = new DSRegularVisits('Natural');
 
         if (count($regularVisits) === 0) {
             return $dsRegularVisits;
@@ -117,11 +117,13 @@ class RegularVisit extends Model
             if ($first && $userSpecific) {
                 $first = false;
 
-                $dsRegularVisits = new DSRegularVisits($sort);
+                $dsRegularVisits = new DSRegularVisits('Natural');
             }
 
             $dsRegularVisits[] = $regularVisit->getDSRegularVisit();
         }
+
+        $dsRegularVisits->setSort($sort);
 
         return $dsRegularVisits;
     }

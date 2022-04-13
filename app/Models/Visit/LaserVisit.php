@@ -101,7 +101,7 @@ class LaserVisit extends Model
      */
     public static function getDSLaserVisitsConditionally(array|Collection $laserVisits, string $sort, bool $userSpecific): DSLaserVisits
     {
-        $dsLaserVisits = new DSLaserVisits($sort);
+        $dsLaserVisits = new DSLaserVisits('Natural');
 
         if (count($laserVisits) === 0) {
             return $dsLaserVisits;
@@ -117,11 +117,13 @@ class LaserVisit extends Model
             if ($first && $userSpecific) {
                 $first = false;
 
-                $dsLaserVisits = new DSLaserVisits($sort);
+                $dsLaserVisits = new DSLaserVisits('Natural');
             }
 
             $dsLaserVisits[] = $laserVisit->getDSLaserVisit();
         }
+
+        $dsLaserVisits->setSort($sort);
 
         return $dsLaserVisits;
     }

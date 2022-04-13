@@ -57,7 +57,7 @@ class Visit extends Model
      */
     private static function getDSVisitsConditionally(\Iterator|array|Collection $visits, string $sort, bool $userSpecific): DSVisits
     {
-        $dsVisits = new DSVisits();
+        $dsVisits = new DSVisits('Natural');
         $first = true;
         /** @var Visit $visit */
         foreach ($visits as $visit) {
@@ -95,11 +95,7 @@ class Visit extends Model
 
             if ($first && $userSpecific) {
                 $first = false;
-                $dsVisits = new DSVisits(
-                    $sort,
-                    $theDSUser,
-                    $theOrder
-                );
+                $dsVisits = new DSVisits('Natural');
             }
 
             if ($visit instanceof Visit) {
@@ -108,6 +104,8 @@ class Visit extends Model
                 $dsVisits[] = $visit->{$relatedOrderDSMethod}();
             }
         }
+
+        $dsVisits->setSort($sort);
 
         return $dsVisits;
     }
