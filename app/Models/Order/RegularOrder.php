@@ -50,7 +50,7 @@ class RegularOrder extends Model
             if (($visits = $this->regularVisits) === null) {
                 $args[$parameterName] = null;
             } else {
-                $args[$parameterName] = RegularVisit::getDSRegularVisits($visits, 'DESC');
+                $args[$parameterName] = RegularVisit::getDSRegularVisits($visits, 'ASC');
             }
         } else {
             $args[$parameterName] = $this->{Str::snake($parameterName)};

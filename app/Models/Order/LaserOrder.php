@@ -87,7 +87,7 @@ class LaserOrder extends Model
             if (($visits = $this->laserVisits) === null) {
                 $args[$parameterName] = null;
             } else {
-                $args[$parameterName] = LaserVisit::getDSLaserVisits($visits, 'DESC');
+                $args[$parameterName] = LaserVisit::getDSLaserVisits($visits, 'ASC');
             }
         } else {
             $args[$parameterName] = $this->{Str::snake($parameterName)};
