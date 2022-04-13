@@ -22,9 +22,15 @@ use TheClinic\Visit\WeeklyVisit;
 use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriod;
 use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriods;
 use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
+use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
+use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
 
 class DatabaseVisitsSeeder extends Seeder
 {
+    private DSLaserVisits $dsLaserVisits;
+
+    private DSRegularVisits $dsRegularVisits;
+
     /**
      * Run the database seeds.
      *
@@ -34,11 +40,10 @@ class DatabaseVisitsSeeder extends Seeder
     {
         $faker = Factory::create();
 
-        for ($i = 0; $i < count($orders = Order::all()); $i++) {
-            if ($i % 2 === 0) {
-                continue;
-            }
+        $this->dsLaserVisits = new DSLaserVisits("Natural");
+        $this->dsRegularVisits = new DSRegularVisits("Natural");
 
+        for ($i = 0; $i < count($orders = Order::all()); $i++) {
             /** @var Order $order */
             $order = $orders[$i];
             if (($laserOrder = $order->laserOrder) !== null) {
@@ -51,6 +56,8 @@ class DatabaseVisitsSeeder extends Seeder
                 continue;
             }
         }
+        $this->dsLaserVisits->setSort("ASC");
+        $this->dsRegularVisits->setSort("ASC");
     }
 
     public function makeVisitsForLaserOrder(LaserOrder $laserOrder, Generator $faker): void
@@ -119,6 +126,8 @@ class DatabaseVisitsSeeder extends Seeder
             if (!$laserVisit->save()) {
                 throw new \RuntimeException('Failed to create a LaserVisit model.', 500);
             }
+
+            $this->dsLaserVisits[] = $laserVisit->getDSLaserVisit();
         }
     }
 
@@ -169,23 +178,25 @@ class DatabaseVisitsSeeder extends Seeder
                 ))->findVisit();
             }
 
-            $RegularVisit = new RegularVisit;
-            $RegularVisit->{$regularOrder->getForeignKey()} = $regularOrder->{$regularOrder->getKeyName()};
-            $RegularVisit->{$visit->getForeignKey()} = $visit->{$visit->getKeyName()};
-            $RegularVisit->visit_timestamp = $visitTimestamp;
-            $RegularVisit->consuming_time = $time;
+            $regularVisit = new RegularVisit;
+            $regularVisit->{$regularOrder->getForeignKey()} = $regularOrder->{$regularOrder->getKeyName()};
+            $regularVisit->{$visit->getForeignKey()} = $visit->{$visit->getKeyName()};
+            $regularVisit->visit_timestamp = $visitTimestamp;
+            $regularVisit->consuming_time = $time;
 
             if ($i === 0) {
-                $RegularVisit->week_days_periods = $dsWekkDaysPeriods;
+                $regularVisit->week_days_periods = $dsWekkDaysPeriods;
             } else {
-                $RegularVisit->week_days_periods = null;
+                $regularVisit->week_days_periods = null;
             }
 
-            $RegularVisit->date_time_period = null;
+            $regularVisit->date_time_period = null;
 
-            if (!$RegularVisit->save()) {
-                throw new \RuntimeException('Failed to create a RegularVisit model.', 500);
+            if (!$regularVisit->save()) {
+                throw new \RuntimeException('Failed to create a regularVisit model.', 500);
             }
+
+            $this->dsRegularVisits[] = $regularVisit->getDSRegularVisit();
         }
     }
 
