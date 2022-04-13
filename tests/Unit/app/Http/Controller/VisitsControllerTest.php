@@ -13,13 +13,17 @@ use App\Models\Visit\RegularVisit;
 use Database\Factories\WeekDaysPeriodsFactory;
 use Faker\Factory;
 use Faker\Generator;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
+use TheClinic\Visit\IFindVisit;
 use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
 use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -28,11 +32,17 @@ use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
 use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
 use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
 use TheClinicUseCases\Visits\Creation\LaserVisitCreation;
+use TheClinicUseCases\Visits\Creation\RegularVisitCreation;
 use TheClinicUseCases\Visits\Deletion\LaserVisitDeletion;
+use TheClinicUseCases\Visits\Deletion\RegularVisitDeletion;
 use TheClinicUseCases\Visits\Interfaces\IDataBaseCreateLaserVisit;
+use TheClinicUseCases\Visits\Interfaces\IDataBaseCreateRegularVisit;
 use TheClinicUseCases\Visits\Interfaces\IDataBaseDeleteLaserVisit;
+use TheClinicUseCases\Visits\Interfaces\IDataBaseDeleteRegularVisit;
 use TheClinicUseCases\Visits\Interfaces\IDataBaseRetrieveLaserVisits;
+use TheClinicUseCases\Visits\Interfaces\IDataBaseRetrieveRegularVisits;
 use TheClinicUseCases\Visits\Retrieval\LaserVisitRetrieval;
+use TheClinicUseCases\Visits\Retrieval\RegularVisitRetrieval;
 
 class VisitsControllerTest extends TestCase
 {
@@ -55,12 +65,12 @@ class VisitsControllerTest extends TestCase
     private DSRegularOrder $dsRegularOrder;
 
     private LaserVisit $laserVisit;
-    private array $laserVisits;
+    private array|Collection $laserVisits;
     private DSLaserVisit $dsLaserVisit;
     private DSLaserVisits $dsLaserVisits;
 
     private RegularVisit $regularVisit;
-    private array $regularVisits;
+    private array|Collection $regularVisits;
     private DSRegularVisit $dsRegularVisit;
     private DSRegularVisits $dsRegularVisits;
 
@@ -71,30 +81,37 @@ class VisitsControllerTest extends TestCase
         $this->faker = Factory::create();
 
         $safety = 0;
-        while (isset($this->laserVisit) && $this->laserVisit !== null && $safety < 500) {
+        while ((!isset($this->laserVisit) || $this->laserVisit === null) && $safety < 500) {
             $this->authenticated = $this->getAuthenticatable('admin');
             $this->dsAuthenticated = $this->authenticated->getDataStructure();
 
             $this->userRole = $this->getAuthenticatable('patient');
             $this->dsUserRole = $this->userRole->getDataStructure();
 
-            $found = false;
+            $laserOrderFound = false;
+            $regularOrderFound = false;
             /** @var Order $order */
             foreach ($this->userRole->user->orders as $order) {
-                /**
-                 * @var LaserOrder $laserOrder
-                 * @var RegularOrder $regularOrder
-                 */
-                if (($laserOrder = $order->laserOrder) !== null && ($regularOrder = $order->regularOrder) !== null) {
-                    $found = true;
+                /** @var LaserOrder $laserOrder */
+                if (($laserOrder = $order->laserOrder) !== null) {
+                    $laserOrderFound = true;
                     $this->laserOrder = $laserOrder;
                     $this->dsLaserOrder = $laserOrder->getDSLaserOrder();
+                }
 
+                /** @var RegularOrder $regularOrder */
+                if (($regularOrder = $order->regularOrder) !== null) {
+                    $regularOrderFound = true;
                     $this->regularOrder = $regularOrder;
                     $this->dsRegularOrder = $regularOrder->getDSRegularOrder();
                 }
+
+                if ($regularOrderFound && $laserOrderFound) {
+                    break;
+                }
             }
-            if (!$found) {
+            if (!$regularOrderFound || !$laserOrderFound) {
+                $safety++;
                 continue;
             }
 
@@ -102,18 +119,23 @@ class VisitsControllerTest extends TestCase
                 count($this->laserVisits = $this->laserOrder->laserVisits) === 0 ||
                 count($this->regularVisits = $this->regularOrder->regularVisits) === 0
             ) {
+                $safety++;
                 continue;
             }
 
-            $this->laserVisit = $this->faker->randomElement($this->laserVisits);
+            $this->laserVisit = $this->laserVisits[0];
             $this->dsLaserVisits = LaserVisit::getDSLaserVisits($this->laserVisits, "ASC");
             $this->dsLaserVisit = $this->laserVisit->getDSLaserVisit();
 
-            $this->regularVisit = $this->faker->randomElement($this->regularVisits);
+            $this->regularVisit = $this->regularVisits[0];
             $this->dsRegularVisits = RegularVisit::getDSRegularVisits($this->regularVisits, "ASC");
             $this->dsRegularVisit = $this->regularVisit->getDSRegularVisit();
 
-            $safety++;
+            break;
+        }
+
+        if (!isset($this->laserVisit) || $this->laserVisit === null) {
+            throw new ModelNotFoundException('', 404);
         }
 
         /** @var \App\Http\Controllers\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
@@ -143,7 +165,12 @@ class VisitsControllerTest extends TestCase
             ->shouldReceive('getVisitsByUser')
             ->with(
                 $this->dsAuthenticated,
-                $this->dsUserRole,
+                Mockery::on(function (DSUser $dsUser): bool {
+                    if ($dsUser->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
                 $sortByTimestamp,
                 $iDataBaseRetrieveLaserVisits
             )
@@ -151,12 +178,12 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->authenticated->getKey(), 'asc');
+        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->userRole->getKey(), 'asc');
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
         foreach ($dsLaserVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)), '$key: ' . strval($key) . "\narray: " . json_encode($jsonResponse->original, JSON_PRETTY_PRINT));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
@@ -167,8 +194,18 @@ class VisitsControllerTest extends TestCase
             ->shouldReceive('getVisitsByOrder')
             ->with(
                 $this->dsAuthenticated,
-                $this->dsUserRole,
-                $this->dsLaserOrder,
+                Mockery::on(function (DSUser $dsUser): bool {
+                    if ($dsUser->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSLaserOrder $dsLaserOrder): bool {
+                    if ($dsLaserOrder->getId() === $this->dsLaserOrder->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
                 $sortByTimestamp,
                 $iDataBaseRetrieveLaserVisits
             )
@@ -176,12 +213,12 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->authenticated->getKey(), 'asc', $this->laserOrder->getKey());
+        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->userRole->getKey(), 'asc', $this->laserOrder->getKey());
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
         foreach ($dsLaserVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
@@ -194,7 +231,6 @@ class VisitsControllerTest extends TestCase
             ->shouldReceive('getVisitsByTimestamp')
             ->with(
                 $this->dsAuthenticated,
-                $this->dsUserRole,
                 $operator,
                 $timestamp,
                 $sortByTimestamp,
@@ -204,12 +240,12 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->authenticated->getKey(), 'asc', null, $timestamp, $operator);
+        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->userRole->getKey(), 'asc', null, $timestamp, $operator);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
         foreach ($dsLaserVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
     }
@@ -235,7 +271,12 @@ class VisitsControllerTest extends TestCase
             ->shouldReceive('getVisitsByUser')
             ->with(
                 $this->dsAuthenticated,
-                $this->dsUserRole,
+                Mockery::on(function (DSUser $dsUser): bool {
+                    if ($dsUser->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
                 $sortByTimestamp,
                 $iDataBaseRetrieveRegularVisits
             )
@@ -243,12 +284,12 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->authenticated->getKey(), 'asc');
+        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->userRole->getKey(), 'asc');
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
         foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
@@ -259,8 +300,18 @@ class VisitsControllerTest extends TestCase
             ->shouldReceive('getVisitsByOrder')
             ->with(
                 $this->dsAuthenticated,
-                $this->dsUserRole,
-                $this->dsRegularOrder,
+                Mockery::on(function (DSUser $dsUser): bool {
+                    if ($dsUser->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSRegularOrder $dsRegularOrder): bool {
+                    if ($dsRegularOrder->getId() === $this->dsRegularOrder->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
                 $sortByTimestamp,
                 $iDataBaseRetrieveRegularVisits
             )
@@ -268,12 +319,12 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->authenticated->getKey(), 'asc', $this->RegularOrder->getKey());
+        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->userRole->getKey(), 'asc', $this->regularOrder->getKey());
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
         foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
@@ -286,7 +337,6 @@ class VisitsControllerTest extends TestCase
             ->shouldReceive('getVisitsByTimestamp')
             ->with(
                 $this->dsAuthenticated,
-                $this->dsUserRole,
                 $operator,
                 $timestamp,
                 $sortByTimestamp,
@@ -296,12 +346,12 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->authenticated->getKey(), 'asc', null, $timestamp, $operator);
+        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->userRole->getKey(), 'asc', null, $timestamp, $operator);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
         foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
     }
@@ -312,6 +362,11 @@ class VisitsControllerTest extends TestCase
         $request = Mockery::mock(Request::class);
         $request->laserOrderId = $this->laserOrder->getKey();
         $request->targetUserId = $this->userRole->user->getKey();
+        $request->weekDaysPeriods = null;
+        $request->dateTimePeriod = null;
+
+        /** @var IFindVisit|MockInterface $iFindVisit */
+        $iFindVisit = Mockery::mock(IFindVisit::class);
 
         /** @var IDataBaseCreateLaserVisit|MockInterface $iDataBaseCreateLaserVisit */
         $iDataBaseCreateLaserVisit = Mockery::mock(IDataBaseCreateLaserVisit::class);
@@ -320,53 +375,53 @@ class VisitsControllerTest extends TestCase
         $laserVisitCreation = Mockery::mock(LaserVisitCreation::class);
         $laserVisitCreation
             ->shouldReceive('create')
-            ->with($this->dsLaserOrder, $this->dsUserRole, $this->dsAuthenticated, $iDataBaseCreateLaserVisit)
-            ->andReturn($this->dsLaserVisits)
+            ->with(
+                Mockery::on(function (DSLaserOrder $dsLaserOrder): bool {
+                    if ($dsLaserOrder->getId() === $this->dsLaserOrder->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSUser $dsUserRole): bool {
+                    if ($dsUserRole->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                $this->dsAuthenticated,
+                $iDataBaseCreateLaserVisit,
+                Mockery::on(function (IFindVisit $iFindVisit): bool {
+                    return true;
+                })
+            )
+            ->andReturn($this->dsLaserVisit)
             //
         ;
 
         // The laserVisitCreation is not null
         $args = [
             'checkAuthentication' => $this->checkAuthentication,
-            'laserVisitCreation' => $laserVisitCreation
+            'laserVisitCreation' => $laserVisitCreation,
+            'iDataBaseCreateLaserVisit' => $iDataBaseCreateLaserVisit
         ];
 
         $jsonResponse = (new VisitsController(...$args))->laserStore($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
-        foreach ($dsLaserVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+        $this->assertCount(count($dsLaserVisitArray = $this->dsLaserVisit->toArray()), $jsonResponse->original);
+        foreach ($dsLaserVisitArray as $key => $value) {
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
-        // The laserVisitCreation and request->weekDayPeriods are null
-        $args = [
-            'checkAuthentication' => $this->checkAuthentication,
-        ];
+        $request->weekDaysPeriods = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods()->toArray();
 
         $jsonResponse = (new VisitsController(...$args))->laserStore($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
-        foreach ($dsLaserVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
-            $this->assertEquals($value, $jsonResponse->original[$key]);
-        }
-
-        // The laserVisitCreation is null
-        $request->weekDayPeriods = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods();
-
-        $args = [
-            'checkAuthentication' => $this->checkAuthentication,
-        ];
-
-        $jsonResponse = (new VisitsController(...$args))->laserStore($request);
-        $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-        $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
-        foreach ($dsLaserVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+        $this->assertCount(count($dsLaserVisitArray = $this->dsLaserVisit->toArray()), $jsonResponse->original);
+        foreach ($dsLaserVisitArray as $key => $value) {
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
     }
@@ -377,6 +432,11 @@ class VisitsControllerTest extends TestCase
         $request = Mockery::mock(Request::class);
         $request->regularOrderId = $this->regularOrder->getKey();
         $request->targetUserId = $this->userRole->user->getKey();
+        $request->weekDaysPeriods = null;
+        $request->dateTimePeriod = null;
+
+        /** @var IFindVisit|MockInterface $iFindVisit */
+        $iFindVisit = Mockery::mock(IFindVisit::class);
 
         /** @var IDataBaseCreateRegularVisit|MockInterface $iDataBaseCreateRegularVisit */
         $iDataBaseCreateRegularVisit = Mockery::mock(IDataBaseCreateRegularVisit::class);
@@ -385,53 +445,53 @@ class VisitsControllerTest extends TestCase
         $regularVisitCreation = Mockery::mock(RegularVisitCreation::class);
         $regularVisitCreation
             ->shouldReceive('create')
-            ->with($this->dsRegularOrder, $this->dsUserRole, $this->dsAuthenticated, $iDataBaseCreateRegularVisit)
-            ->andReturn($this->dsRegularVisits)
+            ->with(
+                Mockery::on(function (DSRegularOrder $dsRegularOrder): bool {
+                    if ($dsRegularOrder->getId() === $this->dsRegularOrder->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSUser $dsUserRole): bool {
+                    if ($dsUserRole->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                $this->dsAuthenticated,
+                $iDataBaseCreateRegularVisit,
+                Mockery::on(function (IFindVisit $iFindVisit): bool {
+                    return true;
+                })
+            )
+            ->andReturn($this->dsRegularVisit)
             //
         ;
 
-        // The RegularVisitCreation is not null
+        // The regularVisitCreation is not null
         $args = [
             'checkAuthentication' => $this->checkAuthentication,
-            'regularVisitCreation' => $regularVisitCreation
+            'regularVisitCreation' => $regularVisitCreation,
+            'iDataBaseCreateRegularVisit' => $iDataBaseCreateRegularVisit
         ];
 
         $jsonResponse = (new VisitsController(...$args))->regularStore($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
-        foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+        $this->assertCount(count($dsRegularVisitArray = $this->dsRegularVisit->toArray()), $jsonResponse->original);
+        foreach ($dsRegularVisitArray as $key => $value) {
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
-        // The RegularVisitCreation and request->weekDayPeriods are null
-        $args = [
-            'checkAuthentication' => $this->checkAuthentication,
-        ];
+        $request->weekDaysPeriods = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods()->toArray();
 
         $jsonResponse = (new VisitsController(...$args))->regularStore($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
-        foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
-            $this->assertEquals($value, $jsonResponse->original[$key]);
-        }
-
-        // The RegularVisitCreation is null
-        $request->weekDayPeriods = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods();
-
-        $args = [
-            'checkAuthentication' => $this->checkAuthentication,
-        ];
-
-        $jsonResponse = (new VisitsController(...$args))->regularStore($request);
-        $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-        $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
-        foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
+        $this->assertCount(count($dsRegularVisitArray = $this->dsRegularVisit->toArray()), $jsonResponse->original);
+        foreach ($dsRegularVisitArray as $key => $value) {
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
     }
@@ -439,6 +499,8 @@ class VisitsControllerTest extends TestCase
     public function testLaserShow(): void
     {
         $timestamp = $this->faker->numberBetween(500000, 1000000);
+        $dsLaserVisits = new DSLaserVisits;
+        $dsLaserVisits[] = $this->dsLaserVisit;
 
         /** @var IDataBaseRetrieveLaserVisits|MockInterface $laserVisitRetrieval */
         $iDataBaseRetrieveLaserVisits = Mockery::mock(IDataBaseRetrieveLaserVisits::class);
@@ -448,29 +510,32 @@ class VisitsControllerTest extends TestCase
         $laserVisitRetrieval
             ->shouldReceive('getVisitsByTimestamp')
             ->with($this->dsAuthenticated, '=', $timestamp, 'desc', $iDataBaseRetrieveLaserVisits)
-            ->andReturn($this->dsLaserVisits)
+            ->andReturn($dsLaserVisits)
             //
         ;
 
         $args = [
             'checkAuthentication' => $this->checkAuthentication,
+            'iDataBaseRetrieveLaserVisits' => $iDataBaseRetrieveLaserVisits,
             'laserVisitRetrieval' => $laserVisitRetrieval
         ];
         $jsonResponse = (new VisitsController(...$args))->laserShow($timestamp);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
-        foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
-            $this->assertEquals($value, $jsonResponse->original[$key]);
+        $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisit->toArray()), $jsonResponse->original);
+        foreach ($dsLaserVisitsArray as $key => $value) {
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
+            $this->assertEquals($value, $jsonResponse->original[$key], '$key: ' . strval($key));
         }
     }
 
     public function testRegularShow(): void
     {
         $timestamp = $this->faker->numberBetween(500000, 1000000);
+        $dsRegularVisits = new DSRegularVisits;
+        $dsRegularVisits[] = $this->dsRegularVisit;
 
-        /** @var IDataBaseRetrieveRegularVisits|MockInterface $iDataBaseRetrieveRegularVisits */
+        /** @var IDataBaseRetrieveRegularVisits|MockInterface $regularVisitRetrieval */
         $iDataBaseRetrieveRegularVisits = Mockery::mock(IDataBaseRetrieveRegularVisits::class);
 
         /** @var RegularVisitRetrieval|MockInterface $regularVisitRetrieval */
@@ -478,22 +543,22 @@ class VisitsControllerTest extends TestCase
         $regularVisitRetrieval
             ->shouldReceive('getVisitsByTimestamp')
             ->with($this->dsAuthenticated, '=', $timestamp, 'desc', $iDataBaseRetrieveRegularVisits)
-            ->andReturn($this->dsRegularVisits)
+            ->andReturn($dsRegularVisits)
             //
         ;
 
         $args = [
             'checkAuthentication' => $this->checkAuthentication,
+            'iDataBaseRetrieveRegularVisits' => $iDataBaseRetrieveRegularVisits,
             'regularVisitRetrieval' => $regularVisitRetrieval
         ];
-
-        $jsonResponse = (new VisitsController(...$args))->regularShow($timestamp);
+        $jsonResponse = (new VisitsController(...$args))->RegularShow($timestamp);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
-        foreach ($dsRegularVisitsArray as $key => $value) {
-            $this->assertNotFalse(array_search($key, $jsonResponse->original));
-            $this->assertEquals($value, $jsonResponse->original[$key]);
+        $this->assertCount(count($dsRegularVisitArray = $this->dsRegularVisit->toArray()), $jsonResponse->original);
+        foreach ($dsRegularVisitArray as $key => $value) {
+            $this->assertNotFalse(array_search($key, array_keys($jsonResponse->original)));
+            $this->assertEquals($value, $jsonResponse->original[$key], '$key: ' . strval($key));
         }
     }
 
@@ -506,7 +571,22 @@ class VisitsControllerTest extends TestCase
         $laserVisitDeletion = Mockery::mock(LaserVisitDeletion::class);
         $laserVisitDeletion
             ->shouldReceive('delete')
-            ->with($this->dsLaserVisit, $this->dsUserRole, $this->dsAuthenticated, $iDataBaseDeleteLaserVisit)
+            ->with(
+                Mockery::on(function (DSLaserVisit $dsLaserVisit): bool {
+                    if ($dsLaserVisit->getId() === $this->dsLaserVisit->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSUser $dsUserRole): bool {
+                    if ($dsUserRole->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                $this->dsAuthenticated,
+                $iDataBaseDeleteLaserVisit
+            )
             //
         ;
 
@@ -516,7 +596,7 @@ class VisitsControllerTest extends TestCase
             'laserVisitDeletion' => $laserVisitDeletion
         ];
 
-        $response = (new VisitsController(...$args))->laserDestroy($this->laserVisit->getKey(), $this->dsUserRole->user->getKey());
+        $response = (new VisitsController(...$args))->laserDestroy($this->laserVisit->getKey(), $this->userRole->user->getKey());
         $this->assertInstanceOf(Response::class, $response);
         $this->assertIsString($response->original);
         $this->assertEquals(200, $response->getStatusCode());
@@ -531,7 +611,22 @@ class VisitsControllerTest extends TestCase
         $regularVisitDeletion = Mockery::mock(RegularVisitDeletion::class);
         $regularVisitDeletion
             ->shouldReceive('delete')
-            ->with($this->dsRegularVisit, $this->dsUserRole, $this->dsAuthenticated, $iDataBaseDeleteRegularVisit)
+            ->with(
+                Mockery::on(function (DSRegularVisit $dsRegularVisit): bool {
+                    if ($dsRegularVisit->getId() === $this->dsRegularVisit->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                Mockery::on(function (DSUser $dsUserRole): bool {
+                    if ($dsUserRole->getId() === $this->dsUserRole->getId()) {
+                        return true;
+                    }
+                    return false;
+                }),
+                $this->dsAuthenticated,
+                $iDataBaseDeleteRegularVisit
+            )
             //
         ;
 
@@ -541,7 +636,7 @@ class VisitsControllerTest extends TestCase
             'regularVisitDeletion' => $regularVisitDeletion
         ];
 
-        $response = (new VisitsController(...$args))->RegularDestroy($this->regularVisit->getKey(), $this->dsUserRole->user->getKey());
+        $response = (new VisitsController(...$args))->regularDestroy($this->regularVisit->getKey(), $this->userRole->user->getKey());
         $this->assertInstanceOf(Response::class, $response);
         $this->assertIsString($response->original);
         $this->assertEquals(200, $response->getStatusCode());

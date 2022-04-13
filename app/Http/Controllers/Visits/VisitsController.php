@@ -23,9 +23,7 @@ use Illuminate\Http\Response;
 use TheClinic\Visit\FastestVisit;
 use TheClinic\Visit\WeeklyVisit;
 use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisit;
 use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
-use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
 use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
 use TheClinicUseCases\Visits\Creation\LaserVisitCreation;
 use TheClinicUseCases\Visits\Creation\RegularVisitCreation;
@@ -44,8 +42,8 @@ class VisitsController extends Controller
 {
     private CheckAuthentication $checkAuthentication;
 
-    private null|LaserVisitCreation $laserVisitCreation;
-    private null|RegularVisitCreation $regularVisitCreation;
+    private LaserVisitCreation $laserVisitCreation;
+    private RegularVisitCreation $regularVisitCreation;
     private IDataBaseCreateLaserVisit $iDataBaseCreateLaserVisit;
     private IDataBaseCreateRegularVisit $iDataBaseCreateRegularVisit;
 
@@ -56,8 +54,8 @@ class VisitsController extends Controller
 
     private LaserVisitRetrieval $laserVisitRetrieval;
     private RegularVisitRetrieval $regularVisitRetrieval;
-    private IDataBaseRetrieveLaserVisits $iDataBaseRetrieveLaserVisit;
-    private IDataBaseRetrieveRegularVisits $iDataBaseRetrieveRegularVisit;
+    private IDataBaseRetrieveLaserVisits $iDataBaseRetrieveLaserVisits;
+    private IDataBaseRetrieveRegularVisits $iDataBaseRetrieveRegularVisits;
 
     public function __construct(
         null|CheckAuthentication $checkAuthentication = null,
@@ -79,8 +77,8 @@ class VisitsController extends Controller
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
 
-        $this->laserVisitCreation = $laserVisitCreation;
-        $this->regularVisitCreation = $regularVisitCreation;
+        $this->laserVisitCreation = $laserVisitCreation ?: new LaserVisitCreation;
+        $this->regularVisitCreation = $regularVisitCreation ?: new RegularVisitCreation;
         $this->iDataBaseCreateLaserVisit = $iDataBaseCreateLaserVisit ?: new DataBaseCreateLaserVisit;
         $this->iDataBaseCreateRegularVisit = $iDataBaseCreateRegularVisit ?: new DataBaseCreateRegularVisit;
 
@@ -95,7 +93,7 @@ class VisitsController extends Controller
         $this->iDataBaseRetrieveRegularVisits = $iDataBaseRetrieveRegularVisits ?: new DataBaseRetrieveRegularVisits;
     }
 
-    public function laserIndex(int $accountId, string $sortByTimestamp, null|int $laserOrderId = null, null|int $timestamp = null, null|int $operator = null): JsonResponse
+    public function laserIndex(int $accountId, string $sortByTimestamp, null|int $laserOrderId = null, null|int $timestamp = null, null|string $operator = null): JsonResponse
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
@@ -107,13 +105,11 @@ class VisitsController extends Controller
         ;
         $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
-        $args = [
-            $dsAuthenticated,
-            $dsTargetUser
-        ];
+        $args = [$dsAuthenticated];
 
         if ($laserOrderId === null && $timestamp === null && $operator === null) {
             $method = 'User';
+            $args[] = $dsTargetUser;
         } elseif ($laserOrderId !== null) {
             $found = false;
             foreach ($targetUser->orders as $order) {
@@ -128,6 +124,7 @@ class VisitsController extends Controller
             }
 
             $method = 'Order';
+            $args[] = $dsTargetUser;
             $args[] = $dsLaserOrder;
         } elseif ($timestamp !== null && $operator !== null) {
             $method = 'Timestamp';
@@ -139,12 +136,12 @@ class VisitsController extends Controller
         $args[] = $this->iDataBaseRetrieveLaserVisits;
 
         /** @var DSLaserVisits $visits */
-        $visits = $this->laserVisitRetrieval->{'getVisitBy' . $method}(...$args);
+        $visits = $this->laserVisitRetrieval->{'getVisitsBy' . $method}(...$args);
 
         return response()->json($visits->toArray());
     }
 
-    public function regularIndex(int $accountId, string $sortByTimestamp, null|int $regularOrderId = null, null|int $timestamp = null): JsonResponse
+    public function regularIndex(int $accountId, string $sortByTimestamp, null|int $regularOrderId = null, null|int $timestamp = null, null|string $operator = null): JsonResponse
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
@@ -156,13 +153,11 @@ class VisitsController extends Controller
         ;
         $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
-        $args = [
-            $dsAuthenticated,
-            $dsTargetUser
-        ];
+        $args = [$dsAuthenticated];
 
-        if ($regularOrderId === null && $timestamp === null) {
+        if ($regularOrderId === null && $timestamp === null && $operator === null) {
             $method = 'User';
+            $args[] = $dsTargetUser;
         } elseif ($regularOrderId !== null) {
             $found = false;
             foreach ($targetUser->orders as $order) {
@@ -177,9 +172,11 @@ class VisitsController extends Controller
             }
 
             $method = 'Order';
+            $args[] = $dsTargetUser;
             $args[] = $dsRegularOrder;
-        } elseif ($timestamp !== null) {
+        } elseif ($timestamp !== null && $operator !== null) {
             $method = 'Timestamp';
+            $args[] = $operator;
             $args[] = $timestamp;
         }
 
@@ -187,7 +184,7 @@ class VisitsController extends Controller
         $args[] = $this->iDataBaseRetrieveRegularVisits;
 
         /** @var DSRegularVisits $visits */
-        $visits = $this->regularVisitRetrieval->{'getVisitBy' . $method}(...$args);
+        $visits = $this->regularVisitRetrieval->{'getVisitsBy' . $method}(...$args);
 
         return response()->json($visits->toArray());
     }
@@ -216,34 +213,30 @@ class VisitsController extends Controller
             ->all()
             //
         ;
-        $futureVisits = LaserVisit::getDSRegularVisits($futureVisits, 'ASC');
+        $futureVisits = LaserVisit::getDSLaserVisits($futureVisits, 'ASC');
 
-        if ($this->laserVisitCreation === null) {
-            if ($request->weekDaysPeriods !== null) {
-                $iFindVisit = new WeeklyVisit(
-                    $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($request->weekDaysPeriods),
-                    $dsLaserOrder->getNeededTime(),
-                    $futureVisits,
-                    $dsWoekSchedule = BusinessDefault::first()->work_schedule,
-                    $dsDownTimes = BusinessDefault::first()->down_times,
-                    $startPoint = new \DateTime
-                );
-            } elseif ($request->dateTimePeriod !== null) {
-                // $iFindVisit = new WeeklyVisit();
-            } else {
-                $iFindVisit = new FastestVisit(
-                    $startPoint = new \DateTime,
-                    $dsLaserOrder->getNeededTime(),
-                    $futureVisits,
-                    $dsWoekSchedule = BusinessDefault::first()->work_schedule,
-                    $dsDownTimes = BusinessDefault::first()->down_times,
-                );
-            }
-
-            $this->laserVisitCreation = new LaserVisitCreation($iFindVisit);
+        if ($request->weekDaysPeriods !== null) {
+            $iFindVisit = new WeeklyVisit(
+                $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($request->weekDaysPeriods),
+                $dsLaserOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::first()->work_schedule,
+                $dsDownTimes = BusinessDefault::first()->down_times,
+                $startPoint = new \DateTime
+            );
+        } elseif ($request->dateTimePeriod !== null) {
+            // $iFindVisit = new WeeklyVisit();
+        } else {
+            $iFindVisit = new FastestVisit(
+                $startPoint = new \DateTime,
+                $dsLaserOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::first()->work_schedule,
+                $dsDownTimes = BusinessDefault::first()->down_times,
+            );
         }
 
-        $dsLaserOrder = $this->laserVisitCreation->create($dsLaserOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateLaserVisit);
+        $dsLaserOrder = $this->laserVisitCreation->create($dsLaserOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateLaserVisit, $iFindVisit);
 
         return response()->json($dsLaserOrder->toArray());
     }
@@ -254,7 +247,7 @@ class VisitsController extends Controller
 
         /** @var RegularOrder $regularOrder */
         $regularOrder = RegularOrder::query()
-            ->whereKey($request->RegularOrderId)
+            ->whereKey($request->regularOrderId)
             ->first();
         $dsRegularOrder = $regularOrder->getDSRegularOrder();
 
@@ -274,32 +267,28 @@ class VisitsController extends Controller
         ;
         $futureVisits = RegularVisit::getDSRegularVisits($futureVisits, 'ASC');
 
-        if ($this->regularVisitCreation === null) {
-            if ($request->weekDaysPeriods !== null) {
-                $iFindVisit = new WeeklyVisit(
-                    $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($request->weekDaysPeriods),
-                    $dsRegularOrder->getNeededTime(),
-                    $futureVisits,
-                    $dsWoekSchedule = BusinessDefault::first()->work_schedule,
-                    $dsDownTimes = BusinessDefault::first()->down_times,
-                    $startPoint = new \DateTime
-                );
-            } elseif ($request->dateTimePeriod !== null) {
-                // $iFindVisit = new WeeklyVisit();
-            } else {
-                $iFindVisit = new FastestVisit(
-                    $startPoint = new \DateTime,
-                    $dsRegularOrder->getNeededTime(),
-                    $futureVisits,
-                    $dsWoekSchedule = BusinessDefault::first()->work_schedule,
-                    $dsDownTimes = BusinessDefault::first()->down_times,
-                );
-            }
-
-            $this->regularVisitCreation = new RegularVisitCreation($iFindVisit);
+        if ($request->weekDaysPeriods !== null) {
+            $iFindVisit = new WeeklyVisit(
+                $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($request->weekDaysPeriods),
+                $dsRegularOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::first()->work_schedule,
+                $dsDownTimes = BusinessDefault::first()->down_times,
+                $startPoint = new \DateTime
+            );
+        } elseif ($request->dateTimePeriod !== null) {
+            // $iFindVisit = new WeeklyVisit();
+        } else {
+            $iFindVisit = new FastestVisit(
+                $startPoint = new \DateTime,
+                $dsRegularOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::first()->work_schedule,
+                $dsDownTimes = BusinessDefault::first()->down_times,
+            );
         }
 
-        $dsRegularOrder = $this->regularVisitCreation->create($dsRegularOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateRegularVisit);
+        $dsRegularOrder = $this->regularVisitCreation->create($dsRegularOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateRegularVisit, $iFindVisit);
 
         return response()->json($dsRegularOrder->toArray());
     }
@@ -311,7 +300,7 @@ class VisitsController extends Controller
         /** @var DSLaserVisits $visits */
         $visits = $this->laserVisitRetrieval->getVisitsByTimestamp($dsAuthenticated, '=', $timestamp, 'desc', $this->iDataBaseRetrieveLaserVisits);
 
-        return response()->json($visits->toArray()[0]);
+        return response()->json($visits[0]->toArray());
     }
 
     public function regularShow(int $timestamp): JsonResponse
@@ -319,9 +308,9 @@ class VisitsController extends Controller
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         /** @var DSRegularVisits $visits */
-        $visits = $this->regularVisitRetrieval->getVisitsByTimestamp($dsAuthenticated, '=', $timestamp, 'desc', $this->iDataBaseRetrieveRegularVisit);
+        $visits = $this->regularVisitRetrieval->getVisitsByTimestamp($dsAuthenticated, '=', $timestamp, 'desc', $this->iDataBaseRetrieveRegularVisits);
 
-        return response()->json($visits->toArray()[0]);
+        return response()->json($visits[0]->toArray());
     }
 
     public function laserDestroy(int $laserVisitId, int $targetUserId): Response
