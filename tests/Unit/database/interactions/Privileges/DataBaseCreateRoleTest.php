@@ -27,7 +27,7 @@ class DataBaseCreateRoleTest extends TestCase
         DB::beginTransaction();
         try {
             $roleName = 'custom_role';
-            (new DataBaseCreateRole)->createRole($roleName, [($privilegeModel = Privilege::first())->name, false]);
+            (new DataBaseCreateRole)->createRole($roleName, [($privilegeModel = Privilege::first())->name => false]);
 
             $this->assertDatabaseHas((new Role)->getTable(), [
                 'name' => $roleName

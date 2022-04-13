@@ -12,8 +12,9 @@ class DataBaseCreateRole implements IDataBaseCreateRole
 {
     public function createRole(string $customRoleName, array $privilegeValue): void
     {
-        DB::beginTransaction();
         try {
+            DB::beginTransaction();
+
             $role = new Role();
             $role->name = $customRoleName;
             if (!$role->save()) {
@@ -31,8 +32,11 @@ class DataBaseCreateRole implements IDataBaseCreateRole
                     throw new \RuntimeException('Failed to create the privilege-value model.', 500);
                 }
             }
+
+            DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
+            throw $th;
         }
     }
 }
