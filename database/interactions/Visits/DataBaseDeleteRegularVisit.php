@@ -17,11 +17,11 @@ class DataBaseDeleteRegularVisit implements IDataBaseDeleteRegularVisit
         $user = User::query()->whereKey($targetUser->getId())->first();
 
         foreach ($user->orders as $order) {
-            if (($regularOrder = $order->regularOrder) === null) {
+            if (($regularOrder = $order->regularOrder) === null || count($regularVisits = $regularOrder->regularVisits) === 0) {
                 continue;
             }
 
-            foreach ($regularOrder->regularVisit as $regularVisit) {
+            foreach ($regularVisits as $regularVisit) {
                 if ($regularVisit->getKey() === $dsRegularVisit->getId()) {
                     $found = true;
                     break;

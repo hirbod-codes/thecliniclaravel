@@ -17,11 +17,11 @@ class DataBaseDeleteLaserVisit implements IDataBaseDeleteLaserVisit
         $user = User::query()->whereKey($targetUser->getId())->first();
 
         foreach ($user->orders as $order) {
-            if (($laserOrder = $order->laserOrder) === null) {
+            if (($laserOrder = $order->laserOrder) === null || count($laserVisits = $laserOrder->laserVisits) === 0) {
                 continue;
             }
 
-            foreach ($laserOrder->laserVisit as $laserVisit) {
+            foreach ($laserVisits as $laserVisit) {
                 if ($laserVisit->getKey() === $dsLaserVisit->getId()) {
                     $found = true;
                     break;
