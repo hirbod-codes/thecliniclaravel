@@ -32,16 +32,6 @@ class DataBaseCreateRegularVisit implements IDataBaseCreateRegularVisit
             throw new \RuntimeException('Failed to create a Visit model.', 500);
         }
 
-        $now = new \DateTime();
-        $futureVisits = RegularVisit::query()
-            ->orderBy('visit_timestamp', 'asc')
-            ->where('visit_timestamp', '>=', $now)
-            ->get()
-            ->all()
-            //
-        ;
-        $futureVisits = RegularVisit::getDSRegularVisits($futureVisits, 'ASC');
-
         $regularOrder = RegularOrder::query()
             ->whereKey($dsRegularOrder->getId())
             ->first();

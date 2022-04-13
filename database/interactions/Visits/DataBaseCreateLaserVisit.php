@@ -32,16 +32,6 @@ class DataBaseCreateLaserVisit implements IDataBaseCreateLaserVisit
             throw new \RuntimeException('Failed to create a Visit model.', 500);
         }
 
-        $now = new \DateTime();
-        $futureVisits = LaserVisit::query()
-            ->orderBy('visit_timestamp', 'asc')
-            ->where('visit_timestamp', '>=', $now)
-            ->get()
-            ->all()
-            //
-        ;
-        $futureVisits = LaserVisit::getDSLaserVisits($futureVisits, 'ASC');
-
         $laserOrder = LaserOrder::query()
             ->whereKey($dsLaserOrder->getId())
             ->first();
