@@ -17,30 +17,37 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
     public function getVisitsByUser(DSUser $dsTargetUser, string $sortByTimestamp): DSLaserVisits
     {
         $laserVisits = DB::table(($laserVisit = new LaserVisit)->getTable())
+            ->select($laserVisit->getTable() . '.' . $laserVisit->getKeyName())
             ->join(
                 ($laserOrder = new LaserOrder)->getTable(),
                 $laserOrder->getTable() . '.' . $laserOrder->getKeyName(),
                 '=',
-                $laserVisit->getTable() . '.' . $laserVisit->{$laserOrder->getForeignKey()}
+                $laserVisit->getTable() . '.' . $laserOrder->getForeignKey()
             )
             ->join(
                 ($order = new Order)->getTable(),
                 $order->getTable() . '.' . $order->getKeyName(),
                 '=',
-                $laserOrder->getTable() . '.' . $laserOrder->{$order->getForeignKey()}
+                $laserOrder->getTable() . '.' . $order->getForeignKey()
             )
             ->join(
                 ($user = new User)->getTable(),
                 $user->getTable() . '.' . $user->getKeyName(),
                 '=',
-                $order->getTable() . '.' . $order->{$user->getForeignKey()}
+                $order->getTable() . '.' . $user->getForeignKey()
             )
-            ->orderBy($laserVisit->getTable() . 'visit_timestamp', strtolower($sortByTimestamp))
+            ->orderBy($laserVisit->getTable() . '.visit_timestamp', strtolower($sortByTimestamp))
             ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
             ->get()
             ->all()
             //
         ;
+
+        $query = LaserVisit::query();
+        foreach ($laserVisits as $key => $value) {
+            $query = $query->where($laserVisit->getKeyName(), '=', $value->{$laserVisit->getKeyName()}, 'or');
+        }
+        $laserVisits = $query->get()->all();
 
         $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
 
@@ -50,31 +57,38 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
     public function getVisitsByOrder(DSUser $dsTargetUser, DSLaserOrder $dsLaserOrder, string $sortByTimestamp): DSLaserVisits
     {
         $laserVisits = DB::table(($laserVisit = new LaserVisit)->getTable())
+            ->select($laserVisit->getTable() . '.' . $laserVisit->getKeyName())
             ->join(
                 ($laserOrder = new LaserOrder)->getTable(),
                 $laserOrder->getTable() . '.' . $laserOrder->getKeyName(),
                 '=',
-                $laserVisit->getTable() . '.' . $laserVisit->{$laserOrder->getForeignKey()}
+                $laserVisit->getTable() . '.' . $laserOrder->getForeignKey()
             )
             ->join(
                 ($order = new Order)->getTable(),
                 $order->getTable() . '.' . $order->getKeyName(),
                 '=',
-                $laserOrder->getTable() . '.' . $laserOrder->{$order->getForeignKey()}
+                $laserOrder->getTable() . '.' . $order->getForeignKey()
             )
             ->join(
                 ($user = new User)->getTable(),
                 $user->getTable() . '.' . $user->getKeyName(),
                 '=',
-                $order->getTable() . '.' . $order->{$user->getForeignKey()}
+                $order->getTable() . '.' . $user->getForeignKey()
             )
-            ->orderBy($laserVisit->getTable() . 'visit_timestamp', strtolower($sortByTimestamp))
+            ->orderBy($laserVisit->getTable() . '.visit_timestamp', strtolower($sortByTimestamp))
             ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
             ->where($order->getTable() . '.' . $order->getKeyName(), '=', $dsLaserOrder->getId())
             ->get()
             ->all()
             //
         ;
+
+        $query = LaserVisit::query();
+        foreach ($laserVisits as $key => $value) {
+            $query = $query->where($laserVisit->getKeyName(), '=', $value->{$laserVisit->getKeyName()}, 'or');
+        }
+        $laserVisits = $query->get()->all();
 
         $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
 

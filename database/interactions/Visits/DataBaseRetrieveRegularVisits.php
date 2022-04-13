@@ -2,8 +2,8 @@
 
 namespace Database\Interactions\Visits;
 
-use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
+use App\Models\Order\Order;
 use App\Models\User;
 use App\Models\Visit\RegularVisit;
 use Illuminate\Support\Facades\DB;
@@ -17,32 +17,39 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
     public function getVisitsByUser(DSUser $dsTargetUser, string $sortByTimestamp): DSRegularVisits
     {
         $regularVisits = DB::table(($regularVisit = new RegularVisit)->getTable())
+            ->select($regularVisit->getTable() . '.' . $regularVisit->getKeyName())
             ->join(
-                ($RegularOrder = new RegularOrder)->getTable(),
-                $RegularOrder->getTable() . '.' . $RegularOrder->getKeyName(),
+                ($regularOrder = new RegularOrder)->getTable(),
+                $regularOrder->getTable() . '.' . $regularOrder->getKeyName(),
                 '=',
-                $regularVisit->getTable() . '.' . $regularVisit->{$RegularOrder->getForeignKey()}
+                $regularVisit->getTable() . '.' . $regularOrder->getForeignKey()
             )
             ->join(
                 ($order = new Order)->getTable(),
                 $order->getTable() . '.' . $order->getKeyName(),
                 '=',
-                $RegularOrder->getTable() . '.' . $RegularOrder->{$order->getForeignKey()}
+                $regularOrder->getTable() . '.' . $order->getForeignKey()
             )
             ->join(
                 ($user = new User)->getTable(),
                 $user->getTable() . '.' . $user->getKeyName(),
                 '=',
-                $order->getTable() . '.' . $order->{$user->getForeignKey()}
+                $order->getTable() . '.' . $user->getForeignKey()
             )
-            ->orderBy($regularVisit->getTable() . 'visit_timestamp', strtolower($sortByTimestamp))
+            ->orderBy($regularVisit->getTable() . '.visit_timestamp', strtolower($sortByTimestamp))
             ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
             ->get()
             ->all()
             //
         ;
 
-        $dsRegularVisits = regularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
+        $query = RegularVisit::query();
+        foreach ($regularVisits as $key => $value) {
+            $query = $query->where($regularVisit->getKeyName(), '=', $value->{$regularVisit->getKeyName()}, 'or');
+        }
+        $regularVisits = $query->get()->all();
+
+        $dsRegularVisits = RegularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
 
         return $dsRegularVisits;
     }
@@ -50,31 +57,38 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
     public function getVisitsByOrder(DSUser $dsTargetUser, DSRegularOrder $dsRegularOrder, string $sortByTimestamp): DSRegularVisits
     {
         $regularVisits = DB::table(($regularVisit = new RegularVisit)->getTable())
+            ->select($regularVisit->getTable() . '.' . $regularVisit->getKeyName())
             ->join(
-                ($RegularOrder = new RegularOrder)->getTable(),
-                $RegularOrder->getTable() . '.' . $RegularOrder->getKeyName(),
+                ($regularOrder = new RegularOrder)->getTable(),
+                $regularOrder->getTable() . '.' . $regularOrder->getKeyName(),
                 '=',
-                $regularVisit->getTable() . '.' . $regularVisit->{$RegularOrder->getForeignKey()}
+                $regularVisit->getTable() . '.' . $regularOrder->getForeignKey()
             )
             ->join(
                 ($order = new Order)->getTable(),
                 $order->getTable() . '.' . $order->getKeyName(),
                 '=',
-                $RegularOrder->getTable() . '.' . $RegularOrder->{$order->getForeignKey()}
+                $regularOrder->getTable() . '.' . $order->getForeignKey()
             )
             ->join(
                 ($user = new User)->getTable(),
                 $user->getTable() . '.' . $user->getKeyName(),
                 '=',
-                $order->getTable() . '.' . $order->{$user->getForeignKey()}
+                $order->getTable() . '.' . $user->getForeignKey()
             )
-            ->orderBy($regularVisit->getTable() . 'visit_timestamp', strtolower($sortByTimestamp))
+            ->orderBy($regularVisit->getTable() . '.visit_timestamp', strtolower($sortByTimestamp))
             ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
             ->where($order->getTable() . '.' . $order->getKeyName(), '=', $dsRegularOrder->getId())
             ->get()
             ->all()
             //
         ;
+
+        $query = RegularVisit::query();
+        foreach ($regularVisits as $key => $value) {
+            $query = $query->where($regularVisit->getKeyName(), '=', $value->{$regularVisit->getKeyName()}, 'or');
+        }
+        $regularVisits = $query->get()->all();
 
         $dsRegularVisits = RegularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
 
