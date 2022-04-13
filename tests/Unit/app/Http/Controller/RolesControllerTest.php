@@ -92,10 +92,23 @@ class RolesControllerTest extends TestCase
 
     private function testStore(): void
     {
+        $user = $this->users['admin'];
+        $dsUser = $user->getDataStructure();
+
+        /** @var \App\Http\Controllers\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
+        $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
+        $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($dsUser);
+
         /** @var Request|\Mockery\Mockinterface $request */
         $request = Mockery::mock(Request::class);
         $request->customRoleName = '';
-        $request->privilegeValue = '';
+        $request->privilegeValue = ['name' => 'value'];
+
+        $this->privilegesManagement
+            ->shouldReceive('createRole')
+            ->with($dsUser, $request->customRoleName, $request->privilegeValue, $this->iDataBaseCreateRole)
+            //
+        ;
 
         $response = $this->instantiate()->store($request);
 

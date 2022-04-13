@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Models\User;
+use Database\Interactions\Privileges\DataBaseCreateRole;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class RolesController extends Controller
     ) {
         $this->privilegesManagement = $privilegesManagement ?: new PrivilegesManagement;
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
-        $this->iDataBaseCreateRole = $iDataBaseCreateRole ?: new IDataBaseCreateRole;
+        $this->iDataBaseCreateRole = $iDataBaseCreateRole ?: new DataBaseCreateRole;
     }
 
     public function index(): JsonResponse
