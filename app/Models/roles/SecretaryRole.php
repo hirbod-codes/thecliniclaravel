@@ -7,7 +7,6 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 use TheClinicDataStructures\DataStructures\User\DSSecretary;
 
 class SecretaryRole extends Authenticatable
