@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Support\Carbon;
-use Laravel\Passport\HasApiTokens;
+use Illuminate\Support\Facades\Schema;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\DataStructures\Visit\DSVisits;
 
@@ -31,8 +31,7 @@ class User extends Model implements
     use Authenticatable,
         Authorizable,
         CanResetPassword,
-        MustVerifyEmail,
-        HasApiTokens;
+        MustVerifyEmail;
 
     /**
      * The attributes that should be hidden for serialization.
@@ -63,33 +62,71 @@ class User extends Model implements
 
     public function getUserRoleNameFKColumnName(): string
     {
-        return strtolower(class_basename(ModelsUser::class)) . '_' . (new Role)->getForeignKey();
+        return strtolower(class_basename(ModelsUser::class)) . '_' . (new Role)->getForeignKeyForName();
     }
 
-    public function getDataStructure(): DSUser
+    public function getDataStructure(array $extraParameters = []): DSUser
     {
-        if (static::class === ModelsUser::class|| static::class === User::class) {
+        if (static::class === ModelsUser::class || static::class === self::class) {
             throw new \RuntimeException('It\'s not possible to call this method: ' . __FUNCTION__ . 'from class: ' . static::class, 500);
         }
 
-        $DS = $this->DS;
+        $userColumns = Schema::getColumnListing((new ModelsUser)->getTable());
+        $roleColumns = Schema::getColumnListing($this->getTable());
+
+        $DS = $this->getDS();
         $args = [];
-        array_map(function (\ReflectionParameter $parameter) use (&$args) {
+        array_map(function (\ReflectionParameter $parameter) use (&$args, $extraParameters, $userColumns, $roleColumns) {
             $parameterName = $parameter->getName();
 
-            $this->collectDSArgs($args, $parameterName);
+            if (array_search($parameterName, array_keys($extraParameters)) !== false) {
+                $args[$parameterName] = $extraParameters[$parameterName];
+            } else {
+                $this->collectDSArgs($args, $parameterName, $userColumns, $roleColumns);
+            }
         }, (new \ReflectionClass($DS))->getConstructor()->getParameters());
 
         return new $DS(...$args);
     }
 
-    private function collectDSArgs(array &$args, string $parameterName)
+    protected function collectDSArgs(array &$args, string $parameterName, array $userColumns, array $roleColumns): void
     {
+        if (array_search(Str::snake($parameterName), $userColumns) !== false) {
+            $this->collectDSArgsFromUser($args, $parameterName, $userColumns, $roleColumns);
+        } elseif (array_search(Str::snake($parameterName), $roleColumns) !== false) {
+            $this->collectDSArgsFromRole($args, $parameterName, $userColumns, $roleColumns);
+        } else {
+            $this->collectOtherDSArgs($args, $parameterName, $userColumns, $roleColumns);
+        }
+    }
+
+    protected function collectDSArgsFromUser(array &$args, string $parameterName): void
+    {
+        /** @var ModelsUser $user */
         $user = $this->user;
 
         if ($parameterName === 'id') {
-            $args[$parameterName] = $user->{$this->getKeyName()};
-        } elseif ($parameterName === 'iCheckAuthentication') {
+            $args[$parameterName] = $user->getKey();
+        } else {
+            $args[$parameterName] = $user->{Str::snake($parameterName)};
+        }
+    }
+
+    protected function collectDSArgsFromRole(array &$args, string $parameterName): void
+    {
+        if ($parameterName === 'id') {
+            $args[$parameterName] = $this->getKey();
+        } else {
+            $args[$parameterName] = $this->{Str::snake($parameterName)};
+        }
+    }
+
+    protected function collectOtherDSArgs(array &$args, string $parameterName): void
+    {
+        /** @var ModelsUser $user */
+        $user = $this->user;
+
+        if ($parameterName === 'iCheckAuthentication') {
             $args[$parameterName] = new CheckAuthentication;
         } elseif ($parameterName === 'orders') {
             if ($user->orders === null || empty($user->orders)) {
@@ -97,8 +134,6 @@ class User extends Model implements
             } else {
                 $args[$parameterName] = Order::getMixedDSOrders($user->orders);
             }
-        } else {
-            $args[$parameterName] = $user->{Str::snake($parameterName)};
         }
     }
 
