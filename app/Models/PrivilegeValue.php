@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\roles\Traits\BelongsToRole;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PrivilegeValue extends Model
 {
-    use HasFactory;
+    use HasFactory,
+        BelongsToRole;
 
     protected $table = "privilege_values";
 
@@ -27,16 +29,6 @@ class PrivilegeValue extends Model
             Privilege::class,
             (new Privilege)->getForeignKey(),
             (new Privilege)->getKeyName(),
-            __FUNCTION__
-        );
-    }
-
-    public function role(): BelongsTo
-    {
-        return $this->belongsTo(
-            Role::class,
-            (new Role)->getForeignKey(),
-            (new Role)->getKeyName(),
             __FUNCTION__
         );
     }
