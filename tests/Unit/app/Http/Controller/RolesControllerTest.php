@@ -16,7 +16,9 @@ use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
 use TheClinicDataStructures\DataStructures\User\DSUser;
+use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
+use TheClinicUseCases\Privileges\Interfaces\IDataBaseDeleteRole;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 
 class RolesControllerTest extends TestCase
@@ -42,6 +44,10 @@ class RolesControllerTest extends TestCase
 
     private IDataBaseCreateRole|MockInterface $iDataBaseCreateRole;
 
+    private IDataBaseDeleteRole|MockInterface $iDataBaseDeleteRole;
+
+    private IPrivilege|MockInterface $ip;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -53,11 +59,17 @@ class RolesControllerTest extends TestCase
 
         /** @var IDataBaseCreateRole|\Mockery\MockInterface $iDataBaseCreateRole */
         $this->iDataBaseCreateRole = Mockery::mock(IDataBaseCreateRole::class);
+
+        /** @var IDataBaseDeleteRole|\Mockery\MockInterface $iDataBaseDeleteRole */
+        $this->iDataBaseDeleteRole = Mockery::mock(IDataBaseDeleteRole::class);
+
+        /** @var IPrivilege|\Mockery\MockInterface $ip */
+        $this->ip = Mockery::mock(IPrivilege::class);
     }
 
     private function instantiate(): RolesController
     {
-        return new RolesController($this->checkAuthentication, $this->privilegesManagement, $this->iDataBaseCreateRole);
+        return new RolesController($this->checkAuthentication, $this->privilegesManagement, $this->iDataBaseCreateRole, $this->iDataBaseDeleteRole, $this->ip);
     }
 
     public function testRun()
@@ -158,7 +170,7 @@ class RolesControllerTest extends TestCase
                     return true;
                 }
                 return false;
-            }), $privilege, $value);
+            }), $privilege, $value, $this->ip);
 
         $result = $this->instantiate()->update($request);
         $this->assertInstanceOf(Response::class, $result);
@@ -185,5 +197,30 @@ class RolesControllerTest extends TestCase
         $result = $this->instantiate()->show($user->{(new PatientRole)->getKeyName()});
         $this->assertInstanceOf(JsonResponse::class, $result);
         $this->assertCount(0, $result->original);
+    }
+
+    private function testDestroy(): void
+    {
+        $user = $this->users['admin'];
+        $dsUser = $user->getDataStructure();
+
+        /** @var \App\Http\Controllers\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
+        $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
+        $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($dsUser);
+
+        /** @var Request|\Mockery\Mockinterface $request */
+        $request = Mockery::mock(Request::class);
+        $request->customRoleName = '';
+
+        $this->privilegesManagement
+            ->shouldReceive('createRole')
+            ->with($dsUser, $request->customRoleName, $this->iDataBaseDeleteRole)
+            //
+        ;
+
+        $response = $this->instantiate()->destroy($request);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals('New role successfully created.', $response->original);
     }
 }

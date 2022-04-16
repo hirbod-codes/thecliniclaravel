@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Auth\CheckAuthentication;
 use App\Models\User;
 use Database\Interactions\Privileges\DataBaseCreateRole;
+use Database\Interactions\Privileges\DataBaseDeleteRole;
+use Database\Interactions\Privileges\Privileges;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
+use TheClinicUseCases\Privileges\Interfaces\IDataBaseDeleteRole;
 
 class RolesController extends Controller
 {
@@ -19,15 +23,23 @@ class RolesController extends Controller
 
     private CheckAuthentication $checkAuthentication;
 
+    private IDataBaseCreateRole $iDataBaseCreateRole;
+
+    private IDataBaseDeleteRole $iDataBaseDeleteRole;
+
     public function __construct(
         CheckAuthentication|null $checkAuthentication = null,
         PrivilegesManagement|null $privilegesManagement = null,
-        IDataBaseCreateRole|null $iDataBaseCreateRole = null
+        IDataBaseCreateRole|null $iDataBaseCreateRole = null,
+        IDataBaseDeleteRole|null $iDataBaseDeleteRole = null,
+        IPrivilege|null $ip
 
     ) {
         $this->privilegesManagement = $privilegesManagement ?: new PrivilegesManagement;
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
         $this->iDataBaseCreateRole = $iDataBaseCreateRole ?: new DataBaseCreateRole;
+        $this->iDataBaseDeleteRole = $iDataBaseDeleteRole ?: new DataBaseDeleteRole;
+        $this->ip = $ip ?: new Privileges;
     }
 
     public function index(): JsonResponse
@@ -54,7 +66,7 @@ class RolesController extends Controller
         $user = User::query()->where((new User)->getKeyName(), '=', $request->accountId)->first();
         $dsUser = $user->authenticatableRole()->getDataStructure();
 
-        $this->privilegesManagement->setUserPrivilege($authenticated, $dsUser, $request->privilege, $request->value);
+        $this->privilegesManagement->setUserPrivilege($authenticated, $dsUser, $request->privilege, $request->value, $this->ip);
 
         return response('The privilege successfully changed.');
     }
@@ -75,5 +87,14 @@ class RolesController extends Controller
                 $dsUser
             ));
         }
+    }
+
+    public function destroy(Request $request)
+    {
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+
+        $this->privilegesManagement->deleteRole($dsAuthenticated, $request->customRoleName, $this->iDataBaseDeleteRole);
+
+        return response('New role successfully deleted.');
     }
 }
