@@ -2,6 +2,7 @@
 
 namespace Database\Factories\roles;
 
+use App\Models\roles\CustomRole;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,15 +10,26 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CustomRoleFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition()
     {
-        return [
-            //
-        ];
+        return [];
+    }
+
+    public function usersForeignKey(int $value): static
+    {
+        return $this->state(function (array $attributes) use ($value) {
+            return [
+                (new CustomRole)->getKeyName() => $value,
+            ];
+        });
+    }
+
+    public function usersRoleNameForeignKey(string $value): static
+    {
+        return $this->state(function (array $attributes) use ($value) {
+            return [
+                (new CustomRole)->getUserRoleNameFKColumnName() => $value,
+            ];
+        });
     }
 }
