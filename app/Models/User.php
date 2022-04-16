@@ -4,18 +4,21 @@ namespace App\Models;
 
 use App\Models\Auth\User as Authenticatable;
 use App\Models\Order\Order;
-use App\Models\roles\Traits\BelongsToRole;
+use App\Models\roles\Traits\BelongsToRoleName;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Str;
+use Laravel\Passport\HasApiTokens;
 
 class User extends Authenticatable
 {
     use HasFactory,
+        HasApiTokens,
         Notifiable,
         ResolveUserModel,
-        BelongsToRole;
+        BelongsToRoleName;
 
     protected $table = "users";
 
@@ -46,5 +49,20 @@ class User extends Authenticatable
             $this->getKeyName(),
             __FUNCTION__
         );
+    }
+
+    /**
+     * Find the user instance for the given username.
+     *
+     * @param  string  $username
+     * @return \App\Models\User
+     */
+    public function findForPassport($credential)
+    {
+        if (Str::contains($credential, '@')) {
+            return $this->where('email', $credential)->first();
+        } else {
+            return $this->where('username', $credential)->first();
+        }
     }
 }
