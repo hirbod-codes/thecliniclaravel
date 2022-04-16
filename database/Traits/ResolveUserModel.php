@@ -2,42 +2,57 @@
 
 namespace Database\Traits;
 
+use App\Models\Auth\User as Authenticatable;
 use App\Models\Model;
+use App\Models\roles\CustomRole;
 use App\Models\roles\DSCustom;
 use App\Models\User;
+use Database\Factories\roles\CustomRoleFactory;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 
 trait ResolveUserModel
 {
-    public function resolveRuleName(DSUser|Model|string $modelFullname): string
+    public function resolveRuleName(DSUser|Authenticatable|User|string $modelFullname): string
     {
         if ($modelFullname instanceof DSUser) {
-            return str_replace('ds', '', strtolower(class_basename($modelFullname)));
-        } else {
-            return str_replace('role', '', strtolower(class_basename($modelFullname)));
+            return $modelFullname->getRuleName();
+        } elseif ($modelFullname instanceof Authenticatable) {
+            return $modelFullname->{$modelFullname->getUserRoleNameFKColumnName()};
+        } elseif ($modelFullname instanceof User) {
+            return $modelFullname->authenticatableRole->{$modelFullname->getUserRoleNameFKColumnName()};
+        } elseif (is_string($modelFullname)) {
+            if (!class_exists($modelFullname, false)) {
+                throw new \InvalidArgumentException('', 500);
+            }
+
+            return $this->resolveRuleName(new $modelFullname);
         }
     }
 
-    public function resolveRuleModelFullName(string $ruleName): string
+    public function resolveRuleModelFullName(string $roleName): string
     {
-        if ($ruleName === 'custom') {
-            return User::class;
+        if (!in_array($roleName, DSUser::$roles)) {
+            return CustomRole::class;
         }
 
-        return 'App\\Models\\roles\\' . ucfirst($ruleName) . 'Role';
+        return 'App\\Models\\roles\\' . ucfirst($roleName) . 'Role';
     }
 
-    public function resolveRuleDataStructureFullName(string $ruleName): string
+    public function resolveRuleDataStructureFullName(string $roleName): string
     {
-        if ($ruleName === 'custom') {
+        if (!in_array($roleName, DSUser::$roles)) {
             return DSCustom::class;
         }
 
-        return 'TheClinicDataStructures\\DataStructures\\User\\DS' . ucfirst($ruleName);
+        return 'TheClinicDataStructures\\DataStructures\\User\\DS' . ucfirst($roleName);
     }
 
-    public function resolveRuleFactoryFullName(string $ruleName): string
+    public function resolveRuleFactoryFullName(string $roleName): string
     {
-        return 'Database\\Factories\\roles\\' . ucfirst($ruleName) . 'RoleFactory';
+        if (!in_array($roleName, DSUser::$roles)) {
+            return CustomRoleFactory::class;
+        } else {
+            return 'Database\\Factories\\roles\\' . ucfirst($roleName) . 'RoleFactory';
+        }
     }
 }
