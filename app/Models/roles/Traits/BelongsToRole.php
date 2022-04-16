@@ -12,18 +12,8 @@ trait BelongsToRole
         return $this->belongsTo(
             Role::class,
             (new Role)->getForeignKey(),
-            'name',
+            (new Role)->getKeyName(),
             __FUNCTION__
         );
-    }
-
-    public function guardRoleForeignKey(): void
-    {
-        $this->guarded[] = (new Role)->getForeignKey();
-    }
-
-    private function addRoleForeignKey(): void
-    {
-        $this->foreignKeys[lcfirst(class_basename(Role::class))] = (new Role)->getForeignKey();
     }
 }
