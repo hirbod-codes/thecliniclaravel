@@ -32,8 +32,8 @@ class Role extends Model
         );
     }
 
-    public function getForeignKey(): string
+    public function getForeignKeyForName(): string
     {
-        return strtolower(class_basename(static::class)) . 'name';
+        return strtolower(class_basename(static::class)) . '_name';
     }
 }

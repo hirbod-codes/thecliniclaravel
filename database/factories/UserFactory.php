@@ -23,7 +23,7 @@ class UserFactory extends Factory
     public function definition()
     {
         $gender = $this->faker->randomElement(['Male', 'Female']);
-        
+
         if ($this->faker->randomElement([0, 1]) === 1) {
             $email = $this->faker->unique()->phoneNumber();
             $email_verified_at = new \DateTime('now', new \DateTimeZone('UTC'));
@@ -63,7 +63,7 @@ class UserFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($value) {
             return [
-                (new Role)->getForeignKey() => $value,
+                (new Role)->getForeignKeyForName() => $value,
             ];
         });
     }

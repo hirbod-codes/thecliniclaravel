@@ -41,7 +41,7 @@ trait TraitBaseUserRoleColumns
 
             $table->string($fkUserRole);
             $table->foreign($fkUserRole, $tableName . '_' . $userTable . '_' . $fkUserRole)
-                ->references((new Role())->getForeignKey())
+                ->references((new Role())->getForeignKeyForName())
                 ->on($userTable)
                 ->onUpdate('cascade')
                 ->onDelete('cascade');

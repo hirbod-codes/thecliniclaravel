@@ -35,7 +35,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             unset($input["role"]);
 
             $userModel = new User;
-            $userModel->{(new Role)->getForeignKey()} = Role::where('name', $ruleName)->first()->name;
+            $userModel->{(new Role)->getForeignKeyForName()} = Role::where('name', $ruleName)->first()->name;
             if (!$userModel->fill($userAattributes)->save()) {
                 DB::rollback();
                 throw new \RuntimeException('Failed to create the account.', 500);
@@ -46,7 +46,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             /** @var Authenticatable $roleModel */
             $roleModel = new $modelFullName;
             $roleModel->{(new $modelFullName)->getKeyName()} = $userModel->{(new User)->getKeyName()};
-            $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKey()};
+            $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKeyForName()};
             if (!$roleModel->fill($input)->save()) {
                 DB::rollback();
                 throw new \RuntimeException('Failed to create the account.', 500);

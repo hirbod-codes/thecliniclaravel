@@ -21,7 +21,7 @@ class DatabaseUsersSeeder extends Seeder
 
             AdminRole::factory()
                 ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
                 ->create();
         }
 
@@ -30,7 +30,7 @@ class DatabaseUsersSeeder extends Seeder
 
             DoctorRole::factory()
                 ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
                 ->create();
         }
 
@@ -39,7 +39,7 @@ class DatabaseUsersSeeder extends Seeder
 
             SecretaryRole::factory()
                 ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
                 ->create();
         }
 
@@ -48,7 +48,7 @@ class DatabaseUsersSeeder extends Seeder
 
             OperatorRole::factory()
                 ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
                 ->create();
         }
 
@@ -57,7 +57,7 @@ class DatabaseUsersSeeder extends Seeder
 
             PatientRole::factory()
                 ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKey()})
+                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
                 ->create();
         }
     }

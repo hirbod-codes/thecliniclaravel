@@ -27,7 +27,7 @@ return new class extends Migration
             $table->id();
 
             $roleTable = (new Role)->getTable();
-            $fk = (new Role)->getForeignKey();
+            $fk = (new Role)->getForeignKeyForName();
 
             $table->string($fk);
             $table->foreign($fk, $this->table . '_' . $roleTable . '_' . $fk)

@@ -48,7 +48,7 @@ return new class extends Migration
 
             $table->string($fkUserRole);
             $table->foreign($fkUserRole, $this->table . '_' . $userTable . '_' . $fkUserRole)
-                ->references((new Role)->getForeignKey())
+                ->references((new Role)->getForeignKeyForName())
                 ->on($userTable)
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
