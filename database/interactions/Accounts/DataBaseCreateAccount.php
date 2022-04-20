@@ -2,10 +2,12 @@
 
 namespace Database\Interactions\Accounts;
 
+use App\Http\Controllers\AccountDocumentsController;
 use App\Models\Auth\User as Authenticatable;
 use App\Models\Role;
 use App\Models\User;
 use Database\Traits\ResolveUserModel;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount;
@@ -21,7 +23,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             DB::beginTransaction();
 
             if (User::where('firstname', $input['firstname'])->where('lastname', $input['lastname'])->first() !== null) {
-                throw new \RuntimeException('A user with same first name and last name already exists.', 500);
+                throw new \RuntimeException('A user with same first name and last name already exists.', 422);
             }
 
             $userAattributes = [];
@@ -33,6 +35,12 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
 
             $ruleName = $input["role"];
             unset($input["role"]);
+
+            if (isset($input['avatar'])) {
+                $avatar = $input['avatar'];
+                unset($input["avatar"]);
+            }
+
 
             $userModel = new User;
             $userModel->{(new Role)->getForeignKeyForName()} = Role::where('name', $ruleName)->first()->name;
@@ -52,7 +60,13 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
                 throw new \RuntimeException('Failed to create the account.', 500);
             }
 
+            if (isset($avatar)) {
+                (new AccountDocumentsController)->makeAvatar('images/avatars/', $avatar, $input['accountId'], 'local');
+            }
+
             DB::commit();
+
+            event(new Registered($userModel));
 
             return $roleModel->getDataStructure();
         } catch (\Throwable $th) {

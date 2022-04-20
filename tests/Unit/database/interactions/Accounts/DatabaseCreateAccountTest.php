@@ -75,6 +75,7 @@ class DatabaseCreateAccountTest extends TestCase
                 $this->assertDatabaseHas((new $roleModelFullname)->getTable(), [(new $roleModelFullname)->getKeyName() => $dsUser->getId()]);
                 $this->assertDatabaseHas((new User)->getTable(), ['username' => $dsUser->getUsername()]);
 
+                // -------------
                 $randomUser = User::first();
                 $input['firstname'] = $randomUser->firstname;
                 $input['lastname'] = $randomUser->lastname;
@@ -85,7 +86,7 @@ class DatabaseCreateAccountTest extends TestCase
                     throw new \RuntimeException('Failure!!!');
                 } catch (\Throwable $th) {
                     $this->assertEquals('A user with same first name and last name already exists.', $th->getMessage());
-                    $this->assertEquals(500, $th->getCode());
+                    $this->assertEquals(422, $th->getCode());
                 }
 
                 DB::rollback();
