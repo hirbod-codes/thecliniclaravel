@@ -16,6 +16,20 @@ class DatabaseUsersSeeder extends Seeder
 {
     public function run(): void
     {
+        $user = User::factory()
+            ->state([
+                'username' => 'hirbod',
+                'email' => 'hirbod.khatami@gmail.com',
+                'phonenumber' => '09380978577',
+            ])
+            ->usersRolesForeignKey('admin')
+            ->create();
+
+        AdminRole::factory()
+            ->usersForeignKey($user->{(new User)->getKeyName()})
+            ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+            ->create();
+
         for ($i = 0; $i < 10; $i++) {
             $user = $this->createUser('admin');
 
