@@ -32,7 +32,7 @@ class RolesController extends Controller
         PrivilegesManagement|null $privilegesManagement = null,
         IDataBaseCreateRole|null $iDataBaseCreateRole = null,
         IDataBaseDeleteRole|null $iDataBaseDeleteRole = null,
-        IPrivilege|null $ip
+        IPrivilege|null $ip = null
 
     ) {
         $this->privilegesManagement = $privilegesManagement ?: new PrivilegesManagement;
