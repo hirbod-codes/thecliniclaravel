@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Models\User;
+use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
@@ -13,6 +14,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Notification;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use TheClinicUseCases\Accounts\Authentication;
@@ -74,12 +76,33 @@ class AccountsController extends Controller
         return response()->json($array);
     }
 
-    // public function create(): JsonResponse
-    // {
-    // }
-
-    public function store(Request $request): JsonResponse
+    public function verifyPhonenumber(Request $request): Response
     {
+        if (User::query()->where('username', '=', $request->phonenumber)->first() !== null) {
+            return response('The provided phonenumber already occupied.', 422);
+        }
+
+        $session = $request->session();
+        $session->put('verificationCode', $code = rand(100000, 999999));
+        $session->put('phonenumber', $request->phonenumber);
+
+        Notification::route('sms', $request->phonenumber)
+            ->notify(new SendPhonenumberVerificationCode($code))
+            //
+        ;
+
+        return response("You will receive a text message on your cell phone including a 6-digit code.\nPlease send it back to us.", 200);
+    }
+
+    public function store(Request $request): Response|JsonResponse
+    {
+        $session = $request->session();
+        if ($session->get('verificationCode', 0) !== $request->code || $request->phonenumber !== $session->get('phonenumber', '')) {
+            return response('The provided code or phonenumber does not match with our records, please try again.', 422);
+        }
+
+        unset($request['code']);
+
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         $username = $this->accountsManagement->createAccount($request->all(), $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();

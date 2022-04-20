@@ -27,8 +27,6 @@ use TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
 use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
-use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToUpdateAdminException;
 
 class AccountsControllerTest extends TestCase
 {
@@ -182,10 +180,33 @@ class AccountsControllerTest extends TestCase
         $authenticatables = $this->getAuthenticatables();
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
-            /** @var \Illuminate\Http\Request|\Mockery\MockInterface $request */
+            $code = $this->faker->numberBetween(100000, 999999);
+            $phonenumber = $this->faker->phoneNumber();
+            $requestInput = [];
+
+            /** @var Session|MockInterface $session */
+            $session = Mockery::mock(Session::class);
+            $session
+                ->shouldReceive('get')
+                ->with('verificationCode', 0)
+                ->andReturn($code)
+                //
+            ;
+            $session
+                ->shouldReceive('get')
+                ->with('phonenumber', '')
+                ->andReturn($phonenumber)
+                //
+            ;
+
+            /** @var Request|MockInterface $request */
             $request = Mockery::mock(Request::class);
-            $request->shouldReceive('all')->andReturn($input);
-            $request->rule = $ruleName;
+            $request->phonenumber = $phonenumber;
+            $request->code = $code;
+            $request->shouldReceive('session')->andreturn($session);
+            $request->shouldReceive('all')->andreturn($requestInput);
+            $request->shouldReceive('offsetUnset');
+            $request->shouldReceive('offsetSet');
 
             $dsNewUser = $authenticatable->getDataStructure();
             $dsNewUserArray = $dsNewUser->toArray();
