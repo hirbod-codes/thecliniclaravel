@@ -33,6 +33,8 @@ trait TraitBaseVisitColumns
             $table->json('week_days_periods')->nullable();
             $table->json('date_time_period')->nullable();
 
+            $table->boolean('visitor_reminded')->default(false);
+
             $table->timestamps();
         });
 
