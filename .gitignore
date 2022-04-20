@@ -15,3 +15,5 @@ yarn-error.log
 /.vscode
 workspace
 tests/ConsoleTest.php
+composer.lock
+phpunit.xml
