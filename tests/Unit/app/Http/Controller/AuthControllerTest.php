@@ -5,11 +5,13 @@ namespace Tests\Unit\app\Http\Controller;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AuthController;
+use App\Models\User;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Mockery;
@@ -73,26 +75,50 @@ class AuthControllerTest extends TestCase
 
     public function testRegister(): void
     {
-        $ruleName = 'admin';
+        $code = $this->faker->numberBetween(100000, 999999);
+        $phonenumber = $this->faker->phoneNumber();
+        $ruleName = 'patient';
         $input = ['role' => 'patient'];
         $requestInput = [];
 
+        /** @var Session|MockInterface $session */
+        $session = Mockery::mock(Session::class);
+        $session
+            ->shouldReceive('get')
+            ->with('verificationCode', 0)
+            ->andReturn($code)
+            //
+        ;
+        $session
+            ->shouldReceive('get')
+            ->with('phonenumber', '')
+            ->andReturn($phonenumber)
+            //
+        ;
+
         /** @var Request|MockInterface $request */
         $request = Mockery::mock(Request::class);
+        $request->phonenumber = $phonenumber;
+        $request->code = $code;
+        $request->shouldReceive('session')->andreturn($session);
         $request->shouldReceive('all')->andreturn($requestInput);
+        $request->shouldReceive('offsetUnset');
+        $request->shouldReceive('offsetSet');
 
         $this->accountsManagement
             ->shouldReceive('signupAccount')
-            ->with(array_merge($requestInput, $input), $this->dataBaseCreateAccount, $this->checkAuthentication)
-            ->andReturn(($user = $this->getAuthenticatable($ruleName))->getDataStructure());
+            ->with($requestInput, $this->dataBaseCreateAccount, $this->checkAuthentication)
+            ->andReturn(($authenticatable = $this->getAuthenticatable($ruleName))->getDataStructure());
 
         $response = $this->instantiate()->register($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
-        $this->assertCount(count($dsUserArray = $user->getDataStructure()->toArray()), $response->original);
+        /** @var User $user */
+        $user = $authenticatable->user;
+        $this->assertCount(count($userArray = $user->withoutRelations()->toArray()), $response->original);
 
-        foreach ($dsUserArray as $key => $value) {
+        foreach ($userArray as $key => $value) {
             $this->assertNotFalse(array_search($key, array_keys($response->original)));
             $this->assertEquals($value, $response->original[$key]);
         }

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
+use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Artisan;
@@ -55,8 +57,23 @@ class AuthController extends Controller
         return (new CheckAuthentication)->getAuthenticated()->token()->id;
     }
 
-    public function register(Request $request)
+    public function register(Request $request): Response|JsonResponse
     {
-        return response()->json($this->accountsManagement->signupAccount(array_merge($request->all(), ['role' => 'patient']), $this->dataBaseCreateAccount, $this->checkAuthentication)->toArray());
+        $session = $request->session();
+        if ($session->get('verificationCode', 0) !== $request->code || $request->phonenumber !== $session->get('phonenumber', '')) {
+            return response('The provided code or phonenumber does not match with our records, please try again.', 422);
+        }
+
+        unset($request['code']);
+
+        $request['role'] = 'patient';
+
+        $newDSUser = $this->accountsManagement->signupAccount($request->all(), $this->dataBaseCreateAccount, $this->checkAuthentication);
+
+        $newUser = User::query()
+            ->where('username', '=', $newDSUser->getUsername())
+            ->firstOrFail();
+
+        return response()->json($newUser->toArray());
     }
 }
