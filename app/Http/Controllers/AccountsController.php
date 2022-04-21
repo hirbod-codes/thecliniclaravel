@@ -16,7 +16,6 @@ use Database\Interactions\Accounts\DataBaseUpdateAccount;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
@@ -149,12 +148,12 @@ class AccountsController extends Controller
         return response()->json($dsAuthenticated->toArray());
     }
 
-    // public function edit(int $accountId): JsonResponse
-    // {
-    // }
-
-    public function update(Request $request, int $accountId): JsonResponse|Response
+    public function update(UpdateAccountRequest $request, int $accountId): JsonResponse|Response
     {
+        if ($accountId <= 0) {
+            return response(__('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1']), 422);
+        }
+
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         try {
@@ -162,31 +161,31 @@ class AccountsController extends Controller
             $targetUser = User::query()->whereKey($accountId)->first();
 
             $dsUpdatedUser = $this->accountsManagement->massUpdateAccount(
-                $request->all(),
+                $request->safe()->all(),
                 $targetUser->authenticatableRole()->getDataStructure(),
                 $dsAuthenticated,
                 $this->dataBaseUpdateAccount
             );
         } catch (AdminsCollisionException $e) {
-            return response($e->getMessage(), $e->getCode());
+            return response(trans_choice('auth.admin_conflict', 0), 403);
         }
 
         return response()->json($dsUpdatedUser->toArray());
     }
 
-    public function updateSelf(Request $request): JsonResponse|Response
+    public function updateSelf(UpdateAccountRequest $request): JsonResponse|Response
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         try {
             $dsUpdatedAuthenticated = $this->accountsManagement->massUpdateAccount(
-                $request->all(),
+                $request->safe()->all(),
                 $dsAuthenticated,
                 $dsAuthenticated,
                 $this->dataBaseUpdateAccount
             );
         } catch (AdminsCollisionException $e) {
-            return response($e->getMessage(), $e->getCode());
+            return response(trans_choice('auth.admin_conflict', 0), 403);
         }
 
         return response()->json($dsUpdatedAuthenticated->toArray());
@@ -217,9 +216,9 @@ class AccountsController extends Controller
         try {
             $this->accountsManagement->deleteAccount($dsUser, $dsUser, $this->dataBaseDeleteAccount);
         } catch (AdminTemptsToDeleteAdminException $e) {
-            return response($e->getMessage(), $e->getCode());
+            return response(trans_choice('auth.admin_conflict', 0), 403);
         } catch (AdminModificationByUserException $e) {
-            return response($e->getMessage(), $e->getCode());
+            return response(trans_choice('auth.admin_conflict', 0), 403);
         }
 
         return response('The user successfuly deleted.');

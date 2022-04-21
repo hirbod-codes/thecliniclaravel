@@ -8,6 +8,7 @@ use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\Auth\User as AuthUser;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -332,9 +333,9 @@ class AccountsControllerTest extends TestCase
             $anotherId = $authenticatable->getKey();
             $dsNewAuthenticatable = $authenticatable->getDataStructure();
 
-            /** @var \Illuminate\Http\Request|\Mockery\MockInterface $request */
-            $request = Mockery::mock(Request::class);
-            $request->shouldReceive('all')->andReturn($input);
+            /** @var UpdateAccountRequest|\Mockery\MockInterface $request */
+            $request = Mockery::mock(UpdateAccountRequest::class);
+            $request->shouldReceive('safe->all')->andReturn($input);
 
             /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
             $this->accountsManagement = Mockery::mock(AccountsManagement::class);
@@ -372,9 +373,9 @@ class AccountsControllerTest extends TestCase
         $input = ['input'];
         $anotherId = $this->dsUser->getId();
 
-        /** @var \Illuminate\Http\Request|\Mockery\MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->shouldReceive('all')->andReturn($input);
+        /** @var UpdateAccountRequest|\Mockery\MockInterface $request */
+        $request = Mockery::mock(UpdateAccountRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
         $this->accountsManagement = Mockery::mock(AccountsManagement::class);
