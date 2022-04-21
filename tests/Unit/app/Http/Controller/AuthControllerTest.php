@@ -5,6 +5,7 @@ namespace Tests\Unit\app\Http\Controller;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AuthController;
+use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
@@ -76,44 +77,25 @@ class AuthControllerTest extends TestCase
     public function testRegister(): void
     {
         $code = $this->faker->numberBetween(100000, 999999);
-        $phonenumber = $this->faker->phoneNumber();
         $ruleName = 'patient';
-        $input = ['role' => 'patient'];
-        $requestInput = [];
+        $requestInput = ['code' => $code];
 
-        /** @var Session|MockInterface $session */
-        $session = Mockery::mock(Session::class);
-        $session
-            ->shouldReceive('get')
-            ->with('verificationCode', 0)
-            ->andReturn($code)
-            //
-        ;
-        $session
-            ->shouldReceive('get')
-            ->with('phonenumber', '')
-            ->andReturn($phonenumber)
-            //
-        ;
-
-        /** @var Request|MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->phonenumber = $phonenumber;
-        $request->code = $code;
-        $request->shouldReceive('session')->andreturn($session);
-        $request->shouldReceive('all')->andreturn($requestInput);
-        $request->shouldReceive('offsetUnset');
-        $request->shouldReceive('offsetSet');
+        /** @var RegisterUserRequest|MockInterface $request */
+        $request = Mockery::mock(RegisterUserRequest::class);
+        $request->shouldReceive('safe->all')->andreturn($requestInput);
 
         $this->accountsManagement
             ->shouldReceive('signupAccount')
-            ->with($requestInput, $this->dataBaseCreateAccount, $this->checkAuthentication)
+            ->with(['role' => 'patient'], $this->dataBaseCreateAccount, $this->checkAuthentication)
             ->andReturn(($authenticatable = $this->getAuthenticatable($ruleName))->getDataStructure());
 
         $response = $this->instantiate()->register($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(200, $response->getStatusCode());
+
         $this->assertIsArray($response->original);
+
         /** @var User $user */
         $user = $authenticatable->user;
         $this->assertCount(count($userArray = $user->withoutRelations()->toArray()), $response->original);

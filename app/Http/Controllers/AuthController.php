@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
+use App\Http\Requests\RegisterUserRequest;
 use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Artisan;
 use Laravel\Passport\RefreshTokenRepository;
@@ -57,18 +57,14 @@ class AuthController extends Controller
         return (new CheckAuthentication)->getAuthenticated()->token()->id;
     }
 
-    public function register(Request $request): Response|JsonResponse
+    public function register(RegisterUserRequest $request): Response|JsonResponse
     {
-        $session = $request->session();
-        if ($session->get('verificationCode', 0) !== $request->code || $request->phonenumber !== $session->get('phonenumber', '')) {
-            return response('The provided code or phonenumber does not match with our records, please try again.', 422);
-        }
+        $validatedInput = $request->safe()->all();
+        unset($validatedInput['code']);
 
-        unset($request['code']);
+        $validatedInput['role'] = 'patient';
 
-        $request['role'] = 'patient';
-
-        $newDSUser = $this->accountsManagement->signupAccount($request->all(), $this->dataBaseCreateAccount, $this->checkAuthentication);
+        $newDSUser = $this->accountsManagement->signupAccount($validatedInput, $this->dataBaseCreateAccount, $this->checkAuthentication);
 
         $newUser = User::query()
             ->where('username', '=', $newDSUser->getUsername())
