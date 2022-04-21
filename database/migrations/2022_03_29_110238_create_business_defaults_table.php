@@ -25,13 +25,14 @@ return new class extends Migration
         Schema::create($this->table, function (Blueprint $table) {
             $table->id();
 
+            $table->integer('min_age');
             $table->integer('visit_alert_deley');
-
             $table->integer('default_regular_order_price');
             $table->integer('default_regular_order_time_consumption');
 
             $table->json('work_schedule');
             $table->json('down_times');
+            $table->json('genders');
 
             $table->timestamps();
         });
