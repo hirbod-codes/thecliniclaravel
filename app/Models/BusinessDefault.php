@@ -30,10 +30,22 @@ class BusinessDefault extends Model
     {
         return Attribute::make(
             get: function (string $downTimes): DSDownTimes {
-                return $t=DSDownTimes::toObject(json_decode($downTimes, true));
+                return DSDownTimes::toObject(json_decode($downTimes, true));
             },
             set: function (DSDownTimes $value) {
                 return json_encode($value->toArray());
+            }
+        );
+    }
+
+    protected function genders(): Attribute
+    {
+        return Attribute::make(
+            get: function (string $genders): array {
+                return json_decode($genders, true);
+            },
+            set: function (array $genders) {
+                return json_encode($genders);
             }
         );
     }
