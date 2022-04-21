@@ -7,6 +7,7 @@ use TheClinicUseCases\Accounts\Authentication;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
+use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\Auth\User as AuthUser;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -229,6 +230,20 @@ class AccountsControllerTest extends TestCase
         );
     }
 
+    private function testStore(): void
+    {
+        $authenticatables = $this->getAuthenticatables();
+
+        foreach ($authenticatables as $ruleName => $authenticatable) {
+            $requestInput = [
+                'code' => $this->faker->numberBetween(100000, 999999),
+                'password_confirmation' => $this->faker->lexify(),
+            ];
+
+            /** @var StoreAccountRequest|MockInterface $request */
+            $request = Mockery::mock(StoreAccountRequest::class);
+            $request->shouldReceive('safe->all')->andreturn($requestInput);
+
             $dsNewUser = $authenticatable->getDataStructure();
             $dsNewUserArray = $dsNewUser->toArray();
 
@@ -236,7 +251,7 @@ class AccountsControllerTest extends TestCase
             $this->accountsManagement = Mockery::mock(AccountsManagement::class);
             $this->accountsManagement
                 ->shouldReceive("createAccount")
-                ->with($input, $this->dsUser, $this->dataBaseCreateAccount)
+                ->with([], $this->dsUser, $this->dataBaseCreateAccount)
                 ->andReturn($dsNewUser);
 
             $accountsController = $this->instantiate();
@@ -273,6 +288,7 @@ class AccountsControllerTest extends TestCase
 
             $jsonResponse = $accountsController->show($username);
             $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
+            $this->assertEquals(200, $jsonResponse->getStatusCode());
             $this->assertIsArray($jsonResponse->original);
             $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
 

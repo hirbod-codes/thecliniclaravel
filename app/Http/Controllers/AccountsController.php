@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
+use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -99,18 +100,17 @@ class AccountsController extends Controller
         return response(trans_choice('auth.phonenumber_verification_code_sent', 0), 200);
     }
 
-    public function store(Request $request): Response|JsonResponse
+    public function store(StoreAccountRequest $request): Response|JsonResponse
     {
-        $session = $request->session();
-        if ($session->get('verificationCode', 0) !== $request->code || $request->phonenumber !== $session->get('phonenumber', '')) {
-            return response('The provided code or phonenumber does not match with our records, please try again.', 422);
-        }
+        $validatedInput = $request->safe()->all();
 
-        unset($request['code']);
+        // Already validated in StoreAccountRequest::class
+        unset($validatedInput['code']);
+        unset($validatedInput['password_confirmation']);
 
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        $username = $this->accountsManagement->createAccount($request->all(), $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();
+        $username = $this->accountsManagement->createAccount($validatedInput, $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();
 
         /** @var \App\Models\Auth\User $newAccount */
         if (($newAccount = User::where('username', '=', $username)->first()) === null) {
