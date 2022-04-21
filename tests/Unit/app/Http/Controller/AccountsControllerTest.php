@@ -7,7 +7,9 @@ use TheClinicUseCases\Accounts\Authentication;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
+use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\Auth\User as AuthUser;
+use App\Notifications\SendPhonenumberVerificationCode;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
@@ -16,9 +18,13 @@ use Database\Interactions\Accounts\DataBaseUpdateAccount;
 use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 use Mockery;
 use Mockery\MockInterface;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount;
@@ -172,54 +178,56 @@ class AccountsControllerTest extends TestCase
         $this->assertEquals($newDSUser->toArray(), $jsonResponse->original[0]);
     }
 
-    // private function testCreate(): void
-    // {
-    // $accountsController = $this->instantiate();
-
-    // $jsonResponse = $accountsController->create();
-    // $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-    // $this->assertIsArray($jsonResponse->original);
-    // $this->assertCount(count(Privilege::all()), $jsonResponse->original);
-
-    // foreach ($jsonResponse->original as $privilegeName => $privilege) {
-    //     $this->assertIsString($privilegeName);
-    //     $this->assertNotNull($privilege);
-    // }
-    // }
-
-    private function testStore(): void
+    private function testVerifyPhonenumber(): void
     {
-        $input = [];
-        $authenticatables = $this->getAuthenticatables();
+        /** @var Session|MockInterface $session */
+        $session = Mockery::mock(Session::class);
+        $session
+            ->shouldReceive('put')
+            ->with(
+                'verificationCode',
+                Mockery::on(function (int $value) {
+                    return $value >= 100000 || $value >= 999999;
+                })
+            )
+            //
+        ;
+        $session
+            ->shouldReceive('put')
+            ->with(
+                'phonenumber',
+                Mockery::on(function (string $value) {
+                    return true;
+                })
+            )
+            //
+        ;
 
-        foreach ($authenticatables as $ruleName => $authenticatable) {
-            $code = $this->faker->numberBetween(100000, 999999);
-            $phonenumber = $this->faker->phoneNumber();
-            $requestInput = [];
+        /** @var VerifyPhonenumberRequest|MockInterface $request */
+        $request = Mockery::mock(VerifyPhonenumberRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn([
+                'phonenumber' => $phonenumber = $this->faker->phoneNumber(),
+            ])
+            //
+        ;
+        $request
+            ->shouldReceive('session')
+            ->andReturn($session)
+            //
+        ;
 
-            /** @var Session|MockInterface $session */
-            $session = Mockery::mock(Session::class);
-            $session
-                ->shouldReceive('get')
-                ->with('verificationCode', 0)
-                ->andReturn($code)
-                //
-            ;
-            $session
-                ->shouldReceive('get')
-                ->with('phonenumber', '')
-                ->andReturn($phonenumber)
-                //
-            ;
+        Notification::fake();
 
-            /** @var Request|MockInterface $request */
-            $request = Mockery::mock(Request::class);
-            $request->phonenumber = $phonenumber;
-            $request->code = $code;
-            $request->shouldReceive('session')->andreturn($session);
-            $request->shouldReceive('all')->andreturn($requestInput);
-            $request->shouldReceive('offsetUnset');
-            $request->shouldReceive('offsetSet');
+        $response = $this->instantiate()->verifyPhonenumber($request);
+
+        $this->assertInstanceOf(Response::class, $response);
+        Notification::assertSentTo(
+            [(new AnonymousNotifiable)->route('sms', $phonenumber)],
+            SendPhonenumberVerificationCode::class
+        );
+    }
 
             $dsNewUser = $authenticatable->getDataStructure();
             $dsNewUserArray = $dsNewUser->toArray();
