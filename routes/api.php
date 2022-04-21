@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
+use App\Http\Requests\UpdateLocaleRequest;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -22,25 +23,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware('throttle:global')->group(function () {
-    Route::put('/changeLocale', function (Request $request) {
-        $locales = [];
-        foreach ($dirs = scandir(base_path() . '/lang') as $value) {
-            if (in_array($value, ['..', '.'])) {
-                continue;
-            }
+    Route::put('/updateLocale', function (UpdateLocaleRequest $request) {
+        $locale = $request->safe()->only('locale');
 
-            if (is_dir(base_path() . '/lang/' . $value)) {
-                $locales[] = $value;
-            }
-        }
+        App::setLocale($locale);
 
-        if (!is_string($request->locale) || !in_array($request->locale, $locales)) {
-            return abort(422, 'The provided locale option must be one of the following: ' . implode(', ', $locales) . '.');
-        }
-
-        App::setLocale($request->locale);
-
-        return response('The locale option successfully change.', 404);
+        return response('The locale option successfully updated.', 200);
     });
 
     Route::group(['middleware' => ['web', 'auth']], function ($router) {
