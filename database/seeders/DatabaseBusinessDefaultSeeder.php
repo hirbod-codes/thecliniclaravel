@@ -24,6 +24,8 @@ class DatabaseBusinessDefaultSeeder extends Seeder
         $dsDown_times = new DSDownTimes();
 
         $businessDefault = new BusinessDefault;
+        $businessDefault->genders = ['Male', 'Female'];
+        $businessDefault->min_age = 16;
         $businessDefault->visit_alert_deley = intval(3600 * 6);
         $businessDefault->default_regular_order_price = $faker->numberBetween(5000000, 10000000);
         $businessDefault->default_regular_order_time_consumption = $faker->numberBetween(600, 1000);
