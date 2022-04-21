@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -18,6 +19,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Validator;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use TheClinicUseCases\Accounts\Authentication;
@@ -122,6 +124,15 @@ class AccountsController extends Controller
 
     public function show(string $username): JsonResponse
     {
+        $usernameRules = include(base_path() . '/app/Rules/BuiltInRules/Models/User/username.php');
+        $validator = Validator::make(['username' => $username], [
+            'username' => $usernameRules['username_not_unique'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors()->toArray(), 422);
+        }
+
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         $dsUser = $this->accountsManagement->getAccount($username, $dsAuthenticated, $this->dataBaseRetrieveAccounts);

@@ -76,7 +76,7 @@ Route::middleware('throttle:global')->group(function () {
                 Route::post('/accounts/verifyPhonenumber', 'verifyPhonenumber')->middleware('throttle:6,1')->name('accounts.verifyPhonenumber');
                 Route::post('/accounts', 'store')->name('accounts.store');
 
-                Route::get('/accounts/{accountId}', 'show')->name('accounts.show');
+                Route::get('/accounts/{username}', 'show')->name('accounts.show');
                 Route::get('/accounts', 'showSelf')->name('accounts.showSelf');
 
                 Route::put('/accounts/{accountId}', 'update')->name('accounts.update');
