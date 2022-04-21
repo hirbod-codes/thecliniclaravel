@@ -20,9 +20,9 @@ class DataBaseUpdateAccount implements IDataBaseUpdateAccount
 
         if (isset($input['firstname']) || isset($input['lastname'])) {
             if (!isset($input['firstname'])) {
-                $input['firstname'] = $theModelClassFullName::where($theModelClassPrimaryKey, $user->getId())->first()->firstname;
+                $input['firstname'] = User::where($theModelClassPrimaryKey, $user->getId())->firstOrFail()->firstname;
             } elseif (!isset($input['lastname'])) {
-                $input['lastname'] = $theModelClassFullName::where($theModelClassPrimaryKey, $user->getId())->first()->lastname;
+                $input['lastname'] = User::where($theModelClassPrimaryKey, $user->getId())->firstOrFail()->lastname;
             }
 
             if (User::where('firstname', $input['firstname'])->where('lastname', $input['lastname'])->first() !== null) {
