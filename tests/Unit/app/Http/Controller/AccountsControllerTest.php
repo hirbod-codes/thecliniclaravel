@@ -6,6 +6,7 @@ use App\Http\Controllers\AccountsController;
 use TheClinicUseCases\Accounts\Authentication;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
+use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Models\Auth\User as AuthUser;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
@@ -105,22 +106,22 @@ class AccountsControllerTest extends TestCase
 
     public function testRun()
     {
-        $methods = [
-            'testIndex',
-            // 'testCreate',
-            'testStore',
-            'testShow',
-            'testShowSelf',
-            // 'testEdit',
-            'testUpdate',
-            'testUpdateSelf',
-            'testDestroy',
-            'testDestroySelf'
-        ];
+        $methods = [];
+        /** @var \ReflectionMethod $method */
+        foreach ((new \ReflectionClass(static::class))->getMethods() as $method) {
+            if ($method->class !== static::class) {
+                continue;
+            }
+            $methods[] = $method->name;
+        }
 
         $this->users = $this->getAuthenticatables();
 
         foreach ($methods as $method) {
+            if (!Str::startsWith($method, 'test') || $method === __FUNCTION__) {
+                continue;
+            }
+
             // because of perfomance i chose a random user from $this->users.
             $this->ruleName = $this->faker->randomElement(array_keys($this->users));
 
@@ -149,9 +150,21 @@ class AccountsControllerTest extends TestCase
             ->with($lastAccountId, $count, $this->ruleName, $this->dsUser, $this->dataBaseRetrieveAccounts)
             ->andReturn([$newDSUser]);
 
+        /** @var IndexAccountsRequest|MockInterface $request */
+        $request = Mockery::mock(IndexAccountsRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn([
+                'roleName' => $this->ruleName,
+                'lastAccountId' => $lastAccountId,
+                'count' => $count
+            ])
+            //
+        ;
+
         $accountsController = $this->instantiate();
 
-        $jsonResponse = $accountsController->index($this->ruleName, $lastAccountId, $count);
+        $jsonResponse = $accountsController->index($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
 
         $this->assertIsArray($jsonResponse->original);
@@ -285,23 +298,6 @@ class AccountsControllerTest extends TestCase
             $this->assertEquals($jsonResponse->original[$key], $value);
         }
     }
-
-    // private function testEdit(): void
-    // {
-    // $id = $this->faker->numberBetween(1, 1000);
-
-    // $accountsController = $this->instantiate();
-
-    // $jsonResponse = $accountsController->edit($id);
-    // $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-    // $this->assertIsArray($jsonResponse->original);
-    // $this->assertCount(count(Privilege::all()), $jsonResponse->original);
-
-    // foreach ($jsonResponse->original as $privilegeName => $privilege) {
-    //     $this->assertIsString($privilegeName);
-    //     $this->assertNotNull($privilege);
-    // }
-    // }
 
     private function testUpdate(): void
     {

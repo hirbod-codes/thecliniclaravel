@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
+use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
@@ -65,13 +66,18 @@ class AccountsController extends Controller
         parent::__construct();
     }
 
-    public function index(string $ruleName, ?int $lastAccountId = null, int $count): JsonResponse
+    public function index(IndexAccountsRequest $request): JsonResponse
     {
+        $validatedInput = $request->safe()->all();
+        $roleName = $validatedInput['roleName'];
+        $lastAccountId = $validatedInput['lastAccountId'];
+        $count = $validatedInput['count'];
+
         $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
 
         $array = array_map(function (DSUser $dsUser) {
             return $dsUser->toArray();
-        }, $this->accountsManagement->getAccounts($lastAccountId, $count, $ruleName, $dsUser, $this->dataBaseRetrieveAccounts));
+        }, $this->accountsManagement->getAccounts($lastAccountId, $count, $roleName, $dsUser, $this->dataBaseRetrieveAccounts));
 
         return response()->json($array);
     }

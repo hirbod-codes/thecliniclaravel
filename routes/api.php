@@ -68,14 +68,12 @@ Route::middleware('throttle:global')->group(function () {
         $request->fulfill();
 
         return response('', 200);
-        // return redirect('/home');
     })->middleware([$authMiddleware, 'signed'])->name('verification.verify');
 
     Route::post('/email/verification-notification', function (Request $request) {
         $request->user()->sendEmailVerificationNotification();
 
         return response('Verification link sent!', 200);
-        // return back()->with('message', 'Verification link sent!');
     })->middleware([$authMiddleware, 'throttle:1,1'])->name('verification.send');
 
     Route::middleware(['guest', 'throttle:6,1'])->post('/register/verifyPhonenumber', [AccountsController::class, 'verifyPhonenumber'])->name('auth.verifyPhonenumber');
@@ -85,17 +83,13 @@ Route::middleware('throttle:global')->group(function () {
     Route::middleware([$authMiddleware, 'throttle:api'])->group(function () use ($authMiddleware) {
         Route::controller(AccountsController::class)
             ->group(function () {
-                Route::get('/accounts/{ruleName}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
-
-                // Route::get('/accounts/create', 'create')->name('accounts.create');
+                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
                 Route::post('/accounts/verifyPhonenumber', 'verifyPhonenumber')->middleware('throttle:6,1')->name('accounts.verifyPhonenumber');
                 Route::post('/accounts', 'store')->name('accounts.store');
 
                 Route::get('/accounts/{accountId}', 'show')->name('accounts.show');
                 Route::get('/accounts', 'showSelf')->name('accounts.showSelf');
-
-                // Route::get('/accounts/{accountId}/edit', 'edit')->name('accounts.edit');
 
                 Route::put('/accounts/{accountId}', 'update')->name('accounts.update');
                 Route::put('/accounts', 'updateSelf')->name('accounts.updateSelf');
