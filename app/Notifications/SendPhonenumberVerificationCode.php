@@ -37,11 +37,10 @@ class SendPhonenumberVerificationCode extends Notification implements ShouldQueu
 
     public function toSms($notifiable)
     {
-        $this->code;
         return (new Sms)
-            ->to($notifiable->phonenumber)
+            ->to(isset($notifiable->phonenumber) ? $notifiable->phonenumber : $notifiable->routes['phonenumber'])
             ->text(trans_choice(
-                'auth.phonenumber_verification_code_sent',
+                'auth.phonenumber_verification_text_message_sms',
                 0,
                 ['code' => strval($this->code)]
             ))

@@ -38,7 +38,7 @@ class VisitAlert extends Notification implements ShouldQueue
     public function toSms($notifiable)
     {
         return (new Sms)
-            ->to($notifiable->phonenumber)
+            ->to(isset($notifiable->phonenumber) ? $notifiable->phonenumber : $notifiable->routes['phonenumber'])
             ->text(trans_choice(
                 'Visits/visits.visit_alert',
                 0,

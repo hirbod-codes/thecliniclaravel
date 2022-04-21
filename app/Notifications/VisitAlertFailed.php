@@ -46,7 +46,7 @@ class VisitAlertFailed extends Notification implements ShouldQueue
         }
 
         return (new Sms)
-            ->to($notifiable->phonenumber)
+            ->to(isset($notifiable->phonenumber) ? $notifiable->phonenumber : $notifiable->routes['phonenumber'])
             ->text('System failed to notify ' . $failedNotifiable . ' for it\'s visit due at: ' . (new \DateTime)->setTimestamp($this->visitTimestamp)->format("Y-m-d H:i:s l P"));
     }
 

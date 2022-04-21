@@ -44,7 +44,7 @@ class QueueHasLongWaitTime extends Notification
     public function toSms($notifiable)
     {
         return (new Sms)
-            ->to($notifiable->phonenumber)
+            ->to(isset($notifiable->phonenumber) ? $notifiable->phonenumber : $notifiable->routes['phonenumber'])
             ->text("The " . $this->queue . " queue of " . $this->connection . "connection is busy.\nThe queue's size is: " . strval($this->size))
             //
         ;
