@@ -29,6 +29,10 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             $userAattributes = [];
             foreach (Schema::getColumnListing((new User)->getTable()) as $column) {
                 if (array_search($column, array_keys($input)) !== false) {
+                    if ($column === 'password') {
+                        $userAattributes[$column] = hash('sha256', $input[$column]);
+                        continue;
+                    }
                     $userAattributes[$column] = $input[$column];
                 }
             }
