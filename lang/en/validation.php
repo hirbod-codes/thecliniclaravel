@@ -130,6 +130,8 @@ return [
     'url' => 'The :attribute must be a valid URL.',
     'uuid' => 'The :attribute must be a valid UUID.',
 
+    'presence_prohibited_with' => "{0} The :current_field field is prohiboted when :other_field is present.",
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
