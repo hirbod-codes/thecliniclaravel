@@ -33,7 +33,12 @@ class AuthServiceProvider extends ServiceProvider
         $app = $this->app;
 
         if (!$app->routesAreCached()) {
-            Passport::routes();
+            Passport::routes(function ($router) {
+                // $router->forAccessTokens();
+                // $router->forPersonalAccessTokens();
+                // $router->forTransientTokens();
+            });
+            // Passport::routes();
         }
 
         Passport::hashClientSecrets();
