@@ -54,13 +54,15 @@ function getBody(response) {
     }
 }
 
-function showMessage(text, insertAfterElm) {
+function showMessage(text, insertAfterElm, milliseconds = 10000) {
     var div = createAppendElm('div', {
         "class": "message",
     }, insertAfterElm);
     div.innerText = text;
 
-    setTimeout(() => div.remove(), 10000);
+    if (milliseconds !== 0) {
+        setTimeout(() => div.remove(), milliseconds);
+    }
 }
 
 function disableButton(elm) {
@@ -87,4 +89,16 @@ function createAppendElm(tagName, attributes, parentElm) {
     parentElm.appendChild(elm);
 
     return elm;
+}
+
+function getElmValue(id) {
+    return getElm(id).value;
+}
+
+function getElm(id) {
+    return document.getElementById(id);
+}
+
+function isElmEmpty(id) {
+    return (getElmValue(id) === '' || getElmValue(id) === null);
 }
