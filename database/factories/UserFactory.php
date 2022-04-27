@@ -2,11 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Email;
-use App\Models\Phonenumber;
 use App\Models\Role;
-use App\Models\Rule;
-use App\Models\Username;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
