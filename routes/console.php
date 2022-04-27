@@ -17,6 +17,15 @@ use Tests\ConsoleTest;
 |
 */
 
+Artisan::command('consoleTest', function () {
+    (new ConsoleTest)->runTests();
+    $this->info('Console test has finished.');
+    // $this->line('line');
+    // $this->info('info');
+    // $this->warn('warn');
+    // $this->warn('error');
+});
+
 Artisan::command('initialize', function () {
     $t = explode(' ', microtime());
     $ms = $t[0];
@@ -128,13 +137,4 @@ Artisan::command('dbSeed', function () {
     $this->info("The command db:seed duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
     $this->newLine();
     $this->newLine();
-});
-
-Artisan::command('consoleTest', function () {
-    (new ConsoleTest)->runTests();
-    $this->info('Console test has finished.');
-    // $this->line('line');
-    // $this->info('info');
-    // $this->warn('warn');
-    // $this->warn('error');
 });
