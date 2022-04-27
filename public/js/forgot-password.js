@@ -19,7 +19,7 @@ function send() {
         }
 
         if (!document.getElementById('code_box')) {
-            addCodeInput();
+            addCodeInput(document.getElementById('parent_box'));
         }
 
         return getBody(response);
@@ -35,7 +35,7 @@ function send() {
                     for (let i = 0; i < messages.length; i++) {
                         const message = messages[i];
 
-                        text += message + "\n";
+                        text += message + "\n\n";
                     }
                 }
             }
@@ -134,11 +134,11 @@ function phonenumberInput(val) {
     document.getElementById("email").value = '';
 }
 
-function addCodeInput() {
+function addCodeInput(parentElm) {
     var div = createAppendElm('div', {
         "class": "box",
         "id": "code_box"
-    }, document.getElementById('parent_box'));
+    }, parentElm);
 
     createAppendElm('p', {
         "class": "message"
