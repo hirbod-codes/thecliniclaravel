@@ -31,24 +31,28 @@ function submit() {
                 var text = data;
             } else {
                 var text = "";
-                for (const attribute in data.errors) {
-                    if (Object.hasOwnProperty.call(data.errors, attribute)) {
-                        var messages = data.errors[attribute];
+                if (!Object.hasOwnProperty.call(data, 'errors')) {
+                    text = data.message;
+                } else {
+                    for (const attribute in data.errors) {
+                        if (Object.hasOwnProperty.call(data.errors, attribute)) {
+                            var messages = data.errors[attribute];
 
-                        for (let i = 0; i < messages.length; i++) {
-                            const message = messages[i];
+                            for (let i = 0; i < messages.length; i++) {
+                                const message = messages[i];
 
-                            text += message + "\n";
+                                text += message + "\n\n";
+                            }
                         }
                     }
                 }
             }
 
-            showMessage(text, document.getElementById('box'));
+            showMessage(text, getElm('box'));
 
             setTimeout(() => {
-                document.getElementById('button').innerText = 'Resend';
-                enableButton(document.getElementById('button'));
+                getElm('button').innerText = 'Resend';
+                enableButton(getElm('button'));
             }, 10000);
 
             return text;
