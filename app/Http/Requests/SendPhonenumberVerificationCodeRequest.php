@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class VerifyPhonenumberRequest extends FormRequest
+class SendPhonenumberVerificationCodeRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ class VerifyPhonenumberRequest extends FormRequest
     public function rules()
     {
         return [
-            'phonenumber' => include (base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php')['phonenumber']
+            'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber_not_unique']
         ];
     }
 }
