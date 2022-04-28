@@ -2,6 +2,8 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\PhonenumberNotVerified;
+use App\Http\Middleware\PhonenumberVerified;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
@@ -37,6 +39,7 @@ class Kernel extends HttpKernel
             \Illuminate\View\Middleware\ShareErrorsFromSession::class,
             \App\Http\Middleware\VerifyCsrfToken::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            'throttle:global',
         ],
 
         'api' => [
@@ -63,5 +66,7 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'phonenumber_verified' => PhonenumberVerified::class,
+        'phonenumber_not_verified' => PhonenumberNotVerified::class,
     ];
 }
