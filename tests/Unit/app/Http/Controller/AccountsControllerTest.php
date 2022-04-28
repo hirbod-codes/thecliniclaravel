@@ -9,6 +9,8 @@ use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
+use App\Http\Requests\ApiVerifyPhonenumberVerificationCodeRequest;
+use App\Http\Requests\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\Auth\User as AuthUser;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -25,6 +27,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Notifications\AnonymousNotifiable;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Mockery;
@@ -180,64 +183,79 @@ class AccountsControllerTest extends TestCase
         $this->assertEquals($newDSUser->toArray(), $jsonResponse->original[0]);
     }
 
-    private function testVerifyPhonenumber(): void
+    private function testSendPhonenumberVerificationCode(): void
     {
-        /** @var Session|MockInterface $session */
-        $session = Mockery::mock(Session::class);
-        $session
-            ->shouldReceive('put')
-            ->with(
-                'verificationCode',
-                Mockery::on(function (int $value) {
-                    return $value >= 100000 || $value >= 999999;
-                })
-            )
-            //
-        ;
-        $session
-            ->shouldReceive('put')
-            ->with(
-                'phonenumber',
-                Mockery::on(function (string $value) {
-                    return true;
-                })
-            )
-            //
-        ;
+        $validatedInput = [
+            'phonenumber' => $phonenumber = $this->faker->phoneNumber(),
+        ];
 
-        /** @var VerifyPhonenumberRequest|MockInterface $request */
-        $request = Mockery::mock(VerifyPhonenumberRequest::class);
+        /** @var SendPhonenumberVerificationCodeRequest|MockInterface $request */
+        $request = Mockery::mock(SendPhonenumberVerificationCodeRequest::class);
         $request
             ->shouldReceive('safe->all')
-            ->andReturn([
-                'phonenumber' => $phonenumber = $this->faker->phoneNumber(),
-            ])
-            //
-        ;
-        $request
-            ->shouldReceive('session')
-            ->andReturn($session)
+            ->andReturn($validatedInput)
             //
         ;
 
         Notification::fake();
 
-        $response = $this->instantiate()->verifyPhonenumber($request);
+        $response = $this->instantiate()->sendPhonenumberVerificationCode($request);
 
-        $this->assertInstanceOf(Response::class, $response);
+        $this->assertInstanceOf(JsonResponse::class, $response);
+
         Notification::assertSentTo(
             [(new AnonymousNotifiable)->route('sms', $phonenumber)],
             SendPhonenumberVerificationCode::class
         );
+
+        $keys = [
+            'code_created_at_encrypted',
+            'code_encrypted',
+            'phonenumber_encrypted',
+            'phonenumber_verified_at_encrypted',
+        ];
+        $this->assertCount(4, $response->original);
+        foreach ($keys as $key) {
+            $this->assertArrayHasKey($key, $response->original);
+            $this->assertNotEmpty($response->original[$key]);
+        }
+    }
+
+    private function testVerifyPhonenumberVerificationCode(): void
+    {
+        $id = $this->faker->numberBetween(100000, 999999);
+        $code = strval($this->faker->numberBetween(100000, 999999));
+        $validatedInput = [
+            'code_created_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp()) . AccountsController::SEPARATOR . strval($id)),
+            'code_encrypted' => Crypt::encryptString(strval($code) . AccountsController::SEPARATOR . strval($id)),
+            'code' => $code,
+        ];
+
+        /** @var ApiVerifyPhonenumberVerificationCodeRequest|MockInterface $request */
+        $request = Mockery::mock(ApiVerifyPhonenumberVerificationCodeRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn($validatedInput)
+            //
+        ;
+
+        $response = $this->instantiate()->verifyPhonenumberVerificationCode($request);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals(trans_choice('auth.phonenumber_verification_successful', 0), $response->original);
     }
 
     private function testStore(): void
     {
+        $id = $this->faker->numberBetween(100000, 999999);
+        $phonenumber = $this->faker->phoneNumber();
         $authenticatables = $this->getAuthenticatables();
 
         foreach ($authenticatables as $ruleName => $authenticatable) {
             $requestInput = [
-                'code' => $this->faker->numberBetween(100000, 999999),
+                'phonenumber_encrypted' => Crypt::encryptString($phonenumber),
+                'phonenumber' => $phonenumber,
+                'phonenumber_verified_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp())),
                 'password_confirmation' => $this->faker->lexify(),
             ];
 
@@ -252,7 +270,17 @@ class AccountsControllerTest extends TestCase
             $this->accountsManagement = Mockery::mock(AccountsManagement::class);
             $this->accountsManagement
                 ->shouldReceive("createAccount")
-                ->with([], $this->dsUser, $this->dataBaseCreateAccount)
+                ->with(
+                    Mockery::on(function (array $input) use ($requestInput) {
+                        $this->assertArrayHasKey('phonenumber', $input);
+                        $this->assertEquals($requestInput['phonenumber'], $input['phonenumber']);
+                        $this->assertArrayHasKey('phonenumber_verified_at', $input);
+                        $this->assertInstanceOf(\DateTime::class, $input['phonenumber_verified_at']);
+                        return true;
+                    }),
+                    $this->dsUser,
+                    $this->dataBaseCreateAccount
+                )
                 ->andReturn($dsNewUser);
 
             $accountsController = $this->instantiate();

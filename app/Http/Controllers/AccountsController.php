@@ -6,7 +6,8 @@ use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\VerifyPhonenumberRequest;
+use App\Http\Requests\SendPhonenumberVerificationCodeRequest;
+use App\Http\Requests\ApiVerifyPhonenumberVerificationCodeRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
@@ -17,6 +18,8 @@ use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -28,13 +31,14 @@ use TheClinicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
-use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToUpdateAdminException;
 use TheClinicUseCases\Exceptions\AdminModificationByUserException;
 use TheClinicUseCases\Exceptions\AdminsCollisionException;
 
 class AccountsController extends Controller
 {
     use ResolveUserModel;
+
+    public const SEPARATOR = '!!!__!!!';
 
     private CheckAuthentication $checkAuthentication;
 
@@ -73,7 +77,7 @@ class AccountsController extends Controller
     {
         $validatedInput = $request->safe()->all();
         $roleName = $validatedInput['roleName'];
-        $lastAccountId = $validatedInput['lastAccountId'];
+        $lastAccountId = isset($validatedInput['lastAccountId']) ? $validatedInput['lastAccountId'] : null;
         $count = $validatedInput['count'];
 
         $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
@@ -85,28 +89,58 @@ class AccountsController extends Controller
         return response()->json($array);
     }
 
-    public function verifyPhonenumber(VerifyPhonenumberRequest $request): Response
+    public function sendPhonenumberVerificationCode(SendPhonenumberVerificationCodeRequest $request): JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        $code = rand(100000, 999999);
+        $id = rand(100000, 999999);
+
+        Notification::route('phonenumber', $validatedInput['phonenumber'])
+            ->notify(new SendPhonenumberVerificationCode($code));
+
+        return response()->json([
+            'code_created_at_encrypted' => ($t = Crypt::encryptString(strval((new \DateTime)->getTimestamp()) . self::SEPARATOR . strval($id))),
+            'code_encrypted' => Crypt::encryptString(strval($code) . self::SEPARATOR . strval($id)),
+            'phonenumber_encrypted' => Crypt::encryptString(strval($validatedInput['phonenumber']) . self::SEPARATOR . strval($id)),
+            'phonenumber_verified_at_encrypted' => $t,
+        ]);
+    }
+
+    public function verifyPhonenumberVerificationCode(ApiVerifyPhonenumberVerificationCodeRequest $request): Response
     {
         $validatedInput = $request->safe()->all();
 
-        $session = $request->session();
-        $session->put('verificationCode', $code = rand(100000, 999999));
-        $session->put('phonenumber', $validatedInput['phonenumber']);
+        $codeCreatedAtDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($validatedInput['code_created_at_encrypted']))[0]);
+        $codeDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($validatedInput['code_encrypted']))[0]);
 
-        Notification::route('phonenumber', $validatedInput['phonenumber'])
-            ->notify(new SendPhonenumberVerificationCode($code))
-            //
-        ;
+        $code = intval($validatedInput['code']);
 
-        return response(trans_choice('auth.phonenumber_verification_code_sent', 0), 200);
+        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp($codeCreatedAtDecrypted)->modify('+90 seconds')->getTimestamp()) {
+            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+        }
+
+        if ($code !== $codeDecrypted) {
+            return response(trans_choice('auth.phonenumber_verification_failed_code', 0), 422);
+        }
+
+        return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
     }
 
     public function store(StoreAccountRequest $request): Response|JsonResponse
     {
         $validatedInput = $request->safe()->all();
 
+        if ($validatedInput['phonenumber'] !== explode(self::SEPARATOR, Crypt::decryptString($validatedInput['phonenumber_encrypted']))[0]) {
+            return response(trans_choice('auth.phonenumber_not_verification', 0), 422);
+        }
+
+        $timestamp = intval(explode(self::SEPARATOR, Crypt::decryptString($validatedInput['phonenumber_verified_at_encrypted']))[0]);
+
+        $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
+
         // Already validated in StoreAccountRequest::class
-        unset($validatedInput['code']);
+        unset($validatedInput['phonenumber_verified_at_encrypted']);
+        unset($validatedInput['phonenumber_encrypted']);
         unset($validatedInput['password_confirmation']);
 
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
@@ -115,7 +149,7 @@ class AccountsController extends Controller
 
         /** @var \App\Models\Auth\User $newAccount */
         if (($newAccount = User::where('username', '=', $username)->first()) === null) {
-            throw new ModelNotFoundException('Failed to find created account!', 404);
+            throw new ModelNotFoundException('Failed to find the created account!', 404);
         }
 
         return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
