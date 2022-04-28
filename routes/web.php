@@ -17,13 +17,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return view('auth.forgot-password');
     return 200;
 })->name('home');
 
 Route::middleware('auth:web')->group(function () {
     // Verify Email
-    Route::get('/email/verify', function () {
+    Route::get('/email/verify/{redirecturl?}', function (Request $request) {
+        $redirecturl = $request->get('redirecturl');
+        $request->session()->put('redirecturl', $redirecturl);
         return view('auth.verify-email');
     })->name('verification.notice');
 
@@ -36,28 +37,42 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
 
-        return redirect('/home');
+        $session = $request->session();
+        $redirecturl = $session->get('redirecturl');
+        $session->forget('redirecturl');
+
+        return redirect($redirecturl ?: '/');
     })->middleware('signed')->name('verification.verify');
-
-    // Reset Password
-    Route::get('/forgot-password', fn () => view('auth.forgot-password'))->name('forgot_password.page');
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot_password');
-
-    Route::get('/reset-password', fn () => view('auth.reset-password'))->name('reset_password.pqge');
-    Route::put('/reset-password', [AuthController::class, 'resetPassword'])->name('reset_password');
 
     // Logout
     Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 });
 
-// Register
-Route::middleware('guest:web')->get('/register', fn () => view('auth.register'))->name('auth.register.page');
-Route::middleware('guest:web')->post('/register', [AuthController::class, 'register'])->name('auth.register');
+Route::middleware('guest:web')->group(function () {
+    // Register
+    Route::get('/register/{redirecturl?}', function (Request $request) {
+        if (!is_null($redirecturl = $request->get('redirecturl'))) {
+            $request->session()->put('redirecturl', $redirecturl);
+        }
+        return view('auth.register');
+    })->name('auth.register.page');
+    Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 
-// Login
-Route::middleware('guest:web')->get('/login', fn () => view('auth.login'))->name('auth.login.page');
-Route::middleware('guest:web')->post('/login', [AuthController::class, 'login'])->name('auth.login');
+    // Login
+    Route::get('/login', fn () => view('auth.login'))->name('auth.login.page');
+    Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 
-// Verify Phonenumber
-Route::middleware('phonenumber_not_verified')->get('/register/verifyPhonenumber', fn () => view('auth.verify-phonenumber'))->name('auth.verifyPhonenumber.page');
-Route::middleware('phonenumber_not_verified')->post('/register/verifyPhonenumber', [AuthController::class, 'verifyPhonenumber'])->name('auth.verifyPhonenumber');
+    // Verify Phonenumber
+    Route::middleware('phonenumber_not_verified')->post('/register/send-phoennumber-verification-code', [AuthController::class, 'sendPhonenumberVerificationCode'])->name('auth.sendPhonenumberVerificationCode');
+    Route::middleware('phonenumber_not_verified')->post('/register/verify-phoennumber-verification-code', [AuthController::class, 'verifyPhonenumberVerificationCode'])->name('auth.verifyPhonenumberVerificationCode');
+});
+
+// Reset Password
+Route::get('/forgot-password/{redirecturl?}', function (Request $request) {
+    $redirecturl = $request->get('redirecturl');
+    $request->session()->put('redirecturl', $redirecturl);
+    return view('auth.forgot-password');
+})->name('forgot_password.page');
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot_password');
+
+Route::put('/reset-password', [AuthController::class, 'resetPassword'])->name('reset_password');
