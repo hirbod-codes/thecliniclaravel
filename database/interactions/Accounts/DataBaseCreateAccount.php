@@ -23,16 +23,17 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             DB::beginTransaction();
 
             if (User::where('firstname', $input['firstname'])->where('lastname', $input['lastname'])->first() !== null) {
-                throw new \RuntimeException('A user with same first name and last name already exists.', 422);
+                throw new \RuntimeException(trans_choice('auth.duplicate_fullname',0), 422);
             }
 
             $userAattributes = [];
             foreach (Schema::getColumnListing((new User)->getTable()) as $column) {
                 if (array_search($column, array_keys($input)) !== false) {
                     if ($column === 'password') {
-                        $userAattributes[$column] = hash('sha256', $input[$column]);
+                        $userAattributes[$column] = bcrypt($input[$column]);
                         continue;
                     }
+
                     $userAattributes[$column] = $input[$column];
                 }
             }
