@@ -45,7 +45,7 @@ class ProhibitExtraFeilds implements Rule, DataAwareRule
      */
     public function message()
     {
-        return 'The validation error message.';
+        return 'Extra fields are forbidden in input json.';
     }
 
     /**
