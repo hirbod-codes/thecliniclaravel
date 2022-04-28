@@ -25,11 +25,13 @@ class RegisterUserRequest extends FormRequest
      */
     public function rules()
     {
-        $array = (new StoreAccountRequest())->rulesWithoutCountLimit();
+        $array = (new StoreAccountRequest())->initialRules();
 
         unset($array['role']);
 
-        $array['code'][] = new ProhibitExtraFeilds($array);
+        $array['firstname'][] = new ProhibitExtraFeilds($array);
+
+        $array['age'][] = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/age.php'))['age'];
 
         return $array;
     }
