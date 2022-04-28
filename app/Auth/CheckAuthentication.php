@@ -36,7 +36,7 @@ class CheckAuthentication implements
             throw new \RuntimeException('There is no authenticated user.', 401);
         }
 
-        return $user->getDataStructure();
+        return $user->authenticatableRole()->getDataStructure();
     }
 
     public function isAuthenticated(DSUser $user): bool
