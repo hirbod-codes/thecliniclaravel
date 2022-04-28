@@ -6,6 +6,7 @@ use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\UpdateLocaleRequest;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
@@ -28,18 +29,21 @@ Route::put('/updateLocale', function (UpdateLocaleRequest $request) {
     return response('The locale option successfully updated.', 200);
 });
 
-Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
+// Login
 Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
 
-Route::middleware(['auth:api', 'start_session', 'phonenumber_not_verified'])->get('/register/verifyPhonenumber', fn () => view('auth.verify-phonenumber'))->name('auth.verifyPhonenumber.page');
-Route::middleware(['auth:api', 'start_session', 'phonenumber_not_verified'])->post('/register/verifyPhonenumber', [AuthController::class, 'verifyPhonenumber'])->name('auth.verifyPhonenumber');
+// Verify Phonenumber
+Route::middleware(['auth:api', 'phonenumber_not_verified'])->post('/accounts/send-phoennumber-verification-code', [AccountsController::class, 'sendPhonenumberVerificationCode'])->name('accounts.sendPhonenumberVerificationCode');
+Route::middleware(['auth:api', 'phonenumber_not_verified'])->post('/accounts/verify-phoennumber-verification-code', [AccountsController::class, 'verifyPhonenumberVerificationCode'])->name('accounts.verifyPhonenumberVerificationCode');
 
 Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
+    // Logout
+    Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
+
     Route::controller(AccountsController::class)
         ->group(function () {
             Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-            // Route::post('/accounts/verifyPhonenumber', 'verifyPhonenumber')->name('accounts.verifyPhonenumber');
             Route::post('/accounts', 'store')->name('accounts.store');
 
             Route::get('/accounts/{username}', 'show')->name('accounts.show');
