@@ -14,6 +14,8 @@ class PhonenumberVerificationCode implements Rule, DataAwareRule
      */
     protected $data = [];
 
+    private bool $expired;
+
     /**
      * Determine if the validation rule passes.
      *
@@ -23,7 +25,15 @@ class PhonenumberVerificationCode implements Rule, DataAwareRule
      */
     public function passes($attribute, $value)
     {
-        return session()->get('verificationCode', 0) === $this->data['code'] && session()->get('phonenumber', '') === $value;
+        $session = session();
+        $future = (new \DateTime)->modify('+1 day')->getTimestamp();
+        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp(strval($session->get('password_reset_verification_timestamp', $future)))->modify('+90 seconds')->getTimestamp()) {
+            $this->expired = true;
+            return false;
+        }
+
+        return ($session->get('verificationCode', 0) === $this->data['code']) &&
+            ($session->get('phonenumber', '') === $value);
     }
 
     /**
@@ -33,6 +43,10 @@ class PhonenumberVerificationCode implements Rule, DataAwareRule
      */
     public function message()
     {
+        if ($this->expired) {
+            return trans_choice('auth.vierfication_code_expired', 0);
+        }
+
         return trans_choice('auth.phonenumber_verification_failed', 0);
     }
 
