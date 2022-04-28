@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Foundation\Inspiring;
+use App\Models\User;
+use Faker\Factory;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
