@@ -21,7 +21,7 @@ class UserFactory extends Factory
         $gender = $this->faker->randomElement(['Male', 'Female']);
 
         if ($this->faker->randomElement([0, 1]) === 1) {
-            $email = $this->faker->unique()->phoneNumber();
+            $email = $this->faker->unique()->safeEmail();
             $email_verified_at = new \DateTime('now', new \DateTimeZone('UTC'));
         } else {
             $email = null;
