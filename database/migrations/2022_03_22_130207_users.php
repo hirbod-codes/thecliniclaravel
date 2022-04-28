@@ -47,7 +47,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
 
             $table->string('phonenumber')->unique();
-            $table->timestamp('phonenumber_verified_at');
+            $table->timestamp('phonenumber_verified_at')->nullable();
 
             $table->string('gender');
 
