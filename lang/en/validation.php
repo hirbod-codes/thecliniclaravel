@@ -144,6 +144,15 @@ return [
     */
 
     'custom' => [
+        'username' => [
+            'regex' => "The :attribute must start with a letter or a number and it can also include underscore, dot or hyphen."
+        ],
+        'firstname' => [
+            'regex' => "The :attribute must only include upper case and lower case characters."
+        ],
+        'lastname' => [
+            'regex' => "The :attribute must only include upper case and lower case characters."
+        ],
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
@@ -161,7 +170,26 @@ return [
     */
 
     'attributes' => [
-        'locale' => 'locale'
+        'locale' => 'locale',
+        'firstname' => 'Firstname',
+        'lastname' => 'Lastname',
+        'username' => 'Username',
+        'email' => 'Email Address',
+        'email_optional' => 'Email Address (Optional)',
+        'phonenumber' => 'Phone Number',
+        'phonenumber_placeholder' => '09#########',
+        'password' => 'Password',
+        'password_confirmation' => 'Confirm Password',
+        'age' => 'Age',
+        'gender' => 'Gender',
+        'state' => 'State',
+        'city' => 'City',
+        'address' => 'Address',
+        'address_optional' => 'Address (Optional)',
+        'avatar' => 'Image',
+        'avatar_label' => 'Image: ',
+        'avatar_optional' => 'Image (Optional)',
+        'avatar_label_optional' => 'Image: (Optional)',
     ],
 
 ];
