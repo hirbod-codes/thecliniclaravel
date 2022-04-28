@@ -43,9 +43,11 @@ class AuthServiceProvider extends ServiceProvider
 
         Passport::hashClientSecrets();
 
-        Passport::tokensExpireIn(now()->addHour());
-        Passport::refreshTokensExpireIn(now()->addHour());
-        Passport::personalAccessTokensExpireIn(now()->addHour());
+        $minutes = env('SESSION_LIFETIME', '120');
+        $delay = (new \DateTime)->modify('+' . $minutes . ' minutes');
+        Passport::tokensExpireIn($delay);
+        Passport::refreshTokensExpireIn($delay);
+        Passport::personalAccessTokensExpireIn($delay);
 
         VerifyEmail::toMailUsing(function ($notifiable, $url) {
             return (new MailMessage)
