@@ -17,7 +17,9 @@ trait GetAuthenticatables
 
     private function getAuthenticatable(string $roleName): Authenticatable
     {
-        return $this->getAuthenticatables(true)[$roleName];
+        $array = $this->getAuthenticatables(true);
+
+        return $array[$roleName];
     }
 
     private function getAuthenticatables(bool $randomId = false): array
@@ -34,31 +36,31 @@ trait GetAuthenticatables
                     $adminRoleId,
                     '=',
                     $this->faker->randomElement($this->getRandomId('admin'))
-                )->first() : AdminRole::orderBy($adminRoleId, 'desc')->first(),
+                )->firstOrFail() : AdminRole::orderBy($adminRoleId, 'desc')->firstOrFail(),
             'doctor' => $randomId ? DoctorRole::query()
                 ->where(
                     $doctorRoleId,
                     '=',
                     $this->faker->randomElement($this->getRandomId('doctor'))
-                )->first() : DoctorRole::orderBy($doctorRoleId, 'desc')->first(),
+                )->firstOrFail() : DoctorRole::orderBy($doctorRoleId, 'desc')->firstOrFail(),
             'secretary' => $randomId ? SecretaryRole::query()
                 ->where(
                     $secretaryRoleId,
                     '=',
                     $this->faker->randomElement($this->getRandomId('secretary'))
-                )->first() : SecretaryRole::orderBy($secretaryRoleId, 'desc')->first(),
+                )->firstOrFail() : SecretaryRole::orderBy($secretaryRoleId, 'desc')->firstOrFail(),
             'operator' => $randomId ? OperatorRole::query()
                 ->where(
                     $operatorRoleId,
                     '=',
                     $this->faker->randomElement($this->getRandomId('operator'))
-                )->first() : OperatorRole::orderBy($operatorRoleId, 'desc')->first(),
+                )->firstOrFail() : OperatorRole::orderBy($operatorRoleId, 'desc')->firstOrFail(),
             'patient' => $randomId ? PatientRole::query()
                 ->where(
                     $patientRoleId,
                     '=',
                     $this->faker->randomElement($this->getRandomId('patient'))
-                )->first() : PatientRole::orderBy($patientRoleId, 'desc')->first(),
+                )->firstOrFail() : PatientRole::orderBy($patientRoleId, 'desc')->firstOrFail(),
         ];
     }
 
@@ -70,6 +72,10 @@ trait GetAuthenticatables
         $ids = array_map(function ($array) use ($modelPrimaryKey) {
             return $array[$modelPrimaryKey];
         }, $modelFullname::query()->orderBy($modelPrimaryKey, 'desc')->get([$modelPrimaryKey])->toArray());
+
+        if (empty($ids)) {
+            throw new \RuntimeException('Failed to find any id related to this role: ' . strval($roleName), 500);
+        }
 
         array_shift($ids);
 
