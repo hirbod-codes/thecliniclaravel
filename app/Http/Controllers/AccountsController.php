@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
-use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\StorePatientAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\SendPhonenumberVerificationCodeRequest;
-use App\Http\Requests\ApiVerifyPhonenumberVerificationCodeRequest;
+use App\Http\Requests\Accounts\StoreDoctorAccountRequest;
+use App\Http\Requests\Accounts\StoreOperatorAccountRequest;
+use App\Http\Requests\Accounts\StoreSecretaryAccountRequest;
+use App\Http\Requests\Accounts\ApiVerifyPhonenumberVerificationCodeRequest;
+use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
@@ -19,7 +22,6 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -126,9 +128,9 @@ class AccountsController extends Controller
         return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
     }
 
-    public function store(StoreAccountRequest $request): Response|JsonResponse
+    private function store(array $validatedInput, string $roleName): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput['role'] = $roleName;
 
         if ($validatedInput['phonenumber'] !== explode(self::SEPARATOR, Crypt::decryptString($validatedInput['phonenumber_encrypted']))[0]) {
             return response(trans_choice('auth.phonenumber_not_verification', 0), 422);
@@ -138,7 +140,7 @@ class AccountsController extends Controller
 
         $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
-        // Already validated in StoreAccountRequest::class
+        // Already validated in StorePatientAccountRequest::class
         unset($validatedInput['phonenumber_verified_at_encrypted']);
         unset($validatedInput['phonenumber_encrypted']);
         unset($validatedInput['password_confirmation']);
@@ -153,6 +155,30 @@ class AccountsController extends Controller
         }
 
         return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
+    }
+
+    public function storeDoctor(StoreDoctorAccountRequest $request): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        return $this->store($validatedInput, 'doctor');
+    }
+
+    public function storeSecretary(StoreSecretaryAccountRequest $request): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        return $this->store($validatedInput, 'secretary');
+    }
+
+    public function storeOperator(StoreOperatorAccountRequest $request): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        return $this->store($validatedInput, 'operator');
+    }
+
+    public function storePatient(StorePatientAccountRequest $request): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        return $this->store($validatedInput, 'patient');
     }
 
     public function show(string $username): JsonResponse
