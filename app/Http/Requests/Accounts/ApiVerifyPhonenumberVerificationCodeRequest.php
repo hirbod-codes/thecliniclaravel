@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Accounts;
 
 use App\Rules\CheckEnryptedValuesIds;
 use Illuminate\Foundation\Http\FormRequest;
@@ -28,7 +28,7 @@ class ApiVerifyPhonenumberVerificationCodeRequest extends FormRequest
             'code_created_at_encrypted' => ['required', 'string', new CheckEnryptedValuesIds],
             'code_encrypted' => ['required', 'string'],
 
-            'code' => ['required', 'string', 'numeric', 'size:6'],
+            'code' => ['required', 'string', 'regex:/\A[0-9]{6}\z/' ],
         ];
     }
 }
