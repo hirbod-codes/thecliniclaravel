@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\StorePatientAccountRequest;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,7 +25,7 @@ class RegisterUserRequest extends FormRequest
      */
     public function rules()
     {
-        $array = (new StoreAccountRequest())->initialRules();
+        $array = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php'));
 
         unset($array['role']);
 
