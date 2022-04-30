@@ -9,7 +9,6 @@ use App\Http\Requests\UpdateLocaleRequest;
 use App\Models\BusinessDefault;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Request as FacadesRequest;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 
@@ -24,8 +23,6 @@ use Illuminate\Support\Facades\Storage;
 |
 */
 
-$t = FacadesRequest::all();
-
 Route::get('genders', function () {
     return response()->json(BusinessDefault::firstOrFail()->genders);
 });
@@ -38,8 +35,8 @@ Route::get('states', function () {
     );
 });
 
-Route::get('cities/{stateName?}', function () {
-    if (!is_string($stateName = FacadesRequest::instance()->get('stateName', ''))) {
+Route::get('cities/{stateName?}', function (Request $request) {
+    if (!is_string($stateName = $request->get('stateName', ''))) {
         throw new \TypeError('only string type is acceptable for name query paraemter.', 500);
     }
 
@@ -64,17 +61,13 @@ Route::get('cities/{stateName?}', function () {
 Route::put('/updateLocale', function (UpdateLocaleRequest $request) {
     $locale = $request->safe()->only('locale');
 
-    App::setLocale($locale);
+    App::setLocale($locale['locale']);
 
     return response('The locale option successfully updated.', 200);
 });
 
 // Login
 Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
-
-// Verify Phonenumber
-Route::middleware(['auth:api', 'phonenumber_not_verified'])->post('/accounts/send-phoennumber-verification-code', [AccountsController::class, 'sendPhonenumberVerificationCode'])->name('accounts.sendPhonenumberVerificationCode');
-Route::middleware(['auth:api', 'phonenumber_not_verified'])->post('/accounts/verify-phoennumber-verification-code', [AccountsController::class, 'verifyPhonenumberVerificationCode'])->name('accounts.verifyPhonenumberVerificationCode');
 
 Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
     // Logout
@@ -84,16 +77,23 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
         ->group(function () {
             Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-            Route::post('/accounts', 'store')->name('accounts.store');
+            // Verify Phonenumber
+            Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
+            Route::post('/account/verify-phoennumber-verification-code', 'verifyPhonenumberVerificationCode')->name('account.verifyPhonenumberVerificationCode');
 
-            Route::get('/accounts/{username}', 'show')->name('accounts.show');
-            Route::get('/accounts', 'showSelf')->name('accounts.showSelf');
+            Route::post('/account/doctor', 'storeDoctor')->name('account.storeDoctor');
+            Route::post('/account/secretary', 'storeSecretary')->name('account.storeSecretary');
+            Route::post('/account/operator', 'storeOperator')->name('account.storeOperator');
+            Route::post('/account/patient', 'storePatient')->name('account.storePatient');
 
-            Route::put('/accounts/{accountId}', 'update')->name('accounts.update');
-            Route::put('/accounts', 'updateSelf')->name('accounts.updateSelf');
+            Route::get('/account/{username}', 'show')->name('account.show');
+            Route::get('/account', 'showSelf')->name('account.showSelf');
 
-            Route::delete('/accounts/{accountId}', 'destroy')->name('accounts.destroy');
-            Route::delete('/accounts', 'destroySelf')->name('accounts.destroySelf');
+            Route::put('/account/{accountId}', 'update')->name('account.update');
+            Route::put('/account', 'updateSelf')->name('account.updateSelf');
+
+            Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
+            Route::delete('/account', 'destroySelf')->name('account.destroySelf');
         });
 
     Route::controller(RolesController::class)
