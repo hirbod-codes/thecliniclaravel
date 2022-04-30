@@ -92,11 +92,11 @@ class User extends Model implements
     protected function collectDSArgs(array &$args, string $parameterName, array $userColumns, array $roleColumns): void
     {
         if (array_search(Str::snake($parameterName), $userColumns) !== false) {
-            $this->collectDSArgsFromUser($args, $parameterName, $userColumns, $roleColumns);
+            $this->collectDSArgsFromUser($args, $parameterName);
         } elseif (array_search(Str::snake($parameterName), $roleColumns) !== false) {
-            $this->collectDSArgsFromRole($args, $parameterName, $userColumns, $roleColumns);
+            $this->collectDSArgsFromRole($args, $parameterName);
         } else {
-            $this->collectOtherDSArgs($args, $parameterName, $userColumns, $roleColumns);
+            $this->collectOtherDSArgs($args, $parameterName);
         }
     }
 
@@ -134,6 +134,8 @@ class User extends Model implements
             } else {
                 $args[$parameterName] = Order::getMixedDSOrders($user->orders);
             }
+        } else {
+            // Do nothing for optional arguments.
         }
     }
 
