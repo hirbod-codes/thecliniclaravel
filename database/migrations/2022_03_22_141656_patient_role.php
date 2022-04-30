@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\roles\OperatorRole;
 use App\Models\roles\PatientRole;
 use Database\Migrations\TraitBaseUserRoleColumns;
 use Illuminate\Database\Migrations\Migration;
@@ -28,6 +29,23 @@ return new class extends Migration
         $this->createBaseUserRoleColumns($this->table, 'patient');
 
         Schema::table($this->table, function (BluePrint $table) {
+            $fk = (new OperatorRole)->getForeignKey();
+
+            $table->unsignedBigInteger($fk)->nullable();
+
+            $operatorRoleTable = (new OperatorRole)->getTable();
+            $table->foreign($fk, $this->table . '_' . $operatorRoleTable . '_' . $fk)
+                ->references((new OperatorRole)->getKeyName())
+                ->on($operatorRoleTable)
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
+
+            $table->integer('age');
+
+            $table->string('state');
+            $table->string('city');
+            $table->string('address')->nullable();
+            $table->string('laser_grade')->nullable();
         });
     }
 
