@@ -6,6 +6,7 @@ use App\Models\Auth\User as Authenticatable;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use TheClinicDataStructures\DataStructures\User\DSOperator;
 
@@ -21,5 +22,10 @@ class OperatorRole extends Authenticatable
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, $this->getKeyName(), (new User)->getKeyName(), __FUNCTION__);
+    }
+
+    public function patients(): HasMany
+    {
+        return $this->hasMany(PatientRole::class, $this->getForeignKey(), $this->getKeyName());
     }
 }
