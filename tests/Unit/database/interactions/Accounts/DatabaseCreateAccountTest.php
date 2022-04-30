@@ -2,17 +2,13 @@
 
 namespace Tests\Unit\database\interactions\Accounts;
 
-use App\Models\Model;
 use App\Models\Role;
 use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
-use Database\Seeders\DatabaseUsersSeeder;
 use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
-use Mockery;
-use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -85,7 +81,7 @@ class DatabaseCreateAccountTest extends TestCase
 
                     throw new \RuntimeException('Failure!!!');
                 } catch (\Throwable $th) {
-                    $this->assertEquals('A user with same first name and last name already exists.', $th->getMessage());
+                    $this->assertEquals(trans_choice('auth.duplicate_fullname', 0), $th->getMessage());
                     $this->assertEquals(422, $th->getCode());
                 }
 
