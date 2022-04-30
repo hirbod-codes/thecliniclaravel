@@ -29,9 +29,12 @@ class RegisterUserRequest extends FormRequest
 
         unset($array['role']);
 
-        $array['firstname'][] = new ProhibitExtraFeilds($array);
+        $specialRules = (include(base_path() . '/app/Rules/BuiltInRules/Models/Patient/rules.php'));
+        unset($specialRules['laser_grade']);
 
-        $array['age'][] = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/age.php'))['age'];
+        $array = array_merge($array, $specialRules);
+
+        $array['username'][] = new ProhibitExtraFeilds($array);
 
         return $array;
     }
