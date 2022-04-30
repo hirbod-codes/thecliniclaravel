@@ -28,4 +28,18 @@ class OperatorRole extends Authenticatable
     {
         return $this->hasMany(PatientRole::class, $this->getForeignKey(), $this->getKeyName());
     }
+
+    protected function collectOtherDSArgs(array &$args, string $parameterName): void
+    {
+        parent::collectOtherDSArgs($args, $parameterName);
+
+        if ($parameterName === 'dsPatients') {
+            /** @var PatientRole $patient */
+            foreach ($this->patients as $patient) {
+                $args[$parameterName] = $patient->getDataStructure();
+            }
+        } else {
+            // Do nothing for optional arguments.
+        }
+    }
 }
