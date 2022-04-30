@@ -113,6 +113,7 @@ function phonenumberVerifyCodeSend() {
             disableButton(getElm('phonenumberVerificationCodeButton'));
             phonenumberVerificationClose();
             getElm('phonenumber').value = data['phonenumber'];
+            getElm('phonenumber').style.border = 0;
         }
 
         return getBody(response);
