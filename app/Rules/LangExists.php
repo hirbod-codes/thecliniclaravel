@@ -18,21 +18,17 @@ class LangExists implements Rule
     public function passes($attribute, $value)
     {
         $locales = [];
-        foreach ($dirs = scandir(base_path() . '/lang') as $value) {
-            if (in_array($value, ['..', '.'])) {
+        foreach ($dirs = scandir(base_path() . '/lang') as $dir) {
+            if (in_array($dir, ['..', '.'])) {
                 continue;
             }
 
-            if (is_dir(base_path() . '/lang/' . $value)) {
-                $locales[] = $value;
+            if (is_dir(base_path() . '/lang/' . $dir)) {
+                $locales[] = $dir;
             }
         }
 
         $this->locales = $locales;
-
-        if (!is_string($value) || !in_array($value, $locales)) {
-            return abort(422, 'The provided locale option must be one of the following: ' . implode(', ', $locales) . '.');
-        }
 
         return in_array($value, $locales);
     }
