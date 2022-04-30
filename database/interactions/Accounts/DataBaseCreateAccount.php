@@ -66,7 +66,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             }
 
             if (isset($avatar)) {
-                (new AccountDocumentsController)->makeAvatar($avatar, $input['accountId'], 'local');
+                (new AccountDocumentsController)->makeAvatar($avatar, $userModel->getKey(), 'private');
             }
 
             DB::commit();
