@@ -22,4 +22,14 @@ class PatientRole extends Authenticatable
     {
         return $this->belongsTo(User::class, $this->getKeyName(), (new User)->getKeyName(), __FUNCTION__);
     }
+
+    public function operator(): BelongsTo
+    {
+        return $this->belongsTo(
+            OperatorRole::class,
+            (new OperatorRole)->getForeignKey(),
+            (new OperatorRole)->getKeyName(),
+            __FUNCTION__
+        );
+    }
 }
