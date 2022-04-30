@@ -13,6 +13,8 @@ return [
     |
     */
 
+    'User-Not-Authorized' => 'You are not authorized for this action.',
+
     'fill_registration_form' => "{0} Please fill these fields in order to register as a patient:",
 
     'access_token_limit' => '{0} Your account already have an access tokens.',
@@ -47,10 +49,18 @@ return [
 
     'registration_successful' => "{0} Your account successfully registered.",
 
-    'Register' => "{0} Register",
     'Send' => "{0} Send",
     'Send-Code' => "{0} Send Code",
     'Resend' => "{0} Resend",
     'Close' => "{0} Close",
 
+    'Register' => "{0} Register",
+    'Login' => "{0} Login",
+    'Forgot-Password' => "{0} Forgot Password",
+    'Verify-Email' => "{0} Verify Email",
+
+    'Verify-Email-Request-Message' => 'Please verify your email by clicking on the sent link in your mail box.',
+    'Verify-Email-Send-Message' => 'Send verification message to my email',
+
+    'sending' => 'Sending...',
 ];
