@@ -10,7 +10,6 @@ use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Requests\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\VerifyPhonenumberVerificationCodeRequest;
-use App\Models\User;
 use App\Notifications\SendEmailPasswordResetCode;
 use App\Notifications\SendPhonenumberPasswordResetCode;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -174,9 +173,14 @@ class AuthControllerTest extends TestCase
 
     public function testForgotPasswordEmail(): void
     {
-        $requestInput = [
-            'email' => $email = ($user = $this->getAuthenticatable('patient')->user)->email,
-        ];
+        $email = null;
+        $safety = 0;
+        while ($email === null && $safety < 200) {
+            $requestInput = [
+                'email' => $email = ($user = $this->getAuthenticatable('patient')->user)->email,
+            ];
+            $safety++;
+        }
 
         /** @var Session|MockInterface $session */
         $session = Mockery::mock(Session::class);
