@@ -16,6 +16,8 @@ class ProhibitExtraFeilds implements Rule, DataAwareRule
 
     protected array $rules;
 
+    protected string $forbiddenKey;
+
     public function __construct(array $rules)
     {
         $this->rules = $rules;
@@ -32,6 +34,7 @@ class ProhibitExtraFeilds implements Rule, DataAwareRule
     {
         foreach ($this->data as $key => $value) {
             if (array_search($key, array_keys($this->rules)) === false) {
+                $this->forbiddenKey = $key;
                 return false;
             }
         }
@@ -45,7 +48,7 @@ class ProhibitExtraFeilds implements Rule, DataAwareRule
      */
     public function message()
     {
-        return 'Extra fields are forbidden in input json.';
+        return 'Extra field: ' . $this->forbiddenKey . ' are forbidden in input json.';
     }
 
     /**
