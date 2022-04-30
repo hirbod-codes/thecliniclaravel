@@ -7,7 +7,7 @@ use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LogInRequest;
 use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\ResetPasswordRequest;
-use App\Http\Requests\SendPhonenumberVerificationCodeRequest;
+use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\VerifyPhonenumberVerificationCodeRequest;
 use App\Models\User;
 use App\Notifications\SendEmailPasswordResetCode;
