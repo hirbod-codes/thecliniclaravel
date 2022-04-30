@@ -19,7 +19,7 @@ async function getData(url) {
     return response;
 }
 
-async function postData(url, data = {}) {
+async function postData(url, data) {
     let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let myRequest = new Request(url);
 
@@ -28,15 +28,17 @@ async function postData(url, data = {}) {
     myHeaders.append("X-Requested-With", "XMLHttpRequest");
     myHeaders.append("X-CSRF-TOKEN", token);
 
-    if (typeof (data) === FormData) {
+    if (data.constructor.name === 'FormData') {
         var init = {
             method: 'POST',
             mode: 'cors',
             credentials: 'same-origin',
             headers: myHeaders,
-            body: JSON.stringify(Object.fromEntries(data))
+            body: data
         };
     } else {
+        myHeaders.append("Content-type", "application/json");
+
         var init = {
             method: 'POST',
             mode: 'cors',
@@ -51,7 +53,7 @@ async function postData(url, data = {}) {
     return response;
 }
 
-async function putData(url, data = {}) {
+async function putData(url, data) {
     let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let myRequest = new Request(url);
 
@@ -60,15 +62,17 @@ async function putData(url, data = {}) {
     myHeaders.append("X-Requested-With", "XMLHttpRequest");
     myHeaders.append("X-CSRF-TOKEN", token);
 
-    if (typeof (data) === FormData) {
+    if (data.constructor.name === 'FormData') {
         var init = {
             method: 'POST',
             mode: 'cors',
             credentials: 'same-origin',
             headers: myHeaders,
-            body: JSON.stringify(Object.fromEntries(data))
+            body: data
         };
     } else {
+        myHeaders.append("Content-type", "application/json");
+
         var init = {
             method: 'POST',
             mode: 'cors',
