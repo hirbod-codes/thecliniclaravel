@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\User;
-use Faker\Factory;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -21,10 +19,6 @@ use Tests\ConsoleTest;
 Artisan::command('consoleTest', function () {
     (new ConsoleTest)->runTests();
     $this->info('Console test has finished.');
-    // $this->line('line');
-    // $this->info('info');
-    // $this->warn('warn');
-    // $this->warn('error');
 });
 
 Artisan::command('initialize', function () {
