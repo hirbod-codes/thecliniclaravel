@@ -5,6 +5,7 @@ namespace App\Http\Requests\Accounts;
 use App\Rules\CheckEnryptedValuesIds;
 use App\Rules\PhonenumberVerificationCode;
 use App\Rules\ProhibitExtraFeilds;
+use App\Rules\ValidateRoleSpecificInformation;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAccountRequest extends FormRequest
@@ -26,7 +27,6 @@ class StoreAccountRequest extends FormRequest
     public function initialRules(): array
     {
         return [
-            'role' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['role'],
             'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber'],
             'firstname' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/firstname.php'))['firstname'],
             'lastname' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/lastname.php'))['lastname'],
@@ -36,6 +36,7 @@ class StoreAccountRequest extends FormRequest
             'password_confirmation' => ['required', 'string', 'same:password'],
             'gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender'],
             'avatar' => (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'],
+            'role' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['role'],
         ];
     }
 
@@ -50,7 +51,11 @@ class StoreAccountRequest extends FormRequest
 
         $array['phonenumber_verified_at_encrypted'] = ['required', 'string', new CheckEnryptedValuesIds];
         $array['phonenumber_encrypted'] = ['required', 'string'];
-        $array['firstname'][] = new ProhibitExtraFeilds($array);
+
+        $array['role'][] = 'bail';
+        $array['role'][] = new ValidateRoleSpecificInformation($array);
+
+        // $array['role'][] = new ProhibitExtraFeilds($array); will be added in ValidateRoleSpecificInformation object. ValidateRoleSpecificInformation objects might add more rules to $array;
 
         return $array;
     }
