@@ -1,20 +1,50 @@
-async function postData(url, data = {}) {
+async function getData(url) {
     let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let myRequest = new Request(url);
 
     let myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Accept", "application/json, text-plain, */*");
     myHeaders.append("X-Requested-With", "XMLHttpRequest");
     myHeaders.append("X-CSRF-TOKEN", token);
 
     let init = {
-        method: 'POST',
+        method: 'GET',
         mode: 'cors',
         credentials: 'same-origin',
         headers: myHeaders,
-        body: JSON.stringify(data)
     };
+
+    const response = await fetch(myRequest, init);
+
+    return response;
+}
+
+async function postData(url, data = {}) {
+    let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    let myRequest = new Request(url);
+
+    let myHeaders = new Headers();
+    myHeaders.append("Accept", "application/json, text-plain, */*");
+    myHeaders.append("X-Requested-With", "XMLHttpRequest");
+    myHeaders.append("X-CSRF-TOKEN", token);
+
+    if (typeof (data) === FormData) {
+        var init = {
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'same-origin',
+            headers: myHeaders,
+            body: JSON.stringify(Object.fromEntries(data))
+        };
+    } else {
+        var init = {
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'same-origin',
+            headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+    }
 
     const response = await fetch(myRequest, init);
 
@@ -26,18 +56,27 @@ async function putData(url, data = {}) {
     let myRequest = new Request(url);
 
     let myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
     myHeaders.append("Accept", "application/json, text-plain, */*");
     myHeaders.append("X-Requested-With", "XMLHttpRequest");
     myHeaders.append("X-CSRF-TOKEN", token);
 
-    let init = {
-        method: 'PUT',
-        mode: 'cors',
-        credentials: 'same-origin',
-        headers: myHeaders,
-        body: JSON.stringify(data)
-    };
+    if (typeof (data) === FormData) {
+        var init = {
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'same-origin',
+            headers: myHeaders,
+            body: JSON.stringify(Object.fromEntries(data))
+        };
+    } else {
+        var init = {
+            method: 'POST',
+            mode: 'cors',
+            credentials: 'same-origin',
+            headers: myHeaders,
+            body: JSON.stringify(data)
+        };
+    }
 
     const response = await fetch(myRequest, init);
 
