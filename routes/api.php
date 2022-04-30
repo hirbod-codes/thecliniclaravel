@@ -6,9 +6,12 @@ use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\UpdateLocaleRequest;
+use App\Models\BusinessDefault;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Request as FacadesRequest;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,6 +23,43 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+$t = FacadesRequest::all();
+
+Route::get('genders', function () {
+    return response()->json(BusinessDefault::firstOrFail()->genders);
+});
+
+Route::get('states', function () {
+    return response()->json(
+        array_map(function (array $state) {
+            return $state['name'];
+        }, json_decode(Storage::disk('public')->get('states.json'), true))
+    );
+});
+
+Route::get('cities/{stateName?}', function () {
+    if (!is_string($stateName = FacadesRequest::instance()->get('stateName', ''))) {
+        throw new \TypeError('only string type is acceptable for name query paraemter.', 500);
+    }
+
+    foreach (json_decode(Storage::disk('public')->get('states.json'), true) as $state) {
+        if ($state['name'] !== $stateName) {
+            continue;
+        }
+
+        $id = $state['id'];
+    }
+
+    $cities = [];
+    foreach (json_decode(Storage::disk('public')->get('cities.json'), true) as $city) {
+        if ($city['province_id'] === $id) {
+            $cities[] = $city['name'];
+        }
+    }
+
+    return response()->json($cities);
+});
 
 Route::put('/updateLocale', function (UpdateLocaleRequest $request) {
     $locale = $request->safe()->only('locale');
