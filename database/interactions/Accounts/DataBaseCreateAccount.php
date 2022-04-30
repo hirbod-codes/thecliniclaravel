@@ -23,7 +23,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             DB::beginTransaction();
 
             if (User::where('firstname', $input['firstname'])->where('lastname', $input['lastname'])->first() !== null) {
-                throw new \RuntimeException(trans_choice('auth.duplicate_fullname',0), 422);
+                throw new \RuntimeException(trans_choice('auth.duplicate_fullname', 0), 422);
             }
 
             $userAattributes = [];
@@ -41,6 +41,15 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             $ruleName = $input["role"];
             unset($input["role"]);
 
+            $modelFullName = $this->resolveRuleModelFullName($ruleName);
+
+            $authAattributes = [];
+            foreach (Schema::getColumnListing((new $modelFullName)->getTable()) as $column) {
+                if (array_search($column, array_keys($input)) !== false) {
+                    $authAattributes[$column] = $input[$column];
+                }
+            }
+
             if (isset($input['avatar'])) {
                 $avatar = $input['avatar'];
                 unset($input["avatar"]);
@@ -49,21 +58,23 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
 
             $userModel = new User;
             $userModel->{(new Role)->getForeignKeyForName()} = Role::where('name', $ruleName)->first()->name;
-            if (!$userModel->fill($userAattributes)->save()) {
-                DB::rollback();
-                throw new \RuntimeException('Failed to create the account.', 500);
+
+            foreach ($userAattributes as $key => $value) {
+                $userModel->{$key} = $value;
             }
 
-            $modelFullName = $this->resolveRuleModelFullName($ruleName);
+            $userModel->saveOrFail();
 
             /** @var Authenticatable $roleModel */
             $roleModel = new $modelFullName;
             $roleModel->{(new $modelFullName)->getKeyName()} = $userModel->{(new User)->getKeyName()};
             $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKeyForName()};
-            if (!$roleModel->fill($input)->save()) {
-                DB::rollback();
-                throw new \RuntimeException('Failed to create the account.', 500);
+
+            foreach ($authAattributes as $key => $value) {
+                $roleModel->{$key} = $value;
             }
+
+            $roleModel->saveOrFail();
 
             if (isset($avatar)) {
                 (new AccountDocumentsController)->makeAvatar($avatar, $userModel->getKey(), 'private');
