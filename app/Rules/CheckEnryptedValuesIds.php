@@ -50,6 +50,8 @@ class CheckEnryptedValuesIds implements Rule, DataAwareRule
                 return false;
             }
         }
+
+        return true;
     }
 
     /**
