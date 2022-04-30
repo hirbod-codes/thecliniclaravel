@@ -156,6 +156,13 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'city' => [
+            'check_city' => 'The provided city doesn\'t exists!',
+            'check_state_city' => 'This city doesn\'t exist in the specified state.',
+        ],
+        'state' => [
+            'check_state' => 'The provided state doesn\'t exists!',
+        ],
     ],
 
     /*
