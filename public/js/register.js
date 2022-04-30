@@ -196,7 +196,7 @@ function addStates(statesPromise) {
 }
 
 function getCities(val) {
-    return getData('/api/cities?name=' + val).then((response) => {
+    return getData('/api/cities?stateName=' + val).then((response) => {
         return getBody(response);
     });
 }
