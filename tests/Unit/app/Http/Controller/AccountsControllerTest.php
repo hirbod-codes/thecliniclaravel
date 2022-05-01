@@ -7,11 +7,13 @@ use TheClinicUseCases\Accounts\Authentication;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
-use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\ApiVerifyPhonenumberVerificationCodeRequest;
-use App\Http\Requests\SendPhonenumberVerificationCodeRequest;
-use App\Http\Requests\VerifyPhonenumberRequest;
+use App\Http\Requests\Accounts\ApiVerifyPhonenumberVerificationCodeRequest;
+use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
+use App\Http\Requests\Accounts\StoreDoctorAccountRequest;
+use App\Http\Requests\Accounts\StoreOperatorAccountRequest;
+use App\Http\Requests\Accounts\StorePatientAccountRequest;
+use App\Http\Requests\Accounts\StoreSecretaryAccountRequest;
 use App\Models\Auth\User as AuthUser;
 use App\Notifications\SendPhonenumberVerificationCode;
 use TheClinicUseCases\Accounts\AccountsManagement;
@@ -22,9 +24,7 @@ use Database\Interactions\Accounts\DataBaseUpdateAccount;
 use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Crypt;
@@ -245,7 +245,7 @@ class AccountsControllerTest extends TestCase
         $this->assertEquals(trans_choice('auth.phonenumber_verification_successful', 0), $response->original);
     }
 
-    private function testStore(): void
+    private function testStoreDoctor(): void
     {
         $id = $this->faker->numberBetween(100000, 999999);
         $phonenumber = $this->faker->phoneNumber();
@@ -259,8 +259,8 @@ class AccountsControllerTest extends TestCase
                 'password_confirmation' => $this->faker->lexify(),
             ];
 
-            /** @var StoreAccountRequest|MockInterface $request */
-            $request = Mockery::mock(StoreAccountRequest::class);
+            /** @var StoreDoctorAccountRequest|MockInterface $request */
+            $request = Mockery::mock(StoreDoctorAccountRequest::class);
             $request->shouldReceive('safe->all')->andreturn($requestInput);
 
             $dsNewUser = $authenticatable->getDataStructure();
@@ -285,7 +285,163 @@ class AccountsControllerTest extends TestCase
 
             $accountsController = $this->instantiate();
 
-            $jsonResponse = $accountsController->store($request);
+            $jsonResponse = $accountsController->storeDoctor($request);
+            $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
+            $this->assertIsArray($jsonResponse->original);
+            $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
+
+            foreach ($dsNewUserArray as $key => $value) {
+                $this->assertArrayHasKey($key, $jsonResponse->original);
+                $this->assertEquals($jsonResponse->original[$key], $value);
+            }
+        }
+    }
+
+    private function testStoreSecretary(): void
+    {
+        $id = $this->faker->numberBetween(100000, 999999);
+        $phonenumber = $this->faker->phoneNumber();
+        $authenticatables = $this->getAuthenticatables();
+
+        foreach ($authenticatables as $ruleName => $authenticatable) {
+            $requestInput = [
+                'phonenumber_encrypted' => Crypt::encryptString($phonenumber),
+                'phonenumber' => $phonenumber,
+                'phonenumber_verified_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp())),
+                'password_confirmation' => $this->faker->lexify(),
+            ];
+
+            /** @var StoreSecretaryAccountRequest|MockInterface $request */
+            $request = Mockery::mock(StoreSecretaryAccountRequest::class);
+            $request->shouldReceive('safe->all')->andreturn($requestInput);
+
+            $dsNewUser = $authenticatable->getDataStructure();
+            $dsNewUserArray = $dsNewUser->toArray();
+
+            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
+            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
+            $this->accountsManagement
+                ->shouldReceive("createAccount")
+                ->with(
+                    Mockery::on(function (array $input) use ($requestInput) {
+                        $this->assertArrayHasKey('phonenumber', $input);
+                        $this->assertEquals($requestInput['phonenumber'], $input['phonenumber']);
+                        $this->assertArrayHasKey('phonenumber_verified_at', $input);
+                        $this->assertInstanceOf(\DateTime::class, $input['phonenumber_verified_at']);
+                        return true;
+                    }),
+                    $this->dsUser,
+                    $this->dataBaseCreateAccount
+                )
+                ->andReturn($dsNewUser);
+
+            $accountsController = $this->instantiate();
+
+            $jsonResponse = $accountsController->storeSecretary($request);
+            $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
+            $this->assertIsArray($jsonResponse->original);
+            $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
+
+            foreach ($dsNewUserArray as $key => $value) {
+                $this->assertArrayHasKey($key, $jsonResponse->original);
+                $this->assertEquals($jsonResponse->original[$key], $value);
+            }
+        }
+    }
+
+    private function testStoreOperator(): void
+    {
+        $id = $this->faker->numberBetween(100000, 999999);
+        $phonenumber = $this->faker->phoneNumber();
+        $authenticatables = $this->getAuthenticatables();
+
+        foreach ($authenticatables as $ruleName => $authenticatable) {
+            $requestInput = [
+                'phonenumber_encrypted' => Crypt::encryptString($phonenumber),
+                'phonenumber' => $phonenumber,
+                'phonenumber_verified_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp())),
+                'password_confirmation' => $this->faker->lexify(),
+            ];
+
+            /** @var StoreOperatorAccountRequest|MockInterface $request */
+            $request = Mockery::mock(StoreOperatorAccountRequest::class);
+            $request->shouldReceive('safe->all')->andreturn($requestInput);
+
+            $dsNewUser = $authenticatable->getDataStructure();
+            $dsNewUserArray = $dsNewUser->toArray();
+
+            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
+            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
+            $this->accountsManagement
+                ->shouldReceive("createAccount")
+                ->with(
+                    Mockery::on(function (array $input) use ($requestInput) {
+                        $this->assertArrayHasKey('phonenumber', $input);
+                        $this->assertEquals($requestInput['phonenumber'], $input['phonenumber']);
+                        $this->assertArrayHasKey('phonenumber_verified_at', $input);
+                        $this->assertInstanceOf(\DateTime::class, $input['phonenumber_verified_at']);
+                        return true;
+                    }),
+                    $this->dsUser,
+                    $this->dataBaseCreateAccount
+                )
+                ->andReturn($dsNewUser);
+
+            $accountsController = $this->instantiate();
+
+            $jsonResponse = $accountsController->storeOperator($request);
+            $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
+            $this->assertIsArray($jsonResponse->original);
+            $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
+
+            foreach ($dsNewUserArray as $key => $value) {
+                $this->assertArrayHasKey($key, $jsonResponse->original);
+                $this->assertEquals($jsonResponse->original[$key], $value);
+            }
+        }
+    }
+
+    private function testStorePatient(): void
+    {
+        $id = $this->faker->numberBetween(100000, 999999);
+        $phonenumber = $this->faker->phoneNumber();
+        $authenticatables = $this->getAuthenticatables();
+
+        foreach ($authenticatables as $ruleName => $authenticatable) {
+            $requestInput = [
+                'phonenumber_encrypted' => Crypt::encryptString($phonenumber),
+                'phonenumber' => $phonenumber,
+                'phonenumber_verified_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp())),
+                'password_confirmation' => $this->faker->lexify(),
+            ];
+
+            /** @var StorePatientAccountRequest|MockInterface $request */
+            $request = Mockery::mock(StorePatientAccountRequest::class);
+            $request->shouldReceive('safe->all')->andreturn($requestInput);
+
+            $dsNewUser = $authenticatable->getDataStructure();
+            $dsNewUserArray = $dsNewUser->toArray();
+
+            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
+            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
+            $this->accountsManagement
+                ->shouldReceive("createAccount")
+                ->with(
+                    Mockery::on(function (array $input) use ($requestInput) {
+                        $this->assertArrayHasKey('phonenumber', $input);
+                        $this->assertEquals($requestInput['phonenumber'], $input['phonenumber']);
+                        $this->assertArrayHasKey('phonenumber_verified_at', $input);
+                        $this->assertInstanceOf(\DateTime::class, $input['phonenumber_verified_at']);
+                        return true;
+                    }),
+                    $this->dsUser,
+                    $this->dataBaseCreateAccount
+                )
+                ->andReturn($dsNewUser);
+
+            $accountsController = $this->instantiate();
+
+            $jsonResponse = $accountsController->storePatient($request);
             $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
             $this->assertIsArray($jsonResponse->original);
             $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
