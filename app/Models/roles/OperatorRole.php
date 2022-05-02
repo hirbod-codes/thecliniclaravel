@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 use TheClinicDataStructures\DataStructures\User\DSOperator;
+use TheClinicDataStructures\DataStructures\User\DSPatients;
 
 class OperatorRole extends Authenticatable
 {
@@ -34,10 +35,12 @@ class OperatorRole extends Authenticatable
         parent::collectOtherDSArgs($args, $parameterName);
 
         if ($parameterName === 'dsPatients') {
+            $patients = new DSPatients();
             /** @var PatientRole $patient */
             foreach ($this->patients as $patient) {
-                $args[$parameterName] = $patient->getDataStructure();
+                $patients[] = $patient->getDataStructure();
             }
+            $args[$parameterName] = $patients;
         } else {
             // Do nothing for optional arguments.
         }
