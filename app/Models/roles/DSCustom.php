@@ -7,7 +7,9 @@ use App\Models\PrivilegeValue;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\User\DSUser;
+use TheClinicDataStructures\DataStructures\User\ICheckAuthentication;
 use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
 use TheClinicDataStructures\Exceptions\DataStructures\User\NoPrivilegeFoundException;
 
@@ -17,12 +19,57 @@ class DSCustom extends DSUser
 
     private array $customData;
 
-    public function __construct(...$args)
-    {
-        $this->roleName = $args['roleName'];
-        unset($args['roleName']);
+    /**
+     * @param ICheckAuthentication $iCheckAuthentication
+     * @param string $roleName
+     * @param integer $id
+     * @param string $firstname
+     * @param string $lastname
+     * @param string $username
+     * @param string $gender
+     * @param string $phonenumber
+     * @param \DateTime $phonenumberVerifiedAt
+     * @param \DateTime $createdAt
+     * @param \DateTime $updatedAt
+     * @param string|null|null $email
+     * @param \DateTime|null|null $emailVerifiedAt
+     * @param DSOrders|null|null $orders
+     */
+    public function __construct(
+        ICheckAuthentication $iCheckAuthentication,
+        string $roleName,
+        int $id,
+        string $firstname,
+        string $lastname,
+        string $username,
+        string $gender,
+        string $phonenumber,
+        \DateTime $phonenumberVerifiedAt,
+        \DateTime $createdAt,
+        \DateTime $updatedAt,
+        string|null $email = null,
+        \DateTime|null $emailVerifiedAt = null,
+        DSOrders|null $orders = null,
+        array|null $data = null,
+    ) {
+        parent::__construct(
+            $iCheckAuthentication,
+            $id,
+            $firstname,
+            $lastname,
+            $username,
+            $gender,
+            $phonenumber,
+            $phonenumberVerifiedAt,
+            $createdAt,
+            $updatedAt,
+            $email,
+            $emailVerifiedAt,
+            $orders
+        );
 
-        parent::__construct(...$args);
+        $this->roleName = $roleName;
+        $this->setData($data);
     }
 
     public function setData(array $data): static
