@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Orders;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\IndexRequest;
+use App\Http\Requests\Orders\StoreRequest;
 use App\Models\Auth\User as Authenticatable;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
@@ -23,6 +25,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use TheClinicDataStructures\DataStructures\Order\DSOrders;
+use TheClinicDataStructures\DataStructures\Order\DSPackages;
+use TheClinicDataStructures\DataStructures\Order\DSParts;
 use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
 use TheClinicDataStructures\DataStructures\User\DSAdmin;
 use TheClinicUseCases\Orders\Creation\LaserOrderCreation;
@@ -104,120 +108,112 @@ class OrdersController extends Controller
         $this->iDataBaseDeleteRegularOrder = $iDataBaseDeleteRegularOrder ?: new DataBaseDeleteRegularOrder;
     }
 
-    public function laserIndex(
-        ?bool $priceOtherwiseTime = null,
-        ?string $username = null,
-        ?int $lastOrderId = null,
-        ?int $count = null,
-        ?string $operator = null,
-        ?int $price = null,
-        ?int $timeConsumption = null
-    ): JsonResponse {
-        $args = func_get_args();
-        return $this->index('laser', ...$args);
+    public function laserIndex(IndexRequest $request): JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        $validatedInput['businessName'] = 'laser';
+        return $this->index($validatedInput);
     }
 
-    public function regularIndex(
-        ?bool $priceOtherwiseTime = null,
-        ?string $username = null,
-        ?int $lastOrderId = null,
-        ?int $count = null,
-        ?string $operator = null,
-        ?int $price = null,
-        ?int $timeConsumption = null
-    ): JsonResponse {
-        $args = func_get_args();
-        return $this->index('regular', ...$args);
+    public function regularIndex(IndexRequest $request): JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        $validatedInput['businessName'] = 'regular';
+        return $this->index($validatedInput);
     }
 
-    private function index(
-        string $businessName,
-        ?bool $priceOtherwiseTime = null,
-        ?string $username = null,
-        ?int $lastOrderId = null,
-        ?int $count = null,
-        ?string $operator = null,
-        ?int $price = null,
-        ?int $timeConsumption = null
-    ): JsonResponse {
+    private function index(array $input): JsonResponse
+    {
         $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
 
         $args = [];
         $args['user'] = $dsUser;
-        $args['db'] = $this->{'iDataBaseRetrieve' . ucfirst($businessName) . 'Orders'};
+        $args['db'] = $this->{'iDataBaseRetrieve' . ucfirst($input['businessName']) . 'Orders'};
 
-        if ($username === null) {
-            $args['lastOrderId'] = $lastOrderId;
-            $args['count'] = $count;
+        if (!isset($input['username'])) {
+            $args['lastOrderId'] = isset($input['lastOrderId']) ? $input['lastOrderId'] : null;
+            $args['count'] = $input['count'];
         } else {
-            $args['targetUser'] = User::query()->where('username', $username)->first()->authenticatableRole()->getDataStructure();
+            $args['targetUser'] = User::query()->where('username', $input['username'])->first()->authenticatableRole()->getDataStructure();
         }
 
-        if ($priceOtherwiseTime !== null) {
-            $args['operator'] = $operator;
-            if ($priceOtherwiseTime === true) {
-                $args['price'] = $price;
+        if (isset($input['priceOtherwiseTime'])) {
+            $input['priceOtherwiseTime'] = boolval($input['priceOtherwiseTime']);
+
+            $args['operator'] = $input['operator'];
+
+            if ($input['priceOtherwiseTime']) {
+                $args['price'] = $input['price'];
             } else {
-                $args['timeConsumption'] = $timeConsumption;
+                $args['timeConsumption'] = $input['timeConsumption'];
             }
         }
 
-        $method = 'get' . ucfirst($businessName) . 'Orders' .
-            (isset($priceOtherwiseTime) && $priceOtherwiseTime === true
+        $method = 'get' . ucfirst($input['businessName']) . 'Orders' .
+            (isset($input['priceOtherwiseTime']) && $input['priceOtherwiseTime'] === true
                 ? 'ByPrice'
-                : (isset($priceOtherwiseTime) && $priceOtherwiseTime === false
+                : (isset($input['priceOtherwiseTime']) && $input['priceOtherwiseTime'] === false
                     ? 'ByTimeConsumption'
                     : ''
                 )
             ) .
-            ($username === null ? '' : 'ByUser');
+            ($input['username'] === null ? '' : 'ByUser');
 
         /** @var DSOrders $dsOrders */
-        $dsOrders = $this->{strtolower($businessName) . 'OrderRetrieval'}->{$method}(...$args);
+        $dsOrders = $this->{strtolower($input['businessName']) . 'OrderRetrieval'}->{$method}(...$args);
 
         return response()->json($dsOrders->toArray());
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreRequest $request): JsonResponse
     {
+        $validatedInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        /** @var Authenticatable $user */
+        /** @var User $user */
         $user = User::query()
-            ->whereKey($request->accountId)
+            ->whereKey($validatedInput['accountId'])
             ->first();
         $dsUser = $user->authenticatableRole()->getDataStructure();
         $gender = $user->gender;
 
-        switch (strtolower($request->businessName)) {
+        switch (strtolower($validatedInput['businessName'])) {
             case 'laser':
-                $parts = Part::query();
-                foreach ($requestParts = $request->parts as $partName) {
-                    $parts = $parts->where('name', '=', $partName, 'or');
+                if (isset($validatedInput['parts']) && count($validatedInput['parts']) !== 0) {
+                    $parts = Part::query();
+                    foreach ($requestParts = $validatedInput['parts'] as $partName) {
+                        $parts = $parts->where('name', '=', $partName, 'or');
+                    }
+                    $parts = $parts->get()->all();
+                    $parts = Part::getDSParts($parts, $gender);
+                } else {
+                    $parts = new DSParts($gender);
                 }
-                $parts = $parts->get()->all();
-                $parts = Part::getDSParts($parts, $gender);
 
-                $packages = Package::query();
-                foreach ($requestPackages = $request->packages as $packageName) {
-                    $packages = $packages->where('name', '=', $packageName, 'or');
+                if (isset($validatedInput['packages']) && count($validatedInput['packages']) !== 0) {
+                    $packages = Package::query();
+                    foreach ($requestPackages = $validatedInput['packages'] as $packageName) {
+                        $packages = $packages->where('name', '=', $packageName, 'or');
+                    }
+                    $packages = $packages->get()->all();
+                    $packages = Package::getDSPackages($packages, $gender);
+                } else {
+                    $packages = new DSPackages($gender);
                 }
-                $packages = $packages->get()->all();
-                $packages = Package::getDSPackages($packages, $gender);
 
                 $order = $this->laserOrderCreation->createLaserOrder($dsUser, $dsAuthenticated, $this->iDataBaseCreateLaserOrder, $parts, $packages);
                 break;
 
             case 'regular':
                 if ($dsAuthenticated instanceof DSAdmin) {
-                    $order = $this->regularOrderCreation->createRegularOrder($request->price, $request->timeConsumption, $dsUser, $dsAuthenticated, $this->iDataBaseCreateRegularOrder);
+                    $order = $this->regularOrderCreation->createRegularOrder($validatedInput['price'], $validatedInput['timeConsumption'], $dsUser, $dsAuthenticated, $this->iDataBaseCreateRegularOrder);
                 } else {
                     $order = $this->regularOrderCreation->createDefaultRegularOrder($dsUser, $dsAuthenticated, $this->iDataBaseCreateDefaultRegularOrder);
                 }
                 break;
 
             default:
-                throw new \LogicException('There\'s no such business name: ' . strval($request->businessName), 500);
+                throw new \LogicException('There\'s no such business name: ' . strval($validatedInput['businessName']), 500);
                 break;
         }
 
@@ -292,7 +288,7 @@ class OrdersController extends Controller
                  * @var User $user
                  * @var Order $order
                  * */
-                foreach (($user = User::query()->whereKey($accountId)->first())->orders as $order) {
+                foreach (($user = User::query()->whereKey($accountId)->firstOrFail())->orders as $order) {
                     /** @var RegularOrder $regularOrder */
                     if (($regularOrder = $order->regularOrder) !== null && $regularOrder->getKey() === $childOrderId) {
                         $found = true;
@@ -311,7 +307,7 @@ class OrdersController extends Controller
                  * @var User $user
                  * @var Order $order
                  * */
-                foreach (($user = User::query()->whereKey($accountId)->first())->orders as $order) {
+                foreach (($user = User::query()->whereKey($accountId)->firstOrFail())->orders as $order) {
                     /** @var LaserOrder $laserOrder */
                     if (($laserOrder = $order->laserOrder) !== null && $laserOrder->getKey() === $childOrderId) {
                         $found = true;
@@ -330,6 +326,6 @@ class OrdersController extends Controller
                 break;
         }
 
-        return response();
+        return response(trans_choice('Orders/destroy.successfull', 0));
     }
 }
