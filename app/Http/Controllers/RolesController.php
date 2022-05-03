@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
+use App\Http\Requests\Roles\ShowRequest;
+use App\Http\Requests\Roles\StoreRequest;
+use App\Http\Requests\Roles\UpdateRequest;
 use App\Models\User;
 use Database\Interactions\Privileges\DataBaseCreateRole;
 use Database\Interactions\Privileges\DataBaseDeleteRole;
@@ -49,21 +52,22 @@ class RolesController extends Controller
         return response()->json($this->privilegesManagement->getPrivileges($authenticated));
     }
 
-    public function store(Request $request)
+    public function store(StoreRequest $request)
     {
+        $validateInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        $this->privilegesManagement->createRole($dsAuthenticated, $request->customRoleName, $request->privilegeValue, $this->iDataBaseCreateRole);
+        $this->privilegesManagement->createRole($dsAuthenticated, $validateInput['customRoleName'], $validateInput['privilegeValue'], $this->iDataBaseCreateRole);
 
         return response('New role successfully created.');
     }
 
-    public function update(Request $request)
+    public function update(UpdateRequest $request)
     {
         $authenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         /** @var \App\Models\User $user */
-        $user = User::query()->where((new User)->getKeyName(), '=', $request->accountId)->first();
+        $user = User::query()->whereKey($request->accountId)->firstOrFail();
         $dsUser = $user->authenticatableRole()->getDataStructure();
 
         $this->privilegesManagement->setUserPrivilege($authenticated, $dsUser, $request->privilege, $request->value, $this->ip);
@@ -71,19 +75,20 @@ class RolesController extends Controller
         return response('The privilege successfully changed.');
     }
 
-    public function show(bool|null $self = null, int|null $accountId = null): JsonResponse
+    public function show(ShowRequest $request): JsonResponse
     {
-        $authenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $validateInput = $request->safe()->all();
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        if (!is_null($self) && $self) {
-            return response()->json($this->privilegesManagement->getSelfPrivileges($authenticated));
+        if (isset($validateInput['self']) && $validateInput['self']) {
+            return response()->json($this->privilegesManagement->getSelfPrivileges($dsAuthenticated));
         } else {
             /** @var \App\Models\User $user */
-            $user = User::query()->where((new User)->getKeyName(), '=', $accountId)->first();
+            $user = User::query()->where((new User)->getKeyName(), '=', $validateInput['accountId'])->first();
             $dsUser = $user->authenticatableRole()->getDataStructure();
 
             return response()->json($this->privilegesManagement->getUserPrivileges(
-                $authenticated,
+                $dsAuthenticated,
                 $dsUser
             ));
         }
