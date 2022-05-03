@@ -16,12 +16,13 @@ class DatabaseCreateRegularOrder implements IDataBaseCreateRegularOrder
         int $price,
         int $timeConsumption
     ): DSRegularOrder {
+        /** @var User $userModel */
         $userModel = User::query()->where('username', $targetUser->getUsername())->first();
 
         DB::beginTransaction();
 
         try {
-            $order = $userModel->order()->create();
+            $order = $userModel->orders()->create();
 
             $regularOrder = new RegularOrder;
             $regularOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
