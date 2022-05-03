@@ -100,9 +100,18 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
         ->group(function () {
             Route::get('/roles', 'index')->name('roles.index');
 
-            Route::get('/roles/{self?}/{accountId?}', 'show')->name('roles.show');
+            Route::post('/role', 'store')->name('roles.store');
 
-            Route::put('/roles', 'update')->name('roles.update');
+            Route::get('/role/{self?}/{accountId?}', 'show')->name('roles.show');
+
+            Route::put('/role', 'update')->name('roles.update');
+        });
+
+    Route::controller(AccountDocumentsController::class)
+        ->group(function () {
+            Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
+
+            Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
         });
 
     Route::controller(OrdersController::class)
