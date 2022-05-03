@@ -131,6 +131,10 @@ return [
     'uuid' => 'The :attribute must be a valid UUID.',
 
     'presence_prohibited_with' => "{0} The :current_field field is prohiboted when :other_field is present.",
+    'prohibited_with_required_with' => "{0} The :current_field field is prohiboted when :prohibited_field is present and required when :required_feild is present.",
+
+    'parts-packages-business-conflict' => "{0} Parts and Packages feilds are not allowed with this business: :businessName .",
+    'parts-packages-requirement' => "{0} At least one of the parts or packages feilds must be provided.",
 
     /*
     |--------------------------------------------------------------------------
