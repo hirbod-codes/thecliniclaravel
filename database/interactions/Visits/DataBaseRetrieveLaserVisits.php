@@ -43,13 +43,17 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
             //
         ;
 
-        $query = LaserVisit::query();
-        foreach ($laserVisits as $key => $value) {
-            $query = $query->where($laserVisit->getKeyName(), '=', $value->{$laserVisit->getKeyName()}, 'or');
-        }
-        $laserVisits = $query->get()->all();
+        if (count($laserVisits) !== 0) {
+            $query = LaserVisit::query();
+            foreach ($laserVisits as $key => $value) {
+                $query = $query->where($laserVisit->getKeyName(), '=', $value->{$laserVisit->getKeyName()}, 'or');
+            }
+            $laserVisits = $query->get()->all();
 
-        $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+            $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+        } else {
+            $dsLaserVisits = new DSLaserVisits();
+        }
 
         return $dsLaserVisits;
     }
@@ -78,19 +82,23 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
             )
             ->orderBy($laserVisit->getTable() . '.visit_timestamp', strtolower($sortByTimestamp))
             ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
-            ->where($order->getTable() . '.' . $order->getKeyName(), '=', $dsLaserOrder->getId())
+            ->where($laserVisit->getTable() . '.' . $laserOrder->getForeignKey(), '=', $dsLaserOrder->getId())
             ->get()
             ->all()
             //
         ;
 
-        $query = LaserVisit::query();
-        foreach ($laserVisits as $key => $value) {
-            $query = $query->where($laserVisit->getKeyName(), '=', $value->{$laserVisit->getKeyName()}, 'or');
-        }
-        $laserVisits = $query->get()->all();
+        if (count($laserVisits) !== 0) {
+            $query = LaserVisit::query();
+            foreach ($laserVisits as $key => $value) {
+                $query = $query->where($laserVisit->getKeyName(), '=', $value->{$laserVisit->getKeyName()}, 'or');
+            }
+            $laserVisits = $query->get()->all();
 
-        $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+            $dsLaserVisits = LaserVisit::getDSLaserVisits($laserVisits, strtoupper($sortByTimestamp));
+        } else {
+            $dsLaserVisits = new DSLaserVisits();
+        }
 
         return $dsLaserVisits;
     }
