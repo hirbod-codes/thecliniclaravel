@@ -49,6 +49,8 @@ return [
 
     'registration_successful' => "{0} Your account successfully registered.",
 
+    'set-avatar-successfully' => 'Yout avatar picture has successfully been set.',
+
     'Send' => "{0} Send",
     'Send-Code' => "{0} Send Code",
     'Resend' => "{0} Resend",
