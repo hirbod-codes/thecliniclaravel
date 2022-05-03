@@ -43,13 +43,17 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
             //
         ;
 
-        $query = RegularVisit::query();
-        foreach ($regularVisits as $key => $value) {
-            $query = $query->where($regularVisit->getKeyName(), '=', $value->{$regularVisit->getKeyName()}, 'or');
-        }
-        $regularVisits = $query->get()->all();
+        if (count($regularVisits) !== 0) {
+            $query = RegularVisit::query();
+            foreach ($regularVisits as $key => $value) {
+                $query = $query->where($regularVisit->getKeyName(), '=', $value->{$regularVisit->getKeyName()}, 'or');
+            }
+            $regularVisits = $query->get()->all();
 
-        $dsRegularVisits = RegularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
+            $dsRegularVisits = RegularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
+        } else {
+            $dsRegularVisits = new DSRegularVisits();
+        }
 
         return $dsRegularVisits;
     }
@@ -78,19 +82,23 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
             )
             ->orderBy($regularVisit->getTable() . '.visit_timestamp', strtolower($sortByTimestamp))
             ->where($user->getTable() . '.' . $user->getKeyName(), '=', $dsTargetUser->getId())
-            ->where($order->getTable() . '.' . $order->getKeyName(), '=', $dsRegularOrder->getId())
+            ->where($regularVisit->getTable() . '.' . $regularOrder->getForeignKey(), '=', $dsRegularOrder->getId())
             ->get()
             ->all()
             //
         ;
 
-        $query = RegularVisit::query();
-        foreach ($regularVisits as $key => $value) {
-            $query = $query->where($regularVisit->getKeyName(), '=', $value->{$regularVisit->getKeyName()}, 'or');
-        }
-        $regularVisits = $query->get()->all();
+        if (count($regularVisits) !== 0) {
+            $query = RegularVisit::query();
+            foreach ($regularVisits as $key => $value) {
+                $query = $query->where($regularVisit->getKeyName(), '=', $value->{$regularVisit->getKeyName()}, 'or');
+            }
+            $regularVisits = $query->get()->all();
 
-        $dsRegularVisits = RegularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
+            $dsRegularVisits = RegularVisit::getDSRegularVisits($regularVisits, strtoupper($sortByTimestamp));
+        } else {
+            $dsRegularVisits = new DSRegularVisits();
+        }
 
         return $dsRegularVisits;
     }
