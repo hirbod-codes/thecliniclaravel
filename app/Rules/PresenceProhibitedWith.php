@@ -5,7 +5,7 @@ namespace App\Rules;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\Rule;
 
-class PresenceProhibitedWithout implements Rule, DataAwareRule
+class PresenceProhibitedWith implements Rule, DataAwareRule
 {
     /**
      * All of the data under validation.

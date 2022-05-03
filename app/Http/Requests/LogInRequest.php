@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\PresenceProhibitedWithout;
+use App\Rules\PresenceProhibitedWith;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -28,12 +28,12 @@ class LogInRequest extends FormRequest
         $rules = [
             'username' => array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/username.php'))['username_not_unique_not_required_exists'], [
                 'required_without:email',
-                new PresenceProhibitedWithout(['email']),
+                new PresenceProhibitedWith(['email']),
             ]),
             'email' => array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/email.php'))['email_not_unique_not_required'], [
                 'exists:users,email',
                 'required_without:username',
-                new PresenceProhibitedWithout(['username']),
+                new PresenceProhibitedWith(['username']),
             ]),
             'password' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/password.php'))['password_string'],
             'remember' => ['boolean']

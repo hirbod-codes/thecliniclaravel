@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Rules\PresenceProhibitedWithout;
+use App\Rules\PresenceProhibitedWith;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -25,7 +25,7 @@ class ForgotPasswordRequest extends FormRequest
                 'email' => array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/email.php'))['email_not_unique_not_required'], [
                     'exists:users,email',
                     'required_without:phonenumber',
-                    new PresenceProhibitedWithout(['phonenumber']),
+                    new PresenceProhibitedWith(['phonenumber']),
                 ]),
                 'phonenumber' => array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber_not_unique_not_required'], [
                     'exists:users,phonenumber',
