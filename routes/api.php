@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountDocumentsController;
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Orders\OrdersController;
@@ -128,16 +129,16 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
 
     Route::controller(VisitsController::class)
         ->group(function () {
-            Route::get('/visits/Laser/{accountId}/{sortByTimestamp}/{laserOrderId?}/{timestamp?}', 'laserIndex')->name('visits.laserIndex');
-            Route::get('/visits/Regular/{accountId}/{sortByTimestamp}/{regularOrderId?}/{timestamp?}', 'regularIndex')->name('visits.regularIndex');
+            Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
+            Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
 
-            Route::post('/visits/regular', 'laserStore')->name('visits.laserStore');
-            Route::post('/visits/laser', 'regularStore')->name('visits.regularStore');
+            Route::post('/visit/laser', 'laserStore')->name('visits.laserStore');
+            Route::post('/visit/regular', 'regularStore')->name('visits.regularStore');
 
-            Route::get('/visits/Laser/{timestamp}', 'laserShow')->name('visits.laserShow');
-            Route::get('/visits/Regular/{timestamp}', 'regularShow')->name('visits.regularShow');
+            Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
+            Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
 
-            Route::delete('/visits/laser/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
-            Route::delete('/visits/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+            Route::delete('/visit/laser/{laserVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+            Route::delete('/visit/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
         });
 });
