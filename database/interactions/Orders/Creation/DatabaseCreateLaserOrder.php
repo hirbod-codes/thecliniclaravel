@@ -28,6 +28,7 @@ class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
         ?DSParts $parts = null,
         ?DSPackages $packages = null
     ): DSLaserOrder {
+        /** @var User $userModel */
         if (($userModel = User::query()->where('username', $targetUser->getUsername())->first()) === null) {
             throw new ModelNotFoundException('', 404);
         }
@@ -35,16 +36,15 @@ class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
         DB::beginTransaction();
 
         try {
-            $order = $userModel->order()->create();
+            $order = $userModel->orders()->create();
 
             $laserOrder = new LaserOrder;
             $laserOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
             $laserOrder->price = $priceWithoutDiscount;
             $laserOrder->price_with_discount = $price;
             $laserOrder->needed_time = $timeConsumption;
-            if (!$laserOrder->save()) {
-                throw new \RuntimeException('Failed to create the laser order', 500);
-            }
+            $laserOrder->saveOrFail();
+
             $laserOrderId = $laserOrder->{$laserOrder->getKeyName()};
 
             /** @var DSPart $part */
@@ -55,9 +55,7 @@ class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
                 $laserOrderPart = new LaserOrderPart;
                 $laserOrderPart->{$laserOrder->getForeignKey()} = $laserOrderId;
                 $laserOrderPart->{$part->getForeignKey()} = $partId;
-                if ($laserOrderPart->save()) {
-                    throw new \RuntimeException('Failed to create the laser order', 500);
-                }
+                $laserOrderPart->saveOrFail();
             }
 
             /** @var DSPackage $package */
@@ -68,9 +66,7 @@ class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
                 $laserOrderPackage = new LaserOrderPackage;
                 $laserOrderPackage->{$laserOrder->getForeignKey()} = $laserOrderId;
                 $laserOrderPackage->{$package->getForeignKey()} = $packageId;
-                if ($laserOrderPackage->save()) {
-                    throw new \RuntimeException('Failed to create the laser order', 500);
-                }
+                $laserOrderPackage->saveOrFail();
             }
 
             DB::commit();
