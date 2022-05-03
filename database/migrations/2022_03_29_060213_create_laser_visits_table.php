@@ -31,7 +31,7 @@ return new class extends Migration
         Schema::table($this->table, function (Blueprint $table) {
             $orderFK = (new LaserOrder)->getForeignKey();
 
-            $table->unsignedBigInteger($orderFK);
+            $table->unsignedBigInteger($orderFK)->after((new LaserVisit)->getKeyName());
             $table->foreign($orderFK, $this->table . '_' . (new LaserOrder)->getTable() . '_' . $orderFK)
                 ->references((new LaserOrder)->getKeyName())
                 ->on((new LaserOrder)->getTable())
