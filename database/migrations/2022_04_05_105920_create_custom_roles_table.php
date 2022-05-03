@@ -32,6 +32,8 @@ return new class extends Migration
         Schema::create($this->table, function (BluePrint $table) use ($fk, $fkUserRole) {
             $table->id($fk);
 
+            $table->json('data')->nullable();
+
             $userTable = (new User)->getTable();
 
             $table->foreign($fk, $this->table . '_' . $userTable . '_' . $fk)
