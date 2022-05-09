@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} | {{ trans_choice('auth.Login', 0) }}</title>
-    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/backend/css/base.css">
 </head>
 
 <body>
@@ -22,13 +22,13 @@
 
             <div class="message" style="margin: 0;height: auto;">_________________________________</div>
             <div class="message">
-                <a href="http://localhost/forgot-password" style="color:#bbb;">Forget your password?</a>
+                <a href="http://localhost/backend/forgot-password" style="color:#bbb;">Forget your password?</a>
             </div>
         </div>
     </div>
 </body>
 
-<script src="/js/base.js"></script>
-<script src="/js/login.js"></script>
+<script src="/backend/js/base.js"></script>
+<script src="/backend/js/login.js"></script>
 
 </html>

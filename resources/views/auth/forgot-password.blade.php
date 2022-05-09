@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} | {{ trans_choice('auth.Forgot-Password', 0) }}</title>
-    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/backend/css/base.css">
 </head>
 
 <body>
@@ -23,7 +23,7 @@
 
 </body>
 
-<script src="/js/base.js"></script>
-<script src="/js/forgot-password.js"></script>
+<script src="/backend/js/base.js"></script>
+<script src="/backend/js/forgot-password.js"></script>
 
 </html>

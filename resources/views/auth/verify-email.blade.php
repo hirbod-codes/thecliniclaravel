@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} | {{ trans_choice('auth.Verify-Email', 0) }}</title>
-    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/backend/css/base.css">
 </head>
 
 <body>
@@ -22,7 +22,7 @@
 
 <div style="display: none;position: absolute;" id="sending...">{{ trans_choice('auth.sending', 0) }}</div>
 
-<script src="/js/base.js"></script>
-<script src="/js/verify-email.js"></script>
+<script src="/backend/js/base.js"></script>
+<script src="/backend/js/verify-email.js"></script>
 
 </html>

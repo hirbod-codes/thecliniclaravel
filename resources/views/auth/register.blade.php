@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name') }} | {{ trans_choice('auth.Register', 0) }}</title>
-    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/backend/css/base.css">
 </head>
 
 <body>
@@ -63,8 +63,8 @@
 <div style="display: none;position: absolute;" id="Resend">{{ trans_choice('auth.Resend', 0) }}</div>
 <div style="display: none;position: absolute;" id="Close">{{ trans_choice('auth.Close', 0) }}</div>
 
-<script src="/js/base.js"></script>
-<script src="/js/register.js"></script>
-<script src="/js/phonenumber-verification.js"></script>
+<script src="/backend/js/base.js"></script>
+<script src="/backend/js/register.js"></script>
+<script src="/backend/js/phonenumber-verification.js"></script>
 
 </html>
