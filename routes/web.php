@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/', function () {
-    return 200;
+    return view('welcome');
 })->name('home');
 
 Route::middleware('auth:web')->group(function () {
