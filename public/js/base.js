@@ -1,4 +1,4 @@
-async function getData(url) {
+async function getData(url, headers = {}) {
     let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let myRequest = new Request(url);
 
@@ -6,6 +6,14 @@ async function getData(url) {
     myHeaders.append("Accept", "application/json, text-plain, */*");
     myHeaders.append("X-Requested-With", "XMLHttpRequest");
     myHeaders.append("X-CSRF-TOKEN", token);
+
+    for (const key in headers) {
+        if (Object.hasOwnProperty.call(headers, key)) {
+            const header = headers[key];
+
+            myHeaders.append(key, header);
+        }
+    }
 
     let init = {
         method: 'GET',
