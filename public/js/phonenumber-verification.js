@@ -108,7 +108,7 @@ function phonenumberVerifyCodeSend() {
         'code': getElmValue('code'),
     };
 
-    postData('/register/verify-phoennumber-verification-code', data).then((response) => {
+    postData('/backend/register/verify-phoennumber-verification-code', data).then((response) => {
         if (response.ok && response.status === 200) {
             disableButton(getElm('phonenumberVerificationCodeButton'));
             phonenumberVerificationClose();
@@ -155,7 +155,7 @@ function phonenumberVerifySend() {
         'phonenumber': getElmValue('phonenumber_verification')
     };
 
-    postData('/register/send-phoennumber-verification-code', data)
+    postData('/backend/register/send-phoennumber-verification-code', data)
         .then((response) => {
             if (response.ok && response.status === 200) {
                 disableButton(getElm('phonenumberVerificationButton'));

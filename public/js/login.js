@@ -19,7 +19,7 @@ function submit() {
         }
     }
 
-    postData('/login', data)
+    postData('/backend/login', data)
         .then(response => {
             if (response.redirected) {
                 window.location.replace(response.url);

@@ -13,7 +13,7 @@ function send() {
         }
     }
 
-    postData('/forgot-password', data).then((response) => {
+    postData('/backend/forgot-password', data).then((response) => {
         if (!response.ok || response.status !== 200) {
             return getBody(response);
         }
@@ -78,7 +78,7 @@ function sendCode() {
         }
     }
 
-    putData('/reset-password', data).then((response) => {
+    putData('/backend/reset-password', data).then((response) => {
         if (!response.ok || response.status !== 200) {
             return getBody(response);
         }

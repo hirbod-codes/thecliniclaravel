@@ -28,7 +28,7 @@ function register() {
         data.append('address', getElmValue('address'));
     }
 
-    postData('/register', data)
+    postData('/backend/register', data)
         .then((response) => {
             if (response.redirected) {
                 window.location.replace(response.url);
@@ -138,7 +138,7 @@ function password_confirmation(val) {
 }
 
 function getGenders() {
-    return getData('/api/genders').then((response) => {
+    return getData('/backend/api/genders').then((response) => {
         return getBody(response);
     });
 }
@@ -177,7 +177,7 @@ function avatar(val) {
 }
 
 function getStates() {
-    return getData('/api/states')
+    return getData('/backend/api/states')
         .then((response) => {
             return getBody(response);
         });
@@ -196,7 +196,7 @@ function addStates(statesPromise) {
 }
 
 function getCities(val) {
-    return getData('/api/cities?stateName=' + val).then((response) => {
+    return getData('/backend/api/cities?stateName=' + val).then((response) => {
         return getBody(response);
     });
 }

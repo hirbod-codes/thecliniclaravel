@@ -7,7 +7,7 @@ function sendEmailVeificationMessage() {
     getElm('send-button').setAttribute('disabled', true);
     getElm('send-button').style.color = '#333';
 
-    postData('/email/verification-notification', {}).then((response) => {
+    postData('/backend/email/verification-notification', {}).then((response) => {
         getElm('send-button').removeAttribute('disabled');
         getElm('send-button').style.color = '#bbbbbb';
         getElm('send-button').removeAttribute('disabled');
