@@ -59,7 +59,7 @@ class AuthController extends Controller
 
         session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/backend');
     }
 
     public function apiLogout(): Response
@@ -141,7 +141,7 @@ class AuthController extends Controller
             return response(__('auth.failed'), 422);
         }
 
-        return redirect('/');
+        return redirect('/backend');
     }
 
     public function register(RegisterUserRequest $request): Response|JsonResponse
