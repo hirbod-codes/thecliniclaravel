@@ -6,7 +6,6 @@ use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Orders\IndexRequest;
 use App\Http\Requests\Orders\StoreRequest;
-use App\Models\Auth\User as Authenticatable;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
@@ -22,7 +21,6 @@ use Database\Interactions\Orders\Retrieval\DatabaseRetrieveLaserOrders;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveRegularOrders;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\Order\DSPackages;
@@ -157,7 +155,7 @@ class OrdersController extends Controller
                     : ''
                 )
             ) .
-            ($input['username'] === null ? '' : 'ByUser');
+            (!isset($input['username']) ? '' : 'ByUser');
 
         /** @var DSOrders $dsOrders */
         $dsOrders = $this->{strtolower($input['businessName']) . 'OrderRetrieval'}->{$method}(...$args);
