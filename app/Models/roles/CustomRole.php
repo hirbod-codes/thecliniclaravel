@@ -36,9 +36,17 @@ class CustomRole extends Authenticatable
 
     public function data(): Attribute
     {
-        return Attribute::make(get: function (string $value) {
+        return Attribute::make(get: function (string|null $value) {
+            if (is_null($value)) {
+                return $value;
+            }
+
             return json_decode($value, true);
-        }, set: function (array $value) {
+        }, set: function (array|null $value) {
+            if (is_null($value)) {
+                return $value;
+            }
+
             return json_encode($value);
         });
     }
