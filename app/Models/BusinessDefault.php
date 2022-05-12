@@ -20,8 +20,14 @@ class BusinessDefault extends Model
             get: function (string $workSchedule): DSWorkSchedule {
                 return DSWorkSchedule::toObject(json_decode($workSchedule, true));
             },
-            set: function (DSWorkSchedule $value) {
-                return json_encode($value->toArray());
+            set: function (DSWorkSchedule|array|string $value) {
+                if (is_array($value)) {
+                    return json_encode($value);
+                } elseif (is_string($value)) {
+                    return $value;
+                } else {
+                    return json_encode($value->toArray());
+                }
             }
         );
     }
@@ -32,8 +38,14 @@ class BusinessDefault extends Model
             get: function (string $downTimes): DSDownTimes {
                 return DSDownTimes::toObject(json_decode($downTimes, true));
             },
-            set: function (DSDownTimes $value) {
-                return json_encode($value->toArray());
+            set: function (DSDownTimes|array|string $value) {
+                if (is_array($value)) {
+                    return json_encode($value);
+                } elseif (is_string($value)) {
+                    return $value;
+                } else {
+                    return json_encode($value->toArray());
+                }
             }
         );
     }
