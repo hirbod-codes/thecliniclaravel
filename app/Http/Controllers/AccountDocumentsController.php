@@ -6,16 +6,14 @@ use App\Auth\CheckAuthentication;
 use App\Http\Requests\AccountDocuments\GetAvatarRequest;
 use App\Http\Requests\AccountDocuments\SetAvatarRequest;
 use Illuminate\Http\File;
-use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use TheClinicDataStructures\DataStructures\User\DSUser;
 
 class AccountDocumentsController extends Controller
 {
     private CheckAuthentication $checkAuthentication;
 
-    public function __construce(CheckAuthentication|null $checkAuthentication = null)
+    public function __construct(CheckAuthentication|null $checkAuthentication = null)
     {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
     }
@@ -25,15 +23,15 @@ class AccountDocumentsController extends Controller
         $validatedInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        if ($validatedInput['accountsId'] !== $dsAuthenticated->getId()) {
-            $privileges = DSUser::getPrivileges();
+        if ($validatedInput['accountId'] !== $dsAuthenticated->getId()) {
+            $privileges = $dsAuthenticated->getUserPrivileges();
             if ($privileges['accountsRead'] === false) {
                 return response(trans_choice('auth.User-Not-Authorized', 0), 403);
             }
         }
 
-        if (Storage::disk('local')->exists('images/avaters/' . strval($validatedInput['accountsId']))) {
-            return Storage::disk('local')->get('images/avaters/' . strval($validatedInput['accountsId']));
+        if (Storage::disk('local')->exists('images/avatars/' . strval($validatedInput['accountId']))) {
+            return response()->file(storage_path() . '/app/images/avatars/' . strval($validatedInput['accountId']));
         }
 
         throw new \RuntimeException('The user\'s avatar file doesn\'t exisit.', 404);
@@ -44,14 +42,14 @@ class AccountDocumentsController extends Controller
         $validatedInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        if ($validatedInput['accountsId'] !== $dsAuthenticated->getId()) {
-            $privileges = DSUser::getPrivileges();
-            if ($privileges['accountsUpdate'] === false) {
+        if ($validatedInput['accountId'] !== $dsAuthenticated->getId()) {
+            $privileges = $dsAuthenticated->getUserPrivileges();
+            if ($privileges['accountUpdate'] === false) {
                 throw new \RuntimeException('You are not authorized for this action.', 403);
             }
         }
 
-        $this->makeAvatar($validatedInput['avatar'], $validatedInput['accountId'], 'private');
+        $this->makeAvatar($validatedInput['avatar'], $validatedInput['accountId'] . '.' . explode('/', $validatedInput['avatar']->getMimeType())[1], 'private');
 
         return response(trans_choice('auth.set-avatar-successfully', 0));
     }
