@@ -4,13 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
-use App\Http\Requests\Accounts\StorePatientAccountRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\Accounts\StoreDoctorAccountRequest;
-use App\Http\Requests\Accounts\StoreOperatorAccountRequest;
-use App\Http\Requests\Accounts\StoreSecretaryAccountRequest;
-use App\Http\Requests\Accounts\ApiVerifyPhonenumberVerificationCodeRequest;
 use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
+use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\UpdateSelfAccountRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
@@ -108,28 +105,18 @@ class AccountsController extends Controller
         ]);
     }
 
-    public function verifyPhonenumberVerificationCode(ApiVerifyPhonenumberVerificationCodeRequest $request): Response
+    public function store(StoreAccountRequest $request, string $roleName): Response|JsonResponse
     {
         $validatedInput = $request->safe()->all();
 
-        $codeCreatedAtDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($validatedInput['code_created_at_encrypted']))[0]);
-        $codeDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($validatedInput['code_encrypted']))[0]);
-
-        $code = intval($validatedInput['code']);
-
-        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp($codeCreatedAtDecrypted)->modify('+90 seconds')->getTimestamp()) {
-            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+        if (($resposne = $this->verifyPhonenumberVerificationCode(
+            $validatedInput['code_created_at_encrypted'],
+            $validatedInput['code_encrypted'],
+            $validatedInput['code']
+        ))->getStatusCode() !== 200) {
+            return $resposne;
         }
 
-        if ($code !== $codeDecrypted) {
-            return response(trans_choice('auth.phonenumber_verification_failed_code', 0), 422);
-        }
-
-        return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
-    }
-
-    private function store(array $validatedInput, string $roleName): Response|JsonResponse
-    {
         $validatedInput['role'] = $roleName;
 
         if ($validatedInput['phonenumber'] !== explode(self::SEPARATOR, Crypt::decryptString($validatedInput['phonenumber_encrypted']))[0]) {
@@ -141,6 +128,9 @@ class AccountsController extends Controller
         $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
         // Already validated in StorePatientAccountRequest::class
+        unset($validatedInput['code_created_at_encrypted']);
+        unset($validatedInput['code_encrypted']);
+        unset($validatedInput['code']);
         unset($validatedInput['phonenumber_verified_at_encrypted']);
         unset($validatedInput['phonenumber_encrypted']);
         unset($validatedInput['password_confirmation']);
@@ -157,35 +147,29 @@ class AccountsController extends Controller
         return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
     }
 
-    public function storeDoctor(StoreDoctorAccountRequest $request): Response|JsonResponse
+    private function verifyPhonenumberVerificationCode(string $codeCreatedAtEncrypted, string $codeEncrypted, int $code): Response
     {
-        $validatedInput = $request->safe()->all();
-        return $this->store($validatedInput, 'doctor');
-    }
+        $codeCreatedAtDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($codeCreatedAtEncrypted))[0]);
+        $codeDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($codeEncrypted))[0]);
 
-    public function storeSecretary(StoreSecretaryAccountRequest $request): Response|JsonResponse
-    {
-        $validatedInput = $request->safe()->all();
-        return $this->store($validatedInput, 'secretary');
-    }
+        $code = intval($code);
 
-    public function storeOperator(StoreOperatorAccountRequest $request): Response|JsonResponse
-    {
-        $validatedInput = $request->safe()->all();
-        return $this->store($validatedInput, 'operator');
-    }
+        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp($codeCreatedAtDecrypted)->modify('+90 seconds')->getTimestamp()) {
+            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+        }
 
-    public function storePatient(StorePatientAccountRequest $request): Response|JsonResponse
-    {
-        $validatedInput = $request->safe()->all();
-        return $this->store($validatedInput, 'patient');
+        if ($code !== $codeDecrypted) {
+            return response(trans_choice('auth.phonenumber_verification_failed_code', 0), 422);
+        }
+
+        return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
     }
 
     public function show(string $username): JsonResponse
     {
         $usernameRules = include(base_path() . '/app/Rules/BuiltInRules/Models/User/username.php');
         $validator = Validator::make(['username' => $username], [
-            'username' => $usernameRules['username_not_unique'],
+            'username' => $usernameRules['username_not_unique_exixts'],
         ]);
 
         if ($validator->fails()) {
@@ -218,7 +202,7 @@ class AccountsController extends Controller
 
         try {
             /** @var User $targetUser*/
-            $targetUser = User::query()->whereKey($accountId)->first();
+            $targetUser = User::query()->whereKey($accountId)->firstOrFail();
 
             $dsUpdatedUser = $this->accountsManagement->massUpdateAccount(
                 $request->safe()->all(),
@@ -233,7 +217,7 @@ class AccountsController extends Controller
         return response()->json($dsUpdatedUser->toArray());
     }
 
-    public function updateSelf(UpdateAccountRequest $request): JsonResponse|Response
+    public function updateSelf(UpdateSelfAccountRequest $request): JsonResponse|Response
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
