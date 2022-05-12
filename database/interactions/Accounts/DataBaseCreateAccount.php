@@ -55,9 +55,8 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
                 unset($input["avatar"]);
             }
 
-
             $userModel = new User;
-            $userModel->{(new Role)->getForeignKeyForName()} = Role::where('name', $ruleName)->first()->name;
+            $userModel->{(new Role)->getForeignKeyForName()} = Role::where('name', $ruleName)->firstOrFail()->name;
 
             foreach ($userAattributes as $key => $value) {
                 $userModel->{$key} = $value;
@@ -78,6 +77,8 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
 
             if (isset($avatar)) {
                 (new AccountDocumentsController)->makeAvatar($avatar, $userModel->getKey(), 'private');
+            } else {
+                (new AccountDocumentsController)->makeAvatar(storage_path() . '/app/images/avatar/default_' . strtolower($userModel->gender) . '.png', $userModel->getKey(), 'private');
             }
 
             DB::commit();
