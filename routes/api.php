@@ -3,11 +3,12 @@
 use App\Http\Controllers\AccountDocumentsController;
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BusinessDefault;
 use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\UpdateLocaleRequest;
-use App\Models\BusinessDefault;
+use App\Models\BusinessDefault as ModelsBusinessDefault;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\Storage;
 */
 
 Route::get('genders', function () {
-    return response()->json(BusinessDefault::firstOrFail()->genders);
+    return response()->json(ModelsBusinessDefault::firstOrFail()->genders);
 });
 
 Route::get('states', function () {
@@ -78,14 +79,10 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
         ->group(function () {
             Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-            // Verify Phonenumber
+            // Phonenumber Verification Message Sender Route
             Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
-            Route::post('/account/verify-phoennumber-verification-code', 'verifyPhonenumberVerificationCode')->name('account.verifyPhonenumberVerificationCode');
 
-            Route::post('/account/doctor', 'storeDoctor')->name('account.storeDoctor');
-            Route::post('/account/secretary', 'storeSecretary')->name('account.storeSecretary');
-            Route::post('/account/operator', 'storeOperator')->name('account.storeOperator');
-            Route::post('/account/patient', 'storePatient')->name('account.storePatient');
+            Route::post('/account/{roleName}', 'store')->name('account.store');
 
             Route::get('/account/{username}', 'show')->name('account.show');
             Route::get('/account', 'showSelf')->name('account.showSelf');
@@ -113,6 +110,13 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
             Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
 
             Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
+        });
+
+    Route::controller(BusinessDefault::class)
+        ->group(function () {
+            Route::get('/settings', 'index')->name('document.index');
+
+            Route::put('/setting', 'update')->name('document.update');
         });
 
     Route::controller(OrdersController::class)
