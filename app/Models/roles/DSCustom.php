@@ -17,7 +17,7 @@ class DSCustom extends DSUser
 {
     private string $roleName;
 
-    private array $customData;
+    private array|null $customData;
 
     /**
      * @param ICheckAuthentication $iCheckAuthentication
@@ -72,7 +72,7 @@ class DSCustom extends DSUser
         $this->setData($data);
     }
 
-    public function setData(array $data): static
+    public function setData(array|null $data): static
     {
         $this->customData = $data;
 
