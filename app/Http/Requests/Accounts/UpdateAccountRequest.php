@@ -2,12 +2,16 @@
 
 namespace App\Http\Requests\Accounts;
 
+use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
-use App\Rules\UniqueFullname;
+use Database\Traits\ResolveUserModel;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 
 class UpdateAccountRequest extends FormRequest
 {
+    use ResolveUserModel;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -25,17 +29,24 @@ class UpdateAccountRequest extends FormRequest
      */
     public function rules()
     {
-        $array = [
-            'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber_optional'],
-            'firstname' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/firstname.php'))['firstname_optional'],
-            'lastname' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/lastname.php'))['lastname_optional'],
-            'username' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/username.php'))['username_optional'],
-            'email' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/email.php'))['email_optional'],
-            'gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender_optional'],
-            'avatar' => (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'],
-        ];
+        $accountId = intval(array_reverse(explode('/', $this->path()))[0]);
 
-        $array['username'][] = new ProhibitExtraFeilds($array);
+        /** @var User $user */
+        $user = User::query()->whereKey($accountId)->firstOrFail();
+        $dsUser = $user->authenticatableRole()->getDataStructure();
+
+        $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php');
+
+        $role = $this->findSimilarRole($dsUser->getRuleName());
+
+        if (!is_null($role)) {
+            $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . Str::studly($role) . '/updateRules.php'));
+        } else {
+            $array['data'][] = 'array';
+            $array['data'][] = 'min:1';
+        }
+
+        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
 
         return $array;
     }
