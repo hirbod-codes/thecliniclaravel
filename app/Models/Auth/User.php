@@ -43,12 +43,14 @@ class User extends Model implements
         'remember_token',
     ];
 
-    protected $guarded = [];
+    protected $guarded = ['*'];
 
     public function __construct(array $attributes = [])
     {
-        $this->guarded[] = 'id';
+        $this->guarded = [];
+        $this->guarded[] = $this->getKeyName();
         $this->guarded[] = 'remember_token';
+        $this->guarded[] = (new Role)->getForeignKeyForName();
         $this->guarded[] = 'created_at';
         $this->guarded[] = 'updated_at';
 
