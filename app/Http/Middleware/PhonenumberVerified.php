@@ -25,7 +25,7 @@ class PhonenumberVerified
         if (Str::startsWith($request->path(), 'api')) {
             return response(trans_choice('auth.phonenumber_not_verification', 0), 403);
         } else {
-            return redirect('/', 403)->with(trans_choice('auth.phonenumber_not_verification', 0));
+            return redirect('/backend', 403)->with(trans_choice('auth.phonenumber_not_verification', 0));
         }
     }
 
