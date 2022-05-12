@@ -4,7 +4,7 @@ namespace App\Http\Requests\Visits;
 
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
-use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;
+use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
 
 class LaserStoreRequest extends FormRequest
 {
@@ -30,7 +30,7 @@ class LaserStoreRequest extends FormRequest
             'targetUserId' => ['required', 'integer', 'numeric', 'min:1'],
             'weekDaysPeriods' => ['array', 'min:1', 'max:7', function (string $attribute, array $value, $fail) {
                 foreach (array_keys($value) as $key) {
-                    if (!in_array($key, DSWorkSchedule::$weekDays)) {
+                    if (!in_array($key, DSWeekDaysPeriods::$weekDays)) {
                         $fail(trans_choice('validation.in', 0, ['attribute' => $attribute]));
                     }
                 }
