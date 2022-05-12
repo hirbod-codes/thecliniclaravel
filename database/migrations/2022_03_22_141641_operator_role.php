@@ -23,9 +23,10 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(null|string $table = null, null|string $roleName = null)
     {
-        $this->createBaseUserRoleColumns($this->table, 'operator');
+        $this->createBaseUserRoleColumns($table ?: $this->table, $roleName ?: 'operator');
+
 
         Schema::table($this->table, function (BluePrint $table) {
         });
@@ -36,10 +37,10 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(string|null $table = null)
     {
         DB::statement('SET FOREIGN_KEY_CHECKS = 0');
-        Schema::dropIfExists($this->table);
+        Schema::dropIfExists($table ?: $this->table);
         DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 };

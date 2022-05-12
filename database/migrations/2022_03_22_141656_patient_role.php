@@ -24,17 +24,17 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(null|string $tableName = null, null|string $roleName = null)
     {
-        $this->createBaseUserRoleColumns($this->table, 'patient');
+        $this->createBaseUserRoleColumns($tableName ?: $this->table, $roleName ?: 'patient');
 
-        Schema::table($this->table, function (BluePrint $table) {
+        Schema::table($tableName ?: $this->table, function (BluePrint $table) use ($tableName) {
             $fk = (new OperatorRole)->getForeignKey();
 
             $table->unsignedBigInteger($fk)->nullable();
 
             $operatorRoleTable = (new OperatorRole)->getTable();
-            $table->foreign($fk, $this->table . '_' . $operatorRoleTable . '_' . $fk)
+            $table->foreign($fk, $tableName ?: $this->table . '_' . $operatorRoleTable . '_' . $fk)
                 ->references((new OperatorRole)->getKeyName())
                 ->on($operatorRoleTable)
                 ->onUpdate('cascade')
@@ -54,10 +54,10 @@ return new class extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down(string|null $table = null)
     {
         DB::statement('SET FOREIGN_KEY_CHECKS = 0');
-        Schema::dropIfExists($this->table);
+        Schema::dropIfExists($table ?: $this->table);
         DB::statement('SET FOREIGN_KEY_CHECKS = 1');
     }
 };
