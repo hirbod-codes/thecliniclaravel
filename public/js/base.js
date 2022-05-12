@@ -27,7 +27,7 @@ async function getData(url, headers = {}) {
     return response;
 }
 
-async function postData(url, data) {
+async function postData(url, data, headers = {}) {
     let token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
     let myRequest = new Request(url);
 
@@ -35,6 +35,14 @@ async function postData(url, data) {
     myHeaders.append("Accept", "application/json, text-plain, */*");
     myHeaders.append("X-Requested-With", "XMLHttpRequest");
     myHeaders.append("X-CSRF-TOKEN", token);
+
+    for (const key in headers) {
+        if (Object.hasOwnProperty.call(headers, key)) {
+            const header = headers[key];
+
+            myHeaders.append(key, header);
+        }
+    }
 
     if (data.constructor.name === 'FormData') {
         var init = {
