@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/
 
-WORKDIR /var/www/html/backend
+WORKDIR /var/www/html/laravel
 
 COPY . .
 
