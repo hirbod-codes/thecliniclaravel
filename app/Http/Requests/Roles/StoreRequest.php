@@ -5,6 +5,7 @@ namespace App\Http\Requests\Roles;
 use App\Rules\ProhibitExtraFeilds;
 use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRequest extends FormRequest
 {
@@ -25,8 +26,8 @@ class StoreRequest extends FormRequest
      */
     public function rules()
     {
-        $array= [
-            'customRoleName' => ['required', 'string', 'regex:/\A[a-zA-Z0-9\/_-]+\z/'],
+        $array = [
+            'customRoleName' => ['required', 'string', 'regex:/\A[a-zA-Z0-9\/_-]+\z/', 'unique:roles,name', Rule::notIn(['custom'])],
             'privilegeValue' => ['required', new ValidatePrivilegeValue],
         ];
 
