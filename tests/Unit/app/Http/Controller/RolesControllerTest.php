@@ -4,6 +4,10 @@ namespace Tests\Unit\app\Http\Controller;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\RolesController;
+use App\Http\Requests\Roles\DestroyRequest;
+use App\Http\Requests\Roles\ShowRequest;
+use App\Http\Requests\Roles\StoreRequest;
+use App\Http\Requests\Roles\UpdateRequest;
 use App\Models\Auth\User;
 use App\Models\roles\PatientRole;
 use Faker\Factory;
@@ -15,6 +19,7 @@ use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
+use TheClinicDataStructures\DataStructures\User\DSPatient;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
@@ -79,6 +84,7 @@ class RolesControllerTest extends TestCase
             'testStore',
             'testUpdate',
             'testShow',
+            'testDestroy',
         ];
 
         $this->users = $this->getAuthenticatables();
@@ -111,14 +117,18 @@ class RolesControllerTest extends TestCase
         $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
         $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($dsUser);
 
-        /** @var Request|\Mockery\Mockinterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->customRoleName = '';
-        $request->privilegeValue = ['name' => 'value'];
+        $input = [
+            'customRoleName' => '',
+            'privilegeValue' => ['name' => 'value'],
+        ];
+
+        /** @var StoreRequest|\Mockery\Mockinterface $request */
+        $request = Mockery::mock(StoreRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $this->privilegesManagement
             ->shouldReceive('createRole')
-            ->with($dsUser, $request->customRoleName, $request->privilegeValue, $this->iDataBaseCreateRole)
+            ->with($dsUser, $input['customRoleName'], $input['privilegeValue'], $this->iDataBaseCreateRole)
             //
         ;
 
@@ -158,15 +168,19 @@ class RolesControllerTest extends TestCase
         $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($dsAdminUser);
         $this->checkAuthentication->shouldReceive("getAuthenticated")->andReturn($adminUser);
 
-        /** @var Request|\Mockery\Mockinterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->accountId = $this->user->{(new PatientRole)->getKeyName()};
-        $request->privilege = $privilege;
-        $request->value = $value;
+        $input = [
+            'accountId' => $this->user->{(new PatientRole)->getKeyName()},
+            'privilege' => $privilege,
+            'value' => $value,
+        ];
+
+        /** @var UpdateRequest|\Mockery\Mockinterface $request */
+        $request = Mockery::mock(UpdateRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $this->privilegesManagement->shouldReceive('setUserPrivilege')
-            ->with($dsAdminUser, \Mockery::on(function (DSUser $value) use ($request) {
-                if ($value->getId() === $request->accountId) {
+            ->with($dsAdminUser, \Mockery::on(function (DSUser $value) use ($input) {
+                if ($value->getId() === $input['accountId']) {
                     return true;
                 }
                 return false;
@@ -186,15 +200,37 @@ class RolesControllerTest extends TestCase
             ->with($this->dsUser)
             ->andReturn([]);
 
-        $result = $this->instantiate()->show($user->{(new PatientRole)->getKeyName()}, true);
+        /** @var ShowRequest|MockInterface $request */
+        $request = Mockery::mock(ShowRequest::class);
+        $request->shouldReceive('safe->all')
+            ->andReturn([
+                'self' => true
+            ])
+            //
+        ;
+
+        $result = $this->instantiate()->show($request);
         $this->assertInstanceOf(JsonResponse::class, $result);
         $this->assertCount(0, $result->original);
 
+        $request->shouldReceive('safe->all')
+            ->andReturn([
+                'accountId' => 90
+            ])
+            //
+        ;
+
         $this->privilegesManagement->shouldReceive('getUserPrivileges')
-            ->with($this->dsUser, $dsUser)
+            ->with($this->dsUser, Mockery::on(function (DSUser $value) use ($dsUser) {
+                if ($value instanceof DSPatient && $value->getUsername() === $dsUser->getUsername()) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }))
             ->andReturn([]);
 
-        $result = $this->instantiate()->show($user->{(new PatientRole)->getKeyName()});
+        $result = $this->instantiate()->show($request);
         $this->assertInstanceOf(JsonResponse::class, $result);
         $this->assertCount(0, $result->original);
     }
@@ -208,19 +244,23 @@ class RolesControllerTest extends TestCase
         $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
         $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($dsUser);
 
-        /** @var Request|\Mockery\Mockinterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->customRoleName = '';
+        $input = [
+            'customRoleName' => '',
+        ];
+
+        /** @var DestroyRequest|\Mockery\Mockinterface $request */
+        $request = Mockery::mock(DestroyRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $this->privilegesManagement
-            ->shouldReceive('createRole')
-            ->with($dsUser, $request->customRoleName, $this->iDataBaseDeleteRole)
+            ->shouldReceive('deleteRole')
+            ->with($dsUser, $input['customRoleName'], $this->iDataBaseDeleteRole)
             //
         ;
 
         $response = $this->instantiate()->destroy($request);
 
         $this->assertInstanceOf(Response::class, $response);
-        $this->assertEquals('New role successfully created.', $response->original);
+        $this->assertEquals('Requested role successfully deleted.', $response->original);
     }
 }
