@@ -29,7 +29,7 @@ class ShowRequest extends FormRequest
             'accountId' => ['required_without:self', 'string', 'integer', 'numeric', 'min:1'],
         ];
 
-        $array['self'][] = new ProhibitExtraFeilds($array);
+        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
 
         return $array;
     }
