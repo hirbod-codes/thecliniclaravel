@@ -4,6 +4,8 @@ namespace Tests\Unit\app\Http\Controller;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Orders\OrdersController;
+use App\Http\Requests\Orders\IndexRequest;
+use App\Http\Requests\Orders\StoreRequest;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
@@ -12,9 +14,7 @@ use App\Models\Part\Part;
 use App\Models\roles\PatientRole;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Mockery;
@@ -81,10 +81,14 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveLaserOrders,
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'lastOrderId' => $lastOrderId,
             'count' => $count,
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var LaserOrderRetrieval|MockInterface $laserOrderRetrieval */
         $laserOrderRetrieval = Mockery::mock(LaserOrderRetrieval::class);
@@ -105,7 +109,7 @@ class OrdersControllerTest extends TestCase
             'laserOrderRetrieval' => $laserOrderRetrieval,
             'iDataBaseRetrieveLaserOrders' => $iDataBaseRetrieveLaserOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->laserIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->laserIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -149,9 +153,13 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveLaserOrders
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'username' => $targetUser->user->username
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var LaserOrderRetrieval|MockInterface $laserOrderRetrieval */
         $laserOrderRetrieval = Mockery::mock(LaserOrderRetrieval::class);
@@ -172,7 +180,7 @@ class OrdersControllerTest extends TestCase
             'laserOrderRetrieval' => $laserOrderRetrieval,
             'iDataBaseRetrieveLaserOrders' => $iDataBaseRetrieveLaserOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->laserIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->laserIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -218,12 +226,16 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveLaserOrders
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'username' => $targetUser->user->username,
             'priceOtherwiseTime' => true,
             'price' => $price,
             'operator' => $operator
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var LaserOrderRetrieval|MockInterface $laserOrderRetrieval */
         $laserOrderRetrieval = Mockery::mock(LaserOrderRetrieval::class);
@@ -244,7 +256,7 @@ class OrdersControllerTest extends TestCase
             'laserOrderRetrieval' => $laserOrderRetrieval,
             'iDataBaseRetrieveLaserOrders' => $iDataBaseRetrieveLaserOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->laserIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->laserIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -276,13 +288,17 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveLaserOrders,
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'priceOtherwiseTime' => true,
             'price' => $price,
             'operator' => $operator,
             'lastOrderId' => $lastOrderId,
             'count' => $count,
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var LaserOrderRetrieval|MockInterface $laserOrderRetrieval */
         $laserOrderRetrieval = Mockery::mock(LaserOrderRetrieval::class);
@@ -303,7 +319,7 @@ class OrdersControllerTest extends TestCase
             'laserOrderRetrieval' => $laserOrderRetrieval,
             'iDataBaseRetrieveLaserOrders' => $iDataBaseRetrieveLaserOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->laserIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->laserIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -349,12 +365,16 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveLaserOrders
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'username' => $targetUser->user->username,
             'priceOtherwiseTime' => false,
             'timeConsumption' => $timeConsumption,
             'operator' => $operator
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var LaserOrderRetrieval|MockInterface $laserOrderRetrieval */
         $laserOrderRetrieval = Mockery::mock(LaserOrderRetrieval::class);
@@ -376,7 +396,7 @@ class OrdersControllerTest extends TestCase
             'iDataBaseRetrieveLaserOrders' => $iDataBaseRetrieveLaserOrders,
         ];
 
-        $response = (new OrdersController(...$controllerArgs))->laserIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->laserIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -403,13 +423,17 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveLaserOrders,
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'priceOtherwiseTime' => false,
             'timeConsumption' => $timeConsumption,
             'operator' => $operator,
             'lastOrderId' => $lastOrderId,
             'count' => $count,
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var LaserOrderRetrieval|MockInterface $laserOrderRetrieval */
         $laserOrderRetrieval = Mockery::mock(LaserOrderRetrieval::class);
@@ -431,7 +455,7 @@ class OrdersControllerTest extends TestCase
             'iDataBaseRetrieveLaserOrders' => $iDataBaseRetrieveLaserOrders,
         ];
 
-        $response = (new OrdersController(...$controllerArgs))->laserIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->laserIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -461,10 +485,14 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveRegularOrders,
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'lastOrderId' => $lastOrderId,
             'count' => $count,
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var RegularOrderRetrieval|MockInterface $regularOrderRetrieval */
         $regularOrderRetrieval = Mockery::mock(RegularOrderRetrieval::class);
@@ -485,7 +513,7 @@ class OrdersControllerTest extends TestCase
             'regularOrderRetrieval' => $regularOrderRetrieval,
             'iDataBaseRetrieveRegularOrders' => $iDataBaseRetrieveRegularOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->regularIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->regularIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -529,9 +557,13 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveRegularOrders
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'username' => $targetUser->user->username
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var RegularOrderRetrieval|MockInterface $regularOrderRetrieval */
         $regularOrderRetrieval = Mockery::mock(RegularOrderRetrieval::class);
@@ -552,7 +584,7 @@ class OrdersControllerTest extends TestCase
             'regularOrderRetrieval' => $regularOrderRetrieval,
             'iDataBaseRetrieveRegularOrders' => $iDataBaseRetrieveRegularOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->regularIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->regularIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -598,12 +630,16 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveRegularOrders
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'username' => $targetUser->user->username,
             'priceOtherwiseTime' => true,
             'price' => $price,
             'operator' => $operator
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var RegularOrderRetrieval|MockInterface $regularOrderRetrieval */
         $regularOrderRetrieval = Mockery::mock(RegularOrderRetrieval::class);
@@ -624,7 +660,7 @@ class OrdersControllerTest extends TestCase
             'regularOrderRetrieval' => $regularOrderRetrieval,
             'iDataBaseRetrieveRegularOrders' => $iDataBaseRetrieveRegularOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->regularIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->regularIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -651,13 +687,17 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveRegularOrders,
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'priceOtherwiseTime' => true,
             'price' => $price,
             'operator' => $operator,
             'lastOrderId' => $lastOrderId,
             'count' => $count,
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var RegularOrderRetrieval|MockInterface $regularOrderRetrieval */
         $regularOrderRetrieval = Mockery::mock(RegularOrderRetrieval::class);
@@ -678,7 +718,7 @@ class OrdersControllerTest extends TestCase
             'regularOrderRetrieval' => $regularOrderRetrieval,
             'iDataBaseRetrieveRegularOrders' => $iDataBaseRetrieveRegularOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->regularIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->regularIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -724,12 +764,16 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveRegularOrders
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'username' => $targetUser->user->username,
             'priceOtherwiseTime' => false,
             'timeConsumption' => $timeConsumption,
             'operator' => $operator
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var RegularOrderRetrieval|MockInterface $regularOrderRetrieval */
         $regularOrderRetrieval = Mockery::mock(RegularOrderRetrieval::class);
@@ -750,7 +794,7 @@ class OrdersControllerTest extends TestCase
             'regularOrderRetrieval' => $regularOrderRetrieval,
             'iDataBaseRetrieveRegularOrders' => $iDataBaseRetrieveRegularOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->regularIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->regularIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -777,13 +821,17 @@ class OrdersControllerTest extends TestCase
             'db' => $iDataBaseRetrieveRegularOrders,
         ];
 
-        $indexArgs = [
+        /** @var IndexRequest|MockInterface $request */
+        $request = Mockery::mock(IndexRequest::class);
+
+        $input = [
             'priceOtherwiseTime' => false,
             'timeConsumption' => $timeConsumption,
             'operator' => $operator,
             'lastOrderId' => $lastOrderId,
             'count' => $count,
         ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var RegularOrderRetrieval|MockInterface $regularOrderRetrieval */
         $regularOrderRetrieval = Mockery::mock(RegularOrderRetrieval::class);
@@ -804,7 +852,7 @@ class OrdersControllerTest extends TestCase
             'regularOrderRetrieval' => $regularOrderRetrieval,
             'iDataBaseRetrieveRegularOrders' => $iDataBaseRetrieveRegularOrders,
         ];
-        $response = (new OrdersController(...$controllerArgs))->regularIndex(...$indexArgs);
+        $response = (new OrdersController(...$controllerArgs))->regularIndex($request);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -1014,14 +1062,17 @@ class OrdersControllerTest extends TestCase
         /** @var IDataBaseCreateLaserOrder|MockInterface $iDataBaseCreateLaserOrder */
         $iDataBaseCreateLaserOrder = Mockery::mock(IDataBaseCreateLaserOrder::class);
 
-        /** @var Request|MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->businessName = 'laser';
-        $request->accountId = $otherUser->{$otherUser->getKeyName()};
-        $request->parts = $partsName;
-        $request->packages = $packagesName;
-        $request->price = $this->faker->numberBetween(10000000, 30000000);
-        $request->timeConsumption = $this->faker->numberBetween(60, 5400);
+        $input = [
+            'businessName' => 'laser',
+            'accountId' => $otherUser->{$otherUser->getKeyName()},
+            'parts' => $partsName,
+            'packages' => $packagesName,
+            'price' => $this->faker->numberBetween(10000000, 30000000),
+            'timeConsumption' => $this->faker->numberBetween(60, 5400),
+        ];
+        /** @var StoreRequest|MockInterface $request */
+        $request = Mockery::mock(StoreRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var DSLaserOrder|MockInterface $dsOrder */
         $dsOrder = Mockery::mock(DSLaserOrder::class);
@@ -1121,14 +1172,17 @@ class OrdersControllerTest extends TestCase
         /** @var IDataBaseCreateRegularOrder|MockInterface $iDataBaseCreateRegularOrder */
         $iDataBaseCreateRegularOrder = Mockery::mock(IDataBaseCreateRegularOrder::class);
 
-        /** @var Request|MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->businessName = 'regular';
-        $request->accountId = $otherUser->{$otherUser->getKeyName()};
-        $request->parts = $partsName;
-        $request->packages = $packagesName;
-        $request->price = $price = $this->faker->numberBetween(10000000, 30000000);
-        $request->timeConsumption = $timeConsumption = $this->faker->numberBetween(60, 5400);
+        $input = [
+            'businessName' => 'regular',
+            'accountId' => $otherUser->{$otherUser->getKeyName()},
+            'parts' => $partsName,
+            'packages' => $packagesName,
+            'price' => $price = $this->faker->numberBetween(10000000, 30000000),
+            'timeConsumption' => $timeConsumption = $this->faker->numberBetween(60, 5400),
+        ];
+        /** @var StoreRequest|MockInterface $request */
+        $request = Mockery::mock(StoreRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var DSRegularOrder|MockInterface $dsOrder */
         $dsOrder = Mockery::mock(DSRegularOrder::class);
@@ -1204,14 +1258,17 @@ class OrdersControllerTest extends TestCase
         /** @var IDataBaseCreateDefaultRegularOrder|MockInterface $iDataBaseCreateDefaultRegularOrder */
         $iDataBaseCreateDefaultRegularOrder = Mockery::mock(IDataBaseCreateDefaultRegularOrder::class);
 
-        /** @var Request|MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->businessName = 'regular';
-        $request->accountId = $otherUser->{$otherUser->getKeyName()};
-        $request->parts = $partsName;
-        $request->packages = $packagesName;
-        $request->price = $price = $this->faker->numberBetween(10000000, 30000000);
-        $request->timeConsumption = $timeConsumption = $this->faker->numberBetween(60, 5400);
+        $input = [
+            'businessName' => 'regular',
+            'accountId' => $otherUser->{$otherUser->getKeyName()},
+            'parts' => $partsName,
+            'packages' => $packagesName,
+            'price' => $price = $this->faker->numberBetween(10000000, 30000000),
+            'timeConsumption' => $timeConsumption = $this->faker->numberBetween(60, 5400),
+        ];
+        /** @var StoreRequest|MockInterface $request */
+        $request = Mockery::mock(StoreRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var DSRegularOrder|MockInterface $dsOrder */
         $dsOrder = Mockery::mock(DSRegularOrder::class);
@@ -1320,7 +1377,7 @@ class OrdersControllerTest extends TestCase
 
         $response = (new OrdersController(...$controllerArgs))->destroy($businessName, $accountId, $childOrderId);
 
-        $this->assertInstanceOf(ResponseFactory::class, $response);
+        $this->assertInstanceOf(Response::class, $response);
     }
 
     public function testLaserDestroy(): void
@@ -1387,6 +1444,6 @@ class OrdersControllerTest extends TestCase
 
         $response = (new OrdersController(...$controllerArgs))->destroy($businessName, $accountId, $childOrderId);
 
-        $this->assertInstanceOf(ResponseFactory::class, $response);
+        $this->assertInstanceOf(Response::class, $response);
     }
 }
