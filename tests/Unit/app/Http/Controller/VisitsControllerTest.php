@@ -4,6 +4,10 @@ namespace Tests\Unit\app\Http\Controller;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Visits\VisitsController;
+use App\Http\Requests\Visits\LaserIndexRequest;
+use App\Http\Requests\Visits\LaserStoreRequest;
+use App\Http\Requests\Visits\RegularIndexRequest;
+use App\Http\Requests\Visits\RegularStoreRequest;
 use App\Models\Auth\User;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
@@ -16,9 +20,7 @@ use Faker\Generator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
@@ -146,6 +148,9 @@ class VisitsControllerTest extends TestCase
 
     public function testLaserIndex(): void
     {
+        /** @var LaserIndexRequest|MockInterface $request */
+        $request = Mockery::mock(LaserIndexRequest::class);
+
         /** @var LaserVisitRetrieval|MockInterface $laserVisitRetrieval */
         $laserVisitRetrieval = Mockery::mock(LaserVisitRetrieval::class);
 
@@ -159,7 +164,11 @@ class VisitsControllerTest extends TestCase
         ];
 
         // getVisitsByUser
-        $sortByTimestamp = 'asc';
+        $input = [
+            'accountId' => $this->userRole->user->getKey(),
+            'sortByTimestamp' => $sortByTimestamp = 'asc',
+        ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $laserVisitRetrieval
             ->shouldReceive('getVisitsByUser')
@@ -178,7 +187,7 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->userRole->getKey(), 'asc');
+        $jsonResponse = (new VisitsController(...$args))->laserIndex($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
@@ -188,7 +197,12 @@ class VisitsControllerTest extends TestCase
         }
 
         // getVisitsByOrder
-        $sortByTimestamp = 'asc';
+        $input = [
+            'accountId' => $this->userRole->user->getKey(),
+            'regularOrderId' => $this->regularOrder->getKey(),
+            'sortByTimestamp' => $sortByTimestamp = 'asc',
+        ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $laserVisitRetrieval
             ->shouldReceive('getVisitsByOrder')
@@ -213,7 +227,7 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->userRole->getKey(), 'asc', $this->laserOrder->getKey());
+        $jsonResponse = (new VisitsController(...$args))->laserIndex($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
@@ -223,9 +237,14 @@ class VisitsControllerTest extends TestCase
         }
 
         // getVisitsByTimestamp
-        $timestamp = $this->faker->numberBetween(500000, 1000000);
-        $operator = $this->faker->randomElement(['<>', '=', '<=', '<', '>=', '>']);
-        $sortByTimestamp = 'asc';
+        $input = [
+            'accountId' => $this->userRole->user->getKey(),
+            'regularOrderId' => $this->regularOrder->getKey(),
+            'sortByTimestamp' => $sortByTimestamp = 'asc',
+            'timestamp' => $timestamp = $this->faker->numberBetween(500000, 1000000),
+            'operator' => $operator = $this->faker->randomElement(['<>', '=', '<=', '<', '>=', '>']),
+        ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $laserVisitRetrieval
             ->shouldReceive('getVisitsByTimestamp')
@@ -240,7 +259,7 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->laserIndex($this->userRole->getKey(), 'asc', null, $timestamp, $operator);
+        $jsonResponse = (new VisitsController(...$args))->laserIndex($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsLaserVisitsArray = $this->dsLaserVisits->toArray()), $jsonResponse->original);
@@ -252,6 +271,9 @@ class VisitsControllerTest extends TestCase
 
     public function testRegularIndex(): void
     {
+        /** @var RegularIndexRequest|MockInterface $request */
+        $request = Mockery::mock(RegularIndexRequest::class);
+
         /** @var RegularVisitRetrieval|MockInterface $regularVisitRetrieval */
         $regularVisitRetrieval = Mockery::mock(RegularVisitRetrieval::class);
 
@@ -265,7 +287,11 @@ class VisitsControllerTest extends TestCase
         ];
 
         // getVisitsByUser
-        $sortByTimestamp = 'asc';
+        $input = [
+            'accountId' => $this->userRole->user->getKey(),
+            'sortByTimestamp' => $sortByTimestamp = 'asc',
+        ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $regularVisitRetrieval
             ->shouldReceive('getVisitsByUser')
@@ -284,7 +310,7 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->userRole->getKey(), 'asc');
+        $jsonResponse = (new VisitsController(...$args))->regularIndex($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
@@ -294,7 +320,12 @@ class VisitsControllerTest extends TestCase
         }
 
         // getVisitsByOrder
-        $sortByTimestamp = 'asc';
+        $input = [
+            'accountId' => $this->userRole->user->getKey(),
+            'regularOrderId' => $this->regularOrder->getKey(),
+            'sortByTimestamp' => $sortByTimestamp = 'asc',
+        ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $regularVisitRetrieval
             ->shouldReceive('getVisitsByOrder')
@@ -319,7 +350,7 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->userRole->getKey(), 'asc', $this->regularOrder->getKey());
+        $jsonResponse = (new VisitsController(...$args))->regularIndex($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
@@ -329,9 +360,14 @@ class VisitsControllerTest extends TestCase
         }
 
         // getVisitsByTimestamp
-        $timestamp = $this->faker->numberBetween(500000, 1000000);
-        $operator = $this->faker->randomElement(['<>', '=', '<=', '<', '>=', '>']);
-        $sortByTimestamp = 'asc';
+        $input = [
+            'accountId' => $this->userRole->user->getKey(),
+            'regularOrderId' => $this->regularOrder->getKey(),
+            'sortByTimestamp' => $sortByTimestamp = 'asc',
+            'timestamp' => $timestamp = $this->faker->numberBetween(500000, 1000000),
+            'operator' => $operator = $this->faker->randomElement(['<>', '=', '<=', '<', '>=', '>']),
+        ];
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $regularVisitRetrieval
             ->shouldReceive('getVisitsByTimestamp')
@@ -346,7 +382,7 @@ class VisitsControllerTest extends TestCase
             //
         ;
 
-        $jsonResponse = (new VisitsController(...$args))->regularIndex($this->userRole->getKey(), 'asc', null, $timestamp, $operator);
+        $jsonResponse = (new VisitsController(...$args))->regularIndex($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(count($dsRegularVisitsArray = $this->dsRegularVisits->toArray()), $jsonResponse->original);
@@ -358,12 +394,15 @@ class VisitsControllerTest extends TestCase
 
     public function testLaserStore(): void
     {
-        /** @var Request|MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->laserOrderId = $this->laserOrder->getKey();
-        $request->targetUserId = $this->userRole->user->getKey();
-        $request->weekDaysPeriods = null;
-        $request->dateTimePeriod = null;
+        $input = [
+            'laserOrderId' => $this->laserOrder->getKey(),
+            'targetUserId' => $this->userRole->user->getKey(),
+            'weekDaysPeriods' => null,
+            'dateTimePeriod' => null,
+        ];
+        /** @var LaserStoreRequest|MockInterface $request */
+        $request = Mockery::mock(LaserStoreRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var IFindVisit|MockInterface $iFindVisit */
         $iFindVisit = Mockery::mock(IFindVisit::class);
@@ -414,7 +453,8 @@ class VisitsControllerTest extends TestCase
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
-        $request->weekDaysPeriods = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods()->toArray();
+        $input['weekDaysPeriods'] = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods()->toArray();
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $jsonResponse = (new VisitsController(...$args))->laserStore($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
@@ -428,12 +468,15 @@ class VisitsControllerTest extends TestCase
 
     public function testRegularStore(): void
     {
-        /** @var Request|MockInterface $request */
-        $request = Mockery::mock(Request::class);
-        $request->regularOrderId = $this->regularOrder->getKey();
-        $request->targetUserId = $this->userRole->user->getKey();
-        $request->weekDaysPeriods = null;
-        $request->dateTimePeriod = null;
+        $input = [
+            'regularOrderId' => $this->regularOrder->getKey(),
+            'targetUserId' => $this->userRole->user->getKey(),
+            'weekDaysPeriods' => null,
+            'dateTimePeriod' => null,
+        ];
+        /** @var RegularStoreRequest|MockInterface $request */
+        $request = Mockery::mock(RegularStoreRequest::class);
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         /** @var IFindVisit|MockInterface $iFindVisit */
         $iFindVisit = Mockery::mock(IFindVisit::class);
@@ -484,7 +527,8 @@ class VisitsControllerTest extends TestCase
             $this->assertEquals($value, $jsonResponse->original[$key]);
         }
 
-        $request->weekDaysPeriods = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods()->toArray();
+        $input['weekDaysPeriods'] = (new WeekDaysPeriodsFactory)->generateDSWeekDaysPeriods()->toArray();
+        $request->shouldReceive('safe->all')->andReturn($input);
 
         $jsonResponse = (new VisitsController(...$args))->regularStore($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
