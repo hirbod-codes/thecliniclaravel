@@ -140,9 +140,7 @@ class AccountsController extends Controller
         $username = $this->accountsManagement->createAccount($validatedInput, $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();
 
         /** @var \App\Models\Auth\User $newAccount */
-        if (($newAccount = User::where('username', '=', $username)->first()) === null) {
-            throw new ModelNotFoundException('Failed to find the created account!', 404);
-        }
+        $newAccount = User::query()->where('username', '=', $username)->firstOrFail();
 
         return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
     }
