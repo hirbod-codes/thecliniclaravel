@@ -4,9 +4,9 @@ namespace Database\Interactions\Privileges;
 
 use App\Models\Role;
 use Database\Traits\ResolveUserModel;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseDeleteRole;
 
 class DataBaseDeleteRole implements IDataBaseDeleteRole
@@ -16,20 +16,23 @@ class DataBaseDeleteRole implements IDataBaseDeleteRole
     public function deleteRole(string $customRoleName): void
     {
         try {
+            if (in_array($customRoleName, DSUser::$roles)) {
+                throw new \RuntimeException('This rule is unremovable.', 403);
+            }
+
             DB::beginTransaction();
 
-            $this->deleteCustomeRoleTable($customRoleName);
-            $this->deleteCustomeRoleMigrationFile($customRoleName);
-            $this->deleteCustomeRoleModel($customRoleName);
-            $this->deleteCustomeRoleDataStructure($customRoleName);
+            $role = $this->findSimilarRole($customRoleName);
+
+            if (!is_null($role)) {
+                $this->deleteCustomeRoleTable($customRoleName);
+                $this->deleteCustomeRoleModel($customRoleName);
+                $this->deleteCustomeRoleDataStructure($customRoleName);
+            }
 
             $role = Role::query()
                 ->where('name', '=', $customRoleName)
-                ->first();
-
-            if ($role === null) {
-                throw new ModelNotFoundException('', 404);
-            }
+                ->firstOrFail();
 
             $role->delete();
 
@@ -77,19 +80,6 @@ class DataBaseDeleteRole implements IDataBaseDeleteRole
             } else {
                 continue;
             }
-
-            break;
-        }
-    }
-
-    private function deleteCustomeRoleMigrationFile(string $customRoleName): void
-    {
-        foreach (scandir(base_path() . '/database/migrations') as $file) {
-            if (!is_file($file) || in_array($file, ['..', '.']) || !Str::contains($file, Str::snake($customRoleName) . '_roles')) {
-                continue;
-            }
-
-            unlink($file);
 
             break;
         }

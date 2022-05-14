@@ -3,6 +3,7 @@
 namespace Tests\Unit\database\interactions\Privileges;
 
 use App\Models\Role;
+use Database\Interactions\Privileges\DataBaseCreateRole;
 use Database\Interactions\Privileges\DataBaseDeleteRole;
 use Faker\Factory;
 use Faker\Generator;
@@ -22,11 +23,16 @@ class DataBaseDeleteRoleTest extends TestCase
 
     public function testDeleteRole(): void
     {
-        DB::beginTransaction();
         try {
-            $role = $this->faker->randomElement(Role::all());
+            $roleName = $this->faker->lexify();
 
-            $roleName = $role->name;
+            DB::beginTransaction();
+
+            (new DataBaseCreateRole)->createRole($roleName, ['accountsRead'  => false]);
+
+            $this->assertDatabaseHas((new Role)->getTable(), [
+                'name' => $roleName
+            ]);
 
             (new DataBaseDeleteRole)->deleteRole($roleName);
 
@@ -37,18 +43,6 @@ class DataBaseDeleteRoleTest extends TestCase
             throw $th;
         } finally {
             DB::rollBack();
-
-            try {
-                $this->assertDatabaseHas((new Role)->getTable(), [
-                    'name' => $roleName
-                ]);
-            } catch (\Throwable $th1) {
-                if (isset($th)) {
-                    throw $th;
-                } else {
-                    throw $th1;
-                }
-            }
         }
     }
 }
