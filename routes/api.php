@@ -103,6 +103,8 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
             Route::get('/role/{self?}/{accountId?}', 'show')->name('roles.show');
 
             Route::put('/role', 'update')->name('roles.update');
+
+            Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
         });
 
     Route::controller(AccountDocumentsController::class)
