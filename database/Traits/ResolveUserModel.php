@@ -31,11 +31,13 @@ trait ResolveUserModel
 
     public function resolveRuleModelFullName(string $roleName): string
     {
-        if (!class_exists($classFullname = 'App\\Models\\roles\\' . Str::studly($roleName) . 'Role')) {
-            return CustomRole::class;
+        if (class_exists($classFullname = 'App\\Models\\roles\\' . Str::studly($roleName) . 'Role')) {
+            return $classFullname;
+        } elseif (class_exists($classFullname = 'App\\Models\\roles\\UserDefined\\' . Str::studly($roleName) . 'Role')) {
+            return $classFullname;
         }
 
-        return $classFullname;
+        return CustomRole::class;
     }
 
     public function resolveRuleDataStructureFullName(string $roleName): string
@@ -61,7 +63,7 @@ trait ResolveUserModel
     public function findSimilarRole(string $role): string|null
     {
         foreach (DSUser::$roles as $r) {
-            if (Str::contains($role, $r)) {
+            if (Str::contains(Str::snake($role), Str::snake($r))) {
                 return $r;
             }
         }
