@@ -22,23 +22,23 @@ class DataBaseCreateRole implements IDataBaseCreateRole
     public function createRole(string $customRoleName, array $privilegeValue): void
     {
         try {
+            if ($customRoleName === 'custom') {
+                throw new \RuntimeException('The rule \'custom\' already exists.', 403);
+            }
+
             DB::beginTransaction();
 
             $role = $this->findSimilarRole($customRoleName);
 
-            if (is_null($role)) {
-                return;
+            if (!is_null($role)) {
+                $this->createCustomeRoleDataStructure($customRoleName, $role);
+                $this->createCustomeRoleModel($customRoleName, $role);
+                $this->createCustomeRoleTable($customRoleName, $role);
             }
-
-            $this->createCustomeRoleDataStructure($customRoleName, $role);
-            $this->createCustomeRoleModel($customRoleName, $role);
-            $this->createCustomeRoleTable($customRoleName, $role);
 
             $role = new Role();
             $role->name = Str::snake($customRoleName);
-            if (!$role->save()) {
-                throw new \RuntimeException('Failed to create the role model.', 500);
-            }
+            $role->saveOrFail();
 
             foreach ($privilegeValue as $privilege => $value) {
                 $privilegeValueModel = new PrivilegeValue;
@@ -46,10 +46,9 @@ class DataBaseCreateRole implements IDataBaseCreateRole
                 $privilegeValueModel->{(new Role)->getForeignKey()} = $role->getKey();
                 $privilegeValueModel->{(new Privilege)->getForeignKey()} = Privilege::query()
                     ->where('name', '=', $privilege)
-                    ->first()->getKey();
-                if (!$privilegeValueModel->save()) {
-                    throw new \RuntimeException('Failed to create the privilege-value model.', 500);
-                }
+                    ->firstOrFail()
+                    ->getKey();
+                $privilegeValueModel->saveOrFail();
             }
 
             DB::commit();
@@ -61,7 +60,7 @@ class DataBaseCreateRole implements IDataBaseCreateRole
 
     private function createCustomeRoleModel(string $customRoleName, string|null $role): void
     {
-        $customRoleName = Str::camel($customRoleName);
+        $customRoleName = Str::studly($customRoleName);
 
         $file = base_path() . '/app/Models/roles/UserDefined/' . $customRoleName . 'Role.php';
 
@@ -74,13 +73,14 @@ class DataBaseCreateRole implements IDataBaseCreateRole
         $content = str_replace('namespace App\\Models\\roles;', 'namespace App\\Models\\roles\\UserDefined;', $content);
         $content = str_replace($dsFullname = $this->resolveRuleDataStructureFullName($role), $customDSFullname = $this->resolveRuleDataStructureFullName($customRoleName), $content);
         $content = str_replace(class_basename($dsFullname), class_basename($customDSFullname), $content);
+        $content = str_replace('    protected $table = "' . Str::snake($role) . '_roles', '    protected $table = "' . Str::snake($customRoleName) . '_roles', $content);
 
         file_put_contents($file, $content);
     }
 
     private function createCustomeRoleTable(string $customRoleName, string|null $role): void
     {
-        $customRoleName = Str::camel($customRoleName);
+        $customRoleName = Str::studly($customRoleName);
 
         foreach (scandir(base_path() . '/database/migrations') as $file) {
             if (!is_file($file) || in_array($file, ['..', '.']) || !Str::contains($file, $role)) {
@@ -115,7 +115,9 @@ class DataBaseCreateRole implements IDataBaseCreateRole
         $fkUserRole = (new AdminRole)->getUserRoleNameFKColumnName();
 
         $unacceptableRoles = [];
-        foreach (Role::all() as $role) {
+        foreach (array_merge(array_map(function (Role $role) {
+            return $role->name;
+        }, Role::query()->get()->all()), $customRoleName) as $role) {
             if (Str::contains($role, DSUser::$roles)) {
                 $unacceptableRoles[] = $role;
             }
@@ -156,9 +158,14 @@ class DataBaseCreateRole implements IDataBaseCreateRole
         );
     }
 
+    private function hasSetPrivilegeMethod(string $roleDSFullname): bool
+    {
+        return (new \ReflectionMethod($roleDSFullname . '::' . 'setPrivilege'))->getDeclaringClass() === $roleDSFullname;
+    }
+
     private function createCustomeRoleDataStructure(string $customRoleName, string|null $role): void
     {
-        $customRoleName = Str::camel($customRoleName);
+        $customRoleName = Str::studly($customRoleName);
 
         $roleDSFullnameOriginal = $this->resolveRuleDataStructureFullName($role);
 
@@ -169,12 +176,44 @@ class DataBaseCreateRole implements IDataBaseCreateRole
         $content = file_get_contents($roleDSFilePath);
         $content = str_replace(class_basename($roleDSFullnameOriginal), 'DS' . $customRoleName, $content);
         $content = str_replace('namespace TheClinicDataStructures\\DataStructures\\User;', 'namespace App\\Models\\roles\\UserDefined;', $content);
-        $content = str_replace('\'' . $role . '\'', Str::snake($customRoleName), $content);
+
+        if (!Str::contains($content, 'use ' . DSUser::class . ';')) {
+            $content = str_replace('namespace App\\Models\\roles\\UserDefined;', 'namespace App\\Models\\roles\\UserDefined;
+
+            use ' . DSUser::class . ';', $content);
+        }
+
+        $content = str_replace('\'' . $role . '\'', '\'' . Str::snake($customRoleName) . '\'', $content);
+
+        $content = str_replace('namespace App\\Models\\roles\\UserDefined;', 'namespace App\\Models\\roles\\UserDefined;
+
+use App\Models\roles\OperatorRole;
+use TheClinicDataStructures\DataStructures\User\DSPatients;
+use TheClinicDataStructures\DataStructures\User\ICheckAuthentication;
+use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
+use App\Models\Privilege;
+use App\Models\PrivilegeValue;
+use App\Models\Role;
+use Illuminate\Database\Eloquent\ModelNotFoundException;', $content);
+
         $content = str_replace(
-            '
+            $this->hasSetPrivilegeMethod($roleDSFullnameOriginal)
+                ?
+                '
     public static function getUserPrivileges(string $roleName = ""): array
     {
-        return include self::PRIVILEGES_PATH . "/secretaryPrivileges.php";
+        return include self::PRIVILEGES_PATH . "/' . Str::snake($role) . 'Privileges.php";
+    }
+
+    public function setPrivilege(string $privilege, mixed $value, IPrivilege $p): void
+    {
+        throw new StrictPrivilegeException(\'This role privileges are strict.\', 403);
+    }'
+                :
+                '
+    public static function getUserPrivileges(string $roleName = ""): array
+    {
+        return include self::PRIVILEGES_PATH . "/' . Str::snake($role) . 'Privileges.php";
     }',
             '
     public function getPrivilege(string $privilege): mixed

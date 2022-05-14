@@ -6,10 +6,13 @@ use App\Models\Privilege;
 use App\Models\PrivilegeValue;
 use App\Models\Role;
 use Database\Interactions\Privileges\DataBaseCreateRole;
+use Database\Interactions\Privileges\DataBaseDeleteRole;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Tests\TestCase;
+use TheClinicDataStructures\DataStructures\User\DSUser;
 
 class DataBaseCreateRoleTest extends TestCase
 {
@@ -24,18 +27,29 @@ class DataBaseCreateRoleTest extends TestCase
 
     public function testCreateRole(): void
     {
-        DB::beginTransaction();
         try {
-            $roleName = 'custom_role';
-            (new DataBaseCreateRole)->createRole($roleName, [($privilegeModel = Privilege::first())->name => false]);
+            DB::beginTransaction();
 
-            $this->assertDatabaseHas((new Role)->getTable(), [
-                'name' => $roleName
-            ]);
+            foreach (DSUser::$roles as $role) {
+                if (Str::contains($role, 'custom')) {
+                    continue;
+                }
 
-            $this->assertDatabaseHas((new PrivilegeValue)->getTable(), [
-                (new Privilege)->getForeignKey() => $privilegeModel->getKey()
-            ]);
+                $roleName = 'my_custom_' . $role;
+
+                (new DataBaseCreateRole)->createRole($roleName, [($privilegeModel = Privilege::first())->name => false]);
+
+                $this->assertDatabaseHas((new Role)->getTable(), [
+                    'name' => $roleName
+                ]);
+
+                $this->assertDatabaseHas((new PrivilegeValue)->getTable(), [
+                    (new Privilege)->getForeignKey() => $privilegeModel->getKey()
+                ]);
+
+                sleep(10);
+                (new DataBaseDeleteRole)->deleteRole($roleName);
+            }
         } finally {
             DB::rollBack();
         }
