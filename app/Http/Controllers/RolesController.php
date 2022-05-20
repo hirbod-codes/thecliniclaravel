@@ -7,16 +7,18 @@ use App\Http\Requests\Roles\DestroyRequest;
 use App\Http\Requests\Roles\ShowRequest;
 use App\Http\Requests\Roles\StoreRequest;
 use App\Http\Requests\Roles\UpdateRequest;
+use App\Models\Role;
 use App\Models\User;
 use Database\Interactions\Privileges\DataBaseCreateRole;
 use Database\Interactions\Privileges\DataBaseDeleteRole;
-use Database\Interactions\Privileges\Privileges;
+use Database\Interactions\Privileges\PrivilegeSetter;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Http\JsonResponse;
-use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
+use TheClinicDataStructures\DataStructures\User\DSAdmin;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseDeleteRole;
+use TheClinicUseCases\Privileges\Interfaces\IPrivilegeSetter;
 
 class RolesController extends Controller
 {
@@ -30,26 +32,32 @@ class RolesController extends Controller
 
     private IDataBaseDeleteRole $iDataBaseDeleteRole;
 
+    private IPrivilegeSetter $ips;
+
     public function __construct(
         CheckAuthentication|null $checkAuthentication = null,
         PrivilegesManagement|null $privilegesManagement = null,
         IDataBaseCreateRole|null $iDataBaseCreateRole = null,
         IDataBaseDeleteRole|null $iDataBaseDeleteRole = null,
-        IPrivilege|null $ip = null
+        IPrivilegeSetter|null $ips = null
 
     ) {
         $this->privilegesManagement = $privilegesManagement ?: new PrivilegesManagement;
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
         $this->iDataBaseCreateRole = $iDataBaseCreateRole ?: new DataBaseCreateRole;
         $this->iDataBaseDeleteRole = $iDataBaseDeleteRole ?: new DataBaseDeleteRole;
-        $this->ip = $ip ?: new Privileges;
+        $this->ips = $ips ?: new PrivilegeSetter;
     }
 
     public function index(): JsonResponse
     {
         $authenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        return response()->json($this->privilegesManagement->getPrivileges($authenticated));
+        if ($authenticated instanceof DSAdmin) {
+            return response()->json(Role::query()->get()->all());
+        } else {
+            return response()->json(['message' => trans_choice('auth.User-Not-Authorized', 0)], 403);
+        }
     }
 
     public function store(StoreRequest $request)
@@ -57,7 +65,7 @@ class RolesController extends Controller
         $validateInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        $this->privilegesManagement->createRole($dsAuthenticated, $validateInput['customRoleName'], $validateInput['privilegeValue'], $this->iDataBaseCreateRole);
+        $this->privilegesManagement->createRole($dsAuthenticated, $validateInput['customRoleName'], $validateInput['privilegeValue'], $validateInput['role'], $this->iDataBaseCreateRole);
 
         return response('New role successfully created.');
     }
@@ -67,32 +75,9 @@ class RolesController extends Controller
         $validateInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        /** @var \App\Models\User $user */
-        $user = User::query()->whereKey($validateInput['accountId'])->firstOrFail();
-        $dsUser = $user->authenticatableRole()->getDataStructure();
-
-        $this->privilegesManagement->setUserPrivilege($dsAuthenticated, $dsUser, $validateInput['privilege'], $validateInput['value'], $this->ip);
+        $this->privilegesManagement->setRolePrivilege($dsAuthenticated, $validateInput['roleName'], $validateInput['privilegeValues'], $this->ips);
 
         return response('The privilege successfully changed.');
-    }
-
-    public function show(ShowRequest $request): JsonResponse
-    {
-        $validateInput = $request->safe()->all();
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        if (isset($validateInput['self']) && $validateInput['self']) {
-            return response()->json($this->privilegesManagement->getSelfPrivileges($dsAuthenticated));
-        } else {
-            /** @var \App\Models\User $user */
-            $user = User::query()->where((new User)->getKeyName(), '=', $validateInput['accountId'])->firstOrFail();
-            $dsUser = $user->authenticatableRole()->getDataStructure();
-
-            return response()->json($this->privilegesManagement->getUserPrivileges(
-                $dsAuthenticated,
-                $dsUser
-            ));
-        }
     }
 
     public function destroy(DestroyRequest $request)
