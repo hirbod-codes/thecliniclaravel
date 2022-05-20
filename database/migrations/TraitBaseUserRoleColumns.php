@@ -14,7 +14,7 @@ trait TraitBaseUserRoleColumns
 {
     use ResolveUserModel;
 
-    public function createBaseUserRoleColumns(string $tableName, string $roleName): void
+    public function createBaseUserRoleColumns(string $tableName, string $roleName, bool $withoutTrigger = false): void
     {
         $fkUserRole = '';
         $modelFullname = $this->resolveRuleModelFullname($roleName);
@@ -48,6 +48,10 @@ trait TraitBaseUserRoleColumns
 
             $table->timestamps();
         });
+
+        if ($withoutTrigger) {
+            return;
+        }
 
         DB::statement(
             'CREATE TRIGGER before_' . $this->table . '_insert BEFORE INSERT ON ' . $this->table . '

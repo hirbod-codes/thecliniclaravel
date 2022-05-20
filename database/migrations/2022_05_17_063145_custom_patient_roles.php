@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\roles\OperatorRole;
-use App\Models\roles\PatientRole;
+use App\Models\roles\CustomOperatorRole;
+use App\Models\roles\CustomPatientRole;
 use Database\Migrations\TraitBaseUserRoleColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -16,7 +16,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->table = (new PatientRole)->getTable();
+        $this->table = (new CustomPatientRole)->getTable();
     }
 
     /**
@@ -26,16 +26,18 @@ return new class extends Migration
      */
     public function up()
     {
-        $this->createBaseUserRoleColumns($this->table, 'patient');
+        $this->createBaseUserRoleColumns($this->table, 'patient', withoutTrigger: true);
 
         Schema::table($this->table, function (BluePrint $table) {
-            $fk = (new OperatorRole)->getForeignKey();
+            $fk = (new CustomOperatorRole)->getForeignKey();
 
             $table->unsignedBigInteger($fk)->nullable();
 
-            $operatorRoleTable = (new OperatorRole)->getTable();
-            $table->foreign($fk, $this->table . '_' . $operatorRoleTable . '_' . $fk)
-                ->references((new OperatorRole)->getKeyName())
+            $operatorRoleTable = (new CustomOperatorRole)->getTable();
+            // The foreign key's name is too long!
+            // $table->foreign($fk, $this->table . '_' . $operatorRoleTable . '_' . $fk)
+            $table->foreign($fk, $operatorRoleTable . '_' . $fk)
+                ->references((new CustomOperatorRole)->getKeyName())
                 ->on($operatorRoleTable)
                 ->onUpdate('cascade')
                 ->onDelete('cascade');

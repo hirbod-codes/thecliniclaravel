@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\roles\AdminRole;
+use App\Models\roles\CustomDoctorRole;
 use Database\Migrations\TraitBaseUserRoleColumns;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,7 +15,7 @@ return new class extends Migration
 
     public function __construct()
     {
-        $this->table = (new AdminRole)->getTable();
+        $this->table = (new CustomDoctorRole)->getTable();
     }
 
     /**
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function up()
     {
-        $this->createBaseUserRoleColumns($this->table, 'admin');
+        $this->createBaseUserRoleColumns($this->table, 'doctor', withoutTrigger: true);
 
         Schema::table($this->table, function (BluePrint $table) {
         });
