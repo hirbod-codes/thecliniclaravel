@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Accounts;
 
+use App\Models\Role;
 use App\Rules\CheckEnryptedValuesIds;
 use App\Rules\ProhibitExtraFeilds;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Str;
 
 class StoreAccountRequest extends FormRequest
@@ -34,12 +34,17 @@ class StoreAccountRequest extends FormRequest
 
         $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php');
 
-        $role = $this->findSimilarRole($roleName);
+        $role = $this->resolveRuleType($roleName);
+        if ($role === 'custom') {
+            $role = null;
+        } elseif (Str::contains($role, 'custom')) {
+            $role = Str::replace('custom_', '', $role);
+        }
 
         if (!is_null($role)) {
             $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . Str::studly($role) . '/updateRules.php'));
         } else {
-            $array['data'][] = 'array';
+            $array['data'][] = 'json';
             $array['data'][] = 'min:1';
         }
 

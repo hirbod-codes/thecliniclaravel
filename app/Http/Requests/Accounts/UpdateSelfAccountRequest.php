@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Accounts;
 
 use App\Auth\CheckAuthentication;
+use App\Models\Role;
 use App\Rules\ProhibitExtraFeilds;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,9 +31,16 @@ class UpdateSelfAccountRequest extends FormRequest
     public function rules()
     {
         $dsUser = (new CheckAuthentication)->getAuthenticatedDSUser();
+
         $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php');
 
-        $role = $this->findSimilarRole($dsUser->getRuleName());
+        $role = $this->resolveRuleName($dsUser);
+        $role = $this->resolveRuleType($role);
+        if ($role === 'custom') {
+            $role = null;
+        } elseif (Str::contains($role, 'custom')) {
+            $role = Str::replace('custom_', '', $role);
+        }
 
         if (!is_null($role)) {
             $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . Str::studly($role) . '/updateRules.php'));

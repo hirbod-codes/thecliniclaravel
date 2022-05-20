@@ -24,7 +24,7 @@ class IndexAccountsRequest extends FormRequest
     public function rules()
     {
         return [
-            'roleName' =>(include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['role'],
+            'roleName' =>(include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'],
             'lastAccountId' => ['nullable', 'integer', 'numeric'],
             'count' => ['required', 'integer', 'numeric']
         ];
