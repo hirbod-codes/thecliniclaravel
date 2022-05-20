@@ -44,6 +44,8 @@ class ValidatePrivilegeValue implements Rule
                 return false;
             }
         }
+
+        return true;
     }
 
     /**
@@ -53,7 +55,9 @@ class ValidatePrivilegeValue implements Rule
      */
     public function message()
     {
-        if ($this->unknownPrivilege) {
+        if (!isset($this->unknownPrivilege)) {
+            return 'The requested \'privilegeValue\' parameter is required.';
+        } elseif ($this->unknownPrivilege !== null) {
             return 'The requested privilege: ' . $this->unknownPrivilege . ' is unknown.';
         } else {
             return 'The requested privilege value must not be null.';
