@@ -23,4 +23,9 @@ class RoleFactory extends Factory
     {
         return $this->state(['name' => $name]);
     }
+
+    public function role(string $role): static
+    {
+        return $this->state(['role' => $role]);
+    }
 }
