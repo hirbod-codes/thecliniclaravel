@@ -7,8 +7,10 @@ use App\Auth\CheckAuthentication;
 use App\Models\Model;
 use App\Models\Order\Order;
 use App\Models\Role;
+use App\Models\roles\AdminRole;
 use App\Models\User as ModelsUser;
 use App\Models\Visit\Visit;
+use Database\Interactions\Privileges\Privileges;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -130,12 +132,16 @@ class User extends Model implements
 
         if ($parameterName === 'iCheckAuthentication') {
             $args[$parameterName] = new CheckAuthentication;
+        } elseif ($parameterName === 'iPrivilege') {
+            $args[$parameterName] = new Privileges;
         } elseif ($parameterName === 'orders') {
             if ($user->orders === null || empty($user->orders)) {
                 $args[$parameterName] = null;
             } else {
                 $args[$parameterName] = Order::getMixedDSOrders($user->orders);
             }
+        } elseif($parameterName === 'ruleName') {
+            $args[$parameterName] = $this->{(new AdminRole)->getUserRoleNameFKColumnName()};
         } else {
             // Do nothing for optional arguments.
         }
