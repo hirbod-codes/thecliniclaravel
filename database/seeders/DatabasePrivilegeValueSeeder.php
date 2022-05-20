@@ -20,9 +20,9 @@ class DatabasePrivilegeValueSeeder extends Seeder
         foreach (Role::all() as $role) {
             switch ($role->name) {
                 case 'admin':
-                    foreach (DSAdmin::getUserPrivileges() as $privilege => $privilegeValue) {
+                    foreach (DSAdmin::getUserPrivilegesStatically() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
-                            ->for(Privilege::where('name', $privilege)->first(), 'privilege')
+                            ->for(Privilege::where('name', $privilege)->firstOrFail(), 'privilege')
                             ->for($role, 'role')
                             ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
@@ -30,9 +30,9 @@ class DatabasePrivilegeValueSeeder extends Seeder
                     break;
 
                 case 'doctor':
-                    foreach (DSDoctor::getUserPrivileges() as $privilege => $privilegeValue) {
+                    foreach (DSDoctor::getUserPrivilegesStatically() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
-                            ->for(Privilege::where('name', $privilege)->first(), 'privilege')
+                            ->for(Privilege::where('name', $privilege)->firstOrFail(), 'privilege')
                             ->for($role, 'role')
                             ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
@@ -40,9 +40,9 @@ class DatabasePrivilegeValueSeeder extends Seeder
                     break;
 
                 case 'secretary':
-                    foreach (DSSecretary::getUserPrivileges() as $privilege => $privilegeValue) {
+                    foreach (DSSecretary::getUserPrivilegesStatically() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
-                            ->for(Privilege::where('name', $privilege)->first(), 'privilege')
+                            ->for(Privilege::where('name', $privilege)->firstOrFail(), 'privilege')
                             ->for($role, 'role')
                             ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
@@ -50,9 +50,9 @@ class DatabasePrivilegeValueSeeder extends Seeder
                     break;
 
                 case 'operator':
-                    foreach (DSOperator::getUserPrivileges() as $privilege => $privilegeValue) {
+                    foreach (DSOperator::getUserPrivilegesStatically() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
-                            ->for(Privilege::where('name', $privilege)->first(), 'privilege')
+                            ->for(Privilege::where('name', $privilege)->firstOrFail(), 'privilege')
                             ->for($role, 'role')
                             ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();
@@ -60,9 +60,9 @@ class DatabasePrivilegeValueSeeder extends Seeder
                     break;
 
                 case 'patient':
-                    foreach (DSPatient::getUserPrivileges() as $privilege => $privilegeValue) {
+                    foreach (DSPatient::getUserPrivilegesStatically() as $privilege => $privilegeValue) {
                         PrivilegeValue::factory()
-                            ->for(Privilege::where('name', $privilege)->first(), 'privilege')
+                            ->for(Privilege::where('name', $privilege)->firstOrFail(), 'privilege')
                             ->for($role, 'role')
                             ->privilegeValue((new PrivilegeValue)->convertPrivilegeValueToString($privilegeValue))
                             ->create();

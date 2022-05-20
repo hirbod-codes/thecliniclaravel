@@ -10,10 +10,10 @@ class DatabaseRulesSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::factory()->name('admin')->create();
-        Role::factory()->name('doctor')->create();
-        Role::factory()->name('secretary')->create();
-        Role::factory()->name('operator')->create();
-        Role::factory()->name('patient')->create();
+        Role::factory()->name('admin')->role('admin')->create();
+        Role::factory()->name('doctor')->role('doctor')->create();
+        Role::factory()->name('secretary')->role('secretary')->create();
+        Role::factory()->name('operator')->role('operator')->create();
+        Role::factory()->name('patient')->role('patient')->create();
     }
 }
