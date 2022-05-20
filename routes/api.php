@@ -1,5 +1,6 @@
 <?php
 
+use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AccountDocumentsController;
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuthController;
@@ -7,12 +8,19 @@ use App\Http\Controllers\BusinessDefault;
 use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
+use App\Http\Requests\Privileges\ShowRequest;
 use App\Http\Requests\UpdateLocaleRequest;
 use App\Models\BusinessDefault as ModelsBusinessDefault;
+use App\Models\Privilege;
+use App\Models\PrivilegeValue;
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use TheClinicUseCases\Privileges\PrivilegesManagement;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,10 +105,30 @@ Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
     Route::controller(RolesController::class)
         ->group(function () {
             Route::get('/roles', 'index')->name('roles.index');
+            Route::get('/privileges', function () {
+                $authenticated = (new CheckAuthentication)->getAuthenticatedDSUser();
 
-            Route::post('/role', 'store')->name('roles.store');
+                return response()->json((new PrivilegesManagement)->getPrivileges($authenticated));
+            })->name('privileges.index');
 
-            Route::get('/role/{self?}/{accountId?}', 'show')->name('roles.show');
+            Route::post('/role', 'store')->name('role.store');
+
+            Route::get('/privilege/{roleName?}', function (ShowRequest $request) {
+                $validateInput = $request->safe()->all();
+
+                $privileges = [];
+                DB::table((new Role)->getTable())
+                    ->select([(new Privilege)->getTable() . '.name', (new PrivilegeValue)->getTable() . '.privilegeValue'])
+                    ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey(), '=', (new Role)->getTable() . '.' . (new Role)->getKeyName())
+                    ->join((new Privilege)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
+                    ->where((new Role)->getTable() . '.name', '=', $validateInput['roleName'])
+                    ->get()
+                    ->map(function ($v, $k) use (&$privileges) {
+                        $privileges[$v->name] = $v->privilegeValue;
+                    });
+
+                return response()->json($privileges);
+            })->name('privileges.show');
 
             Route::put('/role', 'update')->name('roles.update');
 
