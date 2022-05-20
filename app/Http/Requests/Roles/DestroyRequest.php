@@ -27,9 +27,8 @@ class DestroyRequest extends FormRequest
      */
     public function rules()
     {
-        $array = [
-            'customRoleName' => ['required', 'string', Rule::notIn(array_merge(DSUser::$roles, ['custom'])), 'exists:' . (new Role)->getTable() . ',name'],
-        ];
+        $array = [];
+        $array['customRoleName'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'];
 
         $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
 

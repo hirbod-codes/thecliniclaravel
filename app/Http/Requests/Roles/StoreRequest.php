@@ -5,7 +5,9 @@ namespace App\Http\Requests\Roles;
 use App\Rules\ProhibitExtraFeilds;
 use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use TheClinicDataStructures\DataStructures\User\DSUser;
 
 class StoreRequest extends FormRequest
 {
@@ -27,8 +29,9 @@ class StoreRequest extends FormRequest
     public function rules()
     {
         $array = [
-            'customRoleName' => ['required', 'string', 'regex:/\A[a-zA-Z0-9\/_-]+\z/', 'unique:roles,name', Rule::notIn(['custom'])],
+            'customRoleName' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName_unique'],
             'privilegeValue' => ['required', new ValidatePrivilegeValue],
+            'role' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['role'],
         ];
 
         $array['customRoleName'][] = new ProhibitExtraFeilds($array);

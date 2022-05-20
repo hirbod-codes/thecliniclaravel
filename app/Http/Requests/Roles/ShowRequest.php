@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Roles;
 
+use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
+use TheClinicDataStructures\DataStructures\User\DSAdmin;
 
 class ShowRequest extends FormRequest
 {
@@ -14,7 +16,7 @@ class ShowRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        return (new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSAdmin;
     }
 
     /**
@@ -25,8 +27,7 @@ class ShowRequest extends FormRequest
     public function rules()
     {
         $array = [
-            'self' => ['required_without:accountId', 'boolean'],
-            'accountId' => ['required_without:self', 'string', 'integer', 'numeric', 'min:1'],
+            'accountId' => ['required', 'string', 'integer', 'numeric', 'min:0'],
         ];
 
         $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);

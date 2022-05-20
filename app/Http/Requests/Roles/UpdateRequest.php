@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Roles;
 
 use App\Rules\ProhibitExtraFeilds;
+use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use TheClinicDataStructures\DataStructures\User\DSUser;
@@ -29,12 +30,11 @@ class UpdateRequest extends FormRequest
         $privileges = DSUser::getPrivileges();
 
         $array = [
-            'accountId' => ['required', 'integer', 'numeric', 'min:1'],
-            'privilege' => ['required', 'string', Rule::in($privileges)],
-            'value' => ['required', 'string'],
+            'roleName' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'],
+            'privilegeValues' => ['required', 'array', new ValidatePrivilegeValue],
         ];
 
-        $array['value'][] = new ProhibitExtraFeilds($array);
+        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
 
         return $array;
     }
