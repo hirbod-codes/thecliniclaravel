@@ -10,30 +10,20 @@ use TheClinicDataStructures\DataStructures\User\Interfaces\IPrivilege;
 
 class Privileges implements IPrivilege
 {
-    public function setPrivilege(DSUser $user, string $privilege, mixed $value): void
+    /**
+     * @return array<string, string> ['privilege' => value, ...]
+     */
+    public function getUserPrivileges(DSUser $dsUser): array
     {
         /** @var User $user */
-        $user = User::query()
-            ->whereKey($user->getId())
-            ->first();
+        $privilegeValues = ($user = User::query()->where('username', '=', $dsUser->getUsername())->firstOrFail())->role->privilegeValues;
 
-        if ($user === null) {
-            throw new ModelNotFoundException('', 404);
-        }
-
+        $array = [];
         /** @var PrivilegeValue $privilegeValue */
-        foreach ($user->role->privilegeValues as $privilegeValue) {
-            if ($privilegeValue->privilege->name !== $privilege) {
-                continue;
-            }
-
-            $privilegeValue->privilegeValue = $privilegeValue->convertPrivilegeValueToString($value);
-
-            if (!$privilegeValue->save()) {
-                throw new \RuntimeException('Failed to update privilege model.', 500);
-            }
-
-            break;
+        foreach ($privilegeValues as $privilegeValue) {
+            $array[$privilegeValue->privilegeValue] = $privilegeValue->privilege->name;
         }
+
+        return $array;
     }
 }
