@@ -2,6 +2,8 @@
 
 namespace Database\Interactions\Accounts;
 
+use App\Models\Model;
+use App\Models\roles\AdminRole;
 use App\Models\User;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -20,6 +22,7 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
      */
     public function getAccounts(int $count, string $ruleName, ?int $lastAccountId = null): array
     {
+        /** @var Model $theModelFullName */
         $theModelFullName = $this->resolveRuleModelFullName($ruleName);
 
         $maxId = $theModelFullName::orderBy('id', 'desc')->first()->id;
@@ -28,7 +31,9 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
             throw new \RuntimeException('Invalid last primary key value, it\'s either greater than max primary key or less than 1.', 500);
         }
 
-        $models = $theModelFullName::orderBy((new $theModelFullName)->getKeyName(), 'desc')
+        $models = $theModelFullName::query()
+            ->orderBy((new $theModelFullName)->getKeyName(), 'desc')
+            ->where((new AdminRole)->getUserRoleNameFKColumnName(), '=', $ruleName)
             ->where((new $theModelFullName)->getKeyName(), $lastAccountId === null ? '<=' : '<', $lastAccountId === null ? $maxId : $lastAccountId)
             ->take($count)
             ->get();

@@ -81,11 +81,13 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
                 (new AccountDocumentsController)->makeAvatar(storage_path() . '/app/images/avatar/default_' . strtolower($userModel->gender) . '.png', $userModel->getKey(), 'private');
             }
 
+            $dsRoleModel = $roleModel->getDataStructure();
+
             DB::commit();
 
             event(new Registered($userModel));
 
-            return $roleModel->getDataStructure();
+            return $dsRoleModel;
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;
