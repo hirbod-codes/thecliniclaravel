@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
+use TheClinicDataStructures\DataStructures\User\DSCustom;
 
 class CustomRole extends Authenticatable
 {
@@ -42,8 +43,8 @@ class CustomRole extends Authenticatable
             }
 
             return json_decode($value, true);
-        }, set: function (array|null $value) {
-            if (is_null($value)) {
+        }, set: function (string|array|null $value) {
+            if (is_null($value) || is_string($value)) {
                 return $value;
             }
 
