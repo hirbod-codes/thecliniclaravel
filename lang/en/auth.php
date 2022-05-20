@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'User-Not-Authorized' => 'You are not authorized for this action.',
+    'User-Not-Authorized' => '{0} You are not authorized for this action.',
 
     'fill_registration_form' => "{0} Please fill these fields in order to register as a patient:",
 
