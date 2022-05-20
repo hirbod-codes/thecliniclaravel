@@ -28,16 +28,16 @@ class DataBaseCreateRoleTest extends TestCase
     public function testCreateRole(): void
     {
         try {
-            DB::beginTransaction();
-
             foreach (DSUser::$roles as $role) {
-                if (Str::contains($role, 'custom')) {
+                DB::beginTransaction();
+
+                if (!Str::contains($role, 'custom')) {
                     continue;
                 }
 
-                $roleName = 'my_custom_' . $role;
+                $roleName = $this->faker->lexify();
 
-                (new DataBaseCreateRole)->createRole($roleName, [($privilegeModel = Privilege::first())->name => false]);
+                (new DataBaseCreateRole)->createRole($roleName, [($privilegeModel = Privilege::first())->name => false], $role);
 
                 $this->assertDatabaseHas((new Role)->getTable(), [
                     'name' => $roleName
@@ -47,11 +47,13 @@ class DataBaseCreateRoleTest extends TestCase
                     (new Privilege)->getForeignKey() => $privilegeModel->getKey()
                 ]);
 
-                sleep(10);
                 (new DataBaseDeleteRole)->deleteRole($roleName);
+
+                DB::rollBack(DB::transactionLevel());
             }
-        } finally {
-            DB::rollBack();
+        } catch (\Throwable $th) {
+            DB::rollBack(DB::transactionLevel());
+            throw $th;
         }
     }
 }

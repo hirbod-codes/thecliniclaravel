@@ -28,7 +28,7 @@ class DataBaseDeleteRoleTest extends TestCase
 
             DB::beginTransaction();
 
-            (new DataBaseCreateRole)->createRole($roleName, ['accountsRead'  => false]);
+            (new DataBaseCreateRole)->createRole($roleName, ['accountsRead'  => false], 'custom_doctor');
 
             $this->assertDatabaseHas((new Role)->getTable(), [
                 'name' => $roleName
@@ -39,10 +39,11 @@ class DataBaseDeleteRoleTest extends TestCase
             $this->assertDatabaseMissing((new Role)->getTable(), [
                 'name' => $roleName
             ]);
+
+            DB::rollBack(DB::transactionLevel());
         } catch (\Throwable $th) {
+            DB::rollBack(DB::transactionLevel());
             throw $th;
-        } finally {
-            DB::rollBack();
         }
     }
 }
