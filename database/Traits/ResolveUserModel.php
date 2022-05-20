@@ -3,12 +3,13 @@
 namespace Database\Traits;
 
 use App\Models\Auth\User as Authenticatable;
+use App\Models\Role;
 use App\Models\roles\CustomRole;
-use App\Models\roles\DSCustom;
 use App\Models\User;
 use Database\Factories\roles\CustomRoleFactory;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use Illuminate\Support\Str;
+use TheClinicDataStructures\DataStructures\User\DSCustom;
 
 trait ResolveUserModel
 {
@@ -31,6 +32,10 @@ trait ResolveUserModel
 
     public function resolveRuleModelFullName(string $roleName): string
     {
+        if (!in_array($roleName, DSUser::$roles)) {
+            $roleName = $this->resolveRuleType($roleName);
+        }
+
         if (class_exists($classFullname = 'App\\Models\\roles\\' . Str::studly($roleName) . 'Role')) {
             return $classFullname;
         } elseif (class_exists($classFullname = 'App\\Models\\roles\\UserDefined\\' . Str::studly($roleName) . 'Role')) {
@@ -42,6 +47,10 @@ trait ResolveUserModel
 
     public function resolveRuleDataStructureFullName(string $roleName): string
     {
+        if (!in_array($roleName, DSUser::$roles)) {
+            $roleName = $this->resolveRuleType($roleName);
+        }
+
         if (class_exists($classFullname = 'TheClinicDataStructures\\DataStructures\\User\\DS' . Str::studly($roleName))) {
             return $classFullname;
         } elseif (class_exists($classFullname = 'App\\Models\\roles\\UserDefined\\DS' . Str::studly($roleName))) {
@@ -53,6 +62,10 @@ trait ResolveUserModel
 
     public function resolveRuleFactoryFullName(string $roleName): string
     {
+        if (!in_array($roleName, DSUser::$roles)) {
+            $roleName = $this->resolveRuleType($roleName);
+        }
+
         if (!class_exists($classFullname = 'Database\\Factories\\roles\\' . Str::studly($roleName) . 'RoleFactory')) {
             return CustomRoleFactory::class;
         }
@@ -60,14 +73,20 @@ trait ResolveUserModel
         return $classFullname;
     }
 
-    public function findSimilarRole(string $role): string|null
+    /**
+     * For example takes custom doctor role: doctor_123 and gives custom_doctor.
+     *
+     * @param string $roleName
+     * @return string
+     */
+    public function resolveRuleType(string $roleName): string
     {
-        foreach (DSUser::$roles as $r) {
-            if (Str::contains(Str::snake($role), Str::snake($r))) {
-                return $r;
-            }
+        if (in_array($roleName, DSUser::$roles)) {
+            return $roleName;
         }
 
-        return null;
+        $roleName = Role::query()->where('name', '=', Str::snake($roleName))->firstOrFail()->role;
+
+        return $roleName;
     }
 }
