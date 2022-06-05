@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Requests\UpdateLocaleRequest;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,6 +17,46 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+Route::get('/locale', function () {
+    $locale = App::getLocale();
+    $direction = include(base_path() . '/lang/' . $locale . '/direction.php');
+    $longName = include(base_path() . '/lang/' . $locale . '/language_name.php');
+    return response()->json(['longName' => $longName, 'shortName' => $locale, 'direction' => $direction]);
+});
+
+Route::get('/locales', function () {
+    $locales = [];
+    foreach ($dirs = scandir(base_path() . '/lang') as $value) {
+        if (in_array($value, ['.', '..']) || !is_dir(base_path() . '/lang/' . $value)) {
+            continue;
+        }
+
+        $longName = include(base_path() . '/lang/' . $value . '/language_name.php');
+
+        $locales[] = ['longName' => $longName, 'shortName' => $value, 'direction' => (include(base_path() . '/lang/' . $value . '/direction.php'))];
+    }
+
+    return response()->json($locales);
+});
+
+Route::put('/locale', function (UpdateLocaleRequest $request) {
+    $validatedInput = $request->safe()->only('locale');
+
+    foreach (scandir(base_path() . '/lang') as $dir) {
+        if (in_array($dir, ['..', '.']) || !is_dir(base_path() . '/lang/' . $dir)) {
+            continue;
+        }
+
+        $longName = include(base_path() . '/lang/' . $dir . '/language_name.php');
+
+        if ($validatedInput['locale'] === $dir || $validatedInput['locale'] === $longName) {
+            App::setLocale($dir);
+        }
+    }
+
+    return response()->json(['message' => 'The locale option successfully updated.']);
+});
 
 Route::get('/', function () {
     return view('welcome');
