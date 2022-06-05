@@ -9,14 +9,11 @@ use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\Privileges\ShowRequest;
-use App\Http\Requests\UpdateLocaleRequest;
 use App\Models\BusinessDefault as ModelsBusinessDefault;
 use App\Models\Privilege;
 use App\Models\PrivilegeValue;
 use App\Models\Role;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -71,6 +68,10 @@ Route::get('cities/{stateName?}', function (Request $request) {
         }
 
         $id = $state['id'];
+    }
+
+    if (!isset($id)) {
+        return response()->json(['error' => 'Provided state has not been found.'], 404);
     }
 
     $cities = [];
