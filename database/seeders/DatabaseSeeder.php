@@ -24,10 +24,15 @@ class DatabaseSeeder extends Seeder
             (new DatabaseRulesSeeder)->run();
             (new DatabasePrivilegeValueSeeder)->run();
 
-            (new DatabaseUsersSeeder)->run();
-
             (new DatabasePartsSeeder)->run();
             (new DatabasePackagesSeeder)->run();
+
+            if (in_array(strtolower(env('APP_ENV', '')), ['production', 'prod'])) {
+                DB::commit();
+                return;
+            }
+
+            (new DatabaseUsersSeeder)->run();
 
             (new DatabaseOrdersSeeder)->run();
 
