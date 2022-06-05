@@ -83,14 +83,6 @@ Route::get('cities/{stateName?}', function (Request $request) {
     return response()->json($cities);
 });
 
-Route::put('/updateLocale', function (UpdateLocaleRequest $request) {
-    $locale = $request->safe()->only('locale');
-
-    App::setLocale($locale['locale']);
-
-    return response('The locale option successfully updated.', 200);
-});
-
 // Login
 Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
 
