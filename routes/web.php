@@ -59,7 +59,7 @@ Route::put('/locale', function (UpdateLocaleRequest $request) {
 });
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('app');
 })->name('home');
 
 Route::middleware('auth:web')->group(function () {
@@ -67,7 +67,7 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/email/verify/{redirecturl?}', function (Request $request) {
         $redirecturl = $request->get('redirecturl');
         $request->session()->put('redirecturl', $redirecturl);
-        return view('auth.verify-email');
+        return view('app');
     })->name('verification.notice');
 
     Route::post('/email/verification-notification', function (Request $request) {
@@ -83,7 +83,7 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
         $request->fulfill();
 
-        return view('auth.verified-email');
+        return redirect('/');
     })->middleware('signed')->name('verification.verify');
 
     // Logout
@@ -96,23 +96,23 @@ Route::middleware('guest:web')->group(function () {
         if (!is_null($redirecturl = $request->get('redirecturl'))) {
             $request->session()->put('redirecturl', $redirecturl);
         }
-        return view('auth.register');
+        return view('app');
     })->name('auth.register.page');
     Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 
     // Login
-    Route::get('/login', fn () => view('auth.login'))->name('auth.login.page');
+    Route::get('/login', fn () => view('app'))->name('auth.login.page');
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 
     // Verify Phonenumber
-    Route::middleware('phonenumber_not_verified')->post('/register/send-phoennumber-verification-code', [AuthController::class, 'sendPhonenumberVerificationCode'])->name('auth.sendPhonenumberVerificationCode');
-    Route::middleware('phonenumber_not_verified')->post('/register/verify-phoennumber-verification-code', [AuthController::class, 'verifyPhonenumberVerificationCode'])->name('auth.verifyPhonenumberVerificationCode');
+    Route::post('/register/send-phoennumber-verification-code', [AuthController::class, 'sendPhonenumberVerificationCode'])->name('auth.sendPhonenumberVerificationCode');
+    Route::post('/register/verify-phoennumber-verification-code', [AuthController::class, 'verifyPhonenumberVerificationCode'])->name('auth.verifyPhonenumberVerificationCode');
 
     // Reset Password
     Route::get('/forgot-password/{redirecturl?}', function (Request $request) {
         $redirecturl = $request->get('redirecturl');
         $request->session()->put('redirecturl', $redirecturl);
-        return view('auth.forgot-password');
+        return view('app');
     })->name('forgot_password.page');
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot_password');
 
