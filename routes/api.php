@@ -33,6 +33,21 @@ use TheClinicUseCases\Privileges\PrivilegesManagement;
 |
 */
 
+Route::get('/locales', function () {
+    $locales = [];
+    foreach ($dirs = scandir(base_path() . '/lang') as $value) {
+        if (in_array($value, ['.', '..']) || !is_dir(base_path() . '/lang/' . $value)) {
+            continue;
+        }
+
+        $longName = include(base_path() . '/lang/' . $value . '/language_name.php');
+
+        $locales[] = ['longName' => $longName, 'shortName' => $value, 'direction' => (include(base_path() . '/lang/' . $value . '/direction.php'))];
+    }
+
+    return response()->json($locales);
+});
+
 Route::get('genders', function () {
     return response()->json(ModelsBusinessDefault::firstOrFail()->genders);
 });
