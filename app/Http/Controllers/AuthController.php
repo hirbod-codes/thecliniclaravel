@@ -59,10 +59,10 @@ class AuthController extends Controller
 
         session()->regenerateToken();
 
-        return redirect('/backend');
+        return redirect('/');
     }
 
-    public function apiLogout(): Response
+    public function apiLogout(): JsonResponse
     {
         $tokens = $this->getTokens();
 
@@ -74,7 +74,7 @@ class AuthController extends Controller
             $refreshTokenRepository->revokeRefreshTokensByAccessTokenId($token->getKey());
         }
 
-        return response('Successfully loged you out.', 200);
+        return response()->json(['message' => 'Successfully loged you out.'], 200);
     }
 
     private function getTokens(): Collection|array
@@ -96,9 +96,9 @@ class AuthController extends Controller
         ;
 
         if ($user === null) {
-            return response(__('auth.failed'), 422);
+            return response()->json(['message' => __('auth.failed')], 422);
         } elseif (!Hash::check($credentials['password'], $user->getAuthPassword())) {
-            return response(__('auth.password'), 422);
+            return response()->json(['message' => __('auth.password')], 422);
         } else {
             $tokens = DB::table('oauth_access_tokens')
                 ->where('user_id', '=', $user->getKey())
@@ -109,7 +109,7 @@ class AuthController extends Controller
             ;
 
             if (count($tokens) > 0) {
-                return response(trans_choice('auth.access_token_limit', 0));
+                return response()->json(['message' => trans_choice('auth.access_token_limit', 0)], 422);
             }
 
             $token = $user->createToken($user->getKey(), ['*'])->accessToken;
@@ -136,12 +136,17 @@ class AuthController extends Controller
         if (array_key_exists('remember', $credentials)) {
             $remember = $credentials['remember'];
         }
+        unset($credentials['remember']);
 
         if (!Auth::guard('web')->attempt($credentials, $remember)) {
-            return response(__('auth.failed'), 422);
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['message' => __('auth.failed')], 422);
+            } else {
+                return response(__('auth.failed'), 422);
+            }
         }
 
-        return redirect('/backend');
+        return redirect('/');
     }
 
     public function register(RegisterUserRequest $request): Response|JsonResponse
@@ -152,7 +157,11 @@ class AuthController extends Controller
         $validatedInput['role'] = 'patient';
 
         if ($validatedInput['phonenumber'] !== $session->get('phonenumber')) {
-            return response(trans_choice('auth.phonenumber_verification_mismatch', 0), 422);
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['message' => trans_choice('auth.phonenumber_verification_mismatch', 0)], 422);
+            } else {
+                return response(trans_choice('auth.phonenumber_verification_mismatch', 0), 422);
+            }
         }
 
         $timestamp = intval($session->get('phonenumber_verification_timestamp', (new \DateTime)->getTimestamp()));
@@ -162,7 +171,11 @@ class AuthController extends Controller
             $newDSUser = $this->accountsManagement->signupAccount($validatedInput, $this->dataBaseCreateAccount, $this->checkAuthentication);
         } catch (\Throwable $th) {
             if ($th->getCode() === 422) {
-                return response($th->getMessage(), $th->getCode());
+                if ($request->header('content-type') === 'application/json') {
+                    return response()->json(['error' => $th->getMessage()], $th->getCode());
+                } else {
+                    return response($th->getMessage(), $th->getCode());
+                }
             }
             throw $th;
         }
@@ -170,7 +183,11 @@ class AuthController extends Controller
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
 
-        return response()->json(['message' => trans_choice('auth.registration_successful', 0), 'redirecturl' => $redirecturl ?: '/']);
+        if ($request->header('content-type') === 'application/json') {
+            return response()->json(['message' => trans_choice('auth.registration_successful', 0), 'redirecturl' => $redirecturl ?: '/']);
+        } else {
+            return response(trans_choice('auth.registration_successful', 0));
+        }
     }
 
     public function forgotPassword(ForgotPasswordRequest $request): Response
@@ -204,7 +221,11 @@ class AuthController extends Controller
 
         $session->put('password_reset_verification_timestamp', (new \DateTime)->getTimestamp());
 
-        return response(trans_choice('auth.' . $identifier . '_verification_code_sent', 0));
+        if ($request->header('content-type') === 'application/json') {
+            return response()->json(['message' => trans_choice('auth.' . $identifier . '_verification_code_sent', 0)]);
+        } else {
+            return response(trans_choice('auth.' . $identifier . '_verification_code_sent', 0));
+        }
     }
 
     public function resetPassword(ResetPasswordRequest $request): JsonResponse
@@ -222,20 +243,37 @@ class AuthController extends Controller
 
         if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp(strval($password_reset_verification_timestamp))->modify('+90 seconds')->getTimestamp()) {
             $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
-            return response(trans_choice('auth.vierfication_code_expired', 0));
+
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.vierfication_code_expired', 0)], 422);
+            } else {
+                return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+            }
         }
 
         if (isset($validatedInput['phonenumber']) && ($validatedInput['phonenumber'] !== $phonenumber || $validatedInput['code'] !== $code)) {
-            return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.phonenumber_verification_failed', 0)], 422);
+            } else {
+                return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
+            }
         } elseif (isset($validatedInput['email']) && ($validatedInput['email'] !== $email || $validatedInput['code'] !== $code)) {
-            return response(trans_choice('auth.email_verification_failed', 0), 422);
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.email_verification_failed', 0)], 422);
+            } else {
+                return response(trans_choice('auth.email_verification_failed', 0), 422);
+            }
         }
         $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
 
         $user = $this->checkAuthentication->getAuthenticated()->user;
         $user->password  = bcrypt($validatedInput['password']);
         if (!$user->save()) {
-            return response('auth.password_reset_failed', 500);
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['message' => trans_choice('auth.password_reset_failed', 0)], 500);
+            } else {
+                return response(trans_choice('auth.password_reset_failed', 0), 500);
+            }
         }
 
         $this->apiLogout();
@@ -244,7 +282,11 @@ class AuthController extends Controller
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
 
-        return response()->json(['message' => trans_choice('auth.password-reset-successful', 0), 'redirecturl' => $redirecturl ?: '/']);
+        if ($request->header('content-type') === 'application/json') {
+            return response()->json(['message' => trans_choice('auth.password-reset-successful', 0), 'redirecturl' => $redirecturl ?: '/']);
+        } else {
+            return response(trans_choice('auth.password-reset-successful', 0), 200);
+        }
     }
 
     public function sendPhonenumberVerificationCode(SendPhonenumberVerificationCodeRequest $request): Response
@@ -259,7 +301,11 @@ class AuthController extends Controller
         Notification::route('phonenumber', $validatedInput['phonenumber'])
             ->notify(new SendPhonenumberVerificationCode($code));
 
-        return response(trans_choice('auth.phonenumber_verification_code_sent', 0), 200);
+        if ($request->header('content-type') === 'application/json') {
+            return response()->json(['message' => trans_choice('auth.phonenumber_verification_code_sent', 0)], 200);
+        } else {
+            return response(trans_choice('auth.phonenumber_verification_code_sent', 0), 200);
+        }
     }
 
     public function verifyPhonenumberVerificationCode(VerifyPhonenumberVerificationCodeRequest $request): Response
@@ -277,16 +323,31 @@ class AuthController extends Controller
 
         if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp($phonenumber_verification_timestamp)->modify('+90 seconds')->getTimestamp()) {
             $session->forget(['code', 'phonenumber', 'phonenumber_verification_timestamp']);
-            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.vierfication_code_expired', 0)], 422);
+            } else {
+                return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+            }
         }
 
         if ($phonenumber !== $validatedInput['phonenumber'] || $code !== $validatedInput['code']) {
             $session->forget(['code', 'phonenumber', 'phonenumber_verification_timestamp']);
-            return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
+
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.phonenumber_verification_failed', 0)], 422);
+            } else {
+                return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
+            }
         }
 
         $session->forget(['code']);
 
-        return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
+
+        if ($request->header('content-type') === 'application/json') {
+            return response()->json(['message' => trans_choice('auth.phonenumber_verification_successful', 0)], 200);
+        } else {
+            return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
+        }
     }
 }
