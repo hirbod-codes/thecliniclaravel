@@ -76,9 +76,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             $roleModel->saveOrFail();
 
             if (isset($avatar)) {
-                (new AccountDocumentsController)->makeAvatar($avatar, $userModel->getKey(), 'private');
-            } else {
-                (new AccountDocumentsController)->makeAvatar(storage_path() . '/app/images/avatar/default_' . strtolower($userModel->gender) . '.png', $userModel->getKey(), 'private');
+                (new AccountDocumentsController)->makeAvatar($avatar, $userModel->getKey() . '.jpg', 'private');
             }
 
             $dsRoleModel = $roleModel->getDataStructure();
