@@ -24,7 +24,7 @@ class VerifyPhonenumberVerificationCodeRequest extends FormRequest
     public function rules()
     {
         return [
-            'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber_not_unique'],
+            'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber'],
             'code' => ['required', 'integer', 'numeric', 'min:100000'],
         ];
     }
