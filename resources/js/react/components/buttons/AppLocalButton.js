@@ -1,36 +1,40 @@
 import React, { Component } from 'react'
 
 import { Dropdown } from '../Menus/DropDown.js';
-import { ThemeContext } from '../themeContenxt';
-import { LocaleContext, locales } from '../localeContext';
+import { LocaleContext } from '../localeContext';
 
 export class AppLocalButton extends Component {
     constructor(props) {
         super(props);
         this.localeClickHandler.bind(this);
-        this.state = {
-            currentLocale: {
-                longName: locales.en.longName
-            },
 
+        this.state = {
             anchorEl: null,
             open: false
         };
     }
 
-    localeClickHandler(e, changeLocale, changeTheme, currentTheme) {
-        let newLocale = e.target.getAttribute('value');
-        changeLocale(newLocale);
-
-        this.updateThemedirection(locales[newLocale].direction, changeTheme, currentTheme)
-    }
-
-    updateThemedirection(direction, changeTheme, currentTheme) {
-        changeTheme(currentTheme + '-' + direction);
-        document.dir = direction;
+    localeClickHandler(e, changeLocale) {
+        changeLocale(e.target.getAttribute('value'));
     }
 
     render() {
+        return (
+            <LocaleContext.Consumer>
+                {({ locales, currentLocale, isLocaleLoading, changeLocale }) => {
+                    return <Dropdown
+                        buttonInnerContent={currentLocale.longName}
+                        menuItems={this.makeItems(locales)}
+                        isLoading={isLocaleLoading}
+                        buttonProps={this.props.buttonProps}
+                        menuItemClickHandler={(e) => {console.log(e.target);changeLocale(e.target.getAttribute('value'));}}
+                    />
+                }}
+            </LocaleContext.Consumer>
+        )
+    }
+
+    makeItems(locales) {
         let items = [];
 
         for (const k in locales) {
@@ -45,23 +49,7 @@ export class AppLocalButton extends Component {
             }
         }
 
-        return (
-            <LocaleContext.Consumer>
-                {({ currentLocale, changeLocale }) => (
-                    <ThemeContext.Consumer>
-                        {({ theme, changeTheme, currentTheme }) => (
-                            <Dropdown
-                                buttonInnerContent={this.state.currentLocale.longName}
-                                buttonProps={this.props.buttonProps}
-                                isLoading={false}
-                                menuItems={items}
-                                menuItemClickHandler={(e) => this.localeClickHandler(e, changeLocale, changeTheme, currentTheme)}
-                            />
-                        )}
-                    </ThemeContext.Consumer>
-                )}
-            </LocaleContext.Consumer>
-        )
+        return items;
     }
 }
 
