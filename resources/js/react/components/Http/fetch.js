@@ -1,87 +1,147 @@
-async function getJsonData(url, headers = {}) {
-    let hs = {};
-    hs.cors = 'no-cors';
-    hs.Accept = 'application/json';
-    hs['Content-Type'] = 'application/json';
-    hs.Connection = 'keep-alive';
+async function getJsonData(url, headers = {}, excludeHeaders = []) {
+    let hs = new Headers();
+    hs.append('cors', 'no-cors');
+    hs.append('Accept', 'application/json');
+    hs.append('Connection', 'keep-alive');
+    hs.append('Content-Type', 'application/json');
 
     for (const key in headers) {
         if (Object.hasOwnProperty.call(headers, key)) {
             const header = headers[key];
 
-            hs[key] = header;
+            if (hs.has(key)) {
+                hs.delete(key);
+            }
+
+            hs.append(key, header);
         }
     }
-    headers = hs;
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: headers,
-        redirect: 'follow',
+    excludeHeaders.forEach((v, i, array) => {
+        if (hs.has(v)) {
+            hs.delete(v);
+        }
     });
 
-    return response.json();
+    let init = {
+        method: 'GET',
+        headers: hs,
+        redirect: 'follow'
+    };
+
+    const response = await fetch(url, init)
+
+    return response;
 }
 
-async function postJsonData(url, data = {}, headers = {}, returnRedirectedUrl = false) {
-    let hs = {};
-    hs.cors = 'no-cors';
-    hs.Accept = 'application/json';
-    hs['Content-Type'] = 'application/json';
-    hs.Connection = 'keep-alive';
+async function postJsonData(url, data = {}, headers = {}) {
+    let hs = new Headers();
+    hs.append('cors', 'no-cors');
+    hs.append('Accept', 'application/json');
+    hs.append('Connection', 'keep-alive');
 
     for (const key in headers) {
         if (Object.hasOwnProperty.call(headers, key)) {
             const header = headers[key];
 
-            hs[key] = header;
+            if (hs.has(key)) {
+                hs.delete(key);
+            }
+
+            hs.append(key, header);
         }
     }
-    headers = hs;
 
-    const response = await fetch(url, {
+    let init = {
         method: 'POST',
-        headers: headers,
-        redirect: 'follow',
-        body: JSON.stringify(data)
-    })
+        headers: hs,
+        redirect: 'follow'
+    };
 
-    if (response.redirected && returnRedirectedUrl) {
-        return response.url;
+    if (data.constructor.name === 'FormData') {
+        init.body = data;
+    } else {
+        init.body = JSON.stringify(data);
+
+        if (hs.has('Content-Type')) {
+            hs.delete('Content-Type');
+        }
+        hs.append('Content-Type', 'application/json');
     }
 
-    return response.json();
+    const response = await fetch(url, init)
+
+    return response;
 }
 
 async function putJsonData(url, data = {}, headers = {}) {
-    let hs = {};
-    hs.cors = 'no-cors';
-    hs.Accept = 'application/json';
-    hs['Content-Type'] = 'application/json';
-    hs.Connection = 'keep-alive';
+    let hs = new Headers();
+    hs.append('cors', 'no-cors');
+    hs.append('Accept', 'application/json');
+    hs.append('Connection', 'keep-alive');
 
     for (const key in headers) {
         if (Object.hasOwnProperty.call(headers, key)) {
             const header = headers[key];
 
-            hs[key] = header;
+            if (hs.has(key)) {
+                hs.delete(key);
+            }
+
+            hs.append(key, header);
         }
     }
-    headers = hs;
 
-    const response = await fetch(url, {
+    let init = {
         method: 'PUT',
-        headers: headers,
-        redirect: 'follow',
-        body: JSON.stringify(data)
-    })
+        headers: hs,
+        redirect: 'follow'
+    };
 
-    return response.json();
+    if (data.constructor.name === 'FormData') {
+        init.body = data;
+    } else {
+        init.body = JSON.stringify(data);
+
+        if (hs.has('Content-Type')) {
+            hs.delete('Content-Type');
+        }
+        hs.append('Content-Type', 'application/json');
+    }
+
+    const response = await fetch(url, init)
+
+    return response;
+}
+
+function loadXHR(url) {
+    return new Promise(function (resolve, reject) {
+        try {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", url);
+            xhr.responseType = "blob";
+
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    resolve(xhr.response)
+                }
+                else {
+                    reject("Loading error:" + xhr.statusText)
+                }
+            };
+            xhr.onerror = function () {
+                reject("Network error.")
+            };
+            xhr.send();
+        }
+        catch (err) { reject(err.message) }
+    });
 }
 
 function backendURL() {
     return 'http://localhost:80';
 }
 
-export { getJsonData, postJsonData, putJsonData, backendURL };
+export { getJsonData, postJsonData, putJsonData, loadXHR, backendURL };
 
