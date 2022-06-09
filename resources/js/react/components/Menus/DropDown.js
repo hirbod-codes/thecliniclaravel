@@ -58,15 +58,9 @@ export class Dropdown extends Component {
             );
         }
 
-        let menuItems = [];
-        // if (this.props.selected) {
-        //     menuItems.push(this.getMenuItem(this.props.selected, this.props.menuItems.length, true));
-        // }
-        for (let i = 0; i < this.props.menuItems.length; i++) {
-            let menuItem = this.props.menuItems[i];
-
-            menuItems.push(this.getMenuItem(menuItem, i));
-        }
+        let menuItems = this.props.menuItems.map((v, i) => {
+            return this.getMenuItem(v, i);
+        });
 
         return (
             <>
