@@ -129,7 +129,7 @@ class AuthController extends Controller
         return $identifier;
     }
 
-    public function login(LogInRequest $request): Response|Redirector|RedirectResponse
+    public function login(LogInRequest $request): Response|Redirector|RedirectResponse|JsonResponse
     {
         $remember = false;
         $credentials = $request->safe()->all();
@@ -149,7 +149,7 @@ class AuthController extends Controller
         return redirect('/');
     }
 
-    public function register(RegisterUserRequest $request): Response|JsonResponse
+    public function register(RegisterUserRequest $request): Response|Redirector|RedirectResponse|JsonResponse
     {
         $validatedInput = $request->safe()->all();
         $session = $request->session();
@@ -183,14 +183,10 @@ class AuthController extends Controller
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
 
-        if ($request->header('content-type') === 'application/json') {
-            return response()->json(['message' => trans_choice('auth.registration_successful', 0), 'redirecturl' => $redirecturl ?: '/']);
-        } else {
-            return response(trans_choice('auth.registration_successful', 0));
-        }
+        return redirect('/');
     }
 
-    public function forgotPassword(ForgotPasswordRequest $request): Response
+    public function forgotPassword(ForgotPasswordRequest $request): Response|JsonResponse
     {
         $validatedInput = $request->safe()->all();
         $session = $request->session();
@@ -228,7 +224,7 @@ class AuthController extends Controller
         }
     }
 
-    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    public function resetPassword(ResetPasswordRequest $request): Response|JsonResponse
     {
         $validatedInput = $request->safe()->all();
         $validatedInput['code'] = intval($validatedInput['code']);
@@ -289,11 +285,25 @@ class AuthController extends Controller
         }
     }
 
-    public function sendPhonenumberVerificationCode(SendPhonenumberVerificationCodeRequest $request): Response
+    public function sendPhonenumberVerificationCode(SendPhonenumberVerificationCodeRequest $request): Response|JsonResponse
     {
         $validatedInput = $request->safe()->all();
 
         $session = $request->session();
+
+        if (
+            ($phonenumber = $session->get('phonenumber', false)) &&
+            $phonenumber === $validatedInput['phonenumber'] &&
+            ($phonenumber_verification_timestamp = $session->get('phonenumber_verification_timestamp', false)) &&
+            (new \DateTime)->getTimestamp() < (new \DateTime)->setTimestamp($phonenumber_verification_timestamp)->modify('+2 minutes')->getTimestamp()
+        ) {
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.verification_code_not_expired', 0)], 200);
+            } else {
+                return response(trans_choice('auth.verification_code_not_expired', 0), 200);
+            }
+        }
+
         $session->put('code', $code = rand(100000, 999999));
         $session->put('phonenumber', $validatedInput['phonenumber']);
         $session->put('phonenumber_verification_timestamp', (new \DateTime)->getTimestamp());
@@ -308,7 +318,7 @@ class AuthController extends Controller
         }
     }
 
-    public function verifyPhonenumberVerificationCode(VerifyPhonenumberVerificationCodeRequest $request): Response
+    public function verifyPhonenumberVerificationCode(VerifyPhonenumberVerificationCodeRequest $request): Response|JsonResponse
     {
         $validatedInput = $request->safe()->all();
         $session = $request->session();
