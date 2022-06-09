@@ -8,12 +8,16 @@ import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
 import FormHelperText from '@mui/material/FormHelperText';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { iterateRecursively } from '../../components/helpers.js';
+import { translate } from '../../traslation/translate.js';
 
 export class LogInForm extends Component {
     constructor(props) {
         super(props);
 
         this.state = {
+            token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
             username: '',
             email: '',
             password: '',
@@ -55,47 +59,75 @@ export class LogInForm extends Component {
         }
         input.password = this.state.password;
 
-        let res = postJsonData(backendURL() + '/login', input, {}, true);
-
-        if (typeof (res) === 'string') {
-            window.location = res;
-            return;
-        }
-
-        res.then((data) => {
-            this.setState({ isLoading: false });
-
-            if (!data.errors) {
-                this.setState({ error: <FormHelperText error>{data.message}</FormHelperText> });
-            } else {
-                var errorMessage = [];
-                let i = 0;
-                for (const k in data.errors) {
-                    if (Object.hasOwnProperty.call(data.errors, k)) {
-                        const error = data.errors[k];
-                        errorMessage.push(<FormHelperText key={i} error>{error}</FormHelperText>);
-                    }
-                    i++;
+        postJsonData(backendURL() + '/login', input, { 'X-CSRF-TOKEN': this.state.token })
+            .then((res) => {
+                if (res.redirected && res.status === 200) {
+                    window.location.href = res.url;
                 }
-                this.setState({ error: errorMessage });
-            }
-        });
+                return res.json();
+            }).then((data) => {
+                this.setState({ isLoading: false });
+
+                let message = [];
+
+                iterateRecursively(data,
+                    () => { },
+                    (array, v, k, i) => {
+                        switch (k) {
+                            case 'errors':
+                                iterateRecursively(v,
+                                    () => { },
+                                    (array2, v2, k2, i2) => {
+                                        iterateRecursively(v2,
+                                            () => { },
+                                            (array3, v3, k3, i3) => {
+                                                message.push(<FormHelperText key={i3} error>{v3}</FormHelperText>);
+                                            },
+                                            () => {
+                                            },
+                                        );
+                                    },
+                                    () => {
+                                        this.setState({ error: message });
+                                    },
+                                );
+                                break;
+
+                            case 'error':
+                                this.setState({ error: <FormHelperText error>{v}</FormHelperText> });
+                                break;
+
+                            case 'message':
+                                if ('errors' in array) {
+                                    return;
+                                }
+
+                                this.setState({ error: <FormHelperText>{v}</FormHelperText> });
+                                break;
+
+                            default:
+                                break;
+                        }
+                    },
+                    () => {
+                        this.setState({ isSubmittingRegisteration: false });
+                    }
+                );
+            });
     }
 
     render() {
         return (
-            <>
-                <Stack component='form' onSubmit={this.handleSubmit}>
-                    <FormControl sx={{ backgroundColor: theme => theme.palette.secendary }}>
-                        <TextField value={this.state.username} onInput={this.handleUsername} required label="User Name" variant='standard' sx={{ m: 1 }} />
-                        <TextField value={this.state.email} onInput={this.handleEmail} required label="Email Address" variant='standard' sx={{ m: 1 }} />
-                        <TextField type='password' onInput={this.handlePassword} required label="Password" variant='standard' sx={{ m: 1 }} />
-                        {this.state.error !== null && this.state.error}
-                        {this.state.isLoading && <LoadingButton loading variant="contained">Log in</LoadingButton>}
-                        {!this.state.isLoading && <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >Log in</Button>}
-                    </FormControl>
-                </Stack>
-            </>
+            <Stack component='form' onSubmit={this.handleSubmit}>
+                <FormControl sx={{ backgroundColor: theme => theme.palette.secendary }}>
+                    <TextField value={this.state.username} onInput={this.handleUsername} required label={translate('general/username/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                    <TextField value={this.state.email} onInput={this.handleEmail} required label={translate('general/email-address/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                    <TextField type='password' onInput={this.handlePassword} required label={translate('general/password/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                    {this.state.error !== null && this.state.error}
+                    {this.state.isLoading && <LoadingButton loading variant="contained">{translate('general/log-in/ucFirstLetterAllWords', this.props.currentLocaleName)}</LoadingButton>}
+                    {!this.state.isLoading && <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/log-in/ucFirstLetterAllWords', this.props.currentLocaleName)}</Button>}
+                </FormControl>
+            </Stack>
         )
     }
 }
