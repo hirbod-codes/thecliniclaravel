@@ -22,6 +22,7 @@ return [
     'duplicate_fullname' => '{0} A user with the same full name already exists.',
 
     'vierfication_code_expired' => "{0} Your verification code is expired, please use another verificatopn code.",
+    'verification_code_not_expired' => "{0} The current verification code is not expired yet, please use it.",
 
     'phonenumber_verification_mismatch' => "{0} The provided phonenumber mismatches with the verified one.\nPlease verify your phonenumber again.",
     'phonenumber_verification_request_message' => "{0} We need to Verify your Phonenumber, before the registration: ",
