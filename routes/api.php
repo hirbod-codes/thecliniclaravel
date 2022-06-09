@@ -30,157 +30,159 @@ use TheClinicUseCases\Privileges\PrivilegesManagement;
 |
 */
 
-Route::get('/locales', function () {
-    $locales = [];
-    foreach ($dirs = scandir(base_path() . '/lang') as $value) {
-        if (in_array($value, ['.', '..']) || !is_dir(base_path() . '/lang/' . $value)) {
-            continue;
+Route::prefix('{locale}')->group(function () {
+    Route::get('/locales', function () {
+        $locales = [];
+        foreach ($dirs = scandir(base_path() . '/lang') as $value) {
+            if (in_array($value, ['.', '..']) || !is_dir(base_path() . '/lang/' . $value)) {
+                continue;
+            }
+
+            $longName = include(base_path() . '/lang/' . $value . '/language_name.php');
+
+            $locales[] = ['longName' => $longName, 'shortName' => $value, 'direction' => (include(base_path() . '/lang/' . $value . '/direction.php'))];
         }
 
-        $longName = include(base_path() . '/lang/' . $value . '/language_name.php');
+        return response()->json($locales);
+    });
 
-        $locales[] = ['longName' => $longName, 'shortName' => $value, 'direction' => (include(base_path() . '/lang/' . $value . '/direction.php'))];
-    }
+    Route::get('genders', function () {
+        return response()->json(ModelsBusinessDefault::firstOrFail()->genders);
+    });
 
-    return response()->json($locales);
-});
+    Route::get('states', function () {
+        return response()->json(
+            array_map(function (array $state) {
+                return $state['name'];
+            }, json_decode(Storage::disk('public')->get('states.json'), true))
+        );
+    });
 
-Route::get('genders', function () {
-    return response()->json(ModelsBusinessDefault::firstOrFail()->genders);
-});
-
-Route::get('states', function () {
-    return response()->json(
-        array_map(function (array $state) {
-            return $state['name'];
-        }, json_decode(Storage::disk('public')->get('states.json'), true))
-    );
-});
-
-Route::get('cities/{stateName?}', function (Request $request) {
-    if (!is_string($stateName = $request->get('stateName', ''))) {
-        throw new \TypeError('only string type is acceptable for name query paraemter.', 500);
-    }
-
-    foreach (json_decode(Storage::disk('public')->get('states.json'), true) as $state) {
-        if ($state['name'] !== $stateName) {
-            continue;
+    Route::get('cities/{stateName?}', function (Request $request) {
+        if (!is_string($stateName = $request->get('stateName', ''))) {
+            throw new \TypeError('only string type is acceptable for name query paraemter.', 500);
         }
 
-        $id = $state['id'];
-    }
+        foreach (json_decode(Storage::disk('public')->get('states.json'), true) as $state) {
+            if ($state['name'] !== $stateName) {
+                continue;
+            }
 
-    if (!isset($id)) {
-        return response()->json(['error' => 'Provided state has not been found.'], 404);
-    }
-
-    $cities = [];
-    foreach (json_decode(Storage::disk('public')->get('cities.json'), true) as $city) {
-        if ($city['province_id'] === $id) {
-            $cities[] = $city['name'];
+            $id = $state['id'];
         }
-    }
 
-    return response()->json($cities);
-});
+        if (!isset($id)) {
+            return response()->json(['error' => 'Provided state has not been found.'], 404);
+        }
 
-// Login
-Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
+        $cities = [];
+        foreach (json_decode(Storage::disk('public')->get('cities.json'), true) as $city) {
+            if ($city['province_id'] === $id) {
+                $cities[] = $city['name'];
+            }
+        }
 
-Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
-    // Logout
-    Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
+        return response()->json($cities);
+    });
 
-    Route::controller(AccountsController::class)
-        ->group(function () {
-            Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
+    // Login
+    Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
 
-            // Phonenumber Verification Message Sender Route
-            Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
+    Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
+        // Logout
+        Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
 
-            Route::post('/account/{roleName}', 'store')->name('account.store');
+        Route::controller(AccountsController::class)
+            ->group(function () {
+                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-            Route::get('/account/{username}', 'show')->name('account.show');
-            Route::get('/account', 'showSelf')->name('account.showSelf');
+                // Phonenumber Verification Message Sender Route
+                Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
 
-            Route::put('/account/{accountId}', 'update')->name('account.update');
-            Route::put('/account', 'updateSelf')->name('account.updateSelf');
+                Route::post('/account/{roleName}', 'store')->name('account.store');
 
-            Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
-            Route::delete('/account', 'destroySelf')->name('account.destroySelf');
-        });
+                Route::get('/account/{username}', 'show')->name('account.show');
+                Route::get('/account', 'showSelf')->name('account.showSelf');
 
-    Route::controller(RolesController::class)
-        ->group(function () {
-            Route::get('/roles', 'index')->name('roles.index');
-            Route::get('/privileges', function () {
-                $authenticated = (new CheckAuthentication)->getAuthenticatedDSUser();
+                Route::put('/account/{accountId}', 'update')->name('account.update');
+                Route::put('/account', 'updateSelf')->name('account.updateSelf');
 
-                return response()->json((new PrivilegesManagement)->getPrivileges($authenticated));
-            })->name('privileges.index');
+                Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
+                Route::delete('/account', 'destroySelf')->name('account.destroySelf');
+            });
 
-            Route::post('/role', 'store')->name('role.store');
+        Route::controller(RolesController::class)
+            ->group(function () {
+                Route::get('/roles', 'index')->name('roles.index');
+                Route::get('/privileges', function () {
+                    $authenticated = (new CheckAuthentication)->getAuthenticatedDSUser();
 
-            Route::get('/privilege/{roleName?}', function (ShowRequest $request) {
-                $validateInput = $request->safe()->all();
+                    return response()->json((new PrivilegesManagement)->getPrivileges($authenticated));
+                })->name('privileges.index');
 
-                $privileges = [];
-                DB::table((new Role)->getTable())
-                    ->select([(new Privilege)->getTable() . '.name', (new PrivilegeValue)->getTable() . '.privilegeValue'])
-                    ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey(), '=', (new Role)->getTable() . '.' . (new Role)->getKeyName())
-                    ->join((new Privilege)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
-                    ->where((new Role)->getTable() . '.name', '=', $validateInput['roleName'])
-                    ->get()
-                    ->map(function ($v, $k) use (&$privileges) {
-                        $privileges[$v->name] = $v->privilegeValue;
-                    });
+                Route::post('/role', 'store')->name('role.store');
 
-                return response()->json($privileges);
-            })->name('privileges.show');
+                Route::get('/privilege/{roleName?}', function (ShowRequest $request) {
+                    $validateInput = $request->safe()->all();
 
-            Route::put('/role', 'update')->name('roles.update');
+                    $privileges = [];
+                    DB::table((new Role)->getTable())
+                        ->select([(new Privilege)->getTable() . '.name', (new PrivilegeValue)->getTable() . '.privilegeValue'])
+                        ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey(), '=', (new Role)->getTable() . '.' . (new Role)->getKeyName())
+                        ->join((new Privilege)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
+                        ->where((new Role)->getTable() . '.name', '=', $validateInput['roleName'])
+                        ->get()
+                        ->map(function ($v, $k) use (&$privileges) {
+                            $privileges[$v->name] = $v->privilegeValue;
+                        });
 
-            Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
-        });
+                    return response()->json($privileges);
+                })->name('privileges.show');
 
-    Route::controller(AccountDocumentsController::class)
-        ->group(function () {
-            Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
+                Route::put('/role', 'update')->name('roles.update');
 
-            Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
-        });
+                Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
+            });
 
-    Route::controller(BusinessDefault::class)
-        ->group(function () {
-            Route::get('/settings', 'index')->name('document.index');
+        Route::controller(AccountDocumentsController::class)
+            ->group(function () {
+                Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
 
-            Route::put('/setting', 'update')->name('document.update');
-        });
+                Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
+            });
 
-    Route::controller(OrdersController::class)
-        ->group(function () {
-            Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-            Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+        Route::controller(BusinessDefault::class)
+            ->group(function () {
+                Route::get('/settings', 'index')->name('document.index');
 
-            Route::post('/orders', 'store')->name('orders.store');
+                Route::put('/setting', 'update')->name('document.update');
+            });
 
-            Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
+        Route::controller(OrdersController::class)
+            ->group(function () {
+                Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
+                Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
 
-            Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
-        });
+                Route::post('/orders', 'store')->name('orders.store');
 
-    Route::controller(VisitsController::class)
-        ->group(function () {
-            Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
-            Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
+                Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
 
-            Route::post('/visit/laser', 'laserStore')->name('visits.laserStore');
-            Route::post('/visit/regular', 'regularStore')->name('visits.regularStore');
+                Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+            });
 
-            Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
-            Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
+        Route::controller(VisitsController::class)
+            ->group(function () {
+                Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
+                Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
 
-            Route::delete('/visit/laser/{laserVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
-            Route::delete('/visit/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
-        });
+                Route::post('/visit/laser', 'laserStore')->name('visits.laserStore');
+                Route::post('/visit/regular', 'regularStore')->name('visits.regularStore');
+
+                Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
+                Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
+
+                Route::delete('/visit/laser/{laserVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+                Route::delete('/visit/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+            });
+    });
 });
