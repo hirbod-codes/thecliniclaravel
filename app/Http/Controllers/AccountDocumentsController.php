@@ -18,23 +18,39 @@ class AccountDocumentsController extends Controller
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
     }
 
-    public function getAvatar(GetAvatarRequest $request): string
+    public function getAvatar(GetAvatarRequest $request)
     {
         $validatedInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $validatedInput['accountId'] = intval($validatedInput['accountId']);
 
         if ($validatedInput['accountId'] !== $dsAuthenticated->getId()) {
             $privileges = $dsAuthenticated->getUserPrivileges();
+
             if ($privileges['accountsRead'] === false) {
-                return response(trans_choice('auth.User-Not-Authorized', 0), 403);
+                if ($request->header('content-type', false) === 'application/json') {
+                    return response()->json(['message' => trans_choice('auth.User-Not-Authorized', 0)], 403);
+                } else {
+                    return response(trans_choice('auth.User-Not-Authorized', 0), 403);
+                }
             }
         }
 
-        if (Storage::disk('local')->exists('images/avatars/' . strval($validatedInput['accountId']))) {
-            return response()->file(storage_path() . '/app/images/avatars/' . strval($validatedInput['accountId']));
+        $extension = 'jpg';
+        $fileName = strval($validatedInput['accountId']) . '.' . $extension;
+
+        $filePathRelative = 'images' . DIRECTORY_SEPARATOR . 'avatars' . DIRECTORY_SEPARATOR . $fileName;
+        $filePathAbsolute = storage_path('app' . DIRECTORY_SEPARATOR . ($filePathRelative));
+
+        if (Storage::disk('local')->exists($filePathRelative)) {
+            return response(base64_encode(file_get_contents($filePathAbsolute)));
         }
 
-        throw new \RuntimeException('The user\'s avatar file doesn\'t exisit.', 404);
+        if ($request->header('content-type', false) === 'application/json') {
+            return response()->json(['message' => 'The user\'s avatar file doesn\'t exisit.'], 404);
+        } else {
+            return response('The user\'s avatar file doesn\'t exisit.', 404);
+        }
     }
 
     public function setAvatar(SetAvatarRequest $request)
@@ -45,11 +61,11 @@ class AccountDocumentsController extends Controller
         if ($validatedInput['accountId'] !== $dsAuthenticated->getId()) {
             $privileges = $dsAuthenticated->getUserPrivileges();
             if ($privileges['accountUpdate'] === false) {
-                throw new \RuntimeException('You are not authorized for this action.', 403);
+                return response()->json(['message' => 'You are not authorized for this action.'], 403);
             }
         }
 
-        $this->makeAvatar($validatedInput['avatar'], $validatedInput['accountId'] . '.' . explode('/', $validatedInput['avatar']->getMimeType())[1], 'private');
+        $this->makeAvatar($validatedInput['avatar'], $validatedInput['accountId'] . '.jpg', 'private');
 
         return response(trans_choice('auth.set-avatar-successfully', 0));
     }
