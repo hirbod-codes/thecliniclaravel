@@ -3,7 +3,6 @@ import React, { Component } from 'react';
 import { ThemeContext, themes } from '../themeContenxt.js';
 
 import Dropdown from '../Menus/DropDown.js';
-import { LocaleContext, locales } from '../localeContext.js';
 
 export class ThemeButton extends Component {
     constructor(props) {
@@ -15,9 +14,23 @@ export class ThemeButton extends Component {
         changeTheme(e.target.getAttribute('value'));
     }
 
-    static contextType = LocaleContext;
-
     render() {
+        return (
+            <ThemeContext.Consumer>
+                {({ theme, changeTheme, currentTheme, isThemeLoading }) => {
+                    return <Dropdown
+                        buttonInnerContent={currentTheme}
+                        menuItems={this.makeItems()}
+                        isLoading={isThemeLoading}
+                        buttonProps={this.props.buttonProps}
+                        menuItemClickHandler={(e) => this.themeHandler(e, changeTheme)}
+                    />
+                }}
+            </ThemeContext.Consumer>
+        )
+    }
+
+    makeItems() {
         let items = [];
         for (const k in themes) {
             let key = k.slice(0, k.indexOf('-'));
@@ -26,26 +39,12 @@ export class ThemeButton extends Component {
             }
         }
 
-        items = items.map((item, k) => {
+        return items.map((item, k) => {
             return {
-                props: { value: item + '-' + locales[this.context.currentLocale].direction },
+                props: { value: item },
                 innerText: item
             }
         });
-
-        return (
-            <ThemeContext.Consumer>
-                {({ theme, changeTheme, currentTheme }) => (
-                    <Dropdown
-                        buttonInnerContent={currentTheme}
-                        buttonProps={this.props.buttonProps}
-                        isLoading={false}
-                        menuItems={items}
-                        menuItemClickHandler={(e) => this.themeHandler(e, changeTheme)}
-                    />
-                )}
-            </ThemeContext.Consumer>
-        )
     }
 }
 
