@@ -14,8 +14,6 @@ import { LocaleContext } from './components/localeContext.js';
 import { WelcomePage } from "./components/pages/WelcomePage.js";
 import { LogInPage } from "./components/pages/auth/LogInPage.js";
 import { SignUpPage } from "./components/pages/auth/SignUpPage.js";
-import { EmailVerificationNotice } from "./components/pages/auth/EmailVerificationNotice.js";
-import { ForgotPassword } from "./components/pages/auth/ForgotPassword.js";
 
 import { createTheme } from '@mui/material/styles';
 import { ThemeProvider } from '@emotion/react';
@@ -161,8 +159,6 @@ export class App extends Component {
                                 <Route path='/' element={<WelcomePage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                                 <Route path='/login' element={<LogInPage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                                 <Route path='/register' element={<SignUpPage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
-                                <Route path='/email/verification-notification' element={<EmailVerificationNotice currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
-                                <Route path='/forgot-password/:redirecturl' element={<ForgotPassword currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                             </Routes>
                         </BrowserRouter>
                     </ThemeProvider>
