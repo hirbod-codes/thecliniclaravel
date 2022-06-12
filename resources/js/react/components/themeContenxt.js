@@ -3,7 +3,7 @@ import React from 'react';
 import { createTheme } from '@mui/material/styles';
 import themes from '../themes/themes.js';
 
-let ThemeContext = React.createContext(createTheme(themes.light));
+let ThemeContext = React.createContext(createTheme(themes['light-ltr']));
 
 function resolveTheme(name) {
     return themes[name];
