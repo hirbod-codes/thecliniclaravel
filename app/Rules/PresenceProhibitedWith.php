@@ -40,9 +40,13 @@ class PresenceProhibitedWith implements Rule, DataAwareRule
      */
     public function passes($attribute, $value)
     {
+        if (!$value) {
+            return true;
+        }
+
         $this->attribute = $attribute;
         foreach ($this->fields as $field) {
-            if (array_search($field, array_keys($this->data)) !== false) {
+            if (array_search($field, array_keys($this->data)) !== false && $this->data[$field]) {
                 $this->duplicatedField = $field;
                 return false;
             }
