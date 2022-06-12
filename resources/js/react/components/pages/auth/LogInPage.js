@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import LogInForm from '../../../forms/auth/LogInForm.js';
 import Header from '../../headers/Header.js';
 
-import Button from '@mui/material/Button';
 import { Grid } from '@mui/material';
 import { translate } from '../../../traslation/translate.js';
 
@@ -15,12 +14,9 @@ export class LogInPage extends Component {
                 <Grid container spacing={1} >
                     <Grid item xs={12} >
                         <Header
-                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
-                            rightSide={
-                                <Button type='button' sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }}>
-                                    <Link to="/register" >{translate('general/sign-up/ucFirstLetterAllWords', this.props.currentLocaleName)}</Link>
-                                </Button>
-                            }
+                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
+                            currentLocaleName={this.props.currentLocaleName}
+                            isLogInPage={true}
                         />
                     </Grid>
                     <Grid item xs={12} >
