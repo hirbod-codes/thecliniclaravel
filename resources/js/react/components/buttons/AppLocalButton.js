@@ -27,7 +27,7 @@ export class AppLocalButton extends Component {
                         menuItems={this.makeItems(locales)}
                         isLoading={isLocaleLoading}
                         buttonProps={this.props.buttonProps}
-                        menuItemClickHandler={(e) => {console.log(e.target);changeLocale(e.target.getAttribute('value'));}}
+                        menuItemClickHandler={(e) => {changeLocale(e.target.getAttribute('value'));}}
                     />
                 }}
             </LocaleContext.Consumer>
