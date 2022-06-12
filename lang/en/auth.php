@@ -43,7 +43,7 @@ return [
     'password_reset_failed' => '{0} System failed to reset your password.',
     'password' => 'The provided password is incorrect.',
     'password_reset_code_mail_message' => "{0} Here's your your 6-digit verification code: \n:code .",
-    'password-reset-successful' => "{0} your password has successfully changed.\nYou will be loged out, Please log in again.",
+    'password-reset-successful' => "{0} your password has successfully changed. Please log in.",
 
     'failed' => 'These credentials do not match our records.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
