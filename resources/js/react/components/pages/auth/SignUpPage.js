@@ -5,7 +5,6 @@ import SignUpForm from '../../../forms/auth/SignUpForm.js';
 import Header from '../../headers/Header.js';
 
 import Grid from '@mui/material/Grid';
-import { Button } from '@mui/material';
 import { translate } from '../../../traslation/translate.js';
 
 export class SignUpPage extends Component {
@@ -15,12 +14,8 @@ export class SignUpPage extends Component {
                 <Grid container spacing={1} >
                     <Grid item xs={12} >
                         <Header
-                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/sign-up/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
-                            rightSide={
-                                <Button type='button' sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }}>
-                                    <Link to="/login" >{translate('general/log-in/ucFirstLetterAllWords', this.props.currentLocaleName)}</Link>
-                                </Button>
-                            }
+                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/sign-up/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
+                            currentLocaleName={this.props.currentLocaleName}
                         />
                     </Grid>
                     <Grid item xs={12} >
