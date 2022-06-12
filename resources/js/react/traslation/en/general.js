@@ -1,101 +1,42 @@
-import { ucFirstLetterFirstWord, ucFirstLetterAllWords } from '../translate.js';
+import { addWordTo } from '../translate.js';
 
-let general = {
-    back: {
-        single: 'back',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('back'),
-    },
-    reset: {
-        single: 'reset',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('reset'),
-    },
-    submit: {
-        single: 'submit',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('submit'),
-    },
-    welcome: {
-        single: 'welcome',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('welcome'),
-    },
-    'log-in': {
-        single: 'log in',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('log in'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('log in')
-    },
-    'log-out': {
-        single: 'log out',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('log out'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('log out')
-    },
-    'sign-up': {
-        single: 'sign up',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('sign up'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('sign up')
-    },
-    account: {
-        single: 'account',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('account'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('account')
-    },
+let general = {};
 
-    firstname: {
-        single: 'first name',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('first name'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('first name')
-    },
-    lastname: {
-        single: 'last name',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('last name'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('last name')
-    },
-    username: {
-        single: 'user name',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('user name'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('user name')
-    },
-    'email-address': {
-        single: 'email address',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('email address'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('email address')
-    },
-    password: {
-        single: 'password',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('password'),
-    },
-    'confirm-password': {
-        single: 'confirm password',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('confirm password'),
-        ucFirstLetterAllWords: ucFirstLetterAllWords('confirm password')
-    },
-    phonenumber: {
-        ucFirstLetterAllWords: ucFirstLetterAllWords('phone number'),
-        single: 'phone number',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('phone number'),
-    },
-    gender: {
-        single: 'gender',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('gender'),
-    },
-    avatar: {
-        single: 'avatar',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('avatar'),
-    },
-    age: {
-        single: 'age',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('age'),
-    },
-    state: {
-        single: 'state',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('state'),
-    },
-    city: {
-        single: 'city',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('city'),
-    },
-    address: {
-        single: 'address',
-        ucFirstLetterFirstWord: ucFirstLetterFirstWord('address'),
-    },
-};
+general = addWordTo(general, 'ok');
+general = addWordTo(general, 'back');
+general = addWordTo(general, 'reset');
+general = addWordTo(general, 'submit');
+general = addWordTo(general, 'welcome');
+general = addWordTo(general, 'log in', null, 'log-in');
+general = addWordTo(general, 'sign up', null, 'sign-up');
+general = addWordTo(general, 'log out', null, 'log-out');
+general = addWordTo(general, 'verify');
+general = addWordTo(general, 'account', 'accounts');
+general = addWordTo(general, 'security code', 'security codes', 'security-code');
+
+general = addWordTo(general, 'first name', 'first names', 'firstname');
+general = addWordTo(general, 'last name', 'last names', 'lastname');
+general = addWordTo(general, 'user name', 'user names', 'username');
+general = addWordTo(general, 'email', 'emails');
+general = addWordTo(general, 'email', 'emails');
+general = addWordTo(general, 'password', 'passwords');
+general = addWordTo(general, 'confirm password', null, 'confirm-password');
+general = addWordTo(general, 'phone number', 'phone numbers', 'phonenumber');
+general = addWordTo(general, 'gender', 'genders');
+general = addWordTo(general, 'avatar', 'avatars');
+general = addWordTo(general, 'age', 'ages');
+general = addWordTo(general, 'state', 'states');
+general = addWordTo(general, 'city', 'cities');
+general = addWordTo(general, 'address', 'addresses');
+general = addWordTo(general, 'order', 'orders');
+general = addWordTo(general, 'visit', 'visits');
+general = addWordTo(general, 'setting', 'settings');
+
+general = addWordTo(
+    general,
+    general.email.single.allLowerCase + ' ' + general.address.single.allLowerCase,
+    general.email.single.allLowerCase + ' ' + general.address.plural.allLowerCase,
+    'email-address'
+);
 
 export { general };
