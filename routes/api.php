@@ -31,6 +31,10 @@ use TheClinicUseCases\Privileges\PrivilegesManagement;
 */
 
 Route::prefix('{locale}')->group(function () {
+    Route::get('/isAuthenticated', function () {
+        return response()->json(['authenticated' => !(new CheckAuthentication)->checkIfThereIsNoAuthenticated()]);
+    });
+
     Route::get('/locales', function () {
         $locales = [];
         foreach ($dirs = scandir(base_path() . '/lang') as $value) {
