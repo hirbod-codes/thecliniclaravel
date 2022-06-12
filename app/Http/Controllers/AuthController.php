@@ -205,7 +205,7 @@ class AuthController extends Controller
             $identifier = 'phonenumber';
         } else {
             /** @var User $user */
-            $user = User::query()->where('email', '=', $validatedInput['email'])->firstOrFail();
+            $user = User::query()->where('email', '=', $validatedInput['email'])->where('email_verified_at', '<>', null)->firstOrFail();
 
             $session->put('code', $code);
             $session->put('email', $validatedInput['email']);
@@ -262,8 +262,14 @@ class AuthController extends Controller
         }
         $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
 
-        $user = $this->checkAuthentication->getAuthenticated()->user;
+        if (isset($validatedInput['email'])) {
+            $user = User::query()->where('email', '=', $validatedInput['email'])->where('email_verified_at', '<>', null)->firstOrFail();
+        } elseif (isset($validatedInput['phonenumber'])) {
+            $user = User::query()->where('phonenumber', '=', $validatedInput['phonenumber'])->where('phonenumber_verified_at', '<>', null)->firstOrFail();
+        }
+
         $user->password  = bcrypt($validatedInput['password']);
+
         if (!$user->save()) {
             if ($request->header('content-type') === 'application/json') {
                 return response()->json(['message' => trans_choice('auth.password_reset_failed', 0)], 500);
@@ -271,9 +277,6 @@ class AuthController extends Controller
                 return response(trans_choice('auth.password_reset_failed', 0), 500);
             }
         }
-
-        $this->apiLogout();
-        $this->logout();
 
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
