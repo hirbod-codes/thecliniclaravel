@@ -93,6 +93,10 @@ Route::prefix('{locale}')->group(function () {
     Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
 
     Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
+        Route::get('/isEmailVerified', function () {
+            return response()->json(['verified' => (!(new CheckAuthentication)->getAuthenticated()->email_created_at ? true : false)]);
+        });
+
         // Logout
         Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
 
