@@ -19,8 +19,11 @@ function iterateRecursively(data, beforeHandling, handling, handled) {
 }
 
 function updateState(obj, state) {
-    return new Promise(() => obj.setState(state));
+    return new Promise((resolve) => obj.setState(state, resolve));
 }
 
-export { iterateRecursively, updateState };
+function doesExist(value) {
+    return !(value === null || value === undefined);
+}
 
+export { iterateRecursively, updateState, doesExist };
