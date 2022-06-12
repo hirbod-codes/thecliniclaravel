@@ -129,6 +129,11 @@ Route::middleware('guest:web')->group(function () {
 });
 
 Route::middleware('auth:web')->group(function () {
+    Route::get('/isEmailVerified', function () {
+        $user = (new CheckAuthentication)->getAuthenticated();
+        return response()->json(['verified' => ($user->email ? ($user->email_verified_at ? true : false) : false)]);
+    });
+
     // Verify Email
     Route::get('/email/verify/{redirecturl?}', function (Request $request) {
         $redirecturl = $request->get('redirecturl');
