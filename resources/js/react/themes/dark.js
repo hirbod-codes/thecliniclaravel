@@ -1,12 +1,7 @@
-let theme = {
-    palette: {
-        primary: {
-            main: '#000',
-        },
-        secondary: {
-            main: '#555',
-        },
-    },
-}
+import { createTheme } from '@mui/material/styles';
 
-export  default theme ;
+let theme = {};
+
+theme = createTheme({ palette: { mode: 'dark' } });
+
+export default theme;
