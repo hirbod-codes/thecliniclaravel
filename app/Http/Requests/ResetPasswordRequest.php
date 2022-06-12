@@ -28,8 +28,9 @@ class ResetPasswordRequest extends FormRequest
 
         $rules['code'] = ['required', 'integer', 'numeric'];
         $rules['password'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/password.php'))['password'];
+        $rules['password_confirmation'] = ['required', 'string', 'same:password'];
 
-        $rules['email'][] = new ProhibitExtraFeilds($rules);
+        $rules[array_key_first($rules)][] = new ProhibitExtraFeilds($rules);
 
         return $rules;
     }

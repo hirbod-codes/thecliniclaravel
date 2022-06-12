@@ -30,6 +30,7 @@ class ForgotPasswordRequest extends FormRequest
                 'phonenumber' => array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber_not_unique_not_required'], [
                     'exists:users,phonenumber',
                     'required_without:email',
+                    new PresenceProhibitedWith(['email']),
                 ])
             ];
     }
