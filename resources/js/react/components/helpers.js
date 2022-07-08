@@ -26,4 +26,18 @@ function doesExist(value) {
     return !(value === null || value === undefined);
 }
 
-export { iterateRecursively, updateState, doesExist };
+function getFormatedDateAccordingToLocale(locale, milliseconds) {
+    let date = new Date();
+    date.setMilliseconds(milliseconds);
+
+    let dateString = '';
+    if (locale === 'fa') {
+        dateString = date.toLocaleString('fa-IR', { numberingSystem: 'arab', timezone: 'Asia/Tehran', calendar: 'persian' });
+    } else {
+        dateString = date.toLocaleString('en-US', { timezone: 'UTC' });
+    }
+
+    return dateString;
+}
+
+export { getFormatedDateAccordingToLocale, iterateRecursively, updateState, doesExist };
