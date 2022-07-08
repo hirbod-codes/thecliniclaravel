@@ -15,6 +15,7 @@ import WelcomePage from "./components/pages/WelcomePage.js";
 import LogInPage from "./components/pages/auth/LogInPage.js";
 import SignUpPage from "./components/pages/auth/SignUpPage.js";
 import OrderLaserPage from './components/pages/Order/OrderLaserPage';
+import VisitPage from './components/pages/Visit/VisitPage';
 
 import { createTheme } from '@mui/material/styles';
 import { ThemeProvider } from '@emotion/react';
@@ -160,6 +161,8 @@ export class App extends Component {
                                 <Route path='/register' element={<SignUpPage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
 
                                 <Route path='/order/laser/page' element={<OrderLaserPage currentLocaleDirection={this.state.localeContext.currentLocale.direction} currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
+                                <Route path='/visit/laser/page' element={<VisitPage businessName='laser' currentLocaleDirection={this.state.localeContext.currentLocale.direction} currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
+                                <Route path='/visit/regular/page' element={<VisitPage businessName='regular' currentLocaleDirection={this.state.localeContext.currentLocale.direction} currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                             </Routes>
                         </BrowserRouter>
                     </ThemeProvider>
