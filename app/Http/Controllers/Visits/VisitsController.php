@@ -269,11 +269,11 @@ class VisitsController extends Controller
     {
         $validateInput = $request->safe()->all();
 
-        if (!isset($validateInput['laserOrderId'])) {
-            if (($laserOrderId = intval($request->session()->get('laserOrderId', null))) === null) {
-                return redirect('/order/laser/page');
+        if (!isset($validateInput['reuglarOrderId'])) {
+            if (($reuglarOrderId = intval($request->session()->get('reuglarOrderId', null))) === null) {
+                return redirect('/');
             }
-            $validateInput['laserOrderId'] = $laserOrderId;
+            $validateInput['reuglarOrderId'] = $reuglarOrderId;
         }
 
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
@@ -323,7 +323,7 @@ class VisitsController extends Controller
 
         $dsRegularOrder = $this->regularVisitCreation->create($dsRegularOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateRegularVisit, $iFindVisit);
 
-        $request->session()->forget('laserOrderId');
+        $request->session()->forget('reuglarOrderId');
 
         return response()->json($dsRegularOrder->toArray());
     }
