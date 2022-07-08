@@ -11,7 +11,7 @@ export class LogInPage extends Component {
     render() {
         return (
             <>
-                <Grid container spacing={1} >
+                <Grid container spacing={1} sx={{ minHeight: '100vh' }}>
                     <Grid item xs={12} >
                         <Header
                             title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
