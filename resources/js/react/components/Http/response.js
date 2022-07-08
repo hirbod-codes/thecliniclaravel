@@ -27,7 +27,6 @@ function collectMessagesFromResponse(data) {
 }
 
 function makeFormHelperTextComponents(data, isError = true) {
-    console.log(data);
     let components = [];
     let i = 0;
     for (const k in data) {

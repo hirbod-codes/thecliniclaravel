@@ -248,7 +248,6 @@ export class VisitPage extends Component {
     }
 
     render() {
-        console.log(this.state);
         return (
             <>
                 <Grid container spacing={1} sx={{ minHeight: '100vh' }}>

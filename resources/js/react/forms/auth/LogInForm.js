@@ -227,14 +227,12 @@ export class LogInForm extends Component {
 
         let error = false;
         let fpData = await postJsonData(backendURL() + '/forgot-password', input, { 'X-CSRF-TOKEN': this.state.token }).then((res) => {
-            console.log(res);
             if (res.status !== 200) {
                 error = true;
             }
 
             return res.json()
         });
-        console.log(fpData);
 
         this.setState({ isFPLoading: false });
 
@@ -242,7 +240,6 @@ export class LogInForm extends Component {
             let messages = [];
             for (const k in fpData.errors) {
                 fpData.errors[k].forEach((v, i) => {
-                    console.log(i)
                     messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
                 });
             }
@@ -286,14 +283,12 @@ export class LogInForm extends Component {
 
         let error = false;
         let rpData = await putJsonData(backendURL() + '/reset-password', input, { 'X-CSRF-TOKEN': this.state.token }).then((res) => {
-            console.log(res);
             if (res.status !== 200) {
                 error = true;
             }
 
             return res.json()
         });
-        console.log(rpData);
 
         this.setState({ isFPLoading: false });
 
@@ -301,7 +296,6 @@ export class LogInForm extends Component {
             let messages = [];
             for (const k in rpData.errors) {
                 rpData.errors[k].forEach((v, i) => {
-                    console.log(i)
                     messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
                 });
             }

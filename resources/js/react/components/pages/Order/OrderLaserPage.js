@@ -108,7 +108,6 @@ export class OrderLaserPage extends Component {
                 return res.json();
             })
             .then((data) => {
-                console.log(data);
                 if (data.indexOf('laserOrderCreate') !== -1 && data.indexOf('accountRead') !== -1) {
                     this.setState({ isAuthorizedToChangeOrderOwner: true });
                 }
@@ -351,8 +350,6 @@ export class OrderLaserPage extends Component {
     }
 
     render() {
-        console.log(this.state);
-
         return (
             <>
                 <Grid container spacing={1} sx={{ minHeight: '100vh' }}>

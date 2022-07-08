@@ -96,7 +96,6 @@ export class ChangeOwnershipButton extends Component {
 
         getJsonData('/account/' + placeholder, { 'X-CSRF-TOKEN': this.state.token })
             .then((res) => {
-                console.log(res.headers.get('Content-Type'));
                 if (res.headers.get('Content-Type') === 'application/json') {
                     return res.json();
                 } else {
@@ -104,11 +103,9 @@ export class ChangeOwnershipButton extends Component {
                 }
             })
             .then((data) => {
-                console.log(data);
                 let collectedData = collectMessagesFromResponse(data);
                 if (collectedData !== false) {
                     this.setState({ errors: makeFormHelperTextComponents(collectedData) });
-                    console.log(collectedData);
                 } else {
                     this.props.handleAccountId(data.id);
                     this.setState({ errors: makeFormHelperTextComponents(collectedData) });
