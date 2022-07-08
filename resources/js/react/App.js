@@ -11,9 +11,10 @@ import '@fontsource/roboto/700.css';
 import { ThemeContext, resolveTheme } from './components/themeContenxt.js';
 import { LocaleContext } from './components/localeContext.js';
 
-import { WelcomePage } from "./components/pages/WelcomePage.js";
-import { LogInPage } from "./components/pages/auth/LogInPage.js";
-import { SignUpPage } from "./components/pages/auth/SignUpPage.js";
+import WelcomePage from "./components/pages/WelcomePage.js";
+import LogInPage from "./components/pages/auth/LogInPage.js";
+import SignUpPage from "./components/pages/auth/SignUpPage.js";
+import OrderLaserPage from './components/pages/Order/OrderLaserPage';
 
 import { createTheme } from '@mui/material/styles';
 import { ThemeProvider } from '@emotion/react';
@@ -25,7 +26,6 @@ export class App extends Component {
         super(props);
 
         this.changeLocale = (name) => {
-            console.log(name);
             putJsonData(backendURL() + '/locale', { 'locale': name }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': '*/*' })
                 .then((res) => {
                     if (res.status === 200) {
@@ -37,7 +37,6 @@ export class App extends Component {
         };
 
         this.changeTheme = (name) => {
-            console.log(name);
             postJsonData(backendURL() + '/theme', { theme: name }, { 'X-CSRF-TOKEN': this.state.token })
                 .then((res) => {
                     if (res.status === 200) {
@@ -159,6 +158,8 @@ export class App extends Component {
                                 <Route path='/' element={<WelcomePage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                                 <Route path='/login' element={<LogInPage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                                 <Route path='/register' element={<SignUpPage currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
+
+                                <Route path='/order/laser/page' element={<OrderLaserPage currentLocaleDirection={this.state.localeContext.currentLocale.direction} currentLocaleName={this.state.localeContext.currentLocale.shortName} />} />
                             </Routes>
                         </BrowserRouter>
                     </ThemeProvider>
