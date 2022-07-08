@@ -216,6 +216,35 @@ class OrdersController extends Controller
         }
 
         return response()->json($order->toArray());
+
+    private function collectDSPacakgesFromNames(array $packagesNames = [], string $gender): DSPackages
+    {
+        if (count($packagesNames) === 0) {
+            return new DSPackages($gender);
+        }
+
+        $packages = Package::query();
+        foreach ($requestPackages = $packagesNames as $packageName) {
+            $packages = $packages->where('name', '=', $packageName, count($packagesNames) !== 1 ? 'or' : 'and');
+        }
+        $packages = $packages->get()->all();
+
+        return Package::getDSPackages($packages, $gender);
+    }
+
+    private function collectDSPartsFromNames(array $partsNames = [], string $gender): DSParts
+    {
+        if (count($partsNames) === 0) {
+            return new DSParts($gender);
+        }
+
+        $parts = Part::query();
+        foreach ($requestParts = $partsNames as $partName) {
+            $parts = $parts->where('name', '=', $partName, count($partsNames) !== 1 ? 'or' : 'and');
+        }
+        $parts = $parts->get()->all();
+
+        return Part::getDSParts($parts, $gender);
     }
 
     public function show(string $businessName, int $accountId, int $childOrderId): JsonResponse
@@ -325,5 +354,38 @@ class OrdersController extends Controller
         }
 
         return response(trans_choice('Orders/destroy.successfull', 0));
+    }
+
+    public function calculateTime(CalculatePartsAndPackagesRquest $request): Response
+    {
+        $validatedInput = $request->safe()->all();
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $dsAuthenticated->getGender();
+
+        return response((new LaserLaserOrder)->calculateTimeConsumption(
+            $this->collectDSPartsFromNames($validatedInput['parts'], $gender),
+            $this->collectDSPacakgesFromNames($validatedInput['packages'], $gender),
+            (new TimeConsumptionCalculator)
+        ));
+    }
+
+    public function calculatePrice(CalculatePartsAndPackagesRquest $request): JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $dsAuthenticated->getGender();
+
+        return response()->json([
+            'price' => (new LaserLaserOrder)->calculatePrice(
+                $this->collectDSPartsFromNames($validatedInput['parts'], $gender),
+                $this->collectDSPacakgesFromNames($validatedInput['packages'], $gender),
+                (new PriceCalculator)
+            ),
+            'priceWithoutDiscount' => (new LaserLaserOrder)->calculatePriceWithoutDiscount(
+                $this->collectDSPartsFromNames($validatedInput['parts'], $gender),
+                $this->collectDSPacakgesFromNames($validatedInput['packages'], $gender),
+                (new PriceCalculator)
+            )
+        ]);
     }
 }

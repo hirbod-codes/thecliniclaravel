@@ -229,14 +229,37 @@ Route::middleware('auth:web')->group(function () {
 
         Route::controller(OrdersController::class)
             ->group(function () {
+                Route::get('/order/laser/page', fn () => view('app'))->name('order.laser.page');
+
                 Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
                 Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
 
-                Route::post('/orders', 'store')->name('orders.store');
+                Route::post('/order', 'store')->name('orders.store');
 
                 Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
 
                 Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+
+                Route::get('/laser/parts/{gender?}', function (Request $request) {
+                    $gender = $request->get('gender', null);
+                    if (is_string($gender)) {
+                        return Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()->toArray();
+                    } else {
+                        return Part::query()->get()->toArray();
+                    }
+                })->name('orders.laser.parts');
+
+                Route::get('/laser/packages/{gender?}', function (Request $request) {
+                    $gender = $request->get('gender', null);
+                    if (is_string($gender)) {
+                        return Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()->toArray();
+                    } else {
+                        return Package::query()->with('parts')->get()->toArray();
+                    }
+                })->name('orders.laser.packages');
+
+                Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
+                Route::post('/laser/price-calculation', 'calculatePrice')->name('priceCalculation');
             });
 
         Route::controller(VisitsController::class)
