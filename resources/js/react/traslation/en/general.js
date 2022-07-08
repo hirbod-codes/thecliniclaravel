@@ -38,5 +38,7 @@ general = addWordTo(
     general.email.single.allLowerCase + ' ' + general.address.plural.allLowerCase,
     'email-address'
 );
+general = addWordTo(general, 'laser order', null, 'laser-order');
+general = addWordTo(general, 'regular order', null, 'regular-order');
 
 export { general };
