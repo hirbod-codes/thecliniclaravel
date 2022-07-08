@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Visits;
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Visits\LaserIndexRequest;
+use App\Http\Requests\Visits\LaserShowAvailableRequest;
 use App\Http\Requests\Visits\LaserStoreRequest;
 use App\Http\Requests\Visits\RegularIndexRequest;
+use App\Http\Requests\Visits\RegularShowAvailableRequest;
 use App\Http\Requests\Visits\RegularStoreRequest;
 use App\Models\BusinessDefault;
 use App\Models\Order\LaserOrder;
@@ -22,7 +24,7 @@ use Database\Interactions\Visits\DataBaseRetrieveLaserVisits;
 use Database\Interactions\Visits\DataBaseRetrieveRegularVisits;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use TheClinic\Visit\FastestVisit;
 use TheClinic\Visit\WeeklyVisit;
@@ -331,6 +333,106 @@ class VisitsController extends Controller
         }
 
         return response()->json($visits[0]->toArray());
+    }
+
+    public function laserShowAvailable(LaserShowAvailableRequest $request): JsonResponse|RedirectResponse
+    {
+        if (($laserOrderId = intval($request->session()->get('laserOrderId', null))) === null) {
+            return redirect('/order/laser/page');
+        }
+
+        $validateInput = $request->safe()->all();
+
+        /** @var LaserOrder $laserOrder */
+        $laserOrder = LaserOrder::query()
+            ->whereKey($laserOrderId)
+            ->firstOrFail();
+        $dsLaserOrder = $laserOrder->getDSLaserOrder();
+
+        $now = new \DateTime();
+        $futureVisits = LaserVisit::query()
+            ->orderBy('visit_timestamp', 'asc')
+            ->where('visit_timestamp', '>=', $now)
+            ->get()
+            ->all()
+            //
+        ;
+        $futureVisits = LaserVisit::getDSLaserVisits($futureVisits, 'ASC');
+
+        if (isset($validateInput['weekDaysPeriods'])) {
+            $iFindVisit = new WeeklyVisit(
+                $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($validateInput['weekDaysPeriods']),
+                $dsLaserOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
+                $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
+                $startPoint = new \DateTime
+            );
+        } elseif (isset($validateInput['dateTimePeriod'])) {
+            // $iFindVisit = new WeeklyVisit();
+        } else {
+            $iFindVisit = new FastestVisit(
+                $startPoint = new \DateTime,
+                $dsLaserOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
+                $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
+            );
+        }
+
+        $timestamp = $iFindVisit->findVisit();
+
+        return response()->json(['availableVisitTimestamp' => $timestamp]);
+    }
+
+    public function regularShowAvailable(RegularShowAvailableRequest $request): JsonResponse|RedirectResponse
+    {
+        if (($regularOrderId = $request->session()->get('regularOrderId', null)) === null) {
+            return redirect('/order/regular/page');
+        }
+
+        $validateInput = $request->safe()->all();
+
+        /** @var RegularOrder $regularOrder */
+        $regularOrder = RegularOrder::query()
+            ->whereKey($regularOrderId)
+            ->firstOrFail();
+        $dsRegularOrder = $regularOrder->getDSRegularOrder();
+
+        $now = new \DateTime();
+        $futureVisits = RegularVisit::query()
+            ->orderBy('visit_timestamp', 'asc')
+            ->where('visit_timestamp', '>=', $now)
+            ->get()
+            ->all()
+            //
+        ;
+        $futureVisits = RegularVisit::getDSRegularVisits($futureVisits, 'ASC');
+
+        if (isset($validateInput['weekDaysPeriods'])) {
+            $iFindVisit = new WeeklyVisit(
+                $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($validateInput['weekDaysPeriods']),
+                $dsRegularOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
+                $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
+                $startPoint = new \DateTime
+            );
+        } elseif (isset($validateInput['dateTimePeriod'])) {
+            // $iFindVisit = new WeeklyVisit();
+        } else {
+            $iFindVisit = new FastestVisit(
+                $startPoint = new \DateTime,
+                $dsRegularOrder->getNeededTime(),
+                $futureVisits,
+                $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
+                $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
+            );
+        }
+
+        $timestamp = $iFindVisit->findVisit();
+
+        return response()->json(['availableVisitTimestamp' => $timestamp]);
     }
 
     public function laserDestroy(int $laserVisitId, int $targetUserId): Response
