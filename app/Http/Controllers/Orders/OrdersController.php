@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Orders;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Orders\CalculatePartsAndPackagesRquest;
 use App\Http\Requests\Orders\IndexRequest;
 use App\Http\Requests\Orders\StoreRequest;
 use App\Models\Order\LaserOrder;
@@ -21,7 +22,11 @@ use Database\Interactions\Orders\Retrieval\DatabaseRetrieveLaserOrders;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveRegularOrders;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
+use TheClinic\Order\Laser\Calculations\PriceCalculator;
+use TheClinic\Order\Laser\Calculations\TimeConsumptionCalculator;
+use TheClinic\Order\Laser\LaserOrder as LaserLaserOrder;
 use TheClinicDataStructures\DataStructures\Order\DSOrders;
 use TheClinicDataStructures\DataStructures\Order\DSPackages;
 use TheClinicDataStructures\DataStructures\Order\DSParts;
@@ -163,47 +168,35 @@ class OrdersController extends Controller
         return response()->json($dsOrders->toArray());
     }
 
-    public function store(StoreRequest $request): JsonResponse
+    public function store(StoreRequest $request): RedirectResponse|JsonResponse
     {
         $validatedInput = $request->safe()->all();
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        /** @var User $user */
-        $user = User::query()
-            ->whereKey($validatedInput['accountId'])
-            ->first();
-        $dsUser = $user->authenticatableRole()->getDataStructure();
-        $gender = $user->gender;
+        if (!isset($validatedInput['accountId'])) {
+            $dsUser = $dsAuthenticated;
+        } else {
+            /** @var User $user */
+            $user = User::query()
+                ->whereKey($validatedInput['accountId'])
+                ->first();
+            $dsUser = $user->authenticatableRole()->getDataStructure();
+        }
 
-        switch (strtolower($validatedInput['businessName'])) {
+        $gender = $dsUser->getGender();
+
+        $businessName = strtolower($validatedInput['businessName']);
+        switch ($businessName) {
             case 'laser':
-                if (isset($validatedInput['parts']) && count($validatedInput['parts']) !== 0) {
-                    $parts = Part::query();
-                    foreach ($requestParts = $validatedInput['parts'] as $partName) {
-                        $parts = $parts->where('name', '=', $partName, 'or');
-                    }
-                    $parts = $parts->get()->all();
-                    $parts = Part::getDSParts($parts, $gender);
-                } else {
-                    $parts = new DSParts($gender);
-                }
+                $parts = $this->collectDSPartsFromNames(!isset($validatedInput['parts']) ? [] : $validatedInput['parts'], $gender);
 
-                if (isset($validatedInput['packages']) && count($validatedInput['packages']) !== 0) {
-                    $packages = Package::query();
-                    foreach ($requestPackages = $validatedInput['packages'] as $packageName) {
-                        $packages = $packages->where('name', '=', $packageName, 'or');
-                    }
-                    $packages = $packages->get()->all();
-                    $packages = Package::getDSPackages($packages, $gender);
-                } else {
-                    $packages = new DSPackages($gender);
-                }
+                $packages = $this->collectDSPacakgesFromNames(!isset($validatedInput['packages']) ? [] : $validatedInput['packages'], $gender);
 
                 $order = $this->laserOrderCreation->createLaserOrder($dsUser, $dsAuthenticated, $this->iDataBaseCreateLaserOrder, $parts, $packages);
                 break;
 
             case 'regular':
-                if ($dsAuthenticated instanceof DSAdmin) {
+                if ($dsAuthenticated instanceof DSAdmin && isset($validatedInput['price'])  && isset($validatedInput['timeConsumption'])) {
                     $order = $this->regularOrderCreation->createRegularOrder($validatedInput['price'], $validatedInput['timeConsumption'], $dsUser, $dsAuthenticated, $this->iDataBaseCreateRegularOrder);
                 } else {
                     $order = $this->regularOrderCreation->createDefaultRegularOrder($dsUser, $dsAuthenticated, $this->iDataBaseCreateDefaultRegularOrder);
@@ -215,7 +208,11 @@ class OrdersController extends Controller
                 break;
         }
 
-        return response()->json($order->toArray());
+        $request->session()->put($businessName === 'laser' ? 'laserOrderId' : ($businessName === 'regular' ? 'regularOrderId' : 'orderId'), strval($order->getId()));
+
+        return redirect('/visit/' . $businessName . '/page');
+        // return response()->json($order->toArray());
+    }
 
     private function collectDSPacakgesFromNames(array $packagesNames = [], string $gender): DSPackages
     {
