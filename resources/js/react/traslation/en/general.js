@@ -32,12 +32,23 @@ general = addWordTo(general, 'order', 'orders');
 general = addWordTo(general, 'visit', 'visits');
 general = addWordTo(general, 'setting', 'settings');
 
-general = addWordTo(
-    general,
-    general.email.single.allLowerCase + ' ' + general.address.single.allLowerCase,
-    general.email.single.allLowerCase + ' ' + general.address.plural.allLowerCase,
-    'email-address'
-);
+general = addWordTo(general, 'monday');
+general = addWordTo(general, 'tuesday');
+general = addWordTo(general, 'wednesday');
+general = addWordTo(general, 'thursday');
+general = addWordTo(general, 'friday');
+general = addWordTo(general, 'saturday');
+general = addWordTo(general, 'sunday');
+
+general = addWordTo(general, general.email.single.allLowerCase + ' ' + general.address.single.allLowerCase, general.email.single.allLowerCase + ' ' + general.address.plural.allLowerCase, 'email-address');
+
+general = addWordTo(general, 'starting time', null, 'starting-time');
+general = addWordTo(general, 'ending time', null, 'ending-time');
+
+general = addWordTo(general, 'total', 'totals');
+general = addWordTo(general, 'result', 'results');
+general = addWordTo(general, 'refresh');
+
 general = addWordTo(general, 'laser order', null, 'laser-order');
 general = addWordTo(general, 'regular order', null, 'regular-order');
 
