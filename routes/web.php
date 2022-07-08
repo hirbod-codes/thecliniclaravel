@@ -10,6 +10,8 @@ use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\Roles\ShowRequest;
 use App\Http\Requests\UpdateLocaleRequest;
+use App\Models\Package\Package;
+use App\Models\Part\Part;
 use App\Models\Privilege;
 use App\Models\PrivilegeValue;
 use App\Models\Role;
@@ -170,7 +172,7 @@ Route::middleware('auth:web')->group(function () {
 
                 Route::post('/account/{roleName}', 'store')->name('account.store');
 
-                Route::get('/account/{username}', 'show')->name('account.show');
+                Route::get('/account/{placeholder}', 'show')->name('account.show');
                 Route::get('/account', 'showSelf')->name('account.showSelf');
 
                 Route::put('/account/{accountId}', 'update')->name('account.update');

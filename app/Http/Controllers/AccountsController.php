@@ -21,6 +21,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Accounts\AccountsManagement;
 use TheClinicUseCases\Accounts\Authentication;
@@ -163,15 +164,19 @@ class AccountsController extends Controller
         return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
     }
 
-    public function show(string $username): JsonResponse
+    public function show(string $placeholder): JsonResponse
     {
-        $usernameRules = include(base_path() . '/app/Rules/BuiltInRules/Models/User/username.php');
-        $validator = Validator::make(['username' => $username], [
-            'username' => $usernameRules['username_not_unique_exixts'],
+        $validator = Validator::make(['placeholder' => $placeholder], [
+            'placeholder' => ['string', 'required'],
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors()->toArray(), 422);
+        }
+
+        $username = $this->findUsername($placeholder);
+        if (gettype($username) === 'object' && get_class($username) === JsonResponse::class) {
+            return $username;
         }
 
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
@@ -179,6 +184,53 @@ class AccountsController extends Controller
         $dsUser = $this->accountsManagement->getAccount($username, $dsAuthenticated, $this->dataBaseRetrieveAccounts);
 
         return response()->json($dsUser->toArray());
+    }
+
+    private function findUsername(string $placeholder): JsonResponse|string|null
+    {
+        if (($user = User::query()
+            ->where('username', '=', $placeholder)
+            ->first()) !== null) {
+            return $placeholder;
+        }
+
+        if (($user = User::query()
+            ->where('email', '=', $placeholder)
+            ->first()) !== null) {
+            return $placeholder;
+        }
+
+        if (($user = User::query()
+            ->where('phonenumber', '=', $placeholder)
+            ->first()) !== null) {
+            return $placeholder;
+        }
+
+        if (Str::contains($placeholder, '-')) {
+            $firstname = explode('-', $placeholder)[0];
+            $lastname = explode('-', $placeholder)[1];
+
+            $firstnameRules = array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/firstname.php'))['firstname_optional'], ['required_with:lastname']);
+            $lastnameRules = array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/lastname.php'))['lastname_optional'], ['required_with:firstname']);
+
+            $validator = Validator::make(['firstname' => $firstname, 'lastname' => $lastname], [
+                'firstname' => $firstnameRules,
+                'lastname' => $lastnameRules,
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()->toArray()], 422);
+            }
+
+            if (($user = User::query()
+                ->where('firstname', '=', $firstname)
+                ->where('lastname', '=', $lastname)
+                ->first()) === null) {
+                return $user->username;
+            }
+        }
+
+        throw new ModelNotFoundException('', 404);
     }
 
     public function showSelf(): JsonResponse
