@@ -40,19 +40,19 @@ class StoreRequest extends FormRequest
         }, Package::query()->get()->all());
 
         $array = [
-            'accountId' => ['required', 'integer', 'numeric', 'min:1'],
+            'accountId' => ['integer', 'numeric', 'min:1'],
             'businessName' => ['required', 'string', Rule::in(['laser', 'regular'])],
 
-            'packages' => ['array'],
-            'packages.*' => ['string', Rule::in($packages)],
-            'parts' => ['array', 'bail', new PartsPackagesRequirement()],
-            'parts.*' => ['string', Rule::in($parts)],
+            'packages' => ['prohibited_unless:businessName,laser', 'array'],
+            'packages.*' => ['required_unless:packages,null', 'string', Rule::in($packages)],
+            'parts' => ['prohibited_unless:businessName,laser', 'array', 'bail', new PartsPackagesRequirement()],
+            'parts.*' => ['required_unless:parts,null', 'string', Rule::in($parts)],
 
-            'price' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser', Rule::requiredIf($dsUser instanceof DSAdmin), Rule::prohibitedIf(!($dsUser instanceof DSAdmin))],
-            'timeConsumption' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser', Rule::requiredIf($dsUser instanceof DSAdmin), Rule::prohibitedIf(!($dsUser instanceof DSAdmin))],
+            'price' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser'],
+            'timeConsumption' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser'],
         ];
 
-        $array['businessName'][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }
