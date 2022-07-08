@@ -10,6 +10,8 @@ use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\Privileges\ShowRequest;
 use App\Models\BusinessDefault as ModelsBusinessDefault;
+use App\Models\Package\Package;
+use App\Models\Part\Part;
 use App\Models\Privilege;
 use App\Models\PrivilegeValue;
 use App\Models\Role;
@@ -109,7 +111,7 @@ Route::prefix('{locale}')->group(function () {
 
                 Route::post('/account/{roleName}', 'store')->name('account.store');
 
-                Route::get('/account/{username}', 'show')->name('account.show');
+                Route::get('/account/{placeholder}', 'show')->name('account.show');
                 Route::get('/account', 'showSelf')->name('account.showSelf');
 
                 Route::put('/account/{accountId}', 'update')->name('account.update');
@@ -171,11 +173,32 @@ Route::prefix('{locale}')->group(function () {
                 Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
                 Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
 
-                Route::post('/orders', 'store')->name('orders.store');
+                Route::post('/order', 'store')->name('orders.store');
 
                 Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
 
                 Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+
+                Route::get('/laser/parts/{gender?}', function (Request $request) {
+                    $gender = $request->get('gender', null);
+                    if (is_string($gender)) {
+                        return Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()->toArray();
+                    } else {
+                        return Part::query()->get()->toArray();
+                    }
+                })->name('orders.laser.parts');
+
+                Route::get('/laser/packages/{gender?}', function (Request $request) {
+                    $gender = $request->get('gender', null);
+                    if (is_string($gender)) {
+                        return Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()->toArray();
+                    } else {
+                        return Package::query()->with('parts')->get()->toArray();
+                    }
+                })->name('orders.laser.packages');
+
+                Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
+                Route::post('/laser/price-calculation', 'calculatePrice')->name('priceCalculation');
             });
 
         Route::controller(VisitsController::class)
@@ -183,11 +206,14 @@ Route::prefix('{locale}')->group(function () {
                 Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
                 Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
 
-                Route::post('/visit/laser', 'laserStore')->name('visits.laserStore');
-                Route::post('/visit/regular', 'regularStore')->name('visits.regularStore');
+                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->middleware('adjustWeekDaysPeriods')->name('visits.laserStore');
+                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->middleware('adjustWeekDaysPeriods')->name('visits.regularStore');
 
                 Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
                 Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
+
+                Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
+                Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
                 Route::delete('/visit/laser/{laserVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
                 Route::delete('/visit/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
