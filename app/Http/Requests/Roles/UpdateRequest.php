@@ -34,7 +34,7 @@ class UpdateRequest extends FormRequest
             'privilegeValues' => ['required', 'array', new ValidatePrivilegeValue],
         ];
 
-        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

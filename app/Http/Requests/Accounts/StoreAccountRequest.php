@@ -54,7 +54,7 @@ class StoreAccountRequest extends FormRequest
         $array['phonenumber_encrypted'] = ['required', 'string', new CheckEnryptedValuesIds];
         $array['phonenumber_verified_at_encrypted'] = ['required', 'string'];
 
-        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

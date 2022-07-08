@@ -30,7 +30,7 @@ class DestroyRequest extends FormRequest
         $array = [];
         $array['customRoleName'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'];
 
-        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Accounts;
 
+use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendPhonenumberVerificationCodeRequest extends FormRequest
@@ -23,8 +24,10 @@ class SendPhonenumberVerificationCodeRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $array = [
             'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber']
         ];
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
+        return $array;
     }
 }

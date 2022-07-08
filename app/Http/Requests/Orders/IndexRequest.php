@@ -35,8 +35,7 @@ class IndexRequest extends FormRequest
             'timeConsumption' =>    ['numeric', 'integer', 'prohibited_if:priceOtherwiseTime,null', 'prohibits:price', 'required_if:priceOtherwiseTime,false'],
         ];
 
-        $array['username'][] = new ProhibitExtraFeilds($array);
-        $array['count'][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

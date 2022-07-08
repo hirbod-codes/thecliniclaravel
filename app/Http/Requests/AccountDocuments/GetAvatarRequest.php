@@ -28,7 +28,7 @@ class GetAvatarRequest extends FormRequest
             'accountId' => ['required', 'integer', 'numeric', 'min:1'],
         ];
 
-        $array['accountId'][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

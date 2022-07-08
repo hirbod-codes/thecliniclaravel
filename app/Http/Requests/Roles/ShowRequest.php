@@ -30,7 +30,7 @@ class ShowRequest extends FormRequest
             'accountId' => ['required', 'string', 'integer', 'numeric', 'min:0'],
         ];
 
-        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

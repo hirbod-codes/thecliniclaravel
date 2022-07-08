@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Accounts;
 
+use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
 class IndexAccountsRequest extends FormRequest
@@ -23,10 +24,12 @@ class IndexAccountsRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            'roleName' =>(include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'],
+        $array = [
+            'roleName' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'],
             'lastAccountId' => ['nullable', 'integer', 'numeric'],
             'count' => ['required', 'integer', 'numeric']
         ];
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
+        return $array;
     }
 }

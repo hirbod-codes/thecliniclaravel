@@ -49,7 +49,7 @@ class UpdateSelfAccountRequest extends FormRequest
             $array['data'][] = 'min:1';
         }
 
-        $array[array_key_first($array)][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

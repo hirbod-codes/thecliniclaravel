@@ -34,7 +34,7 @@ class RegisterUserRequest extends FormRequest
 
         $array = array_merge($array, $specialRules);
 
-        $array['username'][] = new ProhibitExtraFeilds($array);
+        array_unshift($rules[array_key_first($rules)], new ProhibitExtraFeilds($rules));
 
         return $array;
     }

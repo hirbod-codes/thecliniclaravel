@@ -29,7 +29,7 @@ class SetAvatarRequest extends FormRequest
             'avatar' => (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar'],
         ];
 
-        $array['accountId'][] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

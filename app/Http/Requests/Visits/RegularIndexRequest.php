@@ -33,7 +33,7 @@ class RegularIndexRequest extends FormRequest
             'operator' => ['required_with:timestamp', 'prohibits:accountId', Rule::in(['>', '>=', '<', '<=', '=', '<>'])],
         ];
 
-        $array['accountId'] = new ProhibitExtraFeilds($array);
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }

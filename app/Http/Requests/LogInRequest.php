@@ -39,7 +39,7 @@ class LogInRequest extends FormRequest
             'remember' => ['boolean']
         ];
 
-        $rules['username'] = new ProhibitExtraFeilds($rules);
+        array_unshift($rules[array_key_first($rules)], new ProhibitExtraFeilds($rules));
 
         return $rules;
     }

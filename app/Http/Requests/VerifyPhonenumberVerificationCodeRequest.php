@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
 class VerifyPhonenumberVerificationCodeRequest extends FormRequest
@@ -23,9 +24,13 @@ class VerifyPhonenumberVerificationCodeRequest extends FormRequest
      */
     public function rules()
     {
-        return [
+        $array = [
             'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber'],
             'code' => ['required', 'integer', 'numeric', 'min:100000'],
         ];
+
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
+
+        return $array;
     }
 }
