@@ -2,6 +2,7 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\AdjustWeekDaysPeriods;
 use App\Http\Middleware\PhonenumberNotVerified;
 use App\Http\Middleware\PhonenumberVerified;
 use App\Http\Middleware\SetLocale;
@@ -74,5 +75,6 @@ class Kernel extends HttpKernel
         'phonenumber_not_verified' => PhonenumberNotVerified::class,
         'setLocale' => SetLocale::class,
         'setLocaleFromSession' => SetLocaleFromSession::class,
+        'adjustWeekDaysPeriods' => AdjustWeekDaysPeriods::class,
     ];
 }
