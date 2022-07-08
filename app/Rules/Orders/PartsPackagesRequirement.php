@@ -34,15 +34,6 @@ class PartsPackagesRequirement implements Rule, DataAwareRule
      */
     public function passes($attribute, $value)
     {
-        if ($this->data['businessName'] !== 'laser') {
-            if (array_search('parts', array_keys($this->data)) !== false || array_search('packages', array_keys($this->data)) !== false) {
-                $this->prohibited = true;
-                return false;
-            }
-
-            return true;
-        }
-
         return (array_key_exists('parts', $this->data) && !empty($this->data['parts'])) ||
             (array_key_exists('packages', $this->data) && !empty($this->data['packages']));
     }
