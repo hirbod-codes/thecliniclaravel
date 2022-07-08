@@ -201,9 +201,18 @@ class VisitsController extends Controller
         return response()->json($visits->toArray());
     }
 
-    public function laserStore(LaserStoreRequest $request): JsonResponse
+    public function laserStore(LaserStoreRequest $request): JsonResponse|RedirectResponse
     {
         $validateInput = $request->safe()->all();
+
+        if (!isset($validateInput['laserOrderId'])) {
+            if (($laserOrderId = intval($request->session()->get('laserOrderId', null))) === null) {
+                return redirect('/order/laser/page');
+            }
+            $validateInput['laserOrderId'] = $laserOrderId;
+        }
+        return redirect('/visit/laser/page');
+
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         /** @var LaserOrder $laserOrder */
@@ -249,14 +258,24 @@ class VisitsController extends Controller
             );
         }
 
-        $dsLaserOrder = $this->laserVisitCreation->create($dsLaserOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateLaserVisit, $iFindVisit);
+        $dsLaserVisit = $this->laserVisitCreation->create($dsLaserOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateLaserVisit, $iFindVisit);
 
-        return response()->json($dsLaserOrder->toArray());
+        $request->session()->forget('laserOrderId');
+
+        return response()->json($dsLaserVisit->toArray());
     }
 
     public function regularStore(RegularStoreRequest $request): JsonResponse
     {
         $validateInput = $request->safe()->all();
+
+        if (!isset($validateInput['laserOrderId'])) {
+            if (($laserOrderId = intval($request->session()->get('laserOrderId', null))) === null) {
+                return redirect('/order/laser/page');
+            }
+            $validateInput['laserOrderId'] = $laserOrderId;
+        }
+
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         /** @var RegularOrder $regularOrder */
@@ -303,6 +322,8 @@ class VisitsController extends Controller
         }
 
         $dsRegularOrder = $this->regularVisitCreation->create($dsRegularOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateRegularVisit, $iFindVisit);
+
+        $request->session()->forget('laserOrderId');
 
         return response()->json($dsRegularOrder->toArray());
     }
