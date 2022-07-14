@@ -76,5 +76,13 @@ trait TraitBaseUserRoleColumns
                             END IF;
                         END;'
         );
+
+        DB::statement(
+            'CREATE TRIGGER after_' . $this->table . '_delete AFTER DELETE ON ' . $this->table . '
+                        FOR EACH ROW
+                        BEGIN
+                            DELETE FROM ' . $this->table . ' WHERE id=OLD.' . $fkUserRole . ';
+                        END;'
+        );
     }
 }
