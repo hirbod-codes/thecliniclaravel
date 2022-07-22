@@ -10,6 +10,8 @@ use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\Privileges\ShowRequest;
 use App\Models\BusinessDefault as ModelsBusinessDefault;
+use App\Models\Order\LaserOrder;
+use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
 use App\Models\Privilege;
@@ -19,6 +21,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use TheClinicDataStructures\DataStructures\Order\DSPackages;
+use TheClinicDataStructures\DataStructures\Order\DSParts;
+use TheClinicDataStructures\DataStructures\User\DSPatient;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 
 /*
@@ -170,8 +176,29 @@ Route::prefix('{locale}')->group(function () {
 
         Route::controller(OrdersController::class)
             ->group(function () {
-                Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-                Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+                Route::get('/orders/laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
+                Route::get('/orders/regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+
+                Route::get('/orders/count/{businessName}', function (string $businessName) {
+                    if ((new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSPatient) {
+                        return response('', 403);
+                    }
+
+                    switch ($businessName) {
+                        case 'laser':
+                            $count = LaserOrder::query()->count();
+                            break;
+
+                        case 'regular':
+                            $count = RegularOrder::query()->count();
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    return response($count);
+                });
 
                 Route::post('/order', 'store')->name('orders.store');
 
@@ -181,20 +208,32 @@ Route::prefix('{locale}')->group(function () {
 
                 Route::get('/laser/parts/{gender?}', function (Request $request) {
                     $gender = $request->get('gender', null);
-                    if (is_string($gender)) {
-                        return Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()->toArray();
-                    } else {
-                        return Part::query()->get()->toArray();
+                    $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
+                    if ($validator->fails()) {
+                        return response()->json($validator->errors());
                     }
+
+                    $dsParts = new DSParts(ucfirst(strtolower($gender)));
+                    for ($i = 0; $i < count($parts = Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()); $i++) {
+                        $dsParts[] = $parts[$i]->getDSPart();
+                    }
+
+                    return $dsParts->toArray();
                 })->name('orders.laser.parts');
 
                 Route::get('/laser/packages/{gender?}', function (Request $request) {
                     $gender = $request->get('gender', null);
-                    if (is_string($gender)) {
-                        return Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()->toArray();
-                    } else {
-                        return Package::query()->with('parts')->get()->toArray();
+                    $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
+                    if ($validator->fails()) {
+                        return response()->json($validator->errors());
                     }
+
+                    $dsPackages = new DSPackages(ucfirst(strtolower($gender)));
+                    for ($i = 0; $i < count($packages = Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()); $i++) {
+                        $dsPackages[] = $packages[$i]->getDSPackage();
+                    }
+
+                    return response()->json($dsPackages->toArray());
                 })->name('orders.laser.packages');
 
                 Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
@@ -206,8 +245,8 @@ Route::prefix('{locale}')->group(function () {
                 Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
                 Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
 
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->middleware('adjustWeekDaysPeriods')->name('visits.laserStore');
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->middleware('adjustWeekDaysPeriods')->name('visits.regularStore');
+                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
+                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
 
                 Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
                 Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
@@ -215,8 +254,8 @@ Route::prefix('{locale}')->group(function () {
                 Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
                 Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
-                Route::delete('/visit/laser/{laserVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
-                Route::delete('/visit/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+                Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('visits.laserDestroy');
+                Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('visits.regularDestroy');
             });
     });
 });
