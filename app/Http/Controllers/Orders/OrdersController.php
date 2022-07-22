@@ -134,7 +134,11 @@ class OrdersController extends Controller
         $args['db'] = $this->{'iDataBaseRetrieve' . ucfirst($input['businessName']) . 'Orders'};
 
         if (!isset($input['username'])) {
-            $args['lastOrderId'] = isset($input['lastOrderId']) ? $input['lastOrderId'] : null;
+            if (isset($input['lastOrderId'])) {
+                $args['lastOrderId'] = $input['lastOrderId'];
+            }
+
+            // $args['lastOrderId'] = isset($input['lastOrderId']) ? $input['lastOrderId'] : null;
             $args['count'] = $input['count'];
         } else {
             $args['targetUser'] = User::query()->where('username', $input['username'])->first()->authenticatableRole()->getDataStructure();
@@ -208,10 +212,7 @@ class OrdersController extends Controller
                 break;
         }
 
-        $request->session()->put($businessName === 'laser' ? 'laserOrderId' : ($businessName === 'regular' ? 'regularOrderId' : 'orderId'), strval($order->getId()));
-
-        return redirect('/visit/' . $businessName . '/page');
-        // return response()->json($order->toArray());
+        return response()->json($order->toArray());
     }
 
     private function collectDSPacakgesFromNames(array $packagesNames = [], string $gender): DSPackages
@@ -269,16 +270,21 @@ class OrdersController extends Controller
         $user = User::query()->where((new User)->getKeyName(), '=', $accountId)->first();
         $dsUser = $user->authenticatableRole()->getDataStructure();
 
-        $laserOrders = $this->laserOrderRetrieval->getLaserOrdersByUser($dsUser, $dsAuthenticated, $this->iDataBaseRetrieveLaserOrders);
+        $dsLaserOrders = $this->laserOrderRetrieval->getLaserOrdersByUser($dsUser, $dsAuthenticated, $this->iDataBaseRetrieveLaserOrders);
 
-        /** @var DSLaserOrder $laserOrder */
-        foreach ($laserOrders as $laserOrder) {
-            if ($laserOrder->getId() === $laserOrderId) {
+        foreach ($dsLaserOrders as $dsLaserOrder) {
+            if ($dsLaserOrder->getId() === $laserOrderId) {
                 break;
             }
         }
 
-        return response()->json($laserOrder->toArray());
+        /** @var LaserOrder $laserOrder */
+        $laserOrder = LaserOrder::query()->whereKey($laserOrderId)->firstOrFail();
+        /** @var User $user */
+        $user = $laserOrder->order->user;
+        $dsUser = $user->authenticatableRole()->getDataStructure();
+
+        return response()->json($dsLaserOrder->toArray());
     }
 
     private function regularShow(int $accountId, int $regularOrderId): JsonResponse
@@ -360,8 +366,8 @@ class OrdersController extends Controller
         $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $dsAuthenticated->getGender();
 
         return response((new LaserLaserOrder)->calculateTimeConsumption(
-            $this->collectDSPartsFromNames($validatedInput['parts'], $gender),
-            $this->collectDSPacakgesFromNames($validatedInput['packages'], $gender),
+            $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
+            $this->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
             (new TimeConsumptionCalculator)
         ));
     }
@@ -374,13 +380,13 @@ class OrdersController extends Controller
 
         return response()->json([
             'price' => (new LaserLaserOrder)->calculatePrice(
-                $this->collectDSPartsFromNames($validatedInput['parts'], $gender),
-                $this->collectDSPacakgesFromNames($validatedInput['packages'], $gender),
+                $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
+                $this->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
                 (new PriceCalculator)
             ),
             'priceWithoutDiscount' => (new LaserLaserOrder)->calculatePriceWithoutDiscount(
-                $this->collectDSPartsFromNames($validatedInput['parts'], $gender),
-                $this->collectDSPacakgesFromNames($validatedInput['packages'], $gender),
+                $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
+                $this->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
                 (new PriceCalculator)
             )
         ]);
