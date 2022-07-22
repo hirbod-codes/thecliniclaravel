@@ -49,7 +49,7 @@ class StoreRequest extends FormRequest
             'parts.*' => ['required_unless:parts,null', 'string', Rule::in($parts)],
 
             'price' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser'],
-            'timeConsumption' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser'],
+            'timeConsumption' => ['integer', 'numeric', 'min:5', 'prohibited_if:businessName,laser'],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
