@@ -24,7 +24,7 @@ class DataBaseDeleteRegularVisit implements IDataBaseDeleteRegularVisit
             foreach ($regularVisits as $regularVisit) {
                 if ($regularVisit->getKey() === $dsRegularVisit->getId()) {
                     $found = true;
-                    break;
+                    break 2;
                 }
             }
         }

@@ -24,7 +24,7 @@ class DataBaseDeleteLaserVisit implements IDataBaseDeleteLaserVisit
             foreach ($laserVisits as $laserVisit) {
                 if ($laserVisit->getKey() === $dsLaserVisit->getId()) {
                     $found = true;
-                    break;
+                    break 2;
                 }
             }
         }
