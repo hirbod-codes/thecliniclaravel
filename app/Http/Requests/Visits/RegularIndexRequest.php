@@ -26,11 +26,11 @@ class RegularIndexRequest extends FormRequest
     public function rules()
     {
         $array = [
-            'accountId' => ['required', 'integer', 'numeric', 'min:1'],
+            'accountId' => ['prohibits:regularOrderId,timestamp,operator', 'integer', 'numeric', 'min:1'],
             'sortByTimestamp' => ['required', 'string', Rule::in(['desc', 'asc'])],
-            'regularOrderId' => ['prohibits:timestamp,operator', 'integer', 'numeric', 'min:1'],
-            'timestamp' => ['required_with:operator', 'prohibits:accountId', 'integer', 'numeric', 'min:1'],
-            'operator' => ['required_with:timestamp', 'prohibits:accountId', Rule::in(['>', '>=', '<', '<=', '=', '<>'])],
+            'regularOrderId' => ['prohibits:accountId,timestamp,operator', 'integer', 'numeric', 'min:1'],
+            'timestamp' => ['required_with:operator', 'prohibits:regularOrderId,accountId', 'integer', 'numeric', 'min:1'],
+            'operator' => ['required_with:timestamp', 'prohibits:regularOrderId,accountId', Rule::in(['>', '>=', '<', '<=', '=', '<>'])],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));

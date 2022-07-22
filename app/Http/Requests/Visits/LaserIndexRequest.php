@@ -26,11 +26,11 @@ class LaserIndexRequest extends FormRequest
     public function rules()
     {
         $array = [
-            'accountId' => ['required', 'integer', 'numeric', 'min:1'],
+            'accountId' => ['prohibits:timestamp,operator,laserOrderId', 'integer', 'numeric', 'min:1'],
             'sortByTimestamp' => ['required', 'string', Rule::in(['desc', 'asc'])],
-            'laserOrderId' => ['prohibits:timestamp,operator', 'integer', 'numeric', 'min:1'],
-            'timestamp' => ['required_with:operator', 'prohibits:accountId', 'integer', 'numeric', 'min:1'],
-            'operator' => ['required_with:timestamp', 'prohibits:accountId', Rule::in(['>', '>=', '<', '<=', '=', '<>'])],
+            'laserOrderId' => ['prohibits:timestamp,operator,accountId', 'integer', 'numeric', 'min:1'],
+            'timestamp' => ['required_with:operator', 'prohibits:accountId,laserOrderId', 'integer', 'numeric', 'min:1'],
+            'operator' => ['required_with:timestamp', 'prohibits:accountId,laserOrderId', Rule::in(['>', '>=', '<', '<=', '=', '<>'])],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
