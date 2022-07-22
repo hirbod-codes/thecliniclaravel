@@ -15,6 +15,9 @@ export class SignUpPage extends Component {
                     <Grid item xs={12} >
                         <Header
                             title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/sign-up/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
+                            isAuthenticated={this.props.isAuthenticated}
+                            isAuthenticationLoading={this.props.isAuthenticationLoading}
+                            navigator={this.props.navigator}
                             currentLocaleName={this.props.currentLocaleName}
                         />
                     </Grid>

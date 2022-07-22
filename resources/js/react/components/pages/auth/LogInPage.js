@@ -15,8 +15,10 @@ export class LogInPage extends Component {
                     <Grid item xs={12} >
                         <Header
                             title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
+                            isAuthenticated={this.props.isAuthenticated}
+                            isAuthenticationLoading={this.props.isAuthenticationLoading}
+                            navigator={this.props.navigator}
                             currentLocaleName={this.props.currentLocaleName}
-                            isLogInPage={true}
                         />
                     </Grid>
                     <Grid item xs={12} >
