@@ -6,18 +6,14 @@ export class TabPanel extends Component {
     render() {
         const { children, value, index, id, ...other } = this.props;
         return (
-            <div
+            <Box
                 role="tabpanel"
                 hidden={value !== index}
                 id={id}
                 {...other}
             >
-                {value === index && (
-                    <Box sx={{ p: 3 }}>
-                        {children}
-                    </Box>
-                )}
-            </div>
+                {value === index && children}
+            </Box>
         )
     }
 }
