@@ -4,8 +4,17 @@ let general = {};
 
 general = addWordTo(general, 'ok');
 general = addWordTo(general, 'back');
+general = addWordTo(general, 'next');
 general = addWordTo(general, 'reset');
 general = addWordTo(general, 'submit');
+general = addWordTo(general, 'done');
+general = addWordTo(general, 'total', 'totals');
+general = addWordTo(general, 'result', 'results');
+general = addWordTo(general, 'refresh');
+general = addWordTo(general, 'successful');
+general = addWordTo(general, 'failure');
+general = addWordTo(general, 'create');
+general = addWordTo(general, 'show');
 general = addWordTo(general, 'welcome');
 general = addWordTo(general, 'log in', null, 'log-in');
 general = addWordTo(general, 'sign up', null, 'sign-up');
@@ -45,11 +54,20 @@ general = addWordTo(general, general.email.single.allLowerCase + ' ' + general.a
 general = addWordTo(general, 'starting time', null, 'starting-time');
 general = addWordTo(general, 'ending time', null, 'ending-time');
 
-general = addWordTo(general, 'total', 'totals');
-general = addWordTo(general, 'result', 'results');
-general = addWordTo(general, 'refresh');
+general = addWordTo(general, 'order dashboard', null, 'order-dashboard');
+general = addWordTo(general, 'visit dashboard', null, 'visit-dashboard');
 
 general = addWordTo(general, 'laser order', null, 'laser-order');
 general = addWordTo(general, 'regular order', null, 'regular-order');
+
+general.columns = {};
+
+general.columns = addWordTo(general.columns, 'action', 'actions');
+general.columns = addWordTo(general.columns, 'id');
+general.columns = addWordTo(general.columns, 'name');
+general.columns = addWordTo(general.columns, 'gender');
+general.columns = addWordTo(general.columns, 'visits');
+general.columns = addWordTo(general.columns, 'Created At', null, 'createdAt');
+general.columns = addWordTo(general.columns, 'Updated At', null, 'updatedAt');
 
 export { general };

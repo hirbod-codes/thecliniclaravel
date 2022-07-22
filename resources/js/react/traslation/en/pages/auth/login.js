@@ -1,5 +1,5 @@
 let login = {
-    'forgot-password': 'Did you forgot your password?'
+    'forgot-password': 'Did you forget your password?'
 };
 
 export { login };

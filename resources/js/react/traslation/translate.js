@@ -84,6 +84,7 @@ function addWordTo(object, single, plural = null, key = null) {
         .join('-');
 
     object[key] = {};
+
     object[key].single = {
         allLowerCase: single,
         ucFirstLetterFirstWord: ucFirstLetterFirstWord(single),
