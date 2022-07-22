@@ -1,11 +1,12 @@
 import React, { Component } from 'react'
+import { Link } from 'react-router-dom';
 
-import { Avatar, Button, Divider, IconButton, Menu, MenuItem, Stack, Tooltip } from '@mui/material'
+import { Avatar, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
+import LoadingButton from '@mui/lab/LoadingButton';
+
 import { translate } from '../traslation/translate';
 import { backendURL, getJsonData, postJsonData } from './Http/fetch';
 import { updateState } from './helpers';
-import LoadingButton from '@mui/lab/LoadingButton';
-import { Link } from 'react-router-dom';
 import SlidingDialog from './Menus/SlidingDialog';
 import { collectMessagesFromResponse, makeFormHelperTextComponents } from './Http/response';
 
@@ -57,16 +58,16 @@ export class UserIconNavigator extends Component {
     }
 
     async initialize() {
-        let accountData = await getJsonData(backendURL() + '/account', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+        let account = await getJsonData(backendURL() + '/account', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
 
-        let avatarData = await getJsonData(backendURL() + '/avatar?accountId=' + accountData.id, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.text());
+        let avatar = await getJsonData(backendURL() + '/avatar?accountId=' + account.id, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.text());
 
-        let isEmailVerifiedData = await getJsonData(backendURL() + '/isEmailVerified', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+        let isEmailVerified = await getJsonData(backendURL() + '/isEmailVerified', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
 
         await updateState(this, {
             isAvatarLoading: false,
-            isEmailVerified: isEmailVerifiedData.verified,
-            image: 'data:image/png;base64,' + avatarData
+            isEmailVerified: isEmailVerified.verified,
+            image: 'data:image/png;base64,' + avatar
         });
     }
 
@@ -95,12 +96,12 @@ export class UserIconNavigator extends Component {
     render() {
         return (
             <>
-                {this.state.isAvatarLoading && <LoadingButton loading variant='contained' >{translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
-                {!this.state.isAvatarLoading &&
+                {this.props.isAvatarLoading && <LoadingButton loading variant='contained' >{translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
+                {!this.props.isAvatarLoading &&
                     <>
                         <Tooltip title={translate('general/account/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} >
                             <IconButton onClick={this.handleIconMenuOpen} >
-                                <Avatar alt={translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} src={this.state.image} />
+                                <Avatar alt={translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} src={this.props.image} />
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -108,7 +109,7 @@ export class UserIconNavigator extends Component {
                             open={this.state.open}
                             onClose={this.handleIconMenuClose}
                         >
-                            {!this.state.isEmailVerified &&
+                            {!this.props.isEmailVerified &&
                                 <SlidingDialog
                                     open={this.state.modalOpen}
                                     onClose={this.handleModalClose}
@@ -124,48 +125,19 @@ export class UserIconNavigator extends Component {
                                     {translate('generalSentences/send-email-verification-message/ucFirstLetterFirstWord', this.props.currentLocaleName)}
                                 </SlidingDialog>
                             }
-                            {window.location.pathname !== '/order/laser/page' &&
-                                [
-                                    <MenuItem key={0} onClick={this.handleOrderMenuOpen}>
-                                        <Link to='/#' style={{ textDecoration: 'none' }} >
-                                            {translate('general/order/plural/ucFirstLetterFirstWord', this.props.currentLocaleName)}
-                                        </Link>
-                                    </MenuItem>,
-                                    <Menu
-                                        key={1}
-                                        anchorEl={this.state.orderMenuAnchorEl}
-                                        open={this.state.orderMenuOpen}
-                                        onClose={this.handleOrderMenuClose}
-                                    >
-                                        <MenuItem >
-                                            <Link to='/order/laser/page' style={{ textDecoration: 'none' }} >
-                                                {translate('general/laser-order/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
-                                            </Link>
-                                        </MenuItem>
-                                        <SlidingDialog
-                                            open={this.state.regularOrderMenuOpen}
-                                            onClose={this.handleModalClose}
-                                            timeout={this.state.emailVerificationSlideTimeout}
-                                            slideTrigger={
-                                                <MenuItem >
-                                                    <Link to='#' onClick={this.handleRegularOrderMenuOpen} style={{ textDecoration: 'none' }} >
-                                                        {translate('general/regular-order/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
-                                                    </Link>
-                                                </MenuItem>
-                                            }
-                                        >
-                                            <Stack
-                                                justifyContent='center'
-                                                direction="column"
-                                                divider={<Divider orientation="horizontal" />}
-                                                spacing={2}
-                                            >
-                                                <div>{translate('/pages/orders/order/regular-order-submition-warning', this.props.currentLocaleName)}</div>
-                                                <Button fullWidth variant='contained' onClick={this.handleRegularOrderSubmition}>{translate('/general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</Button>
-                                            </Stack>
-                                        </SlidingDialog>
-                                    </Menu>
-                                ]
+                            {window.location.pathname !== '/dashboard/order' &&
+                                <MenuItem>
+                                    <Link to='/dashboard/order' style={{ textDecoration: 'none' }} >
+                                        {translate('general/order-dashboard/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                    </Link>
+                                </MenuItem>
+                            }
+                            {window.location.pathname !== '/dashboard/visit' &&
+                                <MenuItem>
+                                    <Link to='/dashboard/visit' style={{ textDecoration: 'none' }} >
+                                        {translate('general/visit-dashboard/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                    </Link>
+                                </MenuItem>
                             }
                             {window.location.pathname !== '/settings' &&
                                 <MenuItem >
