@@ -21,18 +21,15 @@ class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
     {
         /** @var User $user */
         $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-        $userPrimaryKey = $user->{$user->getKeyName()};
 
-        $relationName = 'regularOrder';
-        $orders = Order::query()
-            ->where($user->getForeignKey(), '=', $userPrimaryKey)
-            ->whereHas($relationName, function ($query) use ($operator, $price) {
+        $orders = RegularOrder::query()
+            ->whereHas('order', function ($query) use ($user) {
                 $query
-                    ->where('price', $operator, $price)
+                    ->where($user->getForeignKey(), '=', $user->getKey())
                     //
                 ;
             })
-            ->with([$relationName])
+            ->where('price', $operator, $price)
             ->get()
             ->all()
             //
@@ -49,17 +46,14 @@ class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
      */
     public function getRegularOrdersByPrice(int $lastOrderId = null, int $count, string $operator, int $price): DSRegularOrders
     {
-        $relationName = 'regularOrder';
-        $orders = Order::query()
-            ->orderBy((new Order)->getKeyName(), 'desc')
-            ->where((new Order)->getKeyName(), '>', $lastOrderId)
-            ->whereHas($relationName, function ($query) use ($operator, $price) {
-                $query
-                    ->where('price', $operator, $price)
-                    //
-                ;
-            })
-            ->with([$relationName])
+        $orders = RegularOrder::query()->orderBy((new RegularOrder)->getKeyName(), 'desc');
+
+        if ($lastOrderId) {
+            $orders = $orders->where((new RegularOrder)->getKeyName(), '<', $lastOrderId);
+        }
+
+        $orders = $orders
+            ->where('price', $operator, $price)
             ->take($count)
             ->get()
             ->all()
@@ -79,18 +73,15 @@ class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
     {
         /** @var User $user */
         $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-        $userPrimaryKey = $user->{$user->getKeyName()};
 
-        $relationName = 'regularOrder';
-        $orders = Order::query()
-            ->where($user->getForeignKey(), '=', $userPrimaryKey)
-            ->whereHas($relationName, function ($query) use ($operator, $timeCosumption) {
+        $orders = RegularOrder::query()
+            ->whereHas('order', function ($query) use ($user) {
                 $query
-                    ->where('needed_time', $operator, $timeCosumption)
+                    ->where($user->getForeignKey(), '=', $user->getKey())
                     //
                 ;
             })
-            ->with([$relationName])
+            ->where('needed_time', $operator, $timeCosumption)
             ->get()
             ->all()
             //
@@ -107,17 +98,14 @@ class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
      */
     public function getRegularOrdersByTimeConsumption(int $count, string $operator, int $timeCosumption, int $lastOrderId = null): DSRegularOrders
     {
-        $relationName = 'regularOrder';
-        $orders = Order::query()
-            ->orderBy((new Order)->getKeyName(), 'desc')
-            ->where((new Order)->getKeyName(), '>', $lastOrderId)
-            ->whereHas($relationName, function ($query) use ($operator, $timeCosumption) {
-                $query
-                    ->where('needed_time', $operator, $timeCosumption)
-                    //
-                ;
-            })
-            ->with([$relationName])
+        $orders = RegularOrder::query()->orderBy((new RegularOrder)->getKeyName(), 'desc');
+
+        if ($lastOrderId) {
+            $orders = $orders->where((new RegularOrder)->getKeyName(), '<', $lastOrderId);
+        }
+
+        $orders = $orders
+            ->where('needed_time', $operator, $timeCosumption)
             ->take($count)
             ->get()
             ->all()
@@ -131,12 +119,14 @@ class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
     {
         /** @var User $user */
         $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-        $userPrimaryKey = $user->{$user->getKeyName()};
 
-        $relationName = 'regularOrder';
-        $orders = Order::query()
-            ->where($user->getForeignKey(), '=', $userPrimaryKey)
-            ->with([$relationName])
+        $orders = RegularOrder::query()
+            ->whereHas('order', function ($query) use ($user) {
+                $query
+                    ->where($user->getForeignKey(), '=', $user->getKey())
+                    //
+                ;
+            })
             ->get()
             ->all()
             //
@@ -147,11 +137,13 @@ class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
 
     public function getRegularOrders(int $count, int $lastOrderId = null): DSRegularOrders
     {
-        $relationName = 'regularOrder';
-        $orders = Order::query()
-            ->orderBy((new Order)->getKeyName(), 'desc')
-            ->where((new Order)->getKeyName(), '>', $lastOrderId)
-            ->with([$relationName])
+        $orders = RegularOrder::query()->orderBy((new RegularOrder)->getKeyName(), 'desc');
+
+        if ($lastOrderId) {
+            $orders = $orders->where((new RegularOrder)->getKeyName(), '<', $lastOrderId);
+        }
+
+        $orders = $orders
             ->take($count)
             ->get()
             ->all()

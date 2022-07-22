@@ -21,18 +21,16 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
     {
         /** @var User $user */
         $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-        $userPrimaryKey = $user->{$user->getKeyName()};
 
-        $relationName = 'laserOrder';
-        $orders = Order::query()
-            ->where($user->getForeignKey(), '=', $userPrimaryKey)
-            ->whereHas($relationName, function ($query) use ($operator, $price) {
+        $orders = LaserOrder::query()
+            ->whereHas('order', function ($query) use ($user) {
                 $query
-                    ->where('price', $operator, $price)
+                    ->where($user->getForeignKey(), '=', $user->getKey())
                     //
                 ;
             })
-            ->with([$relationName . '.parts', $relationName . '.packages'])
+            ->where('price', $operator, $price)
+            ->with(['parts', 'packages'])
             ->get()
             ->all()
             //
@@ -51,17 +49,15 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
      */
     public function getLaserOrdersByPrice(int $lastOrderId = null, int $count, string $operator, int $price): DSLaserOrders
     {
-        $relationName = 'laserOrder';
-        $orders = Order::query()
-            ->orderBy((new Order)->getKeyName(), 'desc')
-            ->where((new Order)->getKeyName(), '>', $lastOrderId)
-            ->whereHas($relationName, function ($query) use ($operator, $price) {
-                $query
-                    ->where('price', $operator, $price)
-                    //
-                ;
-            })
-            ->with([$relationName . '.parts', $relationName . '.packages'])
+        $orders = LaserOrder::query()->orderBy((new LaserOrder)->getKeyName(), 'desc');
+
+        if ($lastOrderId) {
+            $orders = $orders->where((new LaserOrder)->getKeyName(), '<', $lastOrderId);
+        }
+
+        $orders = $orders
+            ->where('price', $operator, $price)
+            ->with(['parts', 'packages'])
             ->take($count)
             ->get()
             ->all()
@@ -81,18 +77,16 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
     {
         /** @var User $user */
         $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-        $userPrimaryKey = $user->{$user->getKeyName()};
 
-        $relationName = 'laserOrder';
-        $orders = Order::query()
-            ->where($user->getForeignKey(), '=', $userPrimaryKey)
-            ->whereHas($relationName, function ($query) use ($operator, $timeCosumption) {
+        $orders = LaserOrder::query()
+            ->whereHas('order', function ($query) use ($user) {
                 $query
-                    ->where('needed_time', $operator, $timeCosumption)
+                    ->where($user->getForeignKey(), '=', $user->getKey())
                     //
                 ;
             })
-            ->with([$relationName . '.parts', $relationName . '.packages'])
+            ->where('needed_time', $operator, $timeCosumption)
+            ->with(['parts', 'packages'])
             ->get()
             ->all()
             //
@@ -111,17 +105,15 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
      */
     public function getLaserOrdersByTimeConsumption(int $count, string $operator, int $timeCosumption, int $lastOrderId = null): DSLaserOrders
     {
-        $relationName = 'laserOrder';
-        $orders = Order::query()
-            ->orderBy((new Order)->getKeyName(), 'desc')
-            ->where((new Order)->getKeyName(), '>', $lastOrderId)
-            ->whereHas($relationName, function ($query) use ($operator, $timeCosumption) {
-                $query
-                    ->where('needed_time', $operator, $timeCosumption)
-                    //
-                ;
-            })
-            ->with([$relationName . '.parts', $relationName . '.packages'])
+        $orders = LaserOrder::query()->orderBy((new LaserOrder)->getKeyName(), 'desc');
+
+        if ($lastOrderId) {
+            $orders = $orders->where((new LaserOrder)->getKeyName(), '<', $lastOrderId);
+        }
+
+        $orders = $orders
+            ->where('needed_time', $operator, $timeCosumption)
+            ->with(['parts', 'packages'])
             ->take($count)
             ->get()
             ->all()
@@ -135,12 +127,15 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
     {
         /** @var User $user */
         $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-        $userPrimaryKey = $user->{$user->getKeyName()};
 
-        $relationName = 'laserOrder';
-        $orders = Order::query()
-            ->where($user->getForeignKey(), '=', $userPrimaryKey)
-            ->with([$relationName . '.parts', $relationName . '.packages'])
+        $orders = LaserOrder::query()
+            ->whereHas('order', function ($query) use ($user) {
+                $query
+                    ->where($user->getForeignKey(), '=', $user->getKey())
+                    //
+                ;
+            })
+            ->with(['parts', 'packages'])
             ->get()
             ->all()
             //
@@ -151,11 +146,14 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
 
     public function getLaserOrders(int $count, int $lastOrderId = null): DSLaserOrders
     {
-        $relationName = 'laserOrder';
-        $orders = Order::query()
-            ->orderBy((new Order)->getKeyName(), 'desc')
-            ->where((new Order)->getKeyName(), '>', $lastOrderId)
-            ->with([$relationName . '.parts', $relationName . '.packages'])
+        $orders = LaserOrder::query()->orderBy((new LaserOrder)->getKeyName(), 'desc');
+
+        if ($lastOrderId) {
+            $orders = $orders->where((new LaserOrder)->getKeyName(), '<', $lastOrderId);
+        }
+
+        $orders = $orders
+            ->with(['parts', 'packages'])
             ->take($count)
             ->get()
             ->all()
