@@ -26,6 +26,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
+use Illuminate\Support\Str;
 use TheClinic\Visit\FastestVisit;
 use TheClinic\Visit\WeeklyVisit;
 use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
@@ -106,31 +107,21 @@ class VisitsController extends Controller
 
         $args = [$dsAuthenticated];
 
-        if (isset($validateInput['accountId'])) {
-            /** @var User $targetUser */
-            $targetUser = User::query()
-                ->whereKey($validateInput['accountId'])
-                ->firstOrFail()
-                //
-            ;
-
-            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
-        }
-
         if (!isset($validateInput['laserOrderId']) && !isset($validateInput['timestamp']) && !isset($validateInput['operator'])) {
+            /** @var User $targetUser */
+            $targetUser = User::query()->whereKey($validateInput['accountId'])->firstOrFail();
+            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
+
             $method = 'User';
             $args[] = $dsTargetUser;
         } elseif (isset($validateInput['laserOrderId'])) {
-            foreach ($targetUser->orders as $order) {
-                /** @var LaserOrder $laserOrder */
-                if (($laserOrder = $order->laserOrder) !== null && $laserOrder->getKey() === (int)$validateInput['laserOrderId']) {
-                    $dsLaserOrder = $laserOrder->getDSLaserOrder();
-                    break;
-                }
-            }
-            if (!isset($dsLaserOrder)) {
-                throw new ModelNotFoundException('Failed to find the laser order with id: ' . $validateInput['laserOrderId'], 404);
-            }
+            /** @var LaserOrder $laserOrder */
+            $laserOrder = LaserOrder::query()->whereKey((int)$validateInput['laserOrderId'])->firstOrFail();
+            $dsLaserOrder = $laserOrder->getDSLaserOrder();
+
+            /** @var User $targetUser */
+            $targetUser = $laserOrder->order->user;
+            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
             $method = 'Order';
             $args[] = $dsTargetUser;
@@ -157,31 +148,21 @@ class VisitsController extends Controller
 
         $args = [$dsAuthenticated];
 
-        if (isset($validateInput['accountId'])) {
-            /** @var User $targetUser */
-            $targetUser = User::query()
-                ->whereKey($validateInput['accountId'])
-                ->first()
-                //
-            ;
-
-            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
-        }
-
         if (!isset($validateInput['regularOrderId']) && !isset($validateInput['timestamp']) && !isset($validateInput['operator'])) {
+            /** @var User $targetUser */
+            $targetUser = User::query()->whereKey($validateInput['accountId'])->firstOrFail();
+            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
+
             $method = 'User';
             $args[] = $dsTargetUser;
         } elseif (isset($validateInput['regularOrderId'])) {
-            foreach ($targetUser->orders as $order) {
-                /** @var RegularOrder $regularOrder */
-                if (($regularOrder = $order->regularOrder) !== null && $regularOrder->getKey() === (int)$validateInput['regularOrderId']) {
-                    $dsregularOrder = $regularOrder->getDSregularOrder();
-                    break;
-                }
-            }
-            if (!isset($dsregularOrder)) {
-                throw new ModelNotFoundException('Failed to find the regular order with id: ' . $validateInput['regularOrderId'], 404);
-            }
+            /** @var RegularOrder $regularOrder */
+            $regularOrder = RegularOrder::query()->whereKey((int)$validateInput['regularOrderId'])->firstOrFail();
+            $dsregularOrder = $regularOrder->getDSregularOrder();
+
+            /** @var User $targetUser */
+            $targetUser = $regularOrder->order->user;
+            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
             $method = 'Order';
             $args[] = $dsTargetUser;
@@ -205,14 +186,6 @@ class VisitsController extends Controller
     {
         $validateInput = $request->safe()->all();
 
-        if (!isset($validateInput['laserOrderId'])) {
-            if (($laserOrderId = intval($request->session()->get('laserOrderId', null))) === null) {
-                return redirect('/order/laser/page');
-            }
-            $validateInput['laserOrderId'] = $laserOrderId;
-        }
-        return redirect('/visit/laser/page');
-
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         /** @var LaserOrder $laserOrder */
@@ -222,9 +195,7 @@ class VisitsController extends Controller
         $dsLaserOrder = $laserOrder->getDSLaserOrder();
 
         /** @var User $targetUser */
-        $targetUser = User::query()
-            ->whereKey($validateInput['targetUserId'])
-            ->firstOrFail();
+        $targetUser = $laserOrder->order->user;
         $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         $now = new \DateTime();
@@ -260,21 +231,12 @@ class VisitsController extends Controller
 
         $dsLaserVisit = $this->laserVisitCreation->create($dsLaserOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateLaserVisit, $iFindVisit);
 
-        $request->session()->forget('laserOrderId');
-
         return response()->json($dsLaserVisit->toArray());
     }
 
     public function regularStore(RegularStoreRequest $request): JsonResponse
     {
         $validateInput = $request->safe()->all();
-
-        if (!isset($validateInput['reuglarOrderId'])) {
-            if (($reuglarOrderId = intval($request->session()->get('reuglarOrderId', null))) === null) {
-                return redirect('/');
-            }
-            $validateInput['reuglarOrderId'] = $reuglarOrderId;
-        }
 
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
@@ -285,9 +247,7 @@ class VisitsController extends Controller
         $dsRegularOrder = $regularOrder->getDSRegularOrder();
 
         /** @var User $targetUser */
-        $targetUser = User::query()
-            ->whereKey($validateInput['targetUserId'])
-            ->firstOrFail();
+        $targetUser = $regularOrder->order->user;
         $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         $now = new \DateTime();
@@ -323,8 +283,6 @@ class VisitsController extends Controller
 
         $dsRegularOrder = $this->regularVisitCreation->create($dsRegularOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateRegularVisit, $iFindVisit);
 
-        $request->session()->forget('reuglarOrderId');
-
         return response()->json($dsRegularOrder->toArray());
     }
 
@@ -358,15 +316,11 @@ class VisitsController extends Controller
 
     public function laserShowAvailable(LaserShowAvailableRequest $request): JsonResponse|RedirectResponse
     {
-        if (($laserOrderId = intval($request->session()->get('laserOrderId', null))) === null) {
-            return redirect('/order/laser/page');
-        }
-
         $validateInput = $request->safe()->all();
 
         /** @var LaserOrder $laserOrder */
         $laserOrder = LaserOrder::query()
-            ->whereKey($laserOrderId)
+            ->whereKey($validateInput['laserOrderId'])
             ->firstOrFail();
         $dsLaserOrder = $laserOrder->getDSLaserOrder();
 
@@ -408,15 +362,11 @@ class VisitsController extends Controller
 
     public function regularShowAvailable(RegularShowAvailableRequest $request): JsonResponse|RedirectResponse
     {
-        if (($regularOrderId = $request->session()->get('regularOrderId', null)) === null) {
-            return redirect('/order/regular/page');
-        }
-
         $validateInput = $request->safe()->all();
 
         /** @var RegularOrder $regularOrder */
         $regularOrder = RegularOrder::query()
-            ->whereKey($regularOrderId)
+            ->whereKey($validateInput['regularOrderId'])
             ->firstOrFail();
         $dsRegularOrder = $regularOrder->getDSRegularOrder();
 
@@ -456,15 +406,9 @@ class VisitsController extends Controller
         return response()->json(['availableVisitTimestamp' => $timestamp]);
     }
 
-    public function laserDestroy(int $laserVisitId, int $targetUserId): Response
+    public function laserDestroy(int $laserVisitId): Response
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        /** @var User $targetUser */
-        $targetUser = User::query()
-            ->whereKey($targetUserId)
-            ->firstOrFail();
-        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         /** @var LaserVisit $laserVisit */
         $laserVisit = LaserVisit::query()
@@ -472,26 +416,28 @@ class VisitsController extends Controller
             ->firstOrFail();
         $dsLaserVisit = $laserVisit->getDSLaserVisit();
 
+        /** @var User $targetUser */
+        $targetUser = $laserVisit->laserOrder->order->user;
+        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
+
         $this->laserVisitDeletion->delete($dsLaserVisit, $dsTargetUser, $dsAuthenticated, $this->iDataBaseDeleteLaserVisit);
 
         return response(trans_choice('Visits/visits.destroy', 0), 200);
     }
 
-    public function regularDestroy(int $regularVisitId, int $targetUserId): Response
+    public function regularDestroy(int $regularVisitId): Response
     {
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        /** @var User $targetUser */
-        $targetUser = User::query()
-            ->whereKey($targetUserId)
-            ->firstOrFail();
-        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         /** @var RegularVisit $regularVisit */
         $regularVisit = RegularVisit::query()
             ->whereKey($regularVisitId)
             ->firstOrFail();
         $dsRegularVisit = $regularVisit->getDSRegularVisit();
+
+        /** @var User $targetUser */
+        $targetUser = $regularVisit->regularOrder->order->user;
+        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         $this->regularVisitDeletion->delete($dsRegularVisit, $dsTargetUser, $dsAuthenticated, $this->iDataBaseDeleteRegularVisit);
 
