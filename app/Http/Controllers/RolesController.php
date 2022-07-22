@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Roles\DestroyRequest;
+use App\Http\Requests\Roles\ShowAllRequest;
 use App\Http\Requests\Roles\ShowRequest;
 use App\Http\Requests\Roles\StoreRequest;
 use App\Http\Requests\Roles\UpdateRequest;
+use App\Models\Privilege;
+use App\Models\PrivilegeValue;
 use App\Models\Role;
 use App\Models\User;
 use Database\Interactions\Privileges\DataBaseCreateRole;
@@ -14,6 +17,7 @@ use Database\Interactions\Privileges\DataBaseDeleteRole;
 use Database\Interactions\Privileges\PrivilegeSetter;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use TheClinicDataStructures\DataStructures\User\DSAdmin;
 use TheClinicUseCases\Privileges\PrivilegesManagement;
 use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
@@ -78,6 +82,56 @@ class RolesController extends Controller
         $this->privilegesManagement->setRolePrivilege($dsAuthenticated, $validateInput['roleName'], $validateInput['privilegeValues'], $this->ips);
 
         return response('The privilege successfully changed.');
+    }
+
+    public function showAll(ShowAllRequest $request): JsonResponse
+    {
+        $input = $request->all();
+
+        $temp = DB::table((new Privilege)->getTable())
+            ->select([(new Privilege)->getTable() . '.name', (new PrivilegeValue)->getTable() . '.privilegeValue'])
+            ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
+            ->join((new Role)->getTable(), (new Role)->getTable() . '.' . (new Role)->getKeyName(), '=', (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey())
+            ->join((new User)->getTable(), (new User)->getTable() . '.' . (new Role)->getForeignKeyForName(), '=', (new Role)->getTable() . '.name')
+            ->where((new User)->getTable() . '.' . (new User)->getKeyName(), '=', $input['accountId'])
+            // ->where((new Privilege)->getTable() . '.name', '=', $input['privilege'])
+            ->get()
+            ->toArray()
+            //
+        ;
+
+        $result = [];
+        array_walk($temp, function ($v, $k) use (&$result) {
+            if (!$v->privilegeValue) {
+                return;
+            }
+
+            $result[$v->name] = $v->privilegeValue;
+        });
+
+        return response()->json($result);
+    }
+
+    public function show(ShowRequest $request): JsonResponse
+    {
+        $input = $request->safe()->all();
+
+        $result = DB::table((new Privilege)->getTable())
+            ->select((new PrivilegeValue)->getTable() . '.privilegeValue')
+            ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
+            ->join((new Role)->getTable(), (new Role)->getTable() . '.' . (new Role)->getKeyName(), '=', (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey())
+            ->join((new User)->getTable(), (new User)->getTable() . '.' . (new Role)->getForeignKeyForName(), '=', (new Role)->getTable() . '.name')
+            ->where((new User)->getTable() . '.' . (new User)->getKeyName(), '=', $input['accountId'])
+            ->where((new Privilege)->getTable() . '.name', '=', $input['privilege'])
+            ->get()
+            ->map(function ($v, $k) {
+                return $v->privilegeValue;
+            })
+            ->toArray()
+            //
+        ;
+
+        return response()->json([$input['privilege'] => count($result) === 1 ? $result[0] : null]);
     }
 
     public function destroy(DestroyRequest $request)
