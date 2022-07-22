@@ -114,6 +114,46 @@ async function putJsonData(url, data = {}, headers = {}) {
     return response;
 }
 
+async function deleteJsonData(url, data = {}, headers = {}) {
+    let hs = new Headers();
+    hs.append('cors', 'no-cors');
+    hs.append('Accept', 'application/json');
+    hs.append('Connection', 'keep-alive');
+
+    for (const key in headers) {
+        if (Object.hasOwnProperty.call(headers, key)) {
+            const header = headers[key];
+
+            if (hs.has(key)) {
+                hs.delete(key);
+            }
+
+            hs.append(key, header);
+        }
+    }
+
+    let init = {
+        method: 'DELETE',
+        headers: hs,
+        redirect: 'follow'
+    };
+
+    if (data.constructor.name === 'FormData') {
+        init.body = data;
+    } else {
+        init.body = JSON.stringify(data);
+
+        if (hs.has('Content-Type')) {
+            hs.delete('Content-Type');
+        }
+        hs.append('Content-Type', 'application/json');
+    }
+
+    const response = await fetch(url, init)
+
+    return response;
+}
+
 function loadXHR(url) {
     return new Promise(function (resolve, reject) {
         try {
@@ -143,5 +183,5 @@ function backendURL() {
     return 'http://localhost:80';
 }
 
-export { getJsonData, postJsonData, putJsonData, loadXHR, backendURL };
+export { getJsonData, postJsonData, putJsonData, deleteJsonData, loadXHR, backendURL };
 
