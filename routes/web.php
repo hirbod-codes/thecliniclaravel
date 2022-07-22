@@ -8,20 +8,19 @@ use App\Http\Controllers\BusinessDefault;
 use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
-use App\Http\Requests\Roles\ShowRequest;
 use App\Http\Requests\UpdateLocaleRequest;
+use App\Models\Order\LaserOrder;
+use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Models\Privilege;
-use App\Models\PrivilegeValue;
-use App\Models\Role;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
-use TheClinicUseCases\Privileges\PrivilegesManagement;
+use TheClinicDataStructures\DataStructures\Order\DSPackages;
+use TheClinicDataStructures\DataStructures\Order\DSParts;
+use TheClinicDataStructures\DataStructures\User\DSPatient;
 
 /*
 |--------------------------------------------------------------------------
@@ -172,30 +171,11 @@ Route::middleware('auth:web')->group(function () {
         Route::controller(RolesController::class)
             ->group(function () {
                 Route::get('/roles', 'index')->name('roles.index');
-                Route::get('/privileges', function () {
-                    $authenticated = (new CheckAuthentication)->getAuthenticatedDSUser();
-
-                    return response()->json((new PrivilegesManagement)->getPrivileges($authenticated));
-                })->name('privileges.index');
 
                 Route::post('/role', 'store')->name('role.store');
 
-                Route::get('/privilege/{roleName?}', function (ShowRequest $request) {
-                    $validateInput = $request->safe()->all();
-
-                    $privileges = [];
-                    DB::table((new Role)->getTable())
-                        ->select([(new Privilege)->getTable() . '.name', (new PrivilegeValue)->getTable() . '.privilegeValue'])
-                        ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey(), '=', (new Role)->getTable() . '.' . (new Role)->getKeyName())
-                        ->join((new Privilege)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
-                        ->where((new Role)->getTable() . '.name', '=', $validateInput['roleName'])
-                        ->get()
-                        ->map(function ($v, $k) use (&$privileges) {
-                            $privileges[$v->name] = $v->privilegeValue;
-                        });
-
-                    return response()->json($privileges);
-                })->name('privileges.show');
+                Route::get('/privileges/show/{accountId?}', 'showAll')->name('privileges.show');
+                Route::get('/privilege/show/{accountId?}/{privilege?}', 'show')->name('privilege.show');
 
                 Route::put('/role', 'update')->name('roles.update');
 
@@ -218,10 +198,31 @@ Route::middleware('auth:web')->group(function () {
 
         Route::controller(OrdersController::class)
             ->group(function () {
-                Route::get('/order/laser/page', fn () => view('app'))->name('order.laser.page');
+                Route::get('/dashboard/order', fn () => view('app'))->name('order.laser.page');
 
-                Route::get('/orders/Laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-                Route::get('/orders/Regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+                Route::get('/orders/laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
+                Route::get('/orders/regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+
+                Route::get('/orders/count/{businessName}', function (string $businessName) {
+                    if ((new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSPatient) {
+                        return response('', 403);
+                    }
+
+                    switch ($businessName) {
+                        case 'laser':
+                            $count = LaserOrder::query()->count();
+                            break;
+
+                        case 'regular':
+                            $count = RegularOrder::query()->count();
+                            break;
+
+                        default:
+                            break;
+                    }
+
+                    return response($count);
+                });
 
                 Route::post('/order', 'store')->name('orders.store');
 
@@ -230,21 +231,33 @@ Route::middleware('auth:web')->group(function () {
                 Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
 
                 Route::get('/laser/parts/{gender?}', function (Request $request) {
-                    $gender = $request->get('gender', null);
-                    if (is_string($gender)) {
-                        return Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()->toArray();
-                    } else {
-                        return Part::query()->get()->toArray();
+                    $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
+                    if ($validator->fails()) {
+                        return response()->json($validator->errors());
                     }
+                    $gender = $request->get('gender', null);
+
+                    $dsParts = new DSParts(ucfirst(strtolower($gender)));
+                    for ($i = 0; $i < count($parts = Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()); $i++) {
+                        $dsParts[] = $parts[$i]->getDSPart();
+                    }
+
+                    return $dsParts->toArray();
                 })->name('orders.laser.parts');
 
                 Route::get('/laser/packages/{gender?}', function (Request $request) {
-                    $gender = $request->get('gender', null);
-                    if (is_string($gender)) {
-                        return Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()->toArray();
-                    } else {
-                        return Package::query()->with('parts')->get()->toArray();
+                    $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
+                    if ($validator->fails()) {
+                        return response()->json($validator->errors());
                     }
+                    $gender = $request->get('gender', null);
+
+                    $dsPackages = new DSPackages(ucfirst(strtolower($gender)));
+                    for ($i = 0; $i < count($packages = Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()); $i++) {
+                        $dsPackages[] = $packages[$i]->getDSPackage();
+                    }
+
+                    return response()->json($dsPackages->toArray());
                 })->name('orders.laser.packages');
 
                 Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
@@ -253,8 +266,7 @@ Route::middleware('auth:web')->group(function () {
 
         Route::controller(VisitsController::class)
             ->group(function () {
-                Route::get('/visit/laser/page', fn () => view('app'))->name('visit.laser.page');
-                Route::get('/visit/regular/page', fn () => view('app'))->name('visit.regular.page');
+                Route::get('/dashboard/visit', fn () => view('app'))->name('visit.laser.page');
 
                 Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
                 Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
@@ -268,8 +280,8 @@ Route::middleware('auth:web')->group(function () {
                 Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
                 Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
-                Route::delete('/visit/laser/{laserVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
-                Route::delete('/visit/regular/{regularVisitId}/{targetUserId}', 'laserDestroy')->name('visits.laserDestroy');
+                Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('visits.laserDestroy');
+                Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('visits.regularDestroy');
             });
     });
 });
