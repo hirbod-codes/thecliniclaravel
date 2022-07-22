@@ -24,8 +24,8 @@ class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegular
 
             $regularOrder = new RegularOrder;
             $regularOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
-            $regularOrder->price = BusinessDefault::first()->default_regular_order_price;
-            $regularOrder->needed_time = BusinessDefault::first()->default_regular_order_time_consumption;
+            $regularOrder->price = BusinessDefault::firstOrFail()->default_regular_order_price;
+            $regularOrder->needed_time = BusinessDefault::firstOrFail()->default_regular_order_time_consumption;
             if (!$regularOrder->save()) {
                 throw new \RuntimeException('Failed to create the order', 500);
             }
