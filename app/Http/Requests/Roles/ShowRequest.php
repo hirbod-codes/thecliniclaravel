@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Roles;
 
-use App\Auth\CheckAuthentication;
+use App\Models\Privilege;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
-use TheClinicDataStructures\DataStructures\User\DSAdmin;
+use Illuminate\Validation\Rule;
 
 class ShowRequest extends FormRequest
 {
@@ -16,7 +16,7 @@ class ShowRequest extends FormRequest
      */
     public function authorize()
     {
-        return (new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSAdmin;
+        return true;
     }
 
     /**
@@ -28,6 +28,11 @@ class ShowRequest extends FormRequest
     {
         $array = [
             'accountId' => ['required', 'string', 'integer', 'numeric', 'min:0'],
+            'privilege' => [
+                'required', 'string', Rule::in($t = Privilege::query()->get('name')->map(function ($v, $k) {
+                    return $v->name;
+                }))
+            ],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
