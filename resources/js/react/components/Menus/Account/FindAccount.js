@@ -1,30 +1,45 @@
-import { Button, Divider, FormControl, Stack, TextField } from '@mui/material'
 import React, { Component } from 'react'
+
+import PropTypes from 'prop-types';
+
+import { Button, Divider, FormControl, Stack, TextField } from '@mui/material'
+
 import { translate } from '../../../traslation/translate'
+import { LocaleContext } from '../../localeContext'
 import { getJsonData } from '../../Http/fetch';
 import { collectMessagesFromResponse, makeFormHelperTextComponents } from '../../Http/response';
-import { LocaleContext } from '../../localeContext';
-import SlidingDialog from '../../Menus/SlidingDialog'
+import { updateState } from '../../helpers';
+import LoadingButton from '@mui/lab/LoadingButton';
 
-export class ChangeOwnershipButton extends Component {
+/**
+ * FindAccount
+ * @augments {Component<Props, State>}
+ */
+export class FindAccount extends Component {
+    static propTypes = {
+        handleAccount: PropTypes.func.isRequired,
+    };
+
     constructor(props) {
         super(props);
 
-        this.handleUsername = this.handleUsername.bind(this);
         this.handleFirstName = this.handleFirstName.bind(this);
         this.handleLastName = this.handleLastName.bind(this);
+        this.handleUsername = this.handleUsername.bind(this);
         this.handlePhonenumber = this.handlePhonenumber.bind(this);
         this.handleEmail = this.handleEmail.bind(this);
+
         this.handleSubmit = this.handleSubmit.bind(this);
 
         this.state = {
+            errors: null,
             firstname: '',
             lastname: '',
             username: '',
             phonenumber: '',
             email: '',
 
-            errors: [],
+            isSubmiting: false,
         };
     }
 
@@ -76,14 +91,14 @@ export class ChangeOwnershipButton extends Component {
         });
     }
 
-    handleSubmit(e) {
-        this.setState({ errors: [] });
+    async handleSubmit(e) {
+        await updateState(this, { isSubmiting: true, errors: [] });
 
         let placeholder = '';
         for (const k in this.state) {
             if (Object.hasOwnProperty.call(this.state, k)) {
                 const val = this.state[k];
-                if (val !== '') {
+                if (val !== '' && k !== 'errors') {
                     if (k === 'firstname' || k === 'lastname') {
                         placeholder = this.state.firstname + '-' + this.state.lastname;
                     } else {
@@ -102,13 +117,12 @@ export class ChangeOwnershipButton extends Component {
                     return res.text();
                 }
             })
-            .then((data) => {
+            .then(async (data) => {
+                await updateState(this, { isSubmiting: false });
                 let collectedData = collectMessagesFromResponse(data);
-                if (collectedData !== false) {
-                    this.setState({ errors: makeFormHelperTextComponents(collectedData) });
-                } else {
-                    this.props.handleAccountId(data.id);
-                    this.setState({ errors: makeFormHelperTextComponents(collectedData) });
+                this.setState({ errors: makeFormHelperTextComponents(collectedData) });
+                if (collectedData === false) {
+                    this.props.handleAccount(data);
                 }
             });
     }
@@ -117,32 +131,29 @@ export class ChangeOwnershipButton extends Component {
         return (
             <>
                 <LocaleContext.Consumer>
-                    {({ locales, currentLocale, isLocaleLoading, changeLocale }) => {
-                        return <SlidingDialog
-                            open={this.props.open}
-                            slideTrigger={<div></div>}
-                            onClose={this.props.onClose}
-                        >
-                            <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
-                                {this.state.errors}
+                    {({ currentLocale }) =>
+                        <FormControl sx={{ backgroundColor: theme => theme.palette.secondary, justifyContent: 'space-around', width: '100%', height: '100%' }}>
+                            {this.state.errors}
 
-                                <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2}>
-                                    <TextField type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                                    <TextField type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                                </Stack>
+                            <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2} justifyContent='space-around'>
+                                <TextField fullWidth type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
+                                <TextField fullWidth type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
+                            </Stack>
 
-                                <TextField type='text' value={this.state.username} onInput={this.handleUsername} label={translate('general/username/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField type='text' value={this.state.phonenumber} onInput={this.handlePhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField type='text' value={this.state.email} onInput={this.handleEmail} label={translate('general/email/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
+                            <TextField fullWidth type='text' value={this.state.username} onInput={this.handleUsername} label={translate('general/username/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
+                            <TextField fullWidth type='text' value={this.state.phonenumber} onInput={this.handlePhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
+                            <TextField fullWidth type='text' value={this.state.email} onInput={this.handleEmail} label={translate('general/email/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
 
+                            {this.state.isSubmiting ?
+                                <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord', currentLocale.shortName)}</LoadingButton> :
                                 <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords', currentLocale.shortName)}</Button>
-                            </FormControl>
-                        </SlidingDialog>
-                    }}
+                            }
+                        </FormControl>
+                    }
                 </LocaleContext.Consumer>
             </>
         )
     }
 }
 
-export default ChangeOwnershipButton
+export default FindAccount
