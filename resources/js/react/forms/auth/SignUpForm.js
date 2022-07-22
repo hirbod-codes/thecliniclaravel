@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 
 import { translate } from '../../traslation/translate.js';
 import { postJsonData, backendURL, getJsonData } from '../../components/Http/fetch.js';
-import { iterateRecursively } from '../../components/helpers.js';
+import { iterateRecursively, updateState } from '../../components/helpers.js';
 
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
@@ -108,7 +108,7 @@ export class SignUpForm extends Component {
 
             await this.exit(key, 'left');
 
-            this.setState({
+            await updateState(this, {
                 activeStep: previousKey
             });
 
@@ -123,7 +123,7 @@ export class SignUpForm extends Component {
 
             await this.exit(key, 'right');
 
-            this.setState({
+            await updateState(this, {
                 activeStep: nextKey
             });
 
@@ -132,12 +132,12 @@ export class SignUpForm extends Component {
     }
 
     exit(key, direction) {
-        return new Promise((resolve) => {
+        return new Promise(async (resolve) => {
             let newSteps = this.state.steps;
             newSteps[key].animationDirection = direction;
             newSteps[key].in = false;
 
-            this.setState({
+            await updateState(this, {
                 steps: newSteps,
             });
 
@@ -147,13 +147,13 @@ export class SignUpForm extends Component {
 
     enter(key, direction) {
         return new Promise((resolve) => {
-            setTimeout(() => {
+            setTimeout(async () => {
                 let newSteps = this.state.steps;
                 newSteps[key].completed = true;
                 newSteps[key].animationDirection = direction;
                 newSteps[key].in = true;
 
-                this.setState({
+                await updateState(this, {
                     steps: newSteps,
                 });
 
