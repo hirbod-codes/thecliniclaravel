@@ -8,33 +8,11 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import UserIconNavigator from '../UserIconNavigator.js';
 import { translate } from '../../traslation/translate.js';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { backendURL, getJsonData } from '../Http/fetch.js';
 import { Link } from 'react-router-dom';
 
 export class Header extends Component {
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-            isAuthenticationLoading: true,
-            isAuthenticated: false,
-        };
-    }
-
-    componentDidMount() {
-        getJsonData(backendURL() + '/isAuthenticated', { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                return res.json();
-            })
-            .then((data) => {
-                this.setState({ isAuthenticated: data.authenticated, isAuthenticationLoading: false });
-            });
-    }
-
     render() {
         return (
             <>
@@ -49,14 +27,14 @@ export class Header extends Component {
 
                             {this.props.rightSide}
 
-                            {this.state.isAuthenticationLoading && <LoadingButton loading variant='contained' >AuthenticationLoading</LoadingButton>}
+                            {this.props.isAuthenticationLoading && <LoadingButton loading variant='contained' >AuthenticationLoading</LoadingButton>}
 
-                            {!this.state.isAuthenticationLoading &&
+                            {!this.props.isAuthenticationLoading &&
                                 (
-                                    this.state.isAuthenticated ?
+                                    this.props.isAuthenticated ?
                                         (
                                             <>
-                                                <UserIconNavigator currentLocaleName={this.props.currentLocaleName} />
+                                                {this.props.navigator}
 
                                                 <Button type='button' variant='contained' onClick={(e) => { window.location.href = '/logout'; }} sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }} >
                                                     {translate('general/log-out/single/ucFirstLetterAllWords', this.props.currentLocaleName)}
@@ -64,7 +42,7 @@ export class Header extends Component {
                                             </>
                                         ) :
                                         (
-                                            this.props.isLogInPage ?
+                                            window.location.pathname === '/login' ?
                                                 (
                                                     <Button type='button' variant='contained' sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }} >
                                                         <Link to='/register' style={{ textDecoration: 'none', color: 'white' }} >
