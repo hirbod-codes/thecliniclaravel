@@ -3,10 +3,12 @@
 namespace App\Http\Middleware;
 
 use App\Http\Requests\Visits\LaserStoreRequest;
+use App\Http\Requests\Visits\RegularStoreRequest;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
 
 class AdjustWeekDaysPeriods
@@ -20,7 +22,12 @@ class AdjustWeekDaysPeriods
      */
     public function handle(Request $request, Closure $next)
     {
-        $validator = Validator::make($t = $request->all(), (new LaserStoreRequest())->rules(), (new LaserStoreRequest())->messages(), (new LaserStoreRequest())->attributes());
+        if (Str::contains($request->path(), 'laser')) {
+            $validator = Validator::make($t = $request->all(), (new LaserStoreRequest())->rules(), (new LaserStoreRequest())->messages(), (new LaserStoreRequest())->attributes());
+        } else {
+            $validator = Validator::make($t = $request->all(), (new RegularStoreRequest())->rules(), (new RegularStoreRequest())->messages(), (new RegularStoreRequest())->attributes());
+        }
+
         if ($validator->fails()) {
             return response()->json($validator->errors()->toArray());
         }
@@ -32,7 +39,7 @@ class AdjustWeekDaysPeriods
         }
 
         if ($locale === 'fa') {
-            $request->merge(['weekDaysPeriods'=> $this->convertToUTC($request->weekDaysPeriods)]);
+            $request->merge(['weekDaysPeriods' => $this->convertToUTC($request->weekDaysPeriods)]);
             $t = $request->all();
         }
 
