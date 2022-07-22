@@ -5,6 +5,7 @@ namespace App\Http\Requests\Visits;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
 use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;
 
 class RegularStoreRequest extends FormRequest
@@ -27,24 +28,24 @@ class RegularStoreRequest extends FormRequest
     public function rules()
     {
         $array = [
-            'regularOrderId' => ['integer', 'numeric', 'min:1'],
-            'targetUserId' => ['required', 'integer', 'numeric', 'min:1'],
-            'weekDaysPeriods' => ['array', 'min:1', 'max:7', function (string $attribute, array $value, $fail) {
-                foreach (array_keys($value) as $key) {
-                    if (!in_array($key, DSWorkSchedule::$weekDays)) {
-                        $fail(trans_choice('validation.in', 0, ['attribute' => $attribute]));
+            'regularOrderId' => ['required', 'integer', 'numeric', 'min:1'],
+            'weekDaysPeriods' => ['array', 'min:1', 'max:7', function ($attribute, $value, $fail) {
+                foreach ($value as $k => $v) {
+                    if (!in_array($k, DSWeekDaysPeriods::$weekDays)) {
+                        $fail(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.weekDaysPeriods', 0)]));
                     }
                 }
             }],
-            'weekDaysPeriods.*' => ['required', 'array', 'min:1'],
-            'weekDaysPeriods.*.*' => ['required', 'array', 'size:2'],
-            'weekDaysPeriods.*.*.*' => ['required', 'string', 'regex:/\A[0-9]{4}-[0-9]{2}-[0-9]{2} ([0-1]{1}[0-9]{1}|2[0-4]{1}):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}\z/', function (string $attribute, string $value, $fail) {
-                $key = explode('.', $attribute);
-                if (!in_array(array_reverse($key)[0], ['start', 'end'])) {
-                    $fail(trans_choice('validation.in', 0, ['attribute' => $attribute]));
-                }
-            }],
         ];
+
+        foreach (DSWeekDaysPeriods::$weekDays as $weekDay) {
+            $array = array_merge($array, [
+                'weekDaysPeriods.' . $weekDay . '' => ['array', 'min:1'],
+                'weekDaysPeriods.' . $weekDay . '.*' => ['required_array_keys:start,end', 'array', 'size:2'],
+                'weekDaysPeriods.' . $weekDay . '.*.start' => ['string', 'date_format:Y-m-d H:i:s'],
+                'weekDaysPeriods.' . $weekDay . '.*.end' => ['string', 'date_format:Y-m-d H:i:s'],
+            ]);
+        }
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
