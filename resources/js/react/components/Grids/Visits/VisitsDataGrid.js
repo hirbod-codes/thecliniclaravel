@@ -2,12 +2,13 @@ import React, { Component } from 'react'
 
 import PropTypes from 'prop-types';
 
+import { Button, Modal, Paper } from '@mui/material';
+
 import DataGridComponent from '../DataGridComponent';
 import { fetchData } from '../../Http/fetch';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
-import { Button, Modal, Paper } from '@mui/material';
 import { convertWeekDays, getDateTimeFormatObject, resolveTimeZone } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
 
