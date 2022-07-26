@@ -6,16 +6,11 @@ import { LocaleContext } from '../localeContext';
 export class AppLocalButton extends Component {
     constructor(props) {
         super(props);
-        this.localeClickHandler.bind(this);
 
         this.state = {
             anchorEl: null,
             open: false
         };
-    }
-
-    localeClickHandler(e, changeLocale) {
-        changeLocale(e.target.getAttribute('value'));
     }
 
     render() {
@@ -27,7 +22,7 @@ export class AppLocalButton extends Component {
                         menuItems={this.makeItems(locales)}
                         isLoading={isLocaleLoading}
                         buttonProps={this.props.buttonProps}
-                        menuItemClickHandler={(e) => {changeLocale(e.target.getAttribute('value'));}}
+                        menuItemClickHandler={(e) => { changeLocale(e.target.getAttribute('value')); }}
                     />
                 }}
             </LocaleContext.Consumer>
