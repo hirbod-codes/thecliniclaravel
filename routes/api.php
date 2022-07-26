@@ -114,6 +114,7 @@ Route::prefix('{locale}')->group(function () {
 
                 // Phonenumber Verification Message Sender Route
                 Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
+                Route::post('/account/verify-phoennumber-verification-code', 'isPhonenumberVerificationCodeVerified')->name('auth.isPhonenumberVerificationCodeVerified');
 
                 Route::post('/account/{roleName}', 'store')->name('account.store');
 
