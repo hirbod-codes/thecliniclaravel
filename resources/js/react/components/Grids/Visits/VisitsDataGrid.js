@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types';
 
 import DataGridComponent from '../DataGridComponent';
-import { getJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
@@ -71,13 +71,13 @@ export class VisitsDataGrid extends Component {
                 return;
             } else {
                 if (this.props.timestamp !== undefined && this.props.operator !== undefined) {
-                    data = await getJsonData('/visits/' + this.props.businessName + '?timestamp=' + this.props.timestamp + '&sortByTimestamp=' + this.props.sort + '&operator=' + this.props.operator, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+                    data = await fetchData('get', '/visits/' + this.props.businessName + '?timestamp=' + this.props.timestamp + '&sortByTimestamp=' + this.props.sort + '&operator=' + this.props.operator, {}, { 'X-CSRF-TOKEN': this.state.token });
                 } else {
                     if (this.props.orderId !== undefined) {
-                        data = await getJsonData('/visits/' + this.props.businessName + '?sortByTimestamp=' + this.props.sort + '&' + this.props.businessName + 'OrderId=' + this.props['orderId'], { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+                        data = await fetchData('get', '/visits/' + this.props.businessName + '?sortByTimestamp=' + this.props.sort + '&' + this.props.businessName + 'OrderId=' + this.props['orderId'], {}, { 'X-CSRF-TOKEN': this.state.token });
                     } else {
                         if (this.props.accountId !== undefined) {
-                            data = await getJsonData('/visits/' + this.props.businessName + '?accountId=' + this.props.accountId + '&sortByTimestamp=' + this.props.sort, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+                            data = await fetchData('get', '/visits/' + this.props.businessName + '?accountId=' + this.props.accountId + '&sortByTimestamp=' + this.props.sort, {}, { 'X-CSRF-TOKEN': this.state.token });
                         } else {
                             reject();
                         }
@@ -85,8 +85,11 @@ export class VisitsDataGrid extends Component {
                 }
             }
 
+            if (data.response.status !== 200) {
+                reject();
+            }
 
-            data = data.visits;
+            data = data.value.visits;
 
             if (this.props.afterGetData !== undefined) {
                 this.props.afterGetData(data);
@@ -138,164 +141,16 @@ export class VisitsDataGrid extends Component {
                             let weekDays = convertWeekDays(weekDaysPeriods, 'UTC', resolveTimeZone(this.props.currentLocaleName));
 
                             let weekDayInputComponents = [];
-                            let error = true;
                             if (weekDays !== null) {
                                 for (const k in weekDaysPeriods) {
                                     if (Object.hasOwnProperty.call(weekDaysPeriods, k)) {
-                                        const weekDaysPeriod = weekDaysPeriods[k];
                                         weekDayInputComponents.push(weekDayInputComponents.length);
-                                        // weekDayInputComponents.push(weekDayInputComponents.length);
-                                        // if (Array.isArray(weekDaysPeriod) === true && weekDaysPeriod.length !== 0) {
-                                        //     error = false;
-                                        //     let weekDay = k;
-                                        //     let timePeriods = [];
-
-                                        //     weekDaysPeriod.forEach((v, i) => {
-                                        // let startDateParts, startTimeParts = null;
-                                        // let t = v.start.split(' ');
-                                        // startDateParts = t[0].split('-');
-                                        // startTimeParts = t[1].split(':');
-                                        // let start = {};
-                                        // getDateTimeFormatObjectInEnglish(this.props.currentLocaleName).formatToParts(new Date(Date.UTC(startDateParts[0], startDateParts[1] - 1, startDateParts[2], startTimeParts[0], startTimeParts[1], startTimeParts[2]))).forEach((v, h) => {
-                                        //     if (v.type !== 'literal') {
-                                        //         start[v.type] = v.value;
-                                        //     }
-                                        // });
-                                        // if (start.dayPeriod !== undefined && start.dayPeriod === 'PM') {
-                                        //     start.hour = String(Number(start.hour) + 12);
-                                        // }
-                                        // t = null;
-
-                                        // let endDateParts, endTimeParts = null;
-                                        // t = v.end.split(' ');
-                                        // endDateParts = t[0].split('-');
-                                        // endTimeParts = t[1].split(':');
-                                        // let end = {};
-                                        // getDateTimeFormatObjectInEnglish(this.props.currentLocaleName).formatToParts(new Date(Date.UTC(endDateParts[0], endDateParts[1] - 1, endDateParts[2], endTimeParts[0], endTimeParts[1], endTimeParts[2]))).forEach((v, y) => {
-                                        //     if (v.type !== 'literal') {
-                                        //         end[v.type] = v.value;
-                                        //     }
-                                        // });
-                                        // if (end.dayPeriod !== undefined && end.dayPeriod === 'PM') {
-                                        //     end.hour = String(Number(end.hour) + 12);
-                                        // }
-
-                                        // if (Number(start.day) === Number(startDateParts[2]) && Number(end.day) === Number(startDateParts[2])) {
-                                        //     let found = false;
-                                        //     weekDays.forEach((v, j) => {
-                                        //         if (v.weekDay === start.weekday) {
-                                        //             found = true;
-                                        //             weekDays[j].timePeriods.push({ start: start.hour + ':' + start.minute, end: end.hour + ':' + end.minute });
-                                        //         }
-                                        //     });
-                                        //     if (!found) {
-                                        //         timePeriods.push({ start: start.hour + ':' + start.minute, end: end.hour + ':' + end.minute });
-                                        //     }
-                                        // } else {
-                                        //     if ((Number(start.day) < Number(startDateParts[2]) && Number(end.day) < Number(startDateParts[2])) || (Number(start.day) > Number(startDateParts[2]) && Number(end.day) > Number(startDateParts[2]))) {
-                                        //         let found = false;
-                                        //         weekDays.forEach((v, j) => {
-                                        //             if (v.weekDay === start.weekday) {
-                                        //                 found = true;
-                                        //                 if (Number(start.day) < Number(startDateParts[2]) && Number(end.day) < Number(startDateParts[2])) {
-                                        //                     if (weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end === (start.hour + ':' + start.minute)) {
-                                        //                         weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end = end.hour + ':' + end.minute;
-                                        //                     } else {
-                                        //                         weekDays[j].timePeriods.push({ start: start.hour + ':' + start.minute, end: end.hour + ':' + end.minute });
-                                        //                     }
-                                        //                 } else {
-                                        //                     if (weekDays[j].timePeriods[0].start === (end.hour + ':' + end.minute)) {
-                                        //                         weekDays[j].timePeriods[0].start = start.hour + ':' + start.minute;
-                                        //                     } else {
-                                        //                         weekDays[j].timePeriods.push({ start: start.hour + ':' + start.minute, end: end.hour + ':' + end.minute });
-                                        //                     }
-                                        //                 }
-                                        //             }
-                                        //         });
-                                        //         if (!found) {
-                                        //             weekDays.push({ weekDay: start.weekday, timePeriods: [{ start: start.hour + ':' + start.minute, end: end.hour + ':' + end.minute }] });
-                                        //             weekDayInputComponents.push(weekDayInputComponents.length);
-                                        //         }
-                                        //     } else {
-                                        //         if (Number(start.day) < Number(startDateParts[2])) {
-                                        //             let found = false;
-                                        //             weekDays.forEach((v, j) => {
-                                        //                 if (v.weekDay === start.weekday) {
-                                        //                     found = true;
-                                        //                     weekDays[j].timePeriods.push({ start: '00:00', end: end.hour + ':' + end.minute });
-                                        //                 }
-                                        //             });
-                                        //             if (!found) {
-                                        //                 timePeriods.push({ start: '00:00', end: end.hour + ':' + end.minute });
-                                        //             }
-
-                                        //             found = false;
-                                        //             weekDays.forEach((v, j) => {
-                                        //                 if (v.weekDay === start.weekday) {
-                                        //                     found = true;
-                                        //                     if (weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end === (start.hour + ':' + start.minute)) {
-                                        //                         weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end = '00:00';
-                                        //                     } else {
-                                        //                         weekDays[j].timePeriods.push({ start: start.hour + ':' + start.minute, end: '00:00' });
-                                        //                     }
-                                        //                 }
-                                        //             });
-                                        //             if (!found) {
-                                        //                 weekDays.push({ weekDay: start.weekday, timePeriods: [{ start: start.hour + ':' + start.minute, end: '00:00' }] });
-                                        //                 weekDayInputComponents.push(weekDayInputComponents.length);
-                                        //             }
-                                        //         } else {
-                                        //             let found = false;
-                                        //             weekDays.forEach((v, j) => {
-                                        //                 if (v.weekDay === end.weekday) {
-                                        //                     found = true;
-                                        //                     weekDays[j].timePeriods.push({ start: start.hour + ':' + start.minute, end: '00:00' });
-                                        //                 }
-                                        //             });
-                                        //             if (!found) {
-                                        //                 timePeriods.push({ start: start.hour + ':' + start.minute, end: '00:00' });
-                                        //             }
-
-
-                                        //             found = false;
-                                        //             weekDays.forEach((v, j) => {
-                                        //                 if (v.weekDay === end.weekday) {
-                                        //                     found = true;
-                                        //                     if (weekDays[j].timePeriods[0].start === (end.hour + ':' + end.minute)) {
-                                        //                         weekDays[j].timePeriods[0].start = '00:00';
-                                        //                     } else {
-                                        //                         weekDays[j].timePeriods.push({ start: '00:00', end: end.hour + ':' + end.minute });
-                                        //                     }
-                                        //                 }
-                                        //             });
-                                        //             if (!found) {
-                                        //                 weekDays.push({ weekDay: end.weekday, timePeriods: [{ start: '00:00', end: end.hour + ':' + end.minute }] });
-                                        //                 weekDayInputComponents.push(weekDayInputComponents.length);
-                                        //             }
-                                        //         }
-                                        //     }
-                                        // }
-                                        //     });
-
-                                        //     if (timePeriods.length === 0) {
-                                        //         continue;
-                                        //     }
-
-                                        //     weekDays.push({ weekDay: weekDay, timePeriods: timePeriods });
-                                        //     weekDayInputComponents.push(weekDayInputComponents.length);
-                                        // } else {
-                                        //     continue;
-                                        // }
                                     }
                                 }
                             }
 
                             let props = {};
-                            if (
-                                // !error &&
-                                weekDays !== null &&
-                                weekDays.length !== 0 && weekDayInputComponents.length !== 0
-                            ) {
+                            if (weekDays !== null && weekDays.length !== 0 && weekDayInputComponents.length !== 0) {
                                 props.weekDays = weekDays;
                                 props.weekDayInputComponents = weekDayInputComponents;
                             }

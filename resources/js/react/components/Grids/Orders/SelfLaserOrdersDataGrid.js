@@ -200,17 +200,16 @@ export class SelfLaserOrdersDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        deleteJsonData('/orders/laser/' + this.props.account.id + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                let deletingRowIds = this.state.deletingRowIds;
-                delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
-                updateState(this, { deletingRowIds: deletingRowIds });
-                if (res.status === 200) {
+        let r = await fetchData('delete', '/orders/laser/' + this.props.account.id + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+
+        deletingRowIds = this.state.deletingRowIds;
+        delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
+        updateState(this, { deletingRowIds: deletingRowIds });
+
                     this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
-                } else {
+        } else {
                     this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
-                }
-            });
+        }
     }
 
     async handleOnCreate(e) {

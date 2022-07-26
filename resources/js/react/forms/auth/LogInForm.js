@@ -7,9 +7,8 @@ import Button from '@mui/material/Button';
 import FormHelperText from '@mui/material/FormHelperText';
 import LoadingButton from '@mui/lab/LoadingButton';
 
-import { iterateRecursively } from '../../components/helpers.js';
 import { translate } from '../../traslation/translate.js';
-import { postJsonData, backendURL, putJsonData } from '../../components/Http/fetch.js';
+import { fetchData, backendURL } from '../../components/Http/fetch.js';
 import SlidingDialog from '../../components/Menus/SlidingDialog.js';
 import { Divider } from '@mui/material';
 
@@ -77,7 +76,7 @@ export class LogInForm extends Component {
         this.setState({ password: e.target.value });
     }
 
-    handleSubmit(e) {
+    async handleSubmit(e) {
         e.preventDefault();
         this.setState({ isLoading: true });
 
@@ -92,61 +91,28 @@ export class LogInForm extends Component {
         }
         input.password = this.state.password;
 
-        postJsonData(backendURL() + '/login', input, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                if (res.redirected && res.status === 200) {
-                    window.location.href = res.url;
-                }
-                return res.json();
-            }).then((data) => {
-                this.setState({ isLoading: false });
+        let r = await fetchData('post', backendURL() + '/login', input, { 'X-CSRF-TOKEN': this.state.token });
 
-                let message = [];
+        if (r.response.status === 200) {
+            if (r.response.redirected) {
+                window.location.href = r.response.url;
+            }
+        } else {
+            if (r.value.errors !== undefined) {
+                let messages = [];
+                for (const k in r.value.errors) {
+                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                        const error = r.value.errors[k];
 
-                iterateRecursively(data,
-                    () => { },
-                    (array, v, k, i) => {
-                        switch (k) {
-                            case 'errors':
-                                iterateRecursively(v,
-                                    () => { },
-                                    (array2, v2, k2, i2) => {
-                                        iterateRecursively(v2,
-                                            () => { },
-                                            (array3, v3, k3, i3) => {
-                                                message.push(<FormHelperText key={i3} error>{v3}</FormHelperText>);
-                                            },
-                                            () => {
-                                            },
-                                        );
-                                    },
-                                    () => {
-                                        this.setState({ error: message });
-                                    },
-                                );
-                                break;
-
-                            case 'error':
-                                this.setState({ error: <FormHelperText error>{v}</FormHelperText> });
-                                break;
-
-                            case 'message':
-                                if ('errors' in array) {
-                                    return;
-                                }
-
-                                this.setState({ error: <FormHelperText>{v}</FormHelperText> });
-                                break;
-
-                            default:
-                                break;
-                        }
-                    },
-                    () => {
-                        this.setState({ isSubmittingRegisteration: false });
+                        error.forEach((v, i) => {
+                            messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
+                        });
                     }
-                );
-            });
+                }
+                this.setState({ error: messages });
+            }
+            this.setState({ isLoading: false });
+        }
     }
 
     render() {
@@ -225,28 +191,20 @@ export class LogInForm extends Component {
             input.email = this.state.fpEmail;
         }
 
-        let error = false;
-        let fpData = await postJsonData(backendURL() + '/forgot-password', input, { 'X-CSRF-TOKEN': this.state.token }).then((res) => {
-            if (res.status !== 200) {
-                error = true;
-            }
-
-            return res.json()
-        });
-
+        let r = await fetchData('post', '/forgot-password', input, { 'X-CSRF-TOKEN': this.state.token });
         this.setState({ isFPLoading: false });
 
-        if (error) {
+        if (r.response.status !== 200) {
             let messages = [];
-            for (const k in fpData.errors) {
-                fpData.errors[k].forEach((v, i) => {
+            for (const k in r.value.errors) {
+                r.value.errors[k].forEach((v, i) => {
                     messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
                 });
             }
             this.setState({ fpError: messages });
         } else {
             this.setState({ rpOpen: true, fpOpen: false });
-            this.setState({ fpError: null, rpError: <FormHelperText>{fpData.message}</FormHelperText> });
+            this.setState({ fpError: null, rpError: <FormHelperText>{r.value.message}</FormHelperText> });
         }
     }
 
@@ -281,27 +239,20 @@ export class LogInForm extends Component {
             input.email = this.state.fpEmail;
         }
 
-        let error = false;
-        let rpData = await putJsonData(backendURL() + '/reset-password', input, { 'X-CSRF-TOKEN': this.state.token }).then((res) => {
-            if (res.status !== 200) {
-                error = true;
-            }
-
-            return res.json()
-        });
+        let r = await fetchData('put', '/reset-password', input, { 'X-CSRF-TOKEN': this.state.token });
 
         this.setState({ isFPLoading: false });
 
-        if (error) {
+        if (r.response.status !== 200) {
             let messages = [];
-            for (const k in rpData.errors) {
-                rpData.errors[k].forEach((v, i) => {
+            for (const k in r.value.errors) {
+                r.value.errors[k].forEach((v, i) => {
                     messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
                 });
             }
             this.setState({ rpError: messages });
         } else {
-            this.setState({ rpSuccessfulError: <FormHelperText>{rpData.message}</FormHelperText> });
+            this.setState({ rpSuccessfulError: <FormHelperText>{r.value.message}</FormHelperText> });
             setTimeout(() => {
                 this.setState({ rpOpen: false, fpOpen: null, rpSuccessfulOpen: true, rpError: null });
             }, 200);

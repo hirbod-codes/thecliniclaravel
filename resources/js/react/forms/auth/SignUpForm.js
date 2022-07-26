@@ -1,8 +1,8 @@
 import React, { Component } from 'react'
 
 import { translate } from '../../traslation/translate.js';
-import { postJsonData, backendURL, getJsonData } from '../../components/Http/fetch.js';
-import { iterateRecursively, updateState } from '../../components/helpers.js';
+import { fetchData } from '../../components/Http/fetch.js';
+import { updateState } from '../../components/helpers.js';
 
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
@@ -277,73 +277,52 @@ export class SignUpForm extends Component {
         this.getStates();
     }
 
-    getGenders() {
-        if (!this.props.currentLocaleName) {
-            return;
+    async getGenders() {
+        const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+        let r = await fetchData('get', '/api/' + locale + '/genders');
+        this.genders = [];
+        for (let i = 0; i < r.value.length; i++) {
+            const gender = r.value[i];
+
+            this.genders.push({ id: i, label: gender });
         }
-
-        getJsonData(backendURL() + '/api/' + this.props.currentLocaleName + '/genders')
-            .then((res) => {
-                return res.json();
-            })
-            .then((data) => {
-                this.genders = [];
-                for (let i = 0; i < data.length; i++) {
-                    const gender = data[i];
-
-                    this.genders.push({ id: i, label: gender });
-                }
-                this.setState({ loadingGenders: false });
-            });
+        this.setState({ loadingGenders: false });
     }
 
-    getStates() {
-        if (!this.props.currentLocaleName) {
-            return;
+    async getStates() {
+        const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+        let r = await fetchData('get', '/api/' + locale + '/states');
+        this.states = [];
+        for (let i = 0; i < r.value.length; i++) {
+            const state = r.value[i];
+
+            this.states.push({ id: i, label: state });
         }
-
-        getJsonData(backendURL() + '/api/' + this.props.currentLocaleName + '/states')
-            .then((res) => {
-                return res.json();
-            })
-            .then((data) => {
-                this.states = [];
-                for (let i = 0; i < data.length; i++) {
-                    const state = data[i];
-
-                    this.states.push({ id: i, label: state });
-                }
-                this.setState({ loadingStates: false });
-            });
+        this.setState({ loadingStates: false });
     }
 
-    getCities(state) {
-        if (!this.props.currentLocaleName) {
-            return;
-        }
-
+    async getCities(state) {
         this.setState({ loadingCities: true });
-        getJsonData(backendURL() + '/api/' + this.props.currentLocaleName + '/cities?stateName=' + state)
-            .then((res) => {
-                return res.json();
-            })
-            .then((data) => {
-                if (data.message) {
-                    this.setState({ error: data.message });
-                    return;
-                }
+        const locale = LocaleContext._currentValue.currentLocale.shortName;
 
-                this.cities = [];
-                for (let i = 0; i < data.length; i++) {
-                    const city = data[i];
+        let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state);
+        if (r.value.message) {
+            this.setState({ error: r.value.message });
+            return;
+        }
 
-                    this.cities.push({ id: i, label: city });
-                }
-                this.setState({ loadingCities: false });
-            });
+        this.cities = [];
+        for (let i = 0; i < r.value.length; i++) {
+            const city = r.value[i];
+
+            this.cities.push({ id: i, label: city });
+        }
+        this.setState({ loadingCities: false });
     }
 
-    handleSubmitPhonenumber(e) {
+    async handleSubmitPhonenumber(e) {
         e.preventDefault();
         this.setState({ isSubmittingPhonenumber: true });
 
@@ -351,60 +330,29 @@ export class SignUpForm extends Component {
 
         input.phonenumber = this.state.phonenumber;
 
-        postJsonData(backendURL() + '/register/send-phoennumber-verification-code', input, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                return res.json();
-            })
-            .then((data) => {
-                let message = [];
+        let r = await fetchData('post', '/register/send-phoennumber-verification-code', input, { 'X-CSRF-TOKEN': this.state.token });
 
-                iterateRecursively(data,
-                    () => { },
-                    (array, v, k, i) => {
-                        switch (k) {
-                            case 'errors':
-                                iterateRecursively(v,
-                                    () => { },
-                                    (array2, v2, k2, i2) => {
-                                        iterateRecursively(v2,
-                                            () => { },
-                                            (array3, v3, k3, i3) => {
-                                                message.push(<FormHelperText key={i3} error>{v3}</FormHelperText>);
-                                            },
-                                            () => {
-                                            },
-                                        );
-                                    },
-                                    () => {
-                                        this.setState({ error: message });
-                                    },
-                                );
-                                break;
+        if (r.response.status !== 200 && r.value.errors !== undefined) {
+            let messages = [];
+            for (const k in r.value.errors) {
+                if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                    const error = r.value.errors[k];
 
-                            case 'error':
-                                this.setState({ error: <FormHelperText error>{v}</FormHelperText> });
-                                break;
+                    error.forEach((v, i) => {
+                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
+                    });
+                }
+            }
+            this.setState({ error: messages });
+        } else {
+            this.setState({ error: <FormHelperText>{r.value.message}</FormHelperText> });
+            this.nextStep();
+        }
 
-                            case 'message':
-                                if ('errors' in array) {
-                                    return;
-                                }
-                                this.setState({ error: <FormHelperText>{v}</FormHelperText> });
-                                this.nextStep();
-                                break;
-
-                            default:
-                                break;
-                        }
-                    },
-                    () => {
-                        this.setState({ isSubmittingPhonenumber: false });
-                    }
-                );
-            });
+        this.setState({ isSubmittingPhonenumber: false });
     }
 
-    handleSubmitPhonenumberCode(e) {
+    async handleSubmitPhonenumberCode(e) {
         e.preventDefault();
         this.setState({ isSubmittingPhonenumberCode: true });
 
@@ -413,60 +361,29 @@ export class SignUpForm extends Component {
         input.phonenumber = this.state.phonenumber;
         input.code = this.state.phonenumberCode;
 
-        postJsonData(backendURL() + '/register/verify-phoennumber-verification-code', input, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                return res.json();
-            })
-            .then((data) => {
-                let message = [];
+        let r = await fetchData('post', '/register/verify-phoennumber-verification-code', input, { 'X-CSRF-TOKEN': this.state.token });
 
-                iterateRecursively(data,
-                    () => { },
-                    (array, v, k, i) => {
-                        switch (k) {
-                            case 'errors':
-                                iterateRecursively(v,
-                                    () => { },
-                                    (array2, v2, k2, i2) => {
-                                        iterateRecursively(v2,
-                                            () => { },
-                                            (array3, v3, k3, i3) => {
-                                                message.push(<FormHelperText key={i3} error>{v3}</FormHelperText>);
-                                            },
-                                            () => { }
-                                        );
-                                    },
-                                    () => {
-                                        this.setState({ error: message });
-                                    },
-                                );
-                                break;
+        if (r.response.status !== 200 && r.value.errors !== undefined) {
+            let messages = [];
+            for (const k in r.value.errors) {
+                if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                    const error = r.value.errors[k];
 
-                            case 'error':
-                                this.setState({ error: <FormHelperText error>{v}</FormHelperText> });
-                                break;
+                    error.forEach((v, i) => {
+                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
+                    });
+                }
+            }
+            this.setState({ error: messages });
+        } else {
+            this.setState({ error: <FormHelperText>{r.value.message}</FormHelperText> });
+            this.nextStep();
+        }
 
-                            case 'message':
-                                if ('errors' in array) {
-                                    return;
-                                }
-
-                                this.setState({ error: <FormHelperText>{v}</FormHelperText> });
-                                this.nextStep();
-                                break;
-
-                            default:
-                                break;
-                        }
-                    },
-                    () => {
-                        this.setState({ isSubmittingPhonenumberCode: false });
-                    }
-                );
-            });
+        this.setState({ isSubmittingPhonenumberCode: false });
     }
 
-    handleSubmitRegister(e) {
+    async handleSubmitRegister(e) {
         e.preventDefault();
         this.setState({ isSubmittingRegisteration: true });
 
@@ -490,59 +407,26 @@ export class SignUpForm extends Component {
         input.append('city', this.state.city);
         input.append('address', this.state.address);
 
-        postJsonData(backendURL() + '/register', input, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                if (res.redirected) {
-                    window.location.href = res.url;
+        let r = await fetchData('post', '/register', input, { 'X-CSRF-TOKEN': this.state.token });
+
+        if (r.response.status !== 200 && r.value.errors !== undefined) {
+            let messages = [];
+            for (const k in r.value.errors) {
+                if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                    const error = r.value.errors[k];
+
+                    error.forEach((v, i) => {
+                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
+                    });
                 }
-                return res.json();
-            }).then((data) => {
-                let message = [];
+            }
+            this.setState({ error: messages });
+        } else {
+            this.setState({ error: <FormHelperText>{r.value.message}</FormHelperText> });
+            this.nextStep();
+        }
 
-                iterateRecursively(data,
-                    () => { },
-                    (array, v, k, i) => {
-                        switch (k) {
-                            case 'errors':
-                                iterateRecursively(v,
-                                    () => { },
-                                    (array2, v2, k2, i2) => {
-                                        iterateRecursively(v2,
-                                            () => { },
-                                            (array3, v3, k3, i3) => {
-                                                message.push(<FormHelperText key={i3} error>{v3}</FormHelperText>);
-                                            },
-                                            () => {
-                                            },
-                                        );
-                                    },
-                                    () => {
-                                        this.setState({ error: message });
-                                    },
-                                );
-                                break;
-
-                            case 'error':
-                                this.setState({ error: <FormHelperText error>{v}</FormHelperText> });
-                                break;
-
-                            case 'message':
-                                if ('errors' in array) {
-                                    return;
-                                }
-
-                                this.setState({ error: <FormHelperText>{v}</FormHelperText> });
-                                break;
-
-                            default:
-                                break;
-                        }
-                    },
-                    () => {
-                        this.setState({ isSubmittingRegisteration: false });
-                    }
-                );
-            });
+        this.setState({ isSubmittingRegisteration: false });
     }
 
     handleFirstname(e) {

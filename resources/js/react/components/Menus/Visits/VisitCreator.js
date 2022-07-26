@@ -11,7 +11,7 @@ import TabPanel from '../TabPanel';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponents from './WeekDayInputComponents';
 import { getDateTimeFormatObject, updateState } from '../../helpers';
-import { postJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 
 /**
  * VisitCreator
@@ -228,8 +228,8 @@ export class VisitCreator extends Component {
         let data = {};
         data[this.props.businessName + 'OrderId'] = this.state.orderId;
 
-        let closestVisitRefresh = await postJsonData('/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
-        if (closestVisitRefresh.availableVisitTimestamp && typeof (closestVisitRefresh.availableVisitTimestamp) === 'number') {
+        let closestVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token })).value;
+        if (closestVisitRefresh.availableVisitTimestamp !== undefined && typeof (closestVisitRefresh.availableVisitTimestamp) === 'number') {
             this.setState({ closestVisitRefresh: getDateTimeFormatObject(this.props.currentLocaleName).format(new Date(closestVisitRefresh.availableVisitTimestamp * 1000)) });
         }
 
@@ -251,8 +251,8 @@ export class VisitCreator extends Component {
 
         data.weekDaysPeriods = computedWeekDaysPeriods;
 
-        let weeklyVisitRefresh = await postJsonData('/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
-        if (weeklyVisitRefresh.availableVisitTimestamp && typeof (weeklyVisitRefresh.availableVisitTimestamp) === 'number') {
+        let weeklyVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token })).value;
+        if (weeklyVisitRefresh.availableVisitTimestamp !== undefined && typeof (weeklyVisitRefresh.availableVisitTimestamp) === 'number') {
             this.setState({ weeklyVisitRefresh: getDateTimeFormatObject(this.props.currentLocaleName).format(new Date(weeklyVisitRefresh.availableVisitTimestamp * 1000)) });
         }
 
@@ -277,10 +277,9 @@ export class VisitCreator extends Component {
             data.weekDaysPeriods = computedWeekDaysPeriods;
         }
 
-        let result = await postJsonData('/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
-        console.log('result', result);
+        let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token });
 
-        if (result) {
+        if (r.response.status === 200) {
             if (this.props.onSuccess !== undefined) {
                 this.props.onSuccess();
             }

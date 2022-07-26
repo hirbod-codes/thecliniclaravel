@@ -11,7 +11,7 @@ import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, Gr
 
 import VisitsDataGrid from './VisitsDataGrid';
 import { translate, ucFirstLetterFirstWord } from '../../../traslation/translate';
-import { deleteJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
 
@@ -183,17 +183,17 @@ export class SelfVisitsDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        deleteJsonData('/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                let deletingRowIds = this.state.deletingRowIds;
-                delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
-                updateState(this, { deletingRowIds: deletingRowIds });
-                if (res.status === 200) {
-                    this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
-                } else {
-                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
-                }
-            });
+        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+
+        deletingRowIds = this.state.deletingRowIds;
+        delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
+        updateState(this, { deletingRowIds: deletingRowIds });
+
+        if (r.response.status === 200) {
+            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+        } else {
+            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+        }
     }
 }
 

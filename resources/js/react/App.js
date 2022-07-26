@@ -15,10 +15,9 @@ import WelcomePage from "./components/pages/WelcomePage.js";
 import LogInPage from "./components/pages/auth/LogInPage.js";
 import SignUpPage from "./components/pages/auth/SignUpPage.js";
 
-import { createTheme } from '@mui/material/styles';
+import { fetchData } from './components/Http/fetch';
 import { ThemeProvider } from '@emotion/react';
 import { GlobalStyles } from '@mui/material';
-import { getJsonData, postJsonData, putJsonData } from './components/Http/fetch';
 import DashboardOrderPage from './components/pages/dashboard/DashboardOrderPage';
 import DashboardVisitPage from './components/pages/dashboard/DashboardVisitPage';
 import UserIconNavigator from './components/UserIconNavigator';
@@ -31,26 +30,18 @@ export class App extends Component {
 
         this.getDataSynchronously = this.getDataSynchronously.bind(this);
 
-        this.changeLocale = (name) => {
-            putJsonData('/locale', { 'locale': name }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': '*/*' })
-                .then((res) => {
-                    if (res.status === 200) {
-                        document.location.reload();
-                    }
-
-                    return res.text();
-                });
+        this.changeLocale = async (name) => {
+            let r = await fetchData('put', '/locale', { 'locale': name }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': '*/*' });
+            if (r.response.status === 200) {
+                document.location.reload();
+            }
         };
 
-        this.changeTheme = (name) => {
-            postJsonData('/theme', { theme: name }, { 'X-CSRF-TOKEN': this.state.token })
-                .then((res) => {
-                    if (res.status === 200) {
-                        document.location.reload();
-                    }
-
-                    return res.json();
-                });
+        this.changeTheme = async (name) => {
+            let r = await fetchData('post', '/theme', { theme: name }, { 'X-CSRF-TOKEN': this.state.token });
+            if (r.response.status === 200) {
+                document.location.reload();
+            }
         };
 
         this.state = {
@@ -106,93 +97,79 @@ export class App extends Component {
 
     // For perfomance reasons we are not using asynchronous programming for this method
     getDataSynchronously() {
-        getJsonData('/isAuthenticated', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json())
-            .then((isAuthenticated) => {
-                updateState(this, (state) => {
-                    state.isAuthenticationLoading = false;
-                    state.isAuthenticated = isAuthenticated.authenticated;
-                    return state;
+        fetchData('get', '/isAuthenticated', {}, { 'X-CSRF-TOKEN': this.state.token }).then((isAuthenticatedResponse) => {
+            if (isAuthenticatedResponse.response.status !== 200) {
+                return;
+            }
+
+            updateState(this, { isAuthenticationLoading: false, isAuthenticated: isAuthenticatedResponse.value.authenticated });
+
+            fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': this.state.token }).then((accountResponse) => {
+                updateState(this, { isAccountLoading: false });
+
+                if (accountResponse.response.status !== 200) {
+                    return;
+                }
+                updateState(this, { account: accountResponse.value });
+
+                fetchData('get', '/avatar?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((avatarResponse) => {
+                    if (avatarResponse.response.status === 200) {
+                        updateState(this, { isAvatarLoading: false, image: 'data:image/png;base64,' + avatarResponse.value });
+                    }
+                });
+
+                fetchData('get', '/privileges/show?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((privilegesResponse) => {
+                    if (privilegesResponse.response.status === 200) {
+                        updateState(this, { privileges: privilegesResponse.value });
+                    }
                 });
             });
+        });
 
-        getJsonData('/account', { 'X-CSRF-TOKEN': this.state.token }).then((res) => { return res.status === 200 ? res.json() : null })
-            .then((account) => {
-                if (account !== null) {
+        fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token }).then((emailResponse) => {
+            if (emailResponse.response.status === 200) {
+                updateState(this, { isEmailVerified: emailResponse.value });
+            }
+        });
+
+        fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token }).then((localeResponse) => {
+            let locale = localeResponse.value;
+            if (localeResponse.response.status !== 200) {
+                return;
+            }
+            updateState(this, (state) => {
+                state.finishStatus.locale = true;
+                state.localeContext.currentLocale = locale;
+                state.localeContext.isLocaleLoading = false;
+                return state;
+            });
+
+            document.dir = locale.direction;
+
+            fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token }).then((themeResponse) => {
+                let themeData = themeResponse.value;
+                if (themeResponse.response.status === 200) {
                     updateState(this, (state) => {
-                        state.isAccountLoading = false;
-                        state.account = account;
-                        return state;
-                    });
-
-                    getJsonData('/avatar?accountId=' + account.id, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { return res.status === 200 ? res.text() : null })
-                        .then((avatar) => {
-                            if (avatar !== null) {
-                                updateState(this, (state) => {
-                                    state.isAvatarLoading = false;
-                                    state.image = 'data:image/png;base64,' + avatar;
-                                    return state;
-                                });
-                            }
-                        });
-
-                    getJsonData('/privileges/show?accountId=' + account.id, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { return res.status === 200 ? res.json() : null })
-                        .then((privileges) => {
-                            if (privileges !== null) {
-                                updateState(this, (state) => {
-                                    state.privileges = privileges;
-                                    return state;
-                                });
-                            }
-                        });
-                } else {
-                    updateState(this, (state) => {
-                        state.isAccountLoading = false;
+                        state.finishStatus.themeData = true;
+                        state.themeContext.theme = createTheme(resolveTheme(themeData.theme + '-' + locale.direction));
+                        state.themeContext.currentTheme = themeData.theme;
+                        state.themeContext.isThemeLoading = false;
                         return state;
                     });
                 }
             });
+        });
 
-        getJsonData('/isEmailVerified', { 'X-CSRF-TOKEN': this.state.token }).then((res) => { return res.status === 200 ? res.json() : null })
-            .then((isEmailVerified) => {
-                if (isEmailVerified !== null) {
-                    updateState(this, (state) => {
-                        state.isEmailVerified = isEmailVerified.verified;
-                        return state;
-                    });
-                }
-            });
-
-        getJsonData('/locale', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json())
-            .then((locale) => {
-                updateState(this, (state) => {
-                    state.finishStatus.locale = true;
-                    state.localeContext.currentLocale = locale;
-                    state.localeContext.isLocaleLoading = false;
-                    return state;
-                });
-                document.dir = locale.direction;
-
-                getJsonData('/theme', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json())
-                    .then((themeData) => {
-                        updateState(this, (state) => {
-                            state.finishStatus.themeData = true;
-                            state.themeContext.theme = createTheme(resolveTheme(themeData.theme + '-' + locale.direction));
-                            state.themeContext.currentTheme = themeData.theme;
-                            state.themeContext.isThemeLoading = false;
-                            return state;
-                        });
-                        document.dir = locale.direction;
-                    });
-            });
-
-        getJsonData('/locales', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json())
-            .then((locales) => {
+        fetchData('get', '/locales', {}, { 'X-CSRF-TOKEN': this.state.token }).then((localesResponse) => {
+            let locales = localesResponse.value;
+            if (localesResponse.response.status === 200) {
                 updateState(this, (state) => {
                     state.finishStatus.locales = true;
                     state.localeContext.locales = locales;
                     return state;
                 });
-            });
+            }
+        });
     }
 
     render() {

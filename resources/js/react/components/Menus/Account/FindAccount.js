@@ -5,8 +5,7 @@ import PropTypes from 'prop-types';
 import { Button, Divider, FormControl, Stack, TextField } from '@mui/material'
 
 import { translate } from '../../../traslation/translate'
-import { LocaleContext } from '../../localeContext'
-import { getJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import { collectMessagesFromResponse, makeFormHelperTextComponents } from '../../Http/response';
 import { updateState } from '../../helpers';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -109,22 +108,26 @@ export class FindAccount extends Component {
             }
         }
 
-        getJsonData('/account/' + placeholder, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                if (res.headers.get('Content-Type') === 'application/json') {
-                    return res.json();
-                } else {
-                    return res.text();
+        let r = await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': this.state.token });
+
+        await updateState(this, { isSubmiting: false });
+
+        if (r.response.status !== 200) {
+            let messages = [];
+            if (r.value.errors !== undefined) {
+                for (const k in r.value.errors) {
+                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                        const error = r.value.errors[k];
+
+                        error.forEach((v, i) => {
+                            messages.push(<FormHelperText key={i} error> {v}</ FormHelperText>);
+                        });
+                    }
                 }
-            })
-            .then(async (data) => {
-                await updateState(this, { isSubmiting: false });
-                let collectedData = collectMessagesFromResponse(data);
-                this.setState({ errors: makeFormHelperTextComponents(collectedData) });
-                if (collectedData === false) {
-                    this.props.handleAccount(data);
-                }
-            });
+            }
+
+            this.setState({ errors: messages });
+        }
     }
 
     render() {

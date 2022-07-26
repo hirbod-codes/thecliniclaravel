@@ -1,187 +1,215 @@
-async function getJsonData(url, headers = {}, excludeHeaders = []) {
-    let hs = new Headers();
-    hs.append('cors', 'no-cors');
-    hs.append('Accept', 'application/json');
-    hs.append('Connection', 'keep-alive');
-    hs.append('Content-Type', 'application/json');
+function fetchData(method, url, data = {}, headers = {}, excludeHeaders = []) {
+    switch (method.toLowerCase()) {
+        case 'get':
+            return getData(url, headers, excludeHeaders);
 
-    for (const key in headers) {
-        if (Object.hasOwnProperty.call(headers, key)) {
-            const header = headers[key];
+        case 'post':
+            return postData(url, data, headers, excludeHeaders);
 
-            if (hs.has(key)) {
-                hs.delete(key);
-            }
+        case 'put':
+            return putData(url, data, headers, excludeHeaders);
 
-            hs.append(key, header);
-        }
+        case 'delete':
+            return deleteData(url, data, headers, excludeHeaders);
+
+        default:
+            throw new Error('Unknown fetch method!');
     }
-
-    excludeHeaders.forEach((v, i, array) => {
-        if (hs.has(v)) {
-            hs.delete(v);
-        }
-    });
-
-    let init = {
-        method: 'GET',
-        headers: hs,
-        redirect: 'follow'
-    };
-
-    const response = await fetch(url, init)
-
-    return response;
 }
 
-async function postJsonData(url, data = {}, headers = {}) {
-    let hs = new Headers();
-    hs.append('cors', 'no-cors');
-    hs.append('Accept', 'application/json');
-    hs.append('Connection', 'keep-alive');
-
-    for (const key in headers) {
-        if (Object.hasOwnProperty.call(headers, key)) {
-            const header = headers[key];
-
-            if (hs.has(key)) {
-                hs.delete(key);
-            }
-
-            hs.append(key, header);
-        }
-    }
-
-    let init = {
-        method: 'POST',
-        headers: hs,
-        redirect: 'follow'
-    };
-
-    if (data.constructor.name === 'FormData') {
-        init.body = data;
-    } else {
-        init.body = JSON.stringify(data);
-
-        if (hs.has('Content-Type')) {
-            hs.delete('Content-Type');
-        }
+function getData(url, headers = {}, excludeHeaders = []) {
+    return new Promise(async (resolve) => {
+        let hs = new Headers();
+        hs.append('cors', 'no-cors');
+        hs.append('Accept', 'application/json');
+        hs.append('Connection', 'keep-alive');
         hs.append('Content-Type', 'application/json');
-    }
 
-    const response = await fetch(url, init)
+        for (const key in headers) {
+            if (Object.hasOwnProperty.call(headers, key)) {
+                const header = headers[key];
 
-    return response;
-}
-
-async function putJsonData(url, data = {}, headers = {}) {
-    let hs = new Headers();
-    hs.append('cors', 'no-cors');
-    hs.append('Accept', 'application/json');
-    hs.append('Connection', 'keep-alive');
-
-    for (const key in headers) {
-        if (Object.hasOwnProperty.call(headers, key)) {
-            const header = headers[key];
-
-            if (hs.has(key)) {
-                hs.delete(key);
-            }
-
-            hs.append(key, header);
-        }
-    }
-
-    let init = {
-        method: 'PUT',
-        headers: hs,
-        redirect: 'follow'
-    };
-
-    if (data.constructor.name === 'FormData') {
-        init.body = data;
-    } else {
-        init.body = JSON.stringify(data);
-
-        if (hs.has('Content-Type')) {
-            hs.delete('Content-Type');
-        }
-        hs.append('Content-Type', 'application/json');
-    }
-
-    const response = await fetch(url, init)
-
-    return response;
-}
-
-async function deleteJsonData(url, data = {}, headers = {}) {
-    let hs = new Headers();
-    hs.append('cors', 'no-cors');
-    hs.append('Accept', 'application/json');
-    hs.append('Connection', 'keep-alive');
-
-    for (const key in headers) {
-        if (Object.hasOwnProperty.call(headers, key)) {
-            const header = headers[key];
-
-            if (hs.has(key)) {
-                hs.delete(key);
-            }
-
-            hs.append(key, header);
-        }
-    }
-
-    let init = {
-        method: 'DELETE',
-        headers: hs,
-        redirect: 'follow'
-    };
-
-    if (data.constructor.name === 'FormData') {
-        init.body = data;
-    } else {
-        init.body = JSON.stringify(data);
-
-        if (hs.has('Content-Type')) {
-            hs.delete('Content-Type');
-        }
-        hs.append('Content-Type', 'application/json');
-    }
-
-    const response = await fetch(url, init)
-
-    return response;
-}
-
-function loadXHR(url) {
-    return new Promise(function (resolve, reject) {
-        try {
-            var xhr = new XMLHttpRequest();
-
-            xhr.open("GET", url);
-            xhr.responseType = "blob";
-
-            xhr.onload = function () {
-                if (xhr.status === 200) {
-                    resolve(xhr.response)
+                if (hs.has(key)) {
+                    hs.delete(key);
                 }
-                else {
-                    reject("Loading error:" + xhr.statusText)
-                }
-            };
-            xhr.onerror = function () {
-                reject("Network error.")
-            };
-            xhr.send();
+
+                hs.append(key, header);
+            }
         }
-        catch (err) { reject(err.message) }
+
+        excludeHeaders.forEach((v, i, array) => {
+            if (hs.has(v)) {
+                hs.delete(v);
+            }
+        });
+
+        let init = {
+            method: 'GET',
+            headers: hs,
+            redirect: 'follow'
+        };
+
+        const response = await fetch(url, init);
+
+        resolve({ response: response, value: await getResponseValue(response) });
     });
+}
+
+function postData(url, data = {}, headers = {}, excludeHeaders = []) {
+    return new Promise(async (resolve) => {
+        let hs = new Headers();
+        hs.append('cors', 'no-cors');
+        hs.append('Accept', 'application/json');
+        hs.append('Connection', 'keep-alive');
+
+        for (const key in headers) {
+            if (Object.hasOwnProperty.call(headers, key)) {
+                const header = headers[key];
+
+                if (hs.has(key)) {
+                    hs.delete(key);
+                }
+
+                hs.append(key, header);
+            }
+        }
+
+        excludeHeaders.forEach((v, i, array) => {
+            if (hs.has(v)) {
+                hs.delete(v);
+            }
+        });
+
+        let init = {
+            method: 'POST',
+            headers: hs,
+            redirect: 'follow'
+        };
+
+        if (data.constructor.name === 'FormData') {
+            init.body = data;
+        } else {
+            init.body = JSON.stringify(data);
+
+            if (hs.has('Content-Type')) {
+                hs.delete('Content-Type');
+            }
+            hs.append('Content-Type', 'application/json');
+        }
+
+        const response = await fetch(url, init);
+
+        resolve({ response: response, value: await getResponseValue(response) });
+    });
+}
+
+function putData(url, data = {}, headers = {}, excludeHeaders = []) {
+    return new Promise(async (resolve) => {
+        let hs = new Headers();
+        hs.append('cors', 'no-cors');
+        hs.append('Accept', 'application/json');
+        hs.append('Connection', 'keep-alive');
+
+        for (const key in headers) {
+            if (Object.hasOwnProperty.call(headers, key)) {
+                const header = headers[key];
+
+                if (hs.has(key)) {
+                    hs.delete(key);
+                }
+
+                hs.append(key, header);
+            }
+        }
+
+        excludeHeaders.forEach((v, i, array) => {
+            if (hs.has(v)) {
+                hs.delete(v);
+            }
+        });
+
+        let init = {
+            method: 'PUT',
+            headers: hs,
+            redirect: 'follow'
+        };
+
+        if (data.constructor.name === 'FormData') {
+            init.body = data;
+        } else {
+            init.body = JSON.stringify(data);
+
+            if (hs.has('Content-Type')) {
+                hs.delete('Content-Type');
+            }
+            hs.append('Content-Type', 'application/json');
+        }
+
+        const response = await fetch(url, init);
+
+        resolve({ response: response, value: await getResponseValue(response) });
+    });
+}
+
+function deleteData(url, data = {}, headers = {}, excludeHeaders = []) {
+    return new Promise(async (resolve) => {
+        let hs = new Headers();
+        hs.append('cors', 'no-cors');
+        hs.append('Accept', 'application/json');
+        hs.append('Connection', 'keep-alive');
+
+        for (const key in headers) {
+            if (Object.hasOwnProperty.call(headers, key)) {
+                const header = headers[key];
+
+                if (hs.has(key)) {
+                    hs.delete(key);
+                }
+
+                hs.append(key, header);
+            }
+        }
+
+        excludeHeaders.forEach((v, i, array) => {
+            if (hs.has(v)) {
+                hs.delete(v);
+            }
+        });
+
+        let init = {
+            method: 'DELETE',
+            headers: hs,
+            redirect: 'follow'
+        };
+
+        if (data.constructor.name === 'FormData') {
+            init.body = data;
+        } else {
+            init.body = JSON.stringify(data);
+
+            if (hs.has('Content-Type')) {
+                hs.delete('Content-Type');
+            }
+            hs.append('Content-Type', 'application/json');
+        }
+
+        const response = await fetch(url, init);
+
+        resolve({ response: response, value: await getResponseValue(response) });
+    });
+}
+
+function getResponseValue(res) {
+    if (res.headers.get('content-type') === 'application/json') {
+        return res.json();
+    } else {
+        return res.text();
+    }
 }
 
 function backendURL() {
     return 'http://localhost:80';
 }
 
-export { getJsonData, postJsonData, putJsonData, deleteJsonData, loadXHR, backendURL };
+export { getResponseValue, fetchData, getData, postData, putData, deleteData, backendURL };
 

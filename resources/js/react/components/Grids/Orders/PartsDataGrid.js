@@ -6,7 +6,7 @@ import { DataGrid, GridFooterContainer, GridPagination, GridSelectedRowCount } f
 
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
-import { getJsonData, postJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { Button, CircularProgress } from '@mui/material';
 
@@ -70,12 +70,12 @@ export class PartsDataGrid extends Component {
                 rows = this.props.rows;
             } else {
                 if (Object.hasOwnProperty.call(this.props, 'accountId') && Object.hasOwnProperty.call(this.props, 'orderId') && Object.hasOwnProperty.call(this.props, 'businessName')) {
-                    rows = await getJsonData('/orders/' + this.props.businessName + '/' + this.props.accountId + '/' + this.props.orderId).then((res) => res.json());
-                    rows = rows.parts;
+                    rows = await fetchData('get', '/orders/' + this.props.businessName + '/' + this.props.accountId + '/' + this.props.orderId);
+                    rows = rows.value.parts;
                 } else {
                     if (Object.hasOwnProperty.call(this.props, 'gender') && Object.hasOwnProperty.call(this.props, 'businessName')) {
-                        rows = await getJsonData('/' + this.props.businessName + '/parts?gender=' + this.props.gender).then((res) => res.json());
-                        rows = rows.parts;
+                        rows = await fetchData('get', '/' + this.props.businessName + '/parts?gender=' + this.props.gender);
+                        rows = rows.value.parts;
                     } else {
                         throw Error('Insufficient information for parts data grid');
                     }
@@ -241,8 +241,8 @@ export class PartsDataGrid extends Component {
         });
 
         await updateState(this, {
-            totalPrice: (await postJsonData('/' + this.props.businessName + '/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json())).price,
-            totalNeddedTime: await postJsonData('/' + this.props.businessName + '/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.text()),
+            totalPrice: (await fetchData('post', '/' + this.props.businessName + '/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value.price,
+            totalNeddedTime: (await fetchData('post', '/' + this.props.businessName + '/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value,
             isCalculatingParts: false,
         });
     }

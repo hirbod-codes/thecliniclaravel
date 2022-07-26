@@ -12,7 +12,7 @@ import { Alert, Button, CircularProgress, IconButton, Modal, Paper, Snackbar, St
 import VisitsDataGrid from './VisitsDataGrid';
 import { translate } from '../../../traslation/translate';
 import { updateState } from '../../helpers';
-import { deleteJsonData, postJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
 
 /**
@@ -167,17 +167,16 @@ export class AnOrderVisitsDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        deleteJsonData('/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                let deletingRowIds = this.state.deletingRowIds;
-                delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
-                updateState(this, { deletingRowIds: deletingRowIds });
-                if (res.status === 200) {
-                    this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
-                } else {
+        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+
+        deletingRowIds = this.state.deletingRowIds;
+        delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
+        updateState(this, { deletingRowIds: deletingRowIds });
+
+        if (r.response.status === 200) {
+        } else {
                     this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
-                }
-            });
+        }
     }
 
     async handleOnCreate(weekDaysPeriods = null) {
@@ -198,9 +197,9 @@ export class AnOrderVisitsDataGrid extends Component {
             data.weekDaysPeriods = computedWeekDaysPeriods;
         }
 
-        let result = await postJsonData('/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
+        let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
 
-        if (result) {
+        if (r.response.status === 200) {
             this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
         } else {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });

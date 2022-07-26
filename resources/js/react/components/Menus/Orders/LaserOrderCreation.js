@@ -9,7 +9,7 @@ import { translate } from '../../../traslation/translate'
 import PartsDataGrid from '../../Grids/Orders/PartsDataGrid'
 import PackagesDataGrid from '../../Grids/Orders/PackagesDataGrid'
 import { updateState } from '../../helpers'
-import { postJsonData } from '../../Http/fetch'
+import { fetchData } from '../../Http/fetch'
 import LoadingButton from '@mui/lab/LoadingButton';
 import FindAccount from '../Account/FindAccount';
 
@@ -318,13 +318,13 @@ export class LaserOrderCreation extends Component {
         };
         data.gender = this.state.account.gender;
 
-        let prices = (await postJsonData('/laser/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json()));
+        let prices = (await fetchData('post', '/laser/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value;
 
         await updateState(this, {
             isCalculating: false,
             totalPrice: prices.price,
             totalPriceWithoutDiscount: prices.priceWithoutDiscount,
-            totalNeddedTime: await postJsonData('/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.text()),
+            totalNeddedTime: (await fetchData('post', '/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value,
         });
     }
 
@@ -337,18 +337,18 @@ export class LaserOrderCreation extends Component {
             packages: this.state.selectedPackages.map((v, i) => v.name),
         };
 
-        let result = await postJsonData('/order', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
+        let r = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
 
         let state = {};
         state.isSubmitDisabled = true;
         state.feedbackOpen = true;
-        if (result) {
+        if (r.response.status === 200) {
             this.props.onCreated();
             state.feedbackColor = 'success';
-            state.feedbackMessage = translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+            state.feedbackMessage = translate('general/successful/single/ucFirstLetterFirstWord');
         } else {
             state.feedbackColor = 'error';
-            state.feedbackMessage = translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+            state.feedbackMessage = translate('general/failure/single/ucFirstLetterFirstWord');
         }
         state.isCalculating = false;
         this.setState(state);

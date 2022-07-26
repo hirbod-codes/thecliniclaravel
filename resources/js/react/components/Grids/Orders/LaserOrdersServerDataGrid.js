@@ -9,7 +9,7 @@ import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, Gr
 import { Alert, Button, CircularProgress, IconButton, Modal, Paper, Snackbar, Stack } from '@mui/material';
 
 import OrdersDataGrid from './OrdersDataGrid'
-import { deleteJsonData, getJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import { translate } from '../../../traslation/translate';
 import { updateState } from '../../helpers';
 import LaserOrderCreation from '../../Menus/Orders/LaserOrderCreation';
@@ -67,8 +67,8 @@ export class LaserOrdersServerDataGrid extends Component {
 
     getRowCount() {
         return new Promise(async (resolve) => {
-            let rowCount = await getJsonData('/orders/count/laser', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.text());
-            resolve(rowCount);
+            let rowCount = await fetchData('get', '/orders/count/laser', {}, { 'X-CSRF-TOKEN': this.state.token });
+            resolve(rowCount.value);
         })
     }
 
@@ -237,7 +237,7 @@ export class LaserOrdersServerDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        deleteJsonData('/orders/laser/' + params.row.userId + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+        fetchData('delete', '/orders/laser/' + params.row.userId + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
             .then((res) => {
                 let deletingRowIds = this.state.deletingRowIds;
                 delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

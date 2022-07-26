@@ -11,7 +11,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import OrdersDataGrid from './OrdersDataGrid';
 import { translate } from '../../../traslation/translate';
-import { deleteJsonData, postJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 
 /**
@@ -173,9 +173,9 @@ export class SelfRegularOrdersDataGrid extends Component {
             data.timeConsumption = Number(this.state.timeConsumption);
         }
 
-        let result = await postJsonData('/order', data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
+        let r = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
 
-        if (result) {
+        if (r.response.status === 200) {
             this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
         } else {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
@@ -193,17 +193,17 @@ export class SelfRegularOrdersDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        deleteJsonData('/orders/regular/' + this.props.account.id + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                let deletingRowIds = this.state.deletingRowIds;
-                delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
-                updateState(this, { deletingRowIds: deletingRowIds, reload: true });
-                if (res.status === 200) {
-                    this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
-                } else {
-                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
-                }
-            });
+        let r = await fetchData('delete', '/orders/regular/' + this.props.account.id + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+
+        deletingRowIds = this.state.deletingRowIds;
+        delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
+        updateState(this, { deletingRowIds: deletingRowIds, reload: true });
+
+        if (r.response.status === 200) {
+            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+        } else {
+            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+        }
     }
 }
 

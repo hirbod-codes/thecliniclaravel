@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
-import { getJsonData } from '../../Http/fetch';
+import { fetchData } from '../../Http/fetch';
 import DataGridComponent from '../DataGridComponent';
 import AnOrderVisitsDataGrid from '../Visits/AnOrderVisitsDataGrid';
 import { Button, Modal, Paper } from '@mui/material';
@@ -92,9 +92,13 @@ export class OrdersDataGrid extends Component {
                 url += 'operator=' + this.props.operator + '&price=' + this.props.price + '&timeConsumption=' + this.props.timeConsumption;
             }
 
-            let data = await getJsonData(url, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+            let data = await fetchData('get', url, {}, { 'X-CSRF-TOKEN': this.state.token });
 
-            data = data.orders;
+            if (data.response.status !== 200) {
+                reject();
+            }
+
+            data = data.value.orders;
 
             if (this.props.afterGetData !== undefined) {
                 this.props.afterGetData(data);
