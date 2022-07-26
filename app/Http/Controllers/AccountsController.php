@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
+use App\Http\Requests\Accounts\isPhonenumberVerificationCodeVerified;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
+use App\Http\Requests\Accounts\UpdatePasswordAccountrequest;
+use App\Http\Requests\Accounts\UpdatePhonenumberAccountRequest;
 use App\Http\Requests\Accounts\UpdateSelfAccountRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
@@ -113,16 +116,14 @@ class AccountsController extends Controller
         if (($resposne = $this->verifyPhonenumberVerificationCode(
             $validatedInput['code_created_at_encrypted'],
             $validatedInput['code_encrypted'],
-            $validatedInput['code']
+            $validatedInput['code'],
+            $validatedInput['phonenumber'],
+            $validatedInput['phonenumber_encrypted'],
         ))->getStatusCode() !== 200) {
             return $resposne;
         }
 
         $validatedInput['role'] = $roleName;
-
-        if ($validatedInput['phonenumber'] !== explode(self::SEPARATOR, Crypt::decryptString($validatedInput['phonenumber_encrypted']))[0]) {
-            return response(trans_choice('auth.phonenumber_not_verification', 0), 422);
-        }
 
         $timestamp = intval(explode(self::SEPARATOR, Crypt::decryptString($validatedInput['phonenumber_verified_at_encrypted']))[0]);
 
@@ -146,19 +147,32 @@ class AccountsController extends Controller
         return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
     }
 
-    private function verifyPhonenumberVerificationCode(string $codeCreatedAtEncrypted, string $codeEncrypted, int $code): Response
+    public function isPhonenumberVerificationCodeVerified(isPhonenumberVerificationCodeVerified $request): Response
+    {
+        $validated = $request->safe()->all();
+
+        return $this->verifyPhonenumberVerificationCode($validated['codeCreatedAtEncrypted'], $validated['codeEncrypted'], $validated['code'], $validated['phonenumber'], $validated['phonenumber_encrypted']);
+    }
+
+    private function verifyPhonenumberVerificationCode(string $codeCreatedAtEncrypted, string $codeEncrypted, int $code, string $phonenumber, string $phonenumber_encrypted): Response
     {
         $codeCreatedAtDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($codeCreatedAtEncrypted))[0]);
         $codeDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($codeEncrypted))[0]);
+        $phonenumber = intval(explode(self::SEPARATOR, Crypt::decryptString($phonenumber))[0]);
+        $phonenumber_encrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($phonenumber_encrypted))[0]);
 
         $code = intval($code);
 
         if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp($codeCreatedAtDecrypted)->modify('+90 seconds')->getTimestamp()) {
-            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+            return response()->json(['errors' => ['code' => [trans_choice('auth.vierfication_code_expired', 0)]]], 422);
         }
 
         if ($code !== $codeDecrypted) {
-            return response(trans_choice('auth.phonenumber_verification_failed_code', 0), 422);
+            return response()->json(['errors' => ['code' => [trans_choice('auth.phonenumber_verification_failed_code', 0)]]], 422);
+        }
+
+        if ($phonenumber !== explode(self::SEPARATOR, Crypt::decryptString($phonenumber_encrypted))[0]) {
+            return response()->json(['errors' => ['code' => [trans_choice('auth.phonenumber_not_verification', 0)]]], 422);
         }
 
         return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
