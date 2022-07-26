@@ -1,14 +1,13 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router-dom';
 
-import { Avatar, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
+import { Avatar, FormHelperText, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { translate } from '../traslation/translate';
-import { backendURL, getJsonData, postJsonData } from './Http/fetch';
+import { fetchData } from './Http/fetch';
 import { updateState } from './helpers';
 import SlidingDialog from './Menus/SlidingDialog';
-import { collectMessagesFromResponse, makeFormHelperTextComponents } from './Http/response';
 
 export class UserIconNavigator extends Component {
     constructor(props) {
@@ -37,8 +36,6 @@ export class UserIconNavigator extends Component {
 
             isAvatarLoading: true,
 
-            image: null,
-
             isEmailVerified: false,
             modalOpen: false,
             emailVerificationSlideTimeout: 300,
@@ -58,39 +55,38 @@ export class UserIconNavigator extends Component {
     }
 
     async initialize() {
-        let account = await getJsonData(backendURL() + '/account', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
-
-        let avatar = await getJsonData(backendURL() + '/avatar?accountId=' + account.id, { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.text());
-
-        let isEmailVerified = await getJsonData(backendURL() + '/isEmailVerified', { 'X-CSRF-TOKEN': this.state.token }).then((res) => res.json());
+        let isEmailVerified = await fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token });
+        isEmailVerified = isEmailVerified.value;
 
         await updateState(this, {
             isAvatarLoading: false,
             isEmailVerified: isEmailVerified.verified,
-            image: 'data:image/png;base64,' + avatar
         });
     }
 
     sendEmailVerificationCode() {
-        postJsonData(backendURL() + '/email/verification-notification', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { return res.text() });
+        fetchData('post', '/email/verification-notification', {}, { 'X-CSRF-TOKEN': this.state.token });
     }
 
-    handleRegularOrderSubmition(e) {
-        postJsonData('/order', { businessName: 'regular' }, { 'X-CSRF-TOKEN': this.state.token })
-            .then((res) => {
-                if (res.redirected) {
-                    window.location.replace(res.url);
+    async handleRegularOrderSubmition(e) {
+        let r = await fetchData('post', '/order', { businessName: 'regular' }, { 'X-CSRF-TOKEN': this.state.token });
+        if (r.response.redirected === 200) {
+            window.location.replace(r.response.url);
+        }
+
+        if (r.value.errors !== undefined) {
+            let messages = [];
+            for (const k in r.value.errors) {
+                if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                    const error = r.value.errors[k];
+
+                    error.forEach((v, i) => {
+                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
+                    });
                 }
-                return res.json();
-            })
-            .then((data) => {
-                if (Object.hasOwnProperty.call(data, 'errors')) {
-                    let collectedData = collectMessagesFromResponse(data);
-                    if (collectedData !== false) {
-                        this.setState({ responseErrors: makeFormHelperTextComponents(collectedData), responseDialogOpen: true });
-                    }
-                }
-            });
+            }
+            this.setState({ responseErrors: messages, responseDialogOpen: true });
+        }
     }
 
     render() {
