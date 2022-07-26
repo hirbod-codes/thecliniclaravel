@@ -2,11 +2,10 @@ import React, { Component } from 'react'
 
 import PropTypes from 'prop-types';
 
-import { Button, Divider, FormControl, Stack, TextField } from '@mui/material'
+import { Button, Divider, FormControl, FormHelperText, Stack, TextField } from '@mui/material'
 
 import { translate } from '../../../traslation/translate'
 import { fetchData } from '../../Http/fetch';
-import { collectMessagesFromResponse, makeFormHelperTextComponents } from '../../Http/response';
 import { updateState } from '../../helpers';
 import LoadingButton from '@mui/lab/LoadingButton';
 
