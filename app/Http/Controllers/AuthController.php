@@ -261,6 +261,12 @@ class AuthController extends Controller
             } else {
                 return response(trans_choice('auth.email_verification_failed', 0), 422);
             }
+        } elseif ($phonenumber === null && $email === null) {
+            if ($request->header('content-type') === 'application/json') {
+                return response()->json(['error' => trans_choice('auth.verification_failed', 0)], 422);
+            } else {
+                return response(trans_choice('auth.verification_failed', 0), 422);
+            }
         }
         $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
 
