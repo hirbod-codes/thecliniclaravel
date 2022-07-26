@@ -262,6 +262,10 @@ class AccountsController extends Controller
             return response(__('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1']), 422);
         }
 
+        if (count($input = $request->safe()->all()) === 0) {
+            return response(trans_choice('general.no-data', 0), 422);
+        }
+
         $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
         try {
@@ -269,7 +273,7 @@ class AccountsController extends Controller
             $targetUser = User::query()->whereKey($accountId)->firstOrFail();
 
             $dsUpdatedUser = $this->accountsManagement->massUpdateAccount(
-                $request->safe()->all(),
+                $input,
                 $targetUser->authenticatableRole()->getDataStructure(),
                 $dsAuthenticated,
                 $this->dataBaseUpdateAccount
