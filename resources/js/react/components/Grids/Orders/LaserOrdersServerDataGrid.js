@@ -128,7 +128,7 @@ export class LaserOrdersServerDataGrid extends Component {
     }
 
     onPageSizeChange(newPageSize) {
-        this.setState({ page: 0, pages: [0], lastOrderId: 0, reload: true });
+        this.setState({ page: 0, pagesLastOrderId: [0], lastOrderId: 0, reload: true });
     }
 
     handleFeedbackClose(event, reason) {
