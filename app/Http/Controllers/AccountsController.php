@@ -8,8 +8,6 @@ use App\Http\Requests\Accounts\isPhonenumberVerificationCodeVerified;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
-use App\Http\Requests\Accounts\UpdatePasswordAccountrequest;
-use App\Http\Requests\Accounts\UpdatePhonenumberAccountRequest;
 use App\Http\Requests\Accounts\UpdateSelfAccountRequest;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
