@@ -1,5 +1,5 @@
 function formatToNumber(props) {
-    if (!Object.hasOwnProperty.call(props, 'value') && !props.value) {
+    if (props.value === undefined) {
         return '';
     }
 
@@ -7,7 +7,7 @@ function formatToNumber(props) {
 }
 
 function formatToTime(props) {
-    if (!Object.hasOwnProperty.call(props, 'value') && !props.value) {
+    if (props.value === undefined) {
         return '';
     }
 
