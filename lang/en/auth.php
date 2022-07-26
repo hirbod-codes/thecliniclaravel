@@ -24,6 +24,8 @@ return [
     'vierfication_code_expired' => "{0} Your verification code is expired, please use another verificatopn code.",
     'verification_code_not_expired' => "{0} The current verification code is not expired yet, please use it.",
 
+    'verification_failed' => "{0} The provided informations does not match with our records, please retry.",
+
     'phonenumber_verification_mismatch' => "{0} The provided phonenumber mismatches with the verified one.\nPlease verify your phonenumber again.",
     'phonenumber_verification_request_message' => "{0} We need to Verify your Phonenumber, before the registration: ",
     'phonenumber_verification_resend' => "{0} Try another phonenumber to verify.",
@@ -35,6 +37,8 @@ return [
     'phonenumber_not_verification' => "{0} Your phonenumber is not verified, please verify it first.",
     'phonenumber_already_verification' => "{0} Your phonenumber is already verified.",
     'phonenumber_verification_successful' => "{0} Your phonenumber is now verified.",
+    'phonenumber_update_success' => "{0} Your phonenumber is now updated.",
+    'phonenumber_update_failure' => "{0} An error occured while updating your phonenumber.",
 
     'email_verified_sucessfully' => "{0} Your email has verified.",
     'email_verification_code_sent' => "{0} You will receive a text message on your email including a 6-digit code.\nPlease send it back to us.",
@@ -44,6 +48,8 @@ return [
     'password' => 'The provided password is incorrect.',
     'password_reset_code_mail_message' => "{0} Here's your your 6-digit verification code: \n:code .",
     'password-reset-successful' => "{0} your password has successfully changed. Please log in.",
+    'password_update_success' => "{0} Your password is now updated.",
+    'password_update_failure' => "{0} An error occured while updating your password.",
 
     'failed' => 'These credentials do not match our records.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',

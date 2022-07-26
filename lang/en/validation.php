@@ -181,6 +181,7 @@ return [
     */
 
     'attributes' => [
+        'role-name' => 'Rule name',
         'locale' => 'locale',
         'firstname' => 'Firstname',
         'lastname' => 'Lastname',
