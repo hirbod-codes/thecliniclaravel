@@ -8,16 +8,19 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
+import { createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@emotion/react';
+import { GlobalStyles } from '@mui/material';
+
 import { ThemeContext, resolveTheme } from './components/themeContenxt.js';
 import { LocaleContext } from './components/localeContext.js';
 
 import WelcomePage from "./components/pages/WelcomePage.js";
 import LogInPage from "./components/pages/auth/LogInPage.js";
 import SignUpPage from "./components/pages/auth/SignUpPage.js";
+import DashboardAccountPage from './components/pages/dashboard/DashboardAccountPage';
 
 import { fetchData } from './components/Http/fetch';
-import { ThemeProvider } from '@emotion/react';
-import { GlobalStyles } from '@mui/material';
 import DashboardOrderPage from './components/pages/dashboard/DashboardOrderPage';
 import DashboardVisitPage from './components/pages/dashboard/DashboardVisitPage';
 import UserIconNavigator from './components/UserIconNavigator';
