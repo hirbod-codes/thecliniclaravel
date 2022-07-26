@@ -53,6 +53,14 @@ class UpdateAccountRequest extends FormRequest
             $array['data'][] = 'min:1';
         }
 
+        if (isset($array['phonenumber'])) {
+            unset($array['phonenumber']);
+        }
+
+        if (isset($array['password'])) {
+            unset($array['password']);
+        }
+
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
