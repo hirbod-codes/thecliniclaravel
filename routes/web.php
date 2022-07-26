@@ -13,6 +13,11 @@ use App\Models\Order\LaserOrder;
 use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
+use App\Models\roles\AdminRole;
+use App\Models\roles\DoctorRole;
+use App\Models\roles\OperatorRole;
+use App\Models\roles\PatientRole;
+use App\Models\roles\SecretaryRole;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -153,7 +158,47 @@ Route::middleware('auth:web')->group(function () {
     Route::middleware('phonenumber_verified')->group(function () {
         Route::controller(AccountsController::class)
             ->group(function () {
+                Route::get('/dashboard/account', fn () => view('app'))->name('account.page');
+
                 Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
+
+                Route::get('/accountsCount/{roleName}', function (string $roleName) {
+                    if (!in_array($roleName, ['admin', 'doctor', 'secretary', 'operator', 'patient'])) {
+                        return response(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.role-name', 0)]), 403);
+                    }
+
+                    if ((new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSPatient) {
+                        return response('', 403);
+                    }
+
+                    switch ($roleName) {
+                        case 'admin':
+                            $modelClassFullName = AdminRole::class;
+                            break;
+
+                        case 'doctor':
+                            $modelClassFullName = DoctorRole::class;
+                            break;
+
+                        case 'secretary':
+                            $modelClassFullName = SecretaryRole::class;
+                            break;
+
+                        case 'operator':
+                            $modelClassFullName = OperatorRole::class;
+                            break;
+
+                        case 'patient':
+                            $modelClassFullName = PatientRole::class;
+                            break;
+
+                        default:
+                            return response('!!', 500);
+                            break;
+                    }
+
+                    return response($modelClassFullName::query()->count());
+                });
 
                 // Phonenumber Verification Message Sender Route
                 Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
