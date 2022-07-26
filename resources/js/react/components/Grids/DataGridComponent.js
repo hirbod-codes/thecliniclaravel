@@ -76,6 +76,7 @@ export class DataGridComponent extends Component {
         await updateState(this, { isLoading: true });
 
         let rows = await this.props.getData();
+        let columns = await this.props.collectColumns(rows);
 
         let rowCount = 0;
         if (this.props.getRowCount !== undefined) {
@@ -84,7 +85,7 @@ export class DataGridComponent extends Component {
             rowCount = rows.length;
         }
 
-        await updateState(this, { isLoading: false, rows: rows, rowCount: Number(rowCount), });
+        await updateState(this, { isLoading: false, rows: rows, rowCount: Number(rowCount), columns: columns });
     }
 
     render() {
