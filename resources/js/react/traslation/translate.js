@@ -1,12 +1,11 @@
+import { LocaleContext } from '../components/localeContext.js';
 import { translations } from './translations.js';
 
-function translate(address, locale) {
-    let str = translations[locale];
+function translate(address) {
+    let previousStr, lastFragment, str, locale = '';
+    let seekTranslation = (seekLocale) => {
+        str = translations[seekLocale];
 
-    let previousStr = '';
-    let lastFragment = '';
-
-    try {
         address = address.replace('.', '/');
         address = address.replace('\\', '/');
         address.split('/').forEach((v, i) => {
@@ -24,6 +23,13 @@ function translate(address, locale) {
         }
 
         return str;
+    }
+
+    try {
+        locale = LocaleContext._currentValue.currentLocale.shortName;
+
+        return seekTranslation(locale);
+
     } catch (error) {
         console.error('locale');
         console.error(locale);
@@ -36,7 +42,7 @@ function translate(address, locale) {
         console.error('str');
         console.error(str);
 
-        throw error
+        throw error;
     }
 }
 

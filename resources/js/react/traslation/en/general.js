@@ -7,6 +7,8 @@ general = addWordTo(general, 'back');
 general = addWordTo(general, 'next');
 general = addWordTo(general, 'reset');
 general = addWordTo(general, 'submit');
+general = addWordTo(general, 'send');
+general = addWordTo(general, 'resend');
 general = addWordTo(general, 'done');
 general = addWordTo(general, 'total', 'totals');
 general = addWordTo(general, 'result', 'results');
@@ -14,12 +16,15 @@ general = addWordTo(general, 'refresh');
 general = addWordTo(general, 'successful');
 general = addWordTo(general, 'failure');
 general = addWordTo(general, 'create');
+general = addWordTo(general, 'update');
 general = addWordTo(general, 'show');
+general = addWordTo(general, 'delete');
 general = addWordTo(general, 'welcome');
 general = addWordTo(general, 'log in', null, 'log-in');
 general = addWordTo(general, 'sign up', null, 'sign-up');
 general = addWordTo(general, 'log out', null, 'log-out');
 general = addWordTo(general, 'verify');
+general = addWordTo(general, 'code', 'codes');
 general = addWordTo(general, 'account', 'accounts');
 general = addWordTo(general, 'security code', 'security codes', 'security-code');
 
@@ -51,6 +56,13 @@ general = addWordTo(general, 'sunday');
 
 general = addWordTo(general, general.email.single.allLowerCase + ' ' + general.address.single.allLowerCase, general.email.single.allLowerCase + ' ' + general.address.plural.allLowerCase, 'email-address');
 
+general = addWordTo(general, 'rule', 'rules');
+general = addWordTo(general, 'admin', 'admins');
+general = addWordTo(general, 'doctor', 'doctors');
+general = addWordTo(general, 'secretary', 'secretaries');
+general = addWordTo(general, 'operator', 'operators');
+general = addWordTo(general, 'patient', 'patients');
+
 general = addWordTo(general, 'starting time', null, 'starting-time');
 general = addWordTo(general, 'ending time', null, 'ending-time');
 
@@ -66,6 +78,7 @@ general.columns = addWordTo(general.columns, 'action', 'actions');
 general.columns = addWordTo(general.columns, 'id');
 general.columns = addWordTo(general.columns, 'name');
 general.columns = addWordTo(general.columns, 'gender');
+general.columns = addWordTo(general.columns, 'order', 'orders');
 general.columns = addWordTo(general.columns, 'visits');
 general.columns = addWordTo(general.columns, 'Created At', null, 'createdAt');
 general.columns = addWordTo(general.columns, 'Updated At', null, 'updatedAt');
