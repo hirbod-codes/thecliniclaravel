@@ -135,84 +135,79 @@ export class WeekDayInputComponent extends Component {
 
     render() {
         return (
-            <LocaleContext.Consumer>
-                {({ currentLocale }) => {
-                    return <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
-                        <Stack
-                            key={this.props.id}
-                            justifyContent='space-around'
-                            direction="row"
-                            // divider={<Divider orientation="vertical" flexItem />}
-                            spacing={1}
+            <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
+                <Stack
+                    key={this.props.id}
+                    justifyContent='space-around'
+                    direction="row"
+                    // divider={<Divider orientation="vertical" flexItem />}
+                    spacing={1}
+                >
+                    <Box>
+                        <InputLabel id={"week-of-the-day-" + this.props.id}>{translate('pages/visits/visit/week-of-the-day')}</InputLabel>
+                        <Select
+                            color={this.state.weekDay === '' ? 'error' : 'primary'}
+                            labelId={"week-of-the-day-" + this.props.id}
+                            value={this.state.weekDay !== '' ? this.state.weekDay : ''}
+                            label={translate('pages/visits/visit/week-of-the-day')}
+                            onChange={this.onWeekDayChange}
                         >
-                            <Box>
-                                <InputLabel id={"week-of-the-day-" + this.props.id}>{translate('pages/visits/visit/week-of-the-day', currentLocale.shortName)}</InputLabel>
-                                <Select
-                                    color={this.state.weekDay === '' ? 'error' : 'primary'}
-                                    labelId={"week-of-the-day-" + this.props.id}
-                                    value={this.state.weekDay !== '' ? this.state.weekDay : ''}
-                                    label={translate('pages/visits/visit/week-of-the-day', currentLocale.shortName)}
-                                    onChange={this.onWeekDayChange}
-                                >
-                                    <MenuItem value={'Monday'}>{translate('general/monday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                    <MenuItem value={'Tuesday'}>{translate('general/tuesday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                    <MenuItem value={'Wednesday'}>{translate('general/wednesday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                    <MenuItem value={'Thursday'}>{translate('general/thursday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                    <MenuItem value={'Friday'}>{translate('general/friday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                    <MenuItem value={'Saturday'}>{translate('general/saturday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                    <MenuItem value={'Sunday'}>{translate('general/sunday/single/ucFirstLetterFirstWord', currentLocale.shortName)}</MenuItem>
-                                </Select>
-                            </Box>
+                            <MenuItem value={'Monday'}>{translate('general/monday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            <MenuItem value={'Tuesday'}>{translate('general/tuesday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            <MenuItem value={'Wednesday'}>{translate('general/wednesday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            <MenuItem value={'Thursday'}>{translate('general/thursday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            <MenuItem value={'Friday'}>{translate('general/friday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            <MenuItem value={'Saturday'}>{translate('general/saturday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            <MenuItem value={'Sunday'}>{translate('general/sunday/single/ucFirstLetterFirstWord')}</MenuItem>
+                        </Select>
+                    </Box>
 
+                    <Stack
+                        direction="column"
+                        divider={<Divider orientation="horizontal" />}
+                        spacing={2}
+                    >
+                        {this.state.timePeriodComponents.map((v, i) => {
+                            let timePeriod = {};
+                            if (this.props.timePeriodComponents !== undefined && this.props.weekDay !== undefined && this.props.timePeriods !== undefined) {
+                                timePeriod.start = this.props.timePeriods[i].start;
+                                timePeriod.end = this.props.timePeriods[i].end;
+                            }
+
+                            return (
+                                <TimePeriodComponent
+                                    key={v}
+                                    id={v}
+                                    isDisabled={this.state.weekDay === ''}
+
+                                    weekDayName={this.props.weekDay !== undefined ? this.props.weekDay : this.state.weekDay}
+                                    weekDayNames={this.props.weekDayNames}
+
+                                    onTimePeriodFulfillment={this.onTimePeriodFulfillment}
+                                    onTimePeriodNotFulfilled={this.onTimePeriodNotFulfilled}
+
+                                    {...timePeriod}
+                                />
+                            );
+                        })}
+
+                        {this.props.isAddable === true ?
                             <Stack
-                                direction="column"
-                                divider={<Divider orientation="horizontal" />}
-                                spacing={2}
+                                justifyContent='center'
+                                direction="row"
+                                spacing={1}
                             >
-                                {this.state.timePeriodComponents.map((v, i) => {
-                                    let timePeriod = {};
-                                    if (this.props.timePeriodComponents !== undefined && this.props.weekDay !== undefined && this.props.timePeriods !== undefined) {
-                                        timePeriod.start = this.props.timePeriods[i].start;
-                                        timePeriod.end = this.props.timePeriods[i].end;
-                                    }
-
-                                    return (
-                                        <TimePeriodComponent
-                                            currentLocaleName={currentLocale.shortName}
-                                            key={v}
-                                            id={v}
-                                            isDisabled={this.state.weekDay === ''}
-
-                                            weekDayName={this.props.weekDay !== undefined ? this.props.weekDay : this.state.weekDay}
-                                            weekDayNames={this.props.weekDayNames}
-
-                                            onTimePeriodFulfillment={this.onTimePeriodFulfillment}
-                                            onTimePeriodNotFulfilled={this.onTimePeriodNotFulfilled}
-
-                                            {...timePeriod}
-                                        />
-                                    );
-                                })}
-
-                                {this.props.isAddable === true ?
-                                    <Stack
-                                        justifyContent='center'
-                                        direction="row"
-                                        spacing={1}
-                                    >
-                                        <Fab size="small" color="primary" disabled={this.state.weekDay === '' ? true : false} onClick={this.insertTimePeriodStack}>
-                                            <AddIcon />
-                                        </Fab>
-                                        <Fab size="small" color="error" disabled={this.state.weekDay === '' ? true : false} onClick={this.removeTimePeriodStack}>
-                                            <CloseIcon />
-                                        </Fab>
-                                    </Stack>
-                                    : null}
+                                <Fab size="small" color="primary" disabled={this.state.weekDay === '' ? true : false} onClick={this.insertTimePeriodStack}>
+                                    <AddIcon />
+                                </Fab>
+                                <Fab size="small" color="error" disabled={this.state.weekDay === '' ? true : false} onClick={this.removeTimePeriodStack}>
+                                    <CloseIcon />
+                                </Fab>
                             </Stack>
-                        </Stack>
-                    </FormControl>
-                }}
-            </LocaleContext.Consumer >
+                            : null}
+                    </Stack>
+                </Stack>
+            </FormControl>
         )
     }
 }

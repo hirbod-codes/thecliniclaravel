@@ -133,27 +133,23 @@ export class FindAccount extends Component {
     render() {
         return (
             <>
-                <LocaleContext.Consumer>
-                    {({ currentLocale }) =>
-                        <FormControl sx={{ backgroundColor: theme => theme.palette.secondary, justifyContent: 'space-around', width: '100%', height: '100%' }}>
-                            {this.state.errors}
+                <FormControl sx={{ backgroundColor: theme => theme.palette.secondary, justifyContent: 'space-around', width: '100%', height: '100%' }}>
+                    {this.state.errors}
 
-                            <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2} justifyContent='space-around'>
-                                <TextField fullWidth type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField fullWidth type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                            </Stack>
+                    <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2} justifyContent='space-around'>
+                        <TextField fullWidth type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                        <TextField fullWidth type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    </Stack>
 
-                            <TextField fullWidth type='text' value={this.state.username} onInput={this.handleUsername} label={translate('general/username/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                            <TextField fullWidth type='text' value={this.state.phonenumber} onInput={this.handlePhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
-                            <TextField fullWidth type='text' value={this.state.email} onInput={this.handleEmail} label={translate('general/email/single/ucFirstLetterAllWords', currentLocale.shortName)} variant='standard' sx={{ m: 1 }} />
+                    <TextField fullWidth type='text' value={this.state.username} onInput={this.handleUsername} label={translate('general/username/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    <TextField fullWidth type='text' value={this.state.phonenumber} onInput={this.handlePhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    <TextField fullWidth type='text' value={this.state.email} onInput={this.handleEmail} label={translate('general/email/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
-                            {this.state.isSubmiting ?
-                                <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord', currentLocale.shortName)}</LoadingButton> :
-                                <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords', currentLocale.shortName)}</Button>
-                            }
-                        </FormControl>
+                    {this.state.isSubmiting ?
+                        <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord')}</LoadingButton> :
+                        <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>
                     }
-                </LocaleContext.Consumer>
+                </FormControl>
             </>
         )
     }

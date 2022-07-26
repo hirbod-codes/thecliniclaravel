@@ -16,8 +16,6 @@ import PartsDataGridModal from '../../Grids/Orders/Modals/PartsDataGridModal';
  */
 export class FindOrder extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
-
         businessName: PropTypes.string.isRequired,
         account: PropTypes.object.isRequired,
         privileges: PropTypes.object.isRequired,
@@ -43,30 +41,30 @@ export class FindOrder extends Component {
 
         columns.push({
             field: 'parts',
-            headerName: translate('pages/orders/order/columns/parts', this.props.currentLocaleName),
-            description: translate('pages/orders/order/columns/parts', this.props.currentLocaleName),
-            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} currentLocaleName={this.props.currentLocaleName} />,
+            headerName: translate('pages/orders/order/columns/parts'),
+            description: translate('pages/orders/order/columns/parts'),
+            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} />,
         });
 
         columns.push({
             field: 'packages',
-            headerName: translate('pages/orders/order/columns/packages', this.props.currentLocaleName),
-            description: translate('pages/orders/order/columns/packages', this.props.currentLocaleName),
-            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.value.packages }} currentLocaleName={this.props.currentLocaleName} />,
+            headerName: translate('pages/orders/order/columns/packages'),
+            description: translate('pages/orders/order/columns/packages'),
+            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.value.packages }} />,
         });
 
         columns.push({
             field: 'priceWithDiscount',
-            headerName: translate('pages/orders/order/columns/priceWithDiscount', this.props.currentLocaleName),
-            description: translate('pages/orders/order/columns/priceWithDiscount', this.props.currentLocaleName),
+            headerName: translate('pages/orders/order/columns/priceWithDiscount'),
+            description: translate('pages/orders/order/columns/priceWithDiscount'),
             type: 'number',
             valueFormatter: formatToNumber,
         });
 
         columns.push({
             field: 'gender',
-            headerName: translate('general/columns/gender/single/ucFirstLetterFirstWord', this.props.currentLocaleName),
-            description: translate('general/columns/gender/single/ucFirstLetterFirstWord', this.props.currentLocaleName),
+            headerName: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
+            description: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
         });
 
         return columns;
@@ -83,11 +81,9 @@ export class FindOrder extends Component {
     render() {
         return (
             <Stack direction='column' divider={<Divider orientation='horizontal' />} spacing={2} sx={{ height: '100%' }} >
-                <div>{translate('pages/visits/visit/choose-one-order', this.props.currentLocaleName)}</div>
+                <div>{translate('pages/visits/visit/choose-one-order')}</div>
 
                 <OrdersDataGrid
-                    currentLocaleName={this.props.currentLocaleName}
-
                     privileges={this.props.privileges}
 
                     businessName={this.props.businessName}
@@ -104,7 +100,7 @@ export class FindOrder extends Component {
                 />
 
                 <Button variant='contained' type='button' disabled={this.state.orderId === null} onClick={(e) => { this.props.onSelectionModelChange(this.state.orderId); }}>
-                    {translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                    {translate('general/submit/single/ucFirstLetterFirstWord')}
                 </Button>
             </Stack >
         )

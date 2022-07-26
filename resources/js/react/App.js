@@ -197,10 +197,8 @@ export class App extends Component {
         };
 
         let navigator = null;
-        let currentLocaleName = null;
         if (!this.state.localeContext.isLocaleLoading && !this.state.themeContext.isThemeLoading) {
-            currentLocaleName = this.state.localeContext.currentLocale.shortName;
-            navigator = <UserIconNavigator image={this.state.image} isAvatarLoading={this.state.isAvatarLoading} isEmailVerified={this.state.isEmailVerified} currentLocaleName={currentLocaleName} />;
+            navigator = <UserIconNavigator image={this.state.image} isAvatarLoading={this.state.isAvatarLoading} isEmailVerified={this.state.isEmailVerified} />;
         }
 
         return (
@@ -216,12 +214,13 @@ export class App extends Component {
                                 {inputGlobalStyles}
                                 <BrowserRouter>
                                     <Routes>
-                                        <Route path='/' element={<WelcomePage navigator={navigator} currentLocaleName={currentLocaleName} {...authProps} />} />
-                                        <Route path='/login' element={<LogInPage navigator={navigator} currentLocaleName={currentLocaleName} {...authProps} />} />
-                                        <Route path='/register' element={<SignUpPage navigator={navigator} currentLocaleName={currentLocaleName} {...authProps} />} />
+                                        <Route path='/' element={<WelcomePage navigator={navigator} {...authProps} />} />
+                                        <Route path='/login' element={<LogInPage navigator={navigator} {...authProps} />} />
+                                        <Route path='/register' element={<SignUpPage navigator={navigator} {...authProps} />} />
 
-                                        <Route path='/dashboard/visit' element={<DashboardVisitPage navigator={navigator} currentLocaleName={currentLocaleName} {...authProps} />} />
-                                        <Route path='/dashboard/order' element={<DashboardOrderPage navigator={navigator} currentLocaleName={currentLocaleName} {...authProps} />} />
+                                        <Route path='/dashboard/account' element={<DashboardAccountPage navigator={navigator} {...authProps} />} />
+                                        <Route path='/dashboard/order' element={<DashboardOrderPage navigator={navigator} {...authProps} />} />
+                                        <Route path='/dashboard/visit' element={<DashboardVisitPage navigator={navigator} {...authProps} />} />
                                     </Routes>
                                 </BrowserRouter>
                             </PrivilegesContext.Provider>

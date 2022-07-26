@@ -21,7 +21,6 @@ import VisitCreator from '../../Menus/Visits/VisitCreator';
  */
 export class SelfVisitsDataGrid extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
         privileges: PropTypes.object.isRequired,
         account: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
@@ -60,7 +59,7 @@ export class SelfVisitsDataGrid extends Component {
             columns.push({
                 field: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.props.currentLocaleName),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -90,8 +89,6 @@ export class SelfVisitsDataGrid extends Component {
         return (
             <>
                 <VisitsDataGrid
-                    currentLocaleName={this.props.currentLocaleName}
-
                     businessName={this.props.businessName}
                     accountId={this.props.account.id}
                     sort={'asc'}
@@ -113,10 +110,10 @@ export class SelfVisitsDataGrid extends Component {
                                         {this.props.privileges['self' + ucFirstLetterFirstWord(this.props.businessName) + 'VisitCreate'] ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
                                                 <Button variant='text' onClick={this.openVisitCreatorModal} size='small' startIcon={<AddIcon />}>
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </Button>
                                             ) : null
                                         }
@@ -137,17 +134,17 @@ export class SelfVisitsDataGrid extends Component {
 
                                 onSuccess={() => {
                                     this.closeVisitCreatorModal();
-                                    this.setState({ isCreating: false, reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
+                                    this.setState({ isCreating: false, reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
                                 }}
                                 onClose={() => {
                                     this.setState({ isCreating: false });
                                     this.closeVisitCreatorModal();
                                 }}
                                 onFailure={() => {
-                                    this.setState({ isCreating: false, feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
+                                    this.setState({ isCreating: false, feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
                                 }}
 
-                                privileges={this.props.privileges} businessName={this.props.businessName} currentLocaleName={this.props.currentLocaleName}
+                                privileges={this.props.privileges} businessName={this.props.businessName}
                             />
                         </Paper>
                     </Modal>

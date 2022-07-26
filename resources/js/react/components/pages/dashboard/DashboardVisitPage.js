@@ -57,11 +57,10 @@ export class DashboardVisitPage extends Component {
             <Grid container spacing={1} sx={{ minHeight: '100vh' }} alignContent='flex-start' >
                 <Grid item xs={12} >
                     <Header
-                        title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('pages/visits/visit/visit/plural/ucFirstLetterFirstWord', this.props.currentLocaleName)}</ Link>}
+                        title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('pages/visits/visit/visit/plural/ucFirstLetterFirstWord')}</ Link>}
                         isAuthenticated={this.props.isAuthenticated}
                         isAuthenticationLoading={this.props.isAuthenticationLoading}
                         navigator={this.props.navigator}
-                        currentLocaleName={this.props.currentLocaleName}
                     />
                 </Grid>
                 <Grid item xs={12} style={{ minHeight: '70vh' }} >
@@ -70,30 +69,30 @@ export class DashboardVisitPage extends Component {
                         : <>
                             <Tabs value={this.state.visitPageTabsValue} onChange={this.handleVisitPageTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
                                 {(this.props.privileges.selfLaserVisitRetrieve || this.props.privileges.selfRegularVisitRetrieve) &&
-                                    <Tab label={translate('pages/visits/visit/your-visit', this.props.currentLocaleName)} />
+                                    <Tab label={translate('pages/visits/visit/your-visit')} />
                                 }
                                 {(this.props.privileges.laserVisitRetrieve || this.props.privileges.regularVisitRetrieve) &&
-                                    <Tab label={translate('pages/visits/visit/others-visit', this.props.currentLocaleName)} />
+                                    <Tab label={translate('pages/visits/visit/others-visit')} />
                                 }
                             </Tabs>
                             {(this.props.privileges.selfLaserVisitRetrieve || this.props.privileges.selfRegularVisitRetrieve) &&
                                 <TabPanel value={this.state.visitPageTabsValue} index={0} style={{ height: '100%' }} >
                                     <Tabs value={this.state.selfVisitTabsValue} onChange={this.handleSelfVisitTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
                                         {(this.props.privileges.selfLaserVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/laser-visit', this.props.currentLocaleName)} />
+                                            <Tab label={translate('pages/visits/visit/laser-visit')} />
                                         }
                                         {(this.props.privileges.selfRegularVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/regular-visit', this.props.currentLocaleName)} />
+                                            <Tab label={translate('pages/visits/visit/regular-visit')} />
                                         }
                                     </Tabs>
                                     {(this.props.privileges.selfLaserVisitRetrieve) &&
                                         <TabPanel value={this.state.selfVisitTabsValue} index={0} style={{ height: '100%' }} >
-                                            <SelfVisitsDataGrid businessName='laser' account={this.props.account} privileges={this.props.privileges} currentLocaleName={this.props.currentLocaleName} />
+                                            <SelfVisitsDataGrid businessName='laser' account={this.props.account} privileges={this.props.privileges} />
                                         </TabPanel>
                                     }
                                     {(this.props.privileges.selfRegularVisitRetrieve) &&
                                         <TabPanel value={this.state.selfVisitTabsValue} index={1} style={{ height: '100%' }} >
-                                            <SelfVisitsDataGrid businessName='regular' account={this.props.account} privileges={this.props.privileges} currentLocaleName={this.props.currentLocaleName} />
+                                            <SelfVisitsDataGrid businessName='regular' account={this.props.account} privileges={this.props.privileges} />
                                         </TabPanel>
                                     }
                                 </TabPanel>
@@ -102,20 +101,20 @@ export class DashboardVisitPage extends Component {
                                 <TabPanel value={this.state.visitPageTabsValue} index={1} style={{ height: '100%' }} >
                                     <Tabs value={this.state.visitTabsValue} onChange={this.handleVisitTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
                                         {(this.props.privileges.laserVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/laser-visit', this.props.currentLocaleName)} />
+                                            <Tab label={translate('pages/visits/visit/laser-visit')} />
                                         }
                                         {(this.props.privileges.regularVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/regular-visit', this.props.currentLocaleName)} />
+                                            <Tab label={translate('pages/visits/visit/regular-visit')} />
                                         }
                                     </Tabs>
                                     {(this.props.privileges.laserVisitRetrieve) &&
                                         <TabPanel value={this.state.visitTabsValue} index={0} style={{ height: '100%' }} >
-                                            <VisitsServerDataGrid businessName='laser' privileges={this.props.privileges} currentLocaleName={this.props.currentLocaleName} />
+                                            <VisitsServerDataGrid businessName='laser' privileges={this.props.privileges} />
                                         </TabPanel>
                                     }
                                     {(this.props.privileges.regularVisitRetrieve) &&
                                         <TabPanel value={this.state.visitTabsValue} index={1} style={{ height: '100%' }} >
-                                            <VisitsServerDataGrid businessName='regular' privileges={this.props.privileges} currentLocaleName={this.props.currentLocaleName} />
+                                            <VisitsServerDataGrid businessName='regular' privileges={this.props.privileges} />
                                         </TabPanel>
                                     }
                                 </TabPanel>

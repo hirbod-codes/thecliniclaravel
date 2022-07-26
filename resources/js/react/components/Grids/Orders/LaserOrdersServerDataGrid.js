@@ -24,7 +24,6 @@ import PackagesDataGridModal from './Modals/PackagesDataGridModal';
  */
 export class LaserOrdersServerDataGrid extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
         privileges: PropTypes.object.isRequired,
     }
 
@@ -75,30 +74,30 @@ export class LaserOrdersServerDataGrid extends Component {
     addColumns(columns) {
         columns.push({
             field: 'parts',
-            headerName: translate('pages/orders/order/columns/parts', this.props.currentLocaleName),
-            description: translate('pages/orders/order/columns/parts', this.props.currentLocaleName),
-            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} currentLocaleName={this.props.currentLocaleName} />,
+            headerName: translate('pages/orders/order/columns/parts'),
+            description: translate('pages/orders/order/columns/parts'),
+            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} />,
         });
 
         columns.push({
             field: 'packages',
-            headerName: translate('pages/orders/order/columns/packages', this.props.currentLocaleName),
-            description: translate('pages/orders/order/columns/packages', this.props.currentLocaleName),
-            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.value.packages }} currentLocaleName={this.props.currentLocaleName} />,
+            headerName: translate('pages/orders/order/columns/packages'),
+            description: translate('pages/orders/order/columns/packages'),
+            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.value.packages }} />,
         });
 
         columns.push({
             field: 'priceWithDiscount',
-            headerName: translate('pages/orders/order/columns/priceWithDiscount', this.props.currentLocaleName),
-            description: translate('pages/orders/order/columns/priceWithDiscount', this.props.currentLocaleName),
+            headerName: translate('pages/orders/order/columns/priceWithDiscount'),
+            description: translate('pages/orders/order/columns/priceWithDiscount'),
             type: 'number',
             valueFormatter: formatToNumber,
         });
 
         columns.push({
             field: 'gender',
-            headerName: translate('general/columns/gender/single/ucFirstLetterFirstWord', this.props.currentLocaleName),
-            description: translate('general/columns/gender/single/ucFirstLetterFirstWord', this.props.currentLocaleName),
+            headerName: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
+            description: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
         });
 
         if (this.props.privileges.laserOrderDelete) {
@@ -106,7 +105,7 @@ export class LaserOrdersServerDataGrid extends Component {
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.props.currentLocaleName),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -152,7 +151,7 @@ export class LaserOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    currentLocaleName={this.props.currentLocaleName}
+
 
                     privileges={this.props.privileges}
                     businessName='laser'
@@ -181,10 +180,10 @@ export class LaserOrdersServerDataGrid extends Component {
                                         {this.props.privileges.laserOrderCreate ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
                                                 <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </Button>
                                             ) : null
                                         }
@@ -220,7 +219,7 @@ export class LaserOrdersServerDataGrid extends Component {
                         onClose={this.closeCreationModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <LaserOrderCreation onCreated={this.handleOnCreate} currentLocaleName={this.props.currentLocaleName} />
+                            <LaserOrderCreation onCreated={this.handleOnCreate} />
                         </Paper>
                     </Modal>
                 }
@@ -243,16 +242,16 @@ export class LaserOrdersServerDataGrid extends Component {
                 delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
                 updateState(this, { deletingRowIds: deletingRowIds });
                 if (res.status === 200) {
-                    this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
+                    this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
                 } else {
-                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
+                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
                 }
             });
     }
 
     async handleOnCreate(e) {
         this.closeCreationModal();
-        this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
+        this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
     }
 }
 

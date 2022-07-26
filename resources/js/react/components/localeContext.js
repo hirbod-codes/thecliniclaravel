@@ -13,6 +13,6 @@ let locales = {
     },
 };
 
-let LocaleContext = React.createContext(locales.en);
+let LocaleContext = React.createContext({ currentLocale: locales.en });
 
 export { locales, LocaleContext };

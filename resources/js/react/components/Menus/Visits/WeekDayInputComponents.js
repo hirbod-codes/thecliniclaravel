@@ -9,6 +9,7 @@ import { Box, Button, Divider, Fab, Stack } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponent from './WeekDayInputComponent';
 import { convertWeekDays, resolveTimeZone, updateState } from '../../helpers';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * WeekDayInputComponents
@@ -16,8 +17,6 @@ import { convertWeekDays, resolveTimeZone, updateState } from '../../helpers';
  */
 export class WeekDayInputComponents extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
-
         handleVisitInfo: PropTypes.func,
         weekDayInputComponents: PropTypes.arrayOf(PropTypes.number),
         weekDays: PropTypes.arrayOf(PropTypes.object),
@@ -122,7 +121,9 @@ export class WeekDayInputComponents extends Component {
             weekDays.forEach((v, i) => {
                 newWeekDays[v.weekDay] = v.timePeriods;
             });
-            weekDays = convertWeekDays(newWeekDays, resolveTimeZone(this.props.currentLocaleName), 'UTC');
+            const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+            weekDays = convertWeekDays(newWeekDays, resolveTimeZone(locale), 'UTC');
             this.props.handleVisitInfo(weekDays);
         }
     }
@@ -184,7 +185,7 @@ export class WeekDayInputComponents extends Component {
                             </Stack>
 
                             <Button type='button' disabled={!this.state.isComplete} onClick={this.handleVisitInfo} fullWidth >
-                                {translate('general/done/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                {translate('general/done/single/ucFirstLetterFirstWord')}
                             </Button>
                         </>
                     }

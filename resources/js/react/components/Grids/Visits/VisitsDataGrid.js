@@ -9,6 +9,7 @@ import { formatToNumber, formatToTime } from '../formatters';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
 import { Button, Modal, Paper } from '@mui/material';
 import { convertWeekDays, getDateTimeFormatObject, resolveTimeZone } from '../../helpers';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * VisitsDataGrid
@@ -16,7 +17,6 @@ import { convertWeekDays, getDateTimeFormatObject, resolveTimeZone } from '../..
  */
 export class VisitsDataGrid extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
         businessName: PropTypes.string.isRequired,
 
         sort: PropTypes.oneOf(['asc', 'desc']),
@@ -113,32 +113,33 @@ export class VisitsDataGrid extends Component {
 
                 switch (k) {
                     case 'id':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'number';
                         column.valueFormatter = formatToNumber;
                         break;
 
                     case 'consumingTime':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.props.currentLocaleName);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.type = 'number';
                         column.valueFormatter = formatToTime;
                         column.valueGetter = formatToNumber;
                         break;
 
                     case 'dateTimePeriod':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.props.currentLocaleName);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.valueGetter = ({ value }) => { if (!value) { return 'N/A'; } else { return value; } };
                         break;
 
                     case 'weekDaysPeriods':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.props.currentLocaleName);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.renderCell = (params) => {
                             const weekDaysPeriods = params.row.weekDaysPeriods;
                             if (!weekDaysPeriods) {
                                 return 'N/A';
                             }
 
-                            let weekDays = convertWeekDays(weekDaysPeriods, 'UTC', resolveTimeZone(this.props.currentLocaleName));
+                            const locale = LocaleContext._currentValue.currentLocale.shortName;
+                            let weekDays = convertWeekDays(weekDaysPeriods, 'UTC', resolveTimeZone(locale));
 
                             let weekDayInputComponents = [];
                             if (weekDays !== null) {
@@ -162,7 +163,7 @@ export class VisitsDataGrid extends Component {
                                         t[params.row.id] = true;
                                         this.setState({ openWeekDaysPeriods: t });
                                     }}>
-                                        {translate('general/show/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                        {translate('general/show/single/ucFirstLetterFirstWord')}
                                     </Button>
 
                                     <Modal
@@ -174,7 +175,7 @@ export class VisitsDataGrid extends Component {
                                         }}
                                     >
                                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                                            <WeekDayInputComponents currentLocaleName={this.props.currentLocaleName} {...props} />
+                                            <WeekDayInputComponents {...props} />
                                         </Paper>
                                     </Modal>
                                 </>
@@ -183,21 +184,23 @@ export class VisitsDataGrid extends Component {
                         break;
 
                     case 'visitTimestamp':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.props.currentLocaleName);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.type = 'dateTime';
-                        column.valueGetter = (props) => { if (!props.value) { return null; } return getDateTimeFormatObject(this.props.currentLocaleName).format(new Date(props.value * 1000)); };
+                        const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+                        column.valueGetter = (props) => { if (!props.value) { return null; } return getDateTimeFormatObject(locale).format(new Date(props.value * 1000)); };
                         column.minWidth = 330;
                         break;
 
                     case 'createdAt':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => { if (!value) { return ''; } return new Date(value); };
                         column.minWidth = 170;
                         break;
 
                     case 'updatedAt':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => { if (!value) { return ''; } return new Date(value); };
                         column.minWidth = 170;

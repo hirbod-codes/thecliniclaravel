@@ -15,9 +15,7 @@ import { Button, CircularProgress } from '@mui/material';
  * @augments {Component<Props, State>}
  */
 export class PartsDataGrid extends Component {
-    static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
-    }
+    static propTypes = {}
 
     constructor(props) {
         super(props);
@@ -102,45 +100,45 @@ export class PartsDataGrid extends Component {
 
                     switch (k) {
                         case 'id':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'number';
                             column.valueFormatter = formatToNumber;
                             break;
 
                         case 'neededTime':
-                            column.headerName = translate('pages/orders/order/columns/' + k, this.props.currentLocaleName);
+                            column.headerName = translate('pages/orders/order/columns/' + k);
                             column.type = 'number';
                             column.valueFormatter = formatToTime;
                             column.valueGetter = formatToNumber;
                             break;
 
                         case 'price':
-                            column.headerName = translate('pages/orders/order/columns/' + k, this.props.currentLocaleName);
+                            column.headerName = translate('pages/orders/order/columns/' + k);
                             column.type = 'number';
                             column.valueFormatter = formatToNumber;
                             break;
 
                         case 'name':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'string';
                             break;
 
                         case 'createdAt':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'dateTime';
                             column.valueGetter = ({ value }) => value && new Date(value);
                             column.minWidth = 170;
                             break;
 
                         case 'updatedAt':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'dateTime';
                             column.valueGetter = ({ value }) => value && new Date(value);
                             column.minWidth = 170;
                             break;
 
                         case 'gender':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             break;
 
                         default:
@@ -169,15 +167,15 @@ export class PartsDataGrid extends Component {
                                     {this.state.isCalculatingParts ?
                                         <CircularProgress size='2rem' /> :
                                         <Button type='button' variant='text' onClick={this.calculate}>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
                                         </Button>
                                     }
                                 </div>
                                 <div>
-                                    {translate('pages/orders/order/total-price', this.props.currentLocaleName)}: {this.state.totalPrice}
+                                    {translate('pages/orders/order/total-price')}: {this.state.totalPrice}
                                 </div>
                                 <div>
-                                    {translate('pages/orders/order/total-neededTime', this.props.currentLocaleName)}: {this.state.totalNeddedTime}
+                                    {translate('pages/orders/order/total-neededTime')}: {this.state.totalNeddedTime}
                                 </div>
                             </>
                             <GridPagination />

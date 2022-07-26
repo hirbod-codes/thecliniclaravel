@@ -16,6 +16,7 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Box from '@mui/material/Box';
 import Slide from '@mui/material/Slide';
+import { LocaleContext } from '../../components/localeContext.js';
 
 export class SignUpForm extends Component {
     constructor(props) {
@@ -169,32 +170,32 @@ export class SignUpForm extends Component {
                     <Stepper >
                         <Step key={0} completed={this.state.steps[1].completed} active={this.state.activeStep === 0}>
                             <StepLabel>
-                                {translate('general/phonenumber/single/ucFirstLetterAllWords', this.props.currentLocaleName)}
+                                {translate('general/phonenumber/single/ucFirstLetterAllWords')}
                             </StepLabel>
                         </Step>
                         <Step key={1} completed={this.state.steps[1].completed} active={this.state.activeStep === 1}>
                             <StepLabel>
-                                {translate('pages/auth/signup/send-phone-number-verification-code', this.props.currentLocaleName)}
+                                {translate('pages/auth/signup/send-phone-number-verification-code')}
                             </StepLabel>
                         </Step>
                         <Step key={2} completed={this.state.steps[2].completed} active={this.state.activeStep === 2}>
                             <StepLabel>
-                                {translate('pages/auth/signup/fill-registration-form', this.props.currentLocaleName)}
+                                {translate('pages/auth/signup/fill-registration-form')}
                             </StepLabel>
                         </Step>
                     </Stepper>
                     <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
-                        <Button variant='contained' disabled={this.state.activeStep === 0} type='button' onClick={this.previousStep} >{translate('general/back/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</Button>
+                        <Button variant='contained' disabled={this.state.activeStep === 0} type='button' onClick={this.previousStep} >{translate('general/back/single/ucFirstLetterFirstWord')}</Button>
                     </Box>
                     <Slide direction={this.state.steps[0].animationDirection} timeout={this.duration} in={this.state.steps[0].in} mountOnEnter unmountOnExit>
                         <Box component='form' onSubmit={this.handleSubmitPhonenumber} >
                             <FormControl sx={{ width: '100%' }} >
                                 {this.state.error !== null && this.state.error}
 
-                                <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
-                                {this.state.isSubmittingPhonenumber && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase', this.props.currentLocaleName)}</LoadingButton>}
-                                {!this.state.isSubmittingPhonenumber && <Button type='submit' fullWidth onClick={this.handleSubmitPhonenumber} variant='contained' >{translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</Button>}
+                                {this.state.isSubmittingPhonenumber && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase')}</LoadingButton>}
+                                {!this.state.isSubmittingPhonenumber && <Button type='submit' fullWidth onClick={this.handleSubmitPhonenumber} variant='contained' >{translate('general/submit/single/ucFirstLetterFirstWord')}</Button>}
                             </FormControl>
                         </Box>
                     </Slide>
@@ -203,10 +204,10 @@ export class SignUpForm extends Component {
                             <FormControl sx={{ width: '100%' }} >
                                 {this.state.error !== null && this.state.error}
 
-                                <TextField onInput={this.handlePhonenumberCode} required label={translate('pages/auth/signup/security-code', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handlePhonenumberCode} required label={translate('pages/auth/signup/security-code')} variant='standard' sx={{ m: 1 }} />
 
-                                {this.state.isSubmittingPhonenumberCode && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
-                                {!this.state.isSubmittingPhonenumberCode && <Button type='submit' fullWidth onClick={this.handleSubmitPhonenumberCode} variant='contained' >{translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</Button>}
+                                {this.state.isSubmittingPhonenumberCode && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterFirstWord')}</LoadingButton>}
+                                {!this.state.isSubmittingPhonenumberCode && <Button type='submit' fullWidth onClick={this.handleSubmitPhonenumberCode} variant='contained' >{translate('general/submit/single/ucFirstLetterFirstWord')}</Button>}
                             </FormControl>
                         </Box>
                     </Slide>
@@ -215,55 +216,55 @@ export class SignUpForm extends Component {
                             <FormControl sx={{ width: '100%' }} >
                                 {this.state.error !== null && this.state.error}
 
-                                <TextField onInput={this.handleFirstname} required label={translate('general/firstname/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField onInput={this.handleLastname} required label={translate('general/lastname/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField onInput={this.handleUsername} required label={translate('general/username/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField type='email' onInput={this.handleEmail} label={translate('general/email-address/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField type='password' error={!this.state.passwordsMatch} onInput={this.handlePassword} required label={translate('general/password/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField type='password' error={!this.state.passwordsMatch} onInput={this.handleConfirmPassword} required label={translate('general/confirm-password/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                                <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} disabled required label={translate('general/phonenumber/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handleFirstname} required label={translate('general/firstname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handleLastname} required label={translate('general/lastname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handleUsername} required label={translate('general/username/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                                <TextField type='email' onInput={this.handleEmail} label={translate('general/email-address/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
+                                <TextField type='password' error={!this.state.passwordsMatch} onInput={this.handlePassword} required label={translate('general/password/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
+                                <TextField type='password' error={!this.state.passwordsMatch} onInput={this.handleConfirmPassword} required label={translate('general/confirm-password/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} disabled required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
-                                {this.state.loadingGenders && <LoadingButton loading variant='contained'>{translate('general/gender/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
+                                {this.state.loadingGenders && <LoadingButton loading variant='contained'>{translate('general/gender/single/ucFirstLetterFirstWord')}</LoadingButton>}
                                 {!this.state.loadingGenders && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
                                     options={this.genders}
                                     onChange={this.handleGender}
-                                    renderInput={(params) => <TextField {...params} label={translate('general/gender/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} required variant='standard' />}
+                                    renderInput={(params) => <TextField {...params} label={translate('general/gender/single/ucFirstLetterFirstWord')} required variant='standard' />}
                                 />}
 
                                 <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
                                     <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 1, flexGrow: 1 }}>
-                                        {translate('pages/auth/signup/choose-avatar', this.props.currentLocaleName) + (this.state.avatar.name ? (': ' + this.state.avatar.name) : '')}
-                                        <TextField id='avatar' type='file' onInput={this.handleAvatar} required label={translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ display: 'none' }} />
+                                        {translate('pages/auth/signup/choose-avatar') + (this.state.avatar.name ? (': ' + this.state.avatar.name) : '')}
+                                        <TextField id='avatar' type='file' onInput={this.handleAvatar} required label={translate('general/avatar/single/ucFirstLetterFirstWord')} variant='standard' sx={{ display: 'none' }} />
                                     </Button>
-                                    <Button variant='contained' type='button' onClick={this.resetAvatar} >{translate('general/reset/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</Button>
+                                    <Button variant='contained' type='button' onClick={this.resetAvatar} >{translate('general/reset/single/ucFirstLetterFirstWord')}</Button>
                                 </Box>
 
-                                <TextField type='number' onInput={this.handleAge} required label={translate('general/age/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} min={1} />
+                                <TextField type='number' onInput={this.handleAge} required label={translate('general/age/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} min={1} />
 
-                                {this.state.loadingStates && <LoadingButton loading variant='contained' sx={{ m: 1 }} >{translate('general/state/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
+                                {this.state.loadingStates && <LoadingButton loading variant='contained' sx={{ m: 1 }} >{translate('general/state/single/ucFirstLetterFirstWord')}</LoadingButton>}
                                 {!this.state.loadingStates && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
                                     options={this.states}
                                     onChange={this.handleState}
-                                    renderInput={(params) => <TextField {...params} label={translate('general/state/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} required variant='standard' />}
+                                    renderInput={(params) => <TextField {...params} label={translate('general/state/single/ucFirstLetterFirstWord')} required variant='standard' />}
                                 />}
 
-                                {this.state.loadingCities && <LoadingButton loading variant='contained' sx={{ m: 1 }} >{translate('general/city/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
+                                {this.state.loadingCities && <LoadingButton loading variant='contained' sx={{ m: 1 }} >{translate('general/city/single/ucFirstLetterFirstWord')}</LoadingButton>}
                                 {!this.state.loadingCities && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
                                     options={this.cities}
                                     onChange={this.handleCity}
-                                    renderInput={(params) => <TextField {...params} label={translate('general/city/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} required variant='standard' />}
+                                    renderInput={(params) => <TextField {...params} label={translate('general/city/single/ucFirstLetterFirstWord')} required variant='standard' />}
                                 />}
 
-                                <TextField onInput={this.handleAddress} multiline label={translate('general/address/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handleAddress} multiline label={translate('general/address/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
 
-                                {this.state.isSubmittingRegisteration && <LoadingButton loading variant="contained">{translate('general/sign-up/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</LoadingButton>}
-                                {!this.state.isSubmittingRegisteration && <Button type='submit' fullWidth onClick={this.handleSubmitRegister} variant='contained' >{translate('general/sign-up/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</Button>}
+                                {this.state.isSubmittingRegisteration && <LoadingButton loading variant="contained">{translate('general/sign-up/single/ucFirstLetterAllWords')}</LoadingButton>}
+                                {!this.state.isSubmittingRegisteration && <Button type='submit' fullWidth onClick={this.handleSubmitRegister} variant='contained' >{translate('general/sign-up/single/ucFirstLetterAllWords')}</Button>}
                             </FormControl>
                         </Box>
                     </Slide>

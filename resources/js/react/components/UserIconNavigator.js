@@ -96,12 +96,12 @@ export class UserIconNavigator extends Component {
     render() {
         return (
             <>
-                {this.props.isAvatarLoading && <LoadingButton loading variant='contained' >{translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton>}
+                {this.props.isAvatarLoading && <LoadingButton loading variant='contained' >{translate('general/avatar/single/ucFirstLetterFirstWord')}</LoadingButton>}
                 {!this.props.isAvatarLoading &&
                     <>
-                        <Tooltip title={translate('general/account/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} >
+                        <Tooltip title={translate('general/account/single/ucFirstLetterFirstWord')} >
                             <IconButton onClick={this.handleIconMenuOpen} >
-                                <Avatar alt={translate('general/avatar/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} src={this.props.image} />
+                                <Avatar alt={translate('general/avatar/single/ucFirstLetterFirstWord')} src={this.props.image} />
                             </IconButton>
                         </Tooltip>
                         <Menu
@@ -117,32 +117,39 @@ export class UserIconNavigator extends Component {
                                     slideTrigger={
                                         <MenuItem onClick={(e) => { this.handleModalOpen(); this.sendEmailVerificationCode(); }}>
                                             <Link to='/#' style={{ textDecoration: 'none' }} >
-                                                {translate('generalSentences/verify-email-address/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                {translate('generalSentences/verify-email-address/ucFirstLetterFirstWord')}
                                             </Link>
                                         </MenuItem>
                                     }
                                 >
-                                    {translate('generalSentences/send-email-verification-message/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                    {translate('generalSentences/send-email-verification-message/ucFirstLetterFirstWord')}
                                 </SlidingDialog>
+                            }
+                            {window.location.pathname !== '/dashboard/account' &&
+                                <MenuItem>
+                                    <Link to='/dashboard/account' style={{ textDecoration: 'none' }} >
+                                        {translate('pages/account/account/account/single/ucFirstLetterFirstWord')}
+                                    </Link>
+                                </MenuItem>
                             }
                             {window.location.pathname !== '/dashboard/order' &&
                                 <MenuItem>
                                     <Link to='/dashboard/order' style={{ textDecoration: 'none' }} >
-                                        {translate('general/order-dashboard/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                        {translate('pages/orders/order/order/single/ucFirstLetterFirstWord')}
                                     </Link>
                                 </MenuItem>
                             }
                             {window.location.pathname !== '/dashboard/visit' &&
                                 <MenuItem>
                                     <Link to='/dashboard/visit' style={{ textDecoration: 'none' }} >
-                                        {translate('general/visit-dashboard/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                        {translate('pages/visits/visit/visit/single/ucFirstLetterFirstWord')}
                                     </Link>
                                 </MenuItem>
                             }
                             {window.location.pathname !== '/settings' &&
                                 <MenuItem >
                                     <Link to='/settings' style={{ textDecoration: 'none' }} >
-                                        {translate('general/setting/plural/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                        {translate('general/setting/plural/ucFirstLetterFirstWord')}
                                     </Link>
                                 </MenuItem>
                             }

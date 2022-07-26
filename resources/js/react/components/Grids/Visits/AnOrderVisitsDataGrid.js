@@ -21,7 +21,6 @@ import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
  */
 export class AnOrderVisitsDataGrid extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
         privileges: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
         orderId: PropTypes.number.isRequired,
@@ -60,7 +59,7 @@ export class AnOrderVisitsDataGrid extends Component {
             columns.push({
                 field: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.props.currentLocaleName),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -90,7 +89,7 @@ export class AnOrderVisitsDataGrid extends Component {
         return (
             <>
                 <VisitsDataGrid
-                    currentLocaleName={this.props.currentLocaleName}
+
 
                     reload={this.state.reload}
                     afterReload={() => this.setState({ reload: false })}
@@ -113,10 +112,10 @@ export class AnOrderVisitsDataGrid extends Component {
                                         {this.props.privileges[this.props.businessName + 'VisitCreate'] ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
                                                 <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </Button>
                                             ) : null
                                         }
@@ -150,7 +149,7 @@ export class AnOrderVisitsDataGrid extends Component {
                         onClose={this.closeCreationModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <WeekDayInputComponents currentLocaleName={this.props.currentLocaleName} handleVisitInfo={this.handleOnCreate} />
+                            <WeekDayInputComponents handleVisitInfo={this.handleOnCreate} />
                         </Paper>
                     </Modal>
                 }
@@ -174,8 +173,9 @@ export class AnOrderVisitsDataGrid extends Component {
         updateState(this, { deletingRowIds: deletingRowIds });
 
         if (r.response.status === 200) {
+            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
         } else {
-                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
+            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
         }
     }
 
@@ -200,9 +200,9 @@ export class AnOrderVisitsDataGrid extends Component {
         let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
 
         if (r.response.status === 200) {
-            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
+            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
+            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
         }
 
         this.setState({ isCreating: false });

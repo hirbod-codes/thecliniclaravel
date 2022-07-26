@@ -6,6 +6,7 @@ import { TextField } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import { resolveTimeZone, updateState } from '../../helpers';
 import { DateTime } from 'luxon';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * TimePeriodComponent
@@ -13,8 +14,6 @@ import { DateTime } from 'luxon';
  */
 export class TimePeriodComponent extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
-
         id: PropTypes.number.isRequired,
         onTimePeriodFulfillment: PropTypes.func.isRequired,
         onTimePeriodNotFulfilled: PropTypes.func.isRequired,
@@ -70,7 +69,8 @@ export class TimePeriodComponent extends Component {
 
     checkCompletion() {
         if (this.state.start && this.state.end) {
-            let date = DateTime.local({ zone: resolveTimeZone(this.props.currentLocaleName) });
+            const locale = LocaleContext._currentValue.currentLocale.shortName;
+            let date = DateTime.local({ zone: resolveTimeZone(locale) });
             let safety = 0
             while (date.weekdayLong !== this.props.weekDayName && safety < 500) {
                 date = date.plus({ days: 1 });
@@ -98,7 +98,7 @@ export class TimePeriodComponent extends Component {
                     value={this.state.start}
                     color={this.state.start === '' ? 'error' : 'primary'}
                     onInput={this.handleStartingTime}
-                    label={translate('general/starting-time/single/ucFirstLetterAllWords', this.props.currentLocaleName)}
+                    label={translate('general/starting-time/single/ucFirstLetterAllWords')}
                     variant='standard'
                     sx={{ m: 1 }}
                 />
@@ -109,7 +109,7 @@ export class TimePeriodComponent extends Component {
                     value={this.state.end}
                     color={this.state.end === '' ? 'error' : 'primary'}
                     onInput={this.handleEndingTime}
-                    label={translate('general/ending-time/single/ucFirstLetterAllWords', this.props.currentLocaleName)}
+                    label={translate('general/ending-time/single/ucFirstLetterAllWords')}
                     variant='standard'
                     sx={{ m: 1 }}
                 />

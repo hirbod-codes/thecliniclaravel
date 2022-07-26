@@ -34,7 +34,7 @@ export class PackagesDataGridModal extends Component {
         return (
             <>
                 <Button type='button' variant='contained' onClick={this.openModal}>
-                    {translate('general/show/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                    {translate('general/show/single/ucFirstLetterFirstWord')}
                 </Button>
 
                 <Modal
@@ -42,7 +42,7 @@ export class PackagesDataGridModal extends Component {
                     onClose={this.closeModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%' }}>
-                        <PackagesDataGrid rows={this.props.rows} currentLocaleName={this.props.currentLocaleName} {...props} />
+                        <PackagesDataGrid rows={this.props.rows} {...props} />
                     </Paper>
                 </Modal>
             </>

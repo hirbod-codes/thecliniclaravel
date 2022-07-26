@@ -8,11 +8,10 @@ export class WelcomePage extends Component {
         return (
             <>
                 <Header
-                    title={translate('general/welcome/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                    title={translate('general/welcome/single/ucFirstLetterFirstWord')}
                     isAuthenticated={this.props.isAuthenticated}
                     isAuthenticationLoading={this.props.isAuthenticationLoading}
                     navigator={this.props.navigator}
-                    currentLocaleName={this.props.currentLocaleName}
                 />
             </>
         )

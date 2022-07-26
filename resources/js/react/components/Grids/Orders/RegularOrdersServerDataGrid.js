@@ -21,7 +21,6 @@ import { updateState } from '../../helpers';
  */
 export class RegularOrdersServerDataGrid extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
         privileges: PropTypes.object.isRequired,
     }
 
@@ -80,7 +79,7 @@ export class RegularOrdersServerDataGrid extends Component {
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.props.currentLocaleName),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -133,8 +132,6 @@ export class RegularOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    currentLocaleName={this.props.currentLocaleName}
-
                     privileges={this.props.privileges}
                     businessName='regular'
 
@@ -162,13 +159,13 @@ export class RegularOrdersServerDataGrid extends Component {
                                         {this.props.privileges.regularOrderCreate ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
-                                                    {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
                                                 <>
-                                                    <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price', this.props.currentLocaleName)} value={this.state.price} />
-                                                    <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/neededTime', this.props.currentLocaleName)} value={this.state.timeConsumption} />
+                                                    <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
+                                                    <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/neededTime')} value={this.state.timeConsumption} />
                                                     <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>
-                                                        {translate('general/create/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                                        {translate('general/create/single/ucFirstLetterFirstWord')}
                                                     </Button>
                                                 </>
                                             ) : null
@@ -238,9 +235,9 @@ export class RegularOrdersServerDataGrid extends Component {
         let result = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
 
         if (result.response.status === 200) {
-            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' });
+            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'error' });
+            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
         }
 
         this.setState({ isCreating: false });

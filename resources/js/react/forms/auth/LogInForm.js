@@ -119,27 +119,27 @@ export class LogInForm extends Component {
         return (
             <Stack component='form' onSubmit={this.handleSubmit}>
                 <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
-                    <TextField value={this.state.username} onInput={this.handleUsername} required label={translate('general/username/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                    <TextField value={this.state.email} onInput={this.handleEmail} required label={translate('general/email-address/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                    <TextField type='password' onInput={this.handlePassword} required label={translate('general/password/single/ucFirstLetterFirstWord', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
+                    <TextField value={this.state.username} onInput={this.handleUsername} required label={translate('general/username/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    <TextField value={this.state.email} onInput={this.handleEmail} required label={translate('general/email-address/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    <TextField type='password' onInput={this.handlePassword} required label={translate('general/password/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
                     {this.state.error !== null && this.state.error}
-                    {this.state.isLoading && <LoadingButton loading variant="contained">{translate('general/log-in/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</LoadingButton>}
-                    {!this.state.isLoading && <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/log-in/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</Button>}
+                    {this.state.isLoading && <LoadingButton loading variant="contained">{translate('general/log-in/single/ucFirstLetterAllWords')}</LoadingButton>}
+                    {!this.state.isLoading && <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/log-in/single/ucFirstLetterAllWords')}</Button>}
 
                     <Divider sx={{ mt: 2, mb: 2 }} />
 
                     <SlidingDialog
                         target={true}
                         open={this.state.fpOpen}
-                        slideTriggerInner={translate('pages/auth/login/forgot-password', this.props.currentLocaleName)}
+                        slideTriggerInner={translate('pages/auth/login/forgot-password')}
                         slideTriggerProps={{ variant: 'outlined' }}
                     >
                         <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
                             {this.state.fpError !== null && this.state.fpError}
-                            <TextField onInput={this.handleFPPhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                            <TextField onInput={this.handleFPEmail} label={translate('general/email-address/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                            {this.state.isFPLoading && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</LoadingButton>}
-                            {!this.state.isFPLoading && <Button type='submit' fullWidth onClick={this.handleSubmitFP} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</Button>}
+                            <TextField onInput={this.handleFPPhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                            <TextField onInput={this.handleFPEmail} label={translate('general/email-address/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                            {this.state.isFPLoading && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterAllWords')}</LoadingButton>}
+                            {!this.state.isFPLoading && <Button type='submit' fullWidth onClick={this.handleSubmitFP} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>}
                         </FormControl>
                     </SlidingDialog>
 
@@ -150,11 +150,11 @@ export class LogInForm extends Component {
                     >
                         <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
                             {this.state.rpError !== null && this.state.rpError}
-                            <TextField type='number' onInput={this.handleRPCode} label={translate('general/security-code/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                            <TextField type='password' onInput={this.handleRPPassword} label={translate('general/password/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                            <TextField type='password' onInput={this.handleRPPasswordConfirmation} label={translate('general/confirm-password/single/ucFirstLetterAllWords', this.props.currentLocaleName)} variant='standard' sx={{ m: 1 }} />
-                            {this.state.isRPLoading && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</LoadingButton>}
-                            {!this.state.isRPLoading && <Button type='submit' fullWidth onClick={this.handleSubmitRP} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</Button>}
+                            <TextField type='number' onInput={this.handleRPCode} label={translate('general/security-code/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                            <TextField type='password' onInput={this.handleRPPassword} label={translate('general/password/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                            <TextField type='password' onInput={this.handleRPPasswordConfirmation} label={translate('general/confirm-password/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                            {this.state.isRPLoading && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterAllWords')}</LoadingButton>}
+                            {!this.state.isRPLoading && <Button type='submit' fullWidth onClick={this.handleSubmitRP} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>}
                         </FormControl>
                     </SlidingDialog>
 
@@ -164,7 +164,7 @@ export class LogInForm extends Component {
                         onClose={this.handleRPSuccessfulClose}
                     >
                         {this.state.rpSuccessfulError !== null && this.state.rpSuccessfulError}
-                        <Button onClick={this.handleRPSuccessfulClose} type='button'>{translate('general/ok/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</Button>
+                        <Button onClick={this.handleRPSuccessfulClose} type='button'>{translate('general/ok/single/ucFirstLetterAllWords')}</Button>
                     </SlidingDialog>
                 </FormControl>
             </Stack>

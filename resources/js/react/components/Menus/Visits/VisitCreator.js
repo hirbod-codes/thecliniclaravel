@@ -12,6 +12,7 @@ import { translate } from '../../../traslation/translate';
 import WeekDayInputComponents from './WeekDayInputComponents';
 import { getDateTimeFormatObject, updateState } from '../../helpers';
 import { fetchData } from '../../Http/fetch';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * VisitCreator
@@ -19,8 +20,6 @@ import { fetchData } from '../../Http/fetch';
  */
 export class VisitCreator extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
-
         privileges: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
 
@@ -147,7 +146,7 @@ export class VisitCreator extends Component {
                     onClose={this.closeAccountSearchModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <FindAccount handleAccount={async (account) => { await updateState(this, { account: account }); this.closeAccountSearchModal(null, null); this.openOrderSearchModal(); }} currentLocaleName={this.props.currentLocaleName} />
+                        <FindAccount handleAccount={async (account) => { await updateState(this, { account: account }); this.closeAccountSearchModal(null, null); this.openOrderSearchModal(); }} />
                     </Paper>
                 </Modal>
                 <Modal
@@ -155,7 +154,7 @@ export class VisitCreator extends Component {
                     onClose={this.closeOrderSearchModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <FindOrder account={this.state.account} privileges={this.props.privileges} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} currentLocaleName={this.props.currentLocaleName} />
+                        <FindOrder account={this.state.account} privileges={this.props.privileges} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} />
                     </Paper>
                 </Modal>
                 <Modal
@@ -165,48 +164,48 @@ export class VisitCreator extends Component {
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         <Stack direction='column' spacing={2} style={{ height: '100%' }} >
                             <Tabs value={this.state.visitFinderTabsValue} onChange={this.handleVisitFinderTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                <Tab label={translate('pages/visits/visit/closest-visit-available', this.props.currentLocaleName)} />
-                                <Tab label={translate('pages/visits/visit/weekly-visit-available', this.props.currentLocaleName)} />
+                                <Tab label={translate('pages/visits/visit/closest-visit-available')} />
+                                <Tab label={translate('pages/visits/visit/weekly-visit-available')} />
                             </Tabs>
                             <TabPanel value={this.state.visitFinderTabsValue} index={0} style={{ height: '100%' }} >
                                 <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
                                     {this.state.closestVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.closestVisitRefresh}</p> : null}
                                     {this.state.isRefreshingClosestVisit ?
                                         <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
                                         </LoadingButton> :
                                         <Button variant='contained' type='button' onClick={this.closestVisitRefresh}>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
                                         </Button>
                                     }
                                     {this.state.isSubmittingVisit ?
                                         <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
                                         </LoadingButton> :
                                         <Button variant='contained' type='button' onClick={async (e) => { await updateState(this, { weekDaysPeriods: null }); this.handleOnCreate(); }}>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
                                         </Button>
                                     }
                                 </Stack>
                             </TabPanel>
                             <TabPanel value={this.state.visitFinderTabsValue} index={1} style={{ height: '100%' }} >
                                 <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
-                                    <WeekDayInputComponents currentLocaleName={this.props.currentLocaleName} handleVisitInfo={this.handleVisitInfo} />
+                                    <WeekDayInputComponents handleVisitInfo={this.handleVisitInfo} />
                                     {this.state.weeklyVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.weeklyVisitRefresh}</p> : null}
                                     {this.state.isRefreshingWeeklyVisit || (this.state.weekDaysPeriods === null) ?
                                         <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
                                         </LoadingButton> :
                                         <Button variant='contained' type='button' onClick={this.weeklyVisitRefresh}>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
                                         </Button>
                                     }
                                     {this.state.isSubmittingVisit || (this.state.weekDaysPeriods === null) ?
                                         <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
                                         </LoadingButton> :
                                         <Button variant='contained' type='button' onClick={this.handleOnCreate}>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
                                         </Button>
                                     }
                                 </Stack>
@@ -230,7 +229,9 @@ export class VisitCreator extends Component {
 
         let closestVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token })).value;
         if (closestVisitRefresh.availableVisitTimestamp !== undefined && typeof (closestVisitRefresh.availableVisitTimestamp) === 'number') {
-            this.setState({ closestVisitRefresh: getDateTimeFormatObject(this.props.currentLocaleName).format(new Date(closestVisitRefresh.availableVisitTimestamp * 1000)) });
+            const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+            this.setState({ closestVisitRefresh: getDateTimeFormatObject(locale).format(new Date(closestVisitRefresh.availableVisitTimestamp * 1000)) });
         }
 
         this.setState({ isRefreshingClosestVisit: false });
@@ -253,7 +254,9 @@ export class VisitCreator extends Component {
 
         let weeklyVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token })).value;
         if (weeklyVisitRefresh.availableVisitTimestamp !== undefined && typeof (weeklyVisitRefresh.availableVisitTimestamp) === 'number') {
-            this.setState({ weeklyVisitRefresh: getDateTimeFormatObject(this.props.currentLocaleName).format(new Date(weeklyVisitRefresh.availableVisitTimestamp * 1000)) });
+            const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+            this.setState({ weeklyVisitRefresh: getDateTimeFormatObject(locale).format(new Date(weeklyVisitRefresh.availableVisitTimestamp * 1000)) });
         }
 
         this.setState({ isRefreshingWeeklyVisit: false });

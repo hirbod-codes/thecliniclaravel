@@ -14,11 +14,10 @@ export class LogInPage extends Component {
                 <Grid container spacing={1} sx={{ minHeight: '100vh' }}>
                     <Grid item xs={12} >
                         <Header
-                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords', this.props.currentLocaleName)}</ Link>}
+                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords')}</ Link>}
                             isAuthenticated={this.props.isAuthenticated}
                             isAuthenticationLoading={this.props.isAuthenticationLoading}
                             navigator={this.props.navigator}
-                            currentLocaleName={this.props.currentLocaleName}
                         />
                     </Grid>
                     <Grid item xs={12} >
@@ -26,7 +25,7 @@ export class LogInPage extends Component {
                             <Grid item xs >
                             </Grid>
                             <Grid item xs={12} sm={9} md={6} >
-                                <LogInForm currentLocaleName={this.props.currentLocaleName} />
+                                <LogInForm />
                             </Grid>
                             <Grid item xs >
                             </Grid>

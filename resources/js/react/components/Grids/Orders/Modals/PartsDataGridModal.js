@@ -34,7 +34,7 @@ export class PartsDataGridModal extends Component {
         return (
             <>
                 <Button type='button' variant='contained' onClick={this.openModal}>
-                    {translate('general/show/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                    {translate('general/show/single/ucFirstLetterFirstWord')}
                 </Button>
 
                 <Modal
@@ -42,7 +42,7 @@ export class PartsDataGridModal extends Component {
                     onClose={this.closeModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%' }}>
-                        <PartsDataGrid currentLocaleName={this.props.currentLocaleName} {...props} />
+                        <PartsDataGrid {...props} />
                     </Paper>
                 </Modal>
             </>

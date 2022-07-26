@@ -15,8 +15,6 @@ import { Button, Modal, Paper } from '@mui/material';
  */
 export class OrdersDataGrid extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
-
         privileges: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
 
@@ -122,7 +120,7 @@ export class OrdersDataGrid extends Component {
 
                 switch (k) {
                     case 'visits':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.renderCell = (params) => {
                             return (
                                 <>
@@ -131,7 +129,7 @@ export class OrdersDataGrid extends Component {
                                         t[params.row.id] = true;
                                         this.setState({ openVisitsModal: t });
                                     }}>
-                                        {translate('general/show/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                        {translate('general/show/single/ucFirstLetterFirstWord')}
                                     </Button>
                                     <Modal
                                         open={this.state.openVisitsModal[params.row.id] === true}
@@ -142,7 +140,7 @@ export class OrdersDataGrid extends Component {
                                         }}
                                     >
                                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                                            <AnOrderVisitsDataGrid orderId={params.row.id} businessName={this.props.businessName} privileges={this.props.privileges} currentLocaleName={this.props.currentLocaleName} />
+                                            <AnOrderVisitsDataGrid orderId={params.row.id} businessName={this.props.businessName} privileges={this.props.privileges}  />
                                         </Paper>
                                     </Modal>
                                 </>
@@ -151,13 +149,13 @@ export class OrdersDataGrid extends Component {
                         break;
 
                     case 'id':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'number';
                         column.valueFormatter = formatToNumber;
                         break;
 
                     case 'neededTime':
-                        column.headerName = translate('pages/orders/order/columns/' + k, this.props.currentLocaleName);
+                        column.headerName = translate('pages/orders/order/columns/' + k);
                         column.type = 'number';
                         column.valueFormatter = formatToTime;
                         column.valueGetter = formatToNumber;
@@ -165,20 +163,20 @@ export class OrdersDataGrid extends Component {
                         break;
 
                     case 'price':
-                        column.headerName = translate('pages/orders/order/columns/' + k, this.props.currentLocaleName);
+                        column.headerName = translate('pages/orders/order/columns/' + k);
                         column.type = 'number';
                         column.valueFormatter = formatToNumber;
                         break;
 
                     case 'createdAt':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => value && new Date(value);
                         column.minWidth = 170;
                         break;
 
                     case 'updatedAt':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.props.currentLocaleName);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => value && new Date(value);
                         column.minWidth = 170;

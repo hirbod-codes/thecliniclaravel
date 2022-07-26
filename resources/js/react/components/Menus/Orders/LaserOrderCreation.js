@@ -19,7 +19,6 @@ import FindAccount from '../Account/FindAccount';
  */
 export class LaserOrderCreation extends Component {
     static propTypes = {
-        currentLocaleName: PropTypes.string.isRequired,
         account: PropTypes.object,
         onCreated: PropTypes.func,
     }
@@ -199,56 +198,56 @@ export class LaserOrderCreation extends Component {
                         <Stepper >
                             <Step key={0} completed={this.state.steps[0].completed} active={true}>
                                 <StepLabel>
-                                    {translate('pages/orders/order/select-part/plural/ucFirstLetterAllWords', this.props.currentLocaleName)}
+                                    {translate('pages/orders/order/select-part/plural/ucFirstLetterAllWords')}
                                 </StepLabel>
                             </Step>
                             <Step key={1} completed={this.state.steps[1].completed} active={true}>
                                 <StepLabel>
-                                    {translate('pages/orders/order/select-package/plural/ucFirstLetterAllWords', this.props.currentLocaleName)}
+                                    {translate('pages/orders/order/select-package/plural/ucFirstLetterAllWords')}
                                 </StepLabel>
                             </Step>
                             <Step key={2} completed={this.state.steps[2].completed} active={true}>
                                 <StepLabel>
-                                    {translate('general/result/plural/ucFirstLetterAllWords', this.props.currentLocaleName)}
+                                    {translate('general/result/plural/ucFirstLetterAllWords')}
                                 </StepLabel>
                             </Step>
                         </Stepper>
                         <Stack direction='row' sx={{ mt: 1 }} >
                             <Box sx={{ flex: 1 }} >
                                 <Button variant='outlined' disabled={this.state.movementDisabled} type='button' onClick={this.previousStep} >
-                                    {translate('general/back/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                    {translate('general/back/single/ucFirstLetterFirstWord')}
                                 </Button>
                             </Box>
                             <Button variant='outlined' type='button' onClick={this.nextStep} disabled={
                                 this.state.movementDisabled ? true : ((this.state.activeStep === this.state.steps.length - 2) ? ((this.state.selectedParts.length === 0 && this.state.selectedPackages.length === 0) ? true : false) : false)
                             } >
-                                {translate('general/next/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}
+                                {translate('general/next/single/ucFirstLetterFirstWord')}
                             </Button>
                         </Stack>
                         <Slide direction={this.state.steps[0].animationDirection} timeout={this.duration} in={this.state.steps[0].in} style={{ height: '100%' }} mountOnEnter unmountOnExit >
                             <div style={{ width: '100%', height: '100%' }} >
-                                <PartsDataGrid selectedParts={this.state.selectedParts} onSelect={this.onPartSelect} gender={this.state.account.gender} businessName='laser' checkboxSelection currentLocaleName={this.props.currentLocaleName} />
+                                <PartsDataGrid selectedParts={this.state.selectedParts} onSelect={this.onPartSelect} gender={this.state.account.gender} businessName='laser' checkboxSelection />
                             </div>
                         </Slide>
                         <Slide direction={this.state.steps[1].animationDirection} timeout={this.duration} in={this.state.steps[1].in} style={{ height: '100%' }} mountOnEnter unmountOnExit >
                             <div style={{ width: '100%', height: '100%' }} >
-                                <PackagesDataGrid selectedPackages={this.state.selectedPackages} onSelect={this.onPackageSelect} gender={this.state.account.gender} businessName='laser' checkboxSelection currentLocaleName={this.props.currentLocaleName} />
+                                <PackagesDataGrid selectedPackages={this.state.selectedPackages} onSelect={this.onPackageSelect} gender={this.state.account.gender} businessName='laser' checkboxSelection />
                             </div>
                         </Slide>
                         <Slide direction={this.state.steps[2].animationDirection} timeout={this.duration} in={this.state.steps[2].in} style={{ height: '100%' }} mountOnEnter unmountOnExit >
                             <Stack direction='column' divider={<Divider orientation="horizontal" />} >
                                 <div>
-                                    {translate('pages/orders/order/total-price', this.props.currentLocaleName)}: {this.state.isCalculating ? <CircularProgress size='small' /> : this.state.totalPrice}
+                                    {translate('pages/orders/order/total-price')}: {this.state.isCalculating ? <CircularProgress size='small' /> : this.state.totalPrice}
                                 </div>
                                 <div>
-                                    {translate('pages/orders/order/total-priceWithoutDiscount', this.props.currentLocaleName)}: {this.state.isCalculating ? <CircularProgress size='small' /> : this.state.totalPriceWithoutDiscount}
+                                    {translate('pages/orders/order/total-priceWithoutDiscount')}: {this.state.isCalculating ? <CircularProgress size='small' /> : this.state.totalPriceWithoutDiscount}
                                 </div>
                                 <div>
-                                    {translate('pages/orders/order/total-neededTime', this.props.currentLocaleName)}: {this.state.isCalculating ? <CircularProgress size='small' /> : this.state.totalNeddedTime}
+                                    {translate('pages/orders/order/total-neededTime')}: {this.state.isCalculating ? <CircularProgress size='small' /> : this.state.totalNeddedTime}
                                 </div>
                                 {this.state.isCalculating ?
-                                    <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</LoadingButton> :
-                                    <Button varient='contained' type='button' onClick={this.submit} disabled={this.state.isSubmitDisabled}>{translate('general/submit/single/ucFirstLetterFirstWord', this.props.currentLocaleName)}</Button>
+                                    <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord')}</LoadingButton> :
+                                    <Button varient='contained' type='button' onClick={this.submit} disabled={this.state.isSubmitDisabled}>{translate('general/submit/single/ucFirstLetterFirstWord')}</Button>
                                 }
                             </Stack>
                         </Slide>
@@ -260,7 +259,7 @@ export class LaserOrderCreation extends Component {
                     onClose={this.closeAccountModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <FindAccount handleAccount={(account) => this.setState({ account: account, accountModalOpen: false, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord', this.props.currentLocaleName), feedbackColor: 'success' })} />
+                        <FindAccount handleAccount={(account) => this.setState({ account: account, accountModalOpen: false, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' })} />
                     </Paper>
                 </Modal>
 
