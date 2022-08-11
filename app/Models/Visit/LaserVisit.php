@@ -10,8 +10,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisit;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
+use App\DataStructures\Visit\Laser\DSLaserVisit;
+use App\DataStructures\Visit\Laser\DSLaserVisits;
 
 class LaserVisit extends Model
 {

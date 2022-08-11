@@ -54,13 +54,4 @@ class UserFactory extends Factory
             ];
         });
     }
-
-    public function usersRolesForeignKey(string $value): static
-    {
-        return $this->state(function (array $attributes) use ($value) {
-            return [
-                (new Role)->getForeignKeyForName() => $value,
-            ];
-        });
-    }
 }

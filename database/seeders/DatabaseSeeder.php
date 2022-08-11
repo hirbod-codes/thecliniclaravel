@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -18,11 +17,11 @@ class DatabaseSeeder extends Seeder
         try {
             DB::beginTransaction();
 
+            (new DatabaseUserColumnSeeder)->run();
             (new DatabaseBusinessDefaultSeeder)->run();
 
-            (new DatabasePrivilegesSeeder)->run();
-            (new DatabaseRulesSeeder)->run();
-            (new DatabasePrivilegeValueSeeder)->run();
+            (new DatabasePrivilegeNameSeeder)->run();
+            (new DatabaseRoleSeeder)->run();
 
             (new DatabasePartsSeeder)->run();
             (new DatabasePackagesSeeder)->run();

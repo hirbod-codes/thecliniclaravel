@@ -2,84 +2,93 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
-use App\Models\roles\AdminRole;
-use App\Models\roles\DoctorRole;
-use App\Models\roles\OperatorRole;
-use App\Models\roles\PatientRole;
-use App\Models\roles\SecretaryRole;
+use App\Models\Auth\Admin;
+use App\Models\Auth\Doctor;
+use App\Models\Auth\Operator;
+use App\Models\Auth\Patient;
+use App\Models\Auth\Secretary;
+use App\Models\RoleName;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Faker\Factory;
 use Illuminate\Database\Seeder;
 
 class DatabaseUsersSeeder extends Seeder
 {
     public function run(): void
     {
+        $faker = Factory::create();
+
         $user = User::factory()
             ->state([
                 'username' => 'hirbod',
                 'email' => 'hirbod.khatami@gmail.com',
                 'phonenumber' => '09380978577',
             ])
-            ->usersRolesForeignKey('admin')
             ->create();
 
-        AdminRole::factory()
-            ->usersForeignKey($user->{(new User)->getKeyName()})
-            ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+        Admin::factory()
+            ->userFK($user->getKey())
+            ->roleFK(RoleName::query()->where('name', '=', 'admin')->firstOrFail()->childRoleModel->getKey())
             ->create();
 
         for ($i = 0; $i < 10; $i++) {
-            $user = $this->createUser('admin');
+            $user = $this->createUser();
 
-            AdminRole::factory()
-                ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+            Admin::factory()
+                ->userFK($user->getKey())
+                ->roleFK(RoleName::query()->where('name', '=', 'admin')->firstOrFail()->childRoleModel->getKey())
                 ->create();
         }
 
         for ($i = 0; $i < 10; $i++) {
-            $user = $this->createUser('doctor');
+            $user = $this->createUser();
 
-            DoctorRole::factory()
-                ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+            Doctor::factory()
+                ->userFK($user->getKey())
+                ->roleFK(RoleName::query()->where('name', '=', 'doctor')->firstOrFail()->childRoleModel->getKey())
                 ->create();
         }
 
         for ($i = 0; $i < 15; $i++) {
-            $user = $this->createUser('secretary');
+            $user = $this->createUser();
 
-            SecretaryRole::factory()
-                ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+            Secretary::factory()
+                ->userFK($user->getKey())
+                ->roleFK(RoleName::query()->where('name', '=', 'secretary')->firstOrFail()->childRoleModel->getKey())
                 ->create();
         }
 
         for ($i = 0; $i < 20; $i++) {
-            $user = $this->createUser('operator');
+            $user = $this->createUser();
 
-            OperatorRole::factory()
-                ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+            Operator::factory()
+                ->userFK($user->getKey())
+                ->roleFK(RoleName::query()->where('name', '=', 'operator')->firstOrFail()->childRoleModel->getKey())
                 ->create();
         }
 
         for ($i = 0; $i < 40; $i++) {
-            $user = $this->createUser('patient');
+            $user = $this->createUser();
 
-            PatientRole::factory()
-                ->usersForeignKey($user->{(new User)->getKeyName()})
-                ->usersRoleNameForeignKey($user->{(new Role)->getForeignKeyForName()})
+            if ($i % 2 === 0) {
+                Patient::factory()
+                    ->userFK($user->getKey())
+                    ->roleFK(RoleName::query()->where('name', '=', 'patient')->firstOrFail()->childRoleModel->getKey())
+                    ->operatorFK(Operator::query()->whereKey($faker->randomElement(Operator::query()->get([(new Operator)->getKeyName()])))->firstOrFail()->getKey())
+                    ->create();
+
+                continue;
+            }
+
+            Patient::factory()
+                ->userFK($user->getKey())
+                ->roleFK(RoleName::query()->where('name', '=', 'patient')->firstOrFail()->childRoleModel->getKey())
                 ->create();
         }
     }
 
-    private function createUser(string $roleName): User
+    private function createUser(): User
     {
-        return User::factory()
-            ->usersRolesForeignKey($roleName)
-            ->create();
+        return User::factory()->create();
     }
 }

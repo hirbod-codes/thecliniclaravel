@@ -8,8 +8,8 @@ use App\Models\Visit\RegularVisit;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrders;
+use App\DataStructures\Order\Regular\DSRegularOrder;
+use App\DataStructures\Order\Regular\DSRegularOrders;
 use Illuminate\Support\Str;
 
 class RegularOrder extends Model
@@ -91,9 +91,9 @@ class RegularOrder extends Model
             if ($first && $userSpecific) {
                 $first = false;
                 if ($order instanceof Order) {
-                    $dsRegularOrders = new DSRegularOrders($order->user->authenticatableRole()->getDataStructure());
+                    $dsRegularOrders = new DSRegularOrders($order->user);
                 } elseif ($order instanceof RegularOrder) {
-                    $dsRegularOrders = new DSRegularOrders($order->order->user->authenticatableRole()->getDataStructure());
+                    $dsRegularOrders = new DSRegularOrders($order->order->user);
                 } else {
                     $first = true;
                     continue;

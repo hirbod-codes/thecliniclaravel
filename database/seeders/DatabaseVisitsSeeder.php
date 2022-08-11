@@ -13,17 +13,15 @@ use App\Models\Visit\RegularVisit;
 use App\Models\Visit\Visit;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use TheClinic\Order\Laser\Calculations\TimeConsumptionCalculator;
-use TheClinic\Visit\FastestVisit;
-use TheClinic\Visit\WeeklyVisit;
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriod;
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriods;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
-use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
+use App\PoliciesLogic\Order\Laser\Calculations\TimeConsumptionCalculator;
+use App\PoliciesLogic\Visit\FastestVisit;
+use App\PoliciesLogic\Visit\WeeklyVisit;
+use App\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Visit\Laser\DSLaserVisits;
+use App\DataStructures\Visit\Regular\DSRegularVisits;
 
 class DatabaseVisitsSeeder extends Seeder
 {

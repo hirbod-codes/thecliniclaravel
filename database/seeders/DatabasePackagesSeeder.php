@@ -6,10 +6,9 @@ use App\Models\Package\Package;
 use App\Models\Package\PartPackage;
 use App\Models\Part\Part;
 use Faker\Factory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use TheClinic\Order\Laser\Calculations\PriceCalculator;
-use TheClinicDataStructures\DataStructures\Order\DSPackages;
+use App\PoliciesLogic\Order\Laser\Calculations\PriceCalculator;
+use App\DataStructures\Order\DSPackages;
 
 class DatabasePackagesSeeder extends Seeder
 {

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
-use TheClinicDataStructures\DataStructures\Order\DSOrders;
+use App\DataStructures\Order\DSOrders;
 
 class Order extends Model
 {
@@ -119,11 +119,11 @@ class Order extends Model
                 $first = false;
 
                 if ($order instanceof Order) {
-                    $dsOrders = new DSOrders($order->user->authenticatableRole()->getDataStructure());
+                    $dsOrders = new DSOrders($order->user);
                 } elseif ($order instanceof RegularOrder) {
-                    $dsOrders = new DSOrders($order->order->user->authenticatableRole()->getDataStructure());
+                    $dsOrders = new DSOrders($order->order->user);
                 } elseif ($order instanceof LaserOrder) {
-                    $dsOrders = new DSOrders($order->order->user->authenticatableRole()->getDataStructure());
+                    $dsOrders = new DSOrders($order->order->user);
                 }
             }
 

@@ -10,10 +10,9 @@ use App\Models\Package\Package;
 use App\Models\Part\Part;
 use App\Models\User;
 use Faker\Factory;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use TheClinic\Order\Laser\Calculations\PriceCalculator;
-use TheClinic\Order\Laser\Calculations\TimeConsumptionCalculator;
+use App\PoliciesLogic\Order\Laser\Calculations\PriceCalculator;
+use App\PoliciesLogic\Order\Laser\Calculations\TimeConsumptionCalculator;
 
 class DatabaseOrdersSeeder extends Seeder
 {

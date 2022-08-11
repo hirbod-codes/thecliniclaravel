@@ -5,14 +5,25 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use TheClinicDataStructures\DataStructures\Time\DSDownTimes;
-use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;
+use App\DataStructures\Time\DSDownTimes;
+use App\DataStructures\Time\DSWorkSchedule;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BusinessDefault extends Model
 {
     use HasFactory;
 
     protected $table = "business_defaults";
+
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(
+            Business::class,
+            (new Business)->getForeignKey(),
+            (new Business)->getKeyName(),
+            __FUNCTION__
+        );
+    }
 
     protected function workSchedule(): Attribute
     {

@@ -10,8 +10,8 @@ use App\Models\Order\LaserOrderPackage;
 use App\Models\Part\Part;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use TheClinicDataStructures\DataStructures\Order\DSPackage;
-use TheClinicDataStructures\DataStructures\Order\DSPackages;
+use App\DataStructures\Order\DSPackage;
+use App\DataStructures\Order\DSPackages;
 
 class Package extends Model
 {

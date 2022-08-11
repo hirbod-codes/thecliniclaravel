@@ -3,7 +3,7 @@
 namespace App\Models\Visit;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSDateTimePeriod;
 
 trait TraitMutatorDateTimePeriod
 {

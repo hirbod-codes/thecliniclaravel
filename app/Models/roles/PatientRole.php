@@ -1,35 +1,60 @@
 <?php
 
-namespace App\Models\roles;
+namespace App\Models\Roles;
 
-use App\Models\Auth\User as Authenticatable;
-use App\Models\User;
+use App\Models\Auth\Patient;
+use App\Models\Model;
+use App\Models\Role;
+use App\Models\RoleGuard;
+use App\Models\RoleName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Notifications\Notifiable;
-use TheClinicDataStructures\DataStructures\User\DSPatient;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class PatientRole extends Authenticatable
+class PatientRole extends Model
 {
-    use HasFactory,
-        Notifiable;
+    use HasFactory;
 
     protected $table = "patient_roles";
 
-    protected string $DS = DSPatient::class;
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class, $this->getKeyName(), (new User)->getKeyName(), __FUNCTION__);
-    }
-
-    public function operator(): BelongsTo
+    public function role(): BelongsTo
     {
         return $this->belongsTo(
-            OperatorRole::class,
-            (new OperatorRole)->getForeignKey(),
-            (new OperatorRole)->getKeyName(),
-            __FUNCTION__
+            Role::class,
+            (new Role)->getForeignKey(),
+            (new Role)->getKeyName()
         );
+    }
+
+    public function roleName(): BelongsTo
+    {
+        return $this->belongsTo(
+            RoleName::class,
+            (new RoleName)->getForeignKey(),
+            (new RoleName)->getKeyName()
+        );
+    }
+
+    public function roleGuard(): BelongsTo
+    {
+        return $this->belongsTo(
+            RoleGuard::class,
+            (new RoleGuard)->getForeignKey(),
+            (new RoleGuard)->getKeyName()
+        );
+    }
+
+    public function userType(): HasMany
+    {
+        return $this->hasMany(
+            Patient::class,
+            $this->getForeignKey(),
+            $this->getKeyName()
+        );
+    }
+
+    public function getUserTypeModelFullname(): string
+    {
+        return Patient::class;
     }
 }

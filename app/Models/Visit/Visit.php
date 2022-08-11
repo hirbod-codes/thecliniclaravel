@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use TheClinicDataStructures\DataStructures\Visit\DSVisit;
-use TheClinicDataStructures\DataStructures\Visit\DSVisits;
+use App\DataStructures\Visit\DSVisit;
+use App\DataStructures\Visit\DSVisits;
 
 class Visit extends Model
 {
@@ -90,8 +90,6 @@ class Visit extends Model
                     $theOrder = $visit->laserVisit->laserOrder;
                 }
             }
-
-            $theDSUser = $theOrder->order->user->authenticatableRole()->getDataStructure();
 
             if ($first && $userSpecific) {
                 $first = false;

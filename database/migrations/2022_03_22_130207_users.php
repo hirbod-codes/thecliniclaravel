@@ -1,6 +1,11 @@
 <?php
 
 use App\Models\Role;
+use App\Models\Auth\Admin;
+use App\Models\Auth\Doctor;
+use App\Models\Auth\Operator;
+use App\Models\Auth\Patient;
+use App\Models\Auth\Secretary;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -24,17 +29,7 @@ return new class extends Migration
     public function up()
     {
         Schema::create($this->table, function (Blueprint $table) {
-            $table->id();
-
-            $roleTable = (new Role)->getTable();
-            $fk = (new Role)->getForeignKeyForName();
-
-            $table->string($fk);
-            $table->foreign($fk, $this->table . '_' . $roleTable . '_' . $fk)
-                ->references('name')
-                ->on($roleTable)
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->id((new User)->getKeyName());
 
             $table->string('firstname');
             $table->string('lastname');
@@ -55,6 +50,40 @@ return new class extends Migration
 
             $table->timestamps();
         });
+
+        DB::statement(
+            'CREATE TRIGGER before_' . $this->table . '_insert BEFORE INSERT ON ' . $this->table . '
+                        FOR EACH ROW
+                        BEGIN
+                            IF (EXISTS(SELECT * FROM ' . $this->table . ' WHERE ' . $this->table . '.firstname = NEW.firstname AND ' . $this->table . '.lastname = NEW.lastname)) = TRUE THEN
+                                SIGNAL SQLSTATE \'45000\'
+                                SET MESSAGE_TEXT = "Mysql before insert trigger";
+                            END IF;
+                        END;'
+        );
+
+        DB::statement(
+            'CREATE TRIGGER before_' . $this->table . '_update BEFORE UPDATE ON ' . $this->table . '
+                        FOR EACH ROW
+                        BEGIN
+                            IF OLD.firstname <> NEW.firstname OR OLD.lastname <> NEW.lastname THEN
+                                IF (EXISTS(SELECT * FROM ' . $this->table . ' WHERE ' . $this->table . '.firstname = NEW.firstname AND ' . $this->table . '.lastname = NEW.lastname)) = TRUE THEN
+                                    SIGNAL SQLSTATE \'45000\'
+                                    SET MESSAGE_TEXT = "Mysql before update trigger";
+                                END IF;
+                            END IF;
+                        END;'
+        );
+
+        DB::statement(
+            'CREATE TRIGGER after_' . $this->table . '_delete AFTER DELETE ON ' . $this->table . '
+                FOR EACH ROW
+                BEGIN
+                    IF (EXISTS(SELECT * FROM users_guard WHERE users_guard.id = old.' . (new User)->getKeyName() . ')) = TRUE THEN
+                        DELETE FROM users_guard WHERE users_guard.id = old.' . (new User)->getKeyName() . ';
+                    END IF;
+                END;'
+        );
     }
 
     /**

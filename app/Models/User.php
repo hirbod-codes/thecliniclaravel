@@ -4,10 +4,14 @@ namespace App\Models;
 
 use App\Models\Auth\User as Authenticatable;
 use App\Models\Order\Order;
-use App\Models\roles\Traits\BelongsToRoleName;
-use Database\Traits\ResolveUserModel;
+use App\Models\Auth\Admin;
+use App\Models\Auth\Doctor;
+use App\Models\Auth\Operator;
+use App\Models\Auth\Patient;
+use App\Models\Auth\Secretary;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Passport\HasApiTokens;
@@ -16,29 +20,86 @@ class User extends Authenticatable
 {
     use HasFactory,
         HasApiTokens,
-        Notifiable,
-        ResolveUserModel,
-        BelongsToRoleName;
+        Notifiable;
 
     protected $table = "users";
 
-    public function authenticatableRole(): Authenticatable|null
+    public function getChildrenTypesRelationNames(): array
     {
-        foreach ($roles = Role::all() as $role) {
-            $modelFullname = $this->resolveRuleModelFullName($role->name);
-
-            if (!class_exists($modelFullname) || !is_subclass_of($modelFullname, Authenticatable::class)) {
-                continue;
+        $relations = [];
+        /** @var \ReflectionMethod $method */
+        foreach (($class = new \ReflectionClass($this))->getMethods() as $method) {
+            if (Str::startsWith($method->getName(), 'childModel') && $method->getReturnType() !== null && $method->getReturnType()->getName() === HasOne::class) {
+                $relations[] = $method->getName();
             }
-
-            if (($authenticatable = $this->hasOne($modelFullname, (new $modelFullname)->getKeyName(), $this->getKeyName())->first()) === null) {
-                continue;
-            }
-
-            return $authenticatable;
         }
+        return $relations;
+    }
 
-        return null;
+    public function authenticatableRole(): HasOne
+    {
+        /** @var \ReflectionMethod $method */
+        foreach (($class = new \ReflectionClass($this))->getMethods() as $method) {
+            $result = $results = null;
+            $methodName = $method->getName();
+            if (Str::startsWith($methodName, 'childModel') && $method->getReturnType() !== null && $method->getReturnType()->getName() === HasOne::class) {
+                $result = $this->$methodName();
+                $results = $result->getResults();
+                if (!($results === null || ($results instanceof \Countable && count($results) === 0))) {
+                    return $result;
+                }
+            }
+        }
+    }
+
+    public function childModelAdmin(): HasOne
+    {
+        return $this->hasOne(
+            Admin::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
+            __FUNCTION__
+        );
+    }
+
+    public function childModelDoctor(): HasOne
+    {
+        return $this->hasOne(
+            Doctor::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
+            __FUNCTION__
+        );
+    }
+
+    public function childModelSecretary(): HasOne
+    {
+        return $this->hasOne(
+            Secretary::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
+            __FUNCTION__
+        );
+    }
+
+    public function childModelOperator(): HasOne
+    {
+        return $this->hasOne(
+            Operator::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
+            __FUNCTION__
+        );
+    }
+
+    public function childModelPatient(): HasOne
+    {
+        return $this->hasOne(
+            Patient::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
+            __FUNCTION__
+        );
     }
 
     public function orders(): HasMany

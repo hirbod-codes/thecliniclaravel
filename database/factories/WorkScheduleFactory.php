@@ -3,10 +3,10 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriods;
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriod;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
-use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWorkSchedule;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>

@@ -1,48 +1,60 @@
 <?php
 
-namespace App\Models\roles;
+namespace App\Models\Roles;
 
-use App\Models\Auth\User as Authenticatable;
-use App\Models\User;
+use App\Models\Auth\Operator;
+use App\Models\Model;
+use App\Models\Role;
+use App\Models\RoleGuard;
+use App\Models\RoleName;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Notifications\Notifiable;
-use TheClinicDataStructures\DataStructures\User\DSOperator;
-use TheClinicDataStructures\DataStructures\User\DSPatients;
 
-class OperatorRole extends Authenticatable
+class OperatorRole extends Model
 {
-    use HasFactory,
-        Notifiable;
+    use HasFactory;
 
     protected $table = "operator_roles";
 
-    protected string $DS = DSOperator::class;
-
-    public function user(): BelongsTo
+    public function role(): BelongsTo
     {
-        return $this->belongsTo(User::class, $this->getKeyName(), (new User)->getKeyName(), __FUNCTION__);
+        return $this->belongsTo(
+            Role::class,
+            (new Role)->getForeignKey(),
+            (new Role)->getKeyName()
+        );
     }
 
-    public function patients(): HasMany
+    public function roleName(): BelongsTo
     {
-        return $this->hasMany(PatientRole::class, $this->getForeignKey(), $this->getKeyName());
+        return $this->belongsTo(
+            RoleName::class,
+            (new RoleName)->getForeignKey(),
+            (new RoleName)->getKeyName()
+        );
     }
 
-    protected function collectOtherDSArgs(array &$args, string $parameterName): void
+    public function roleGuard(): BelongsTo
     {
-        parent::collectOtherDSArgs($args, $parameterName);
+        return $this->belongsTo(
+            RoleGuard::class,
+            (new RoleGuard)->getForeignKey(),
+            (new RoleGuard)->getKeyName()
+        );
+    }
 
-        if ($parameterName === 'dsPatients') {
-            $patients = new DSPatients();
-            /** @var PatientRole $patient */
-            foreach ($this->patients as $patient) {
-                $patients[] = $patient->getDataStructure();
-            }
-            $args[$parameterName] = $patients;
-        } else {
-            // Do nothing for optional arguments.
-        }
+    public function userType(): HasMany
+    {
+        return $this->hasMany(
+            Operator::class,
+            $this->getForeignKey(),
+            $this->getKeyName()
+        );
+    }
+
+    public function getUserTypeModelFullname(): string
+    {
+        return Operator::class;
     }
 }

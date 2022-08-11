@@ -2,7 +2,7 @@
 
 namespace App\Models\Traits;
 
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSDateTimePeriod;
 
 trait TraitDSDateTimePeriod
 {

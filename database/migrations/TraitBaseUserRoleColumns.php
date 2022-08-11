@@ -2,49 +2,36 @@
 
 namespace Database\Migrations;
 
-use App\Models\Role;
-use App\Models\roles\AdminRole;
 use App\Models\User;
-use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 trait TraitBaseUserRoleColumns
 {
-    use ResolveUserModel;
-
-    public function createBaseUserRoleColumns(string $tableName, string $roleName, bool $withoutTrigger = false): void
+    public function createBaseUserRoleColumns(string $modelFullname, bool $withoutTrigger = false): void
     {
-        $fkUserRole = '';
-        $modelFullname = $this->resolveRuleModelFullname($roleName);
+        $tableName = (new $modelFullname)->getTable();
         $fk = (new $modelFullname)->getKeyName();
 
-        Schema::create($tableName, function (BluePrint $table) use (&$fkUserRole, $fk, $modelFullname, $tableName) {
+        Schema::create($tableName, function (BluePrint $table) use ($fk, $tableName) {
             $table->id($fk);
 
             $userTable = (new User)->getTable();
 
-            $table->foreign($fk, $tableName . '_' . $userTable . '_' . $fk)
+            $table->unsignedBigInteger((new User)->getForeignKey())->unique();
+            $table->foreign((new User)->getForeignKey(), $tableName . '_' . $userTable . '_' . (new User)->getForeignKey())
                 ->references((new User)->getKeyName())
                 ->on($userTable)
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
 
-            $table->foreign($fk, $tableName . '_users_guard_' . $fk)
+            $table->unsignedBigInteger('user_guard_id')->unique();
+            $table->foreign('user_guard_id', $tableName . '_users_guard_user_guard_id')
                 ->references('id')
                 ->on("users_guard")
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
-
-            $fkUserRole = (new AdminRole)->getUserRoleNameFKColumnName();
-
-            $table->string($fkUserRole);
-            $table->foreign($fkUserRole, $tableName . '_' . $userTable . '_' . $fkUserRole)
-                ->references((new Role())->getForeignKeyForName())
-                ->on($userTable)
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+                ->onUpdate('restrict')
+                ->onDelete('restrict');
 
             $table->timestamps();
         });
@@ -57,12 +44,23 @@ trait TraitBaseUserRoleColumns
             'CREATE TRIGGER before_' . $this->table . '_insert BEFORE INSERT ON ' . $this->table . '
                         FOR EACH ROW
                         BEGIN
-                            IF NEW.' . $fkUserRole . ' <> \'' . $roleName . '\' THEN
-                            signal sqlstate \'45000\'
-                            SET MESSAGE_TEXT = "Mysql trigger";
+                            DECLARE final_id INT;
+
+                            IF (ISNULL(NEW.' . (new User)->getForeignKey() . ')) = TRUE THEN
+                                SIGNAL SQLSTATE \'45000\'
+                                SET MESSAGE_TEXT = "Mysql before insert trigger NULL foreign key value for column ' . (new User)->getForeignKey() . '";
                             END IF;
 
-                            INSERT INTO users_guard (id) VALUES (NEW.' . $fk . ');
+                            SET NEW.' . $fk . ' = NEW.' . (new User)->getForeignKey() . ';
+                            SET NEW.user_guard_id = NEW.' . (new User)->getForeignKey() . ';
+                            SET final_id = NEW.' . (new User)->getForeignKey() . ';
+
+                            IF (EXISTS(SELECT * FROM users_guard WHERE users_guard.id = final_id)) = TRUE THEN
+                                SIGNAL SQLSTATE \'45000\'
+                                SET MESSAGE_TEXT = "Mysql before insert trigger";
+                            END IF;
+
+                            INSERT INTO users_guard(id) VALUES (final_id);
                         END;'
         );
 
@@ -70,18 +68,10 @@ trait TraitBaseUserRoleColumns
             'CREATE TRIGGER before_' . $this->table . '_update BEFORE UPDATE ON ' . $this->table . '
                         FOR EACH ROW
                         BEGIN
-                            IF NEW.' . $fkUserRole . ' <> \'' . $roleName . '\' THEN
-                            signal sqlstate \'45000\'
-                            SET MESSAGE_TEXT = "Mysql trigger";
+                            IF NEW.' . (new User)->getForeignKey() . ' <> OLD.' . (new User)->getForeignKey() . ' OR NEW.user_guard_id <> OLD.user_guard_id OR NEW.' . $fk . ' <> OLD.' . $fk . ' THEN
+                                SIGNAL SQLSTATE \'45000\'
+                                SET MESSAGE_TEXT = "Mysql before insert trigger";
                             END IF;
-                        END;'
-        );
-
-        DB::statement(
-            'CREATE TRIGGER after_' . $this->table . '_delete AFTER DELETE ON ' . $this->table . '
-                        FOR EACH ROW
-                        BEGIN
-                            DELETE FROM ' . $this->table . ' WHERE id=OLD.' . $fkUserRole . ';
                         END;'
         );
     }

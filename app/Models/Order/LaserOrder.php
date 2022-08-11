@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
+use App\DataStructures\Order\Laser\DSLaserOrder;
 use Illuminate\Support\Str;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrders;
+use App\DataStructures\Order\Laser\DSLaserOrders;
 
 class LaserOrder extends Model
 {
@@ -128,9 +128,9 @@ class LaserOrder extends Model
             if ($first && $userSpecific) {
                 $first = false;
                 if ($order instanceof Order) {
-                    $dsLaserOrders = new DSLaserOrders($order->user->authenticatableRole()->getDataStructure());
+                    $dsLaserOrders = new DSLaserOrders($order->user);
                 } elseif ($order instanceof LaserOrder) {
-                    $dsLaserOrders = new DSLaserOrders($order->order->user->authenticatableRole()->getDataStructure());
+                    $dsLaserOrders = new DSLaserOrders($order->order->user);
                 } else {
                     $first = true;
                     continue;

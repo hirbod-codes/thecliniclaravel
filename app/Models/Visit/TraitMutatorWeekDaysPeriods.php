@@ -3,7 +3,7 @@
 namespace App\Models\Visit;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeekDaysPeriods;
 
 trait TraitMutatorWeekDaysPeriods
 {

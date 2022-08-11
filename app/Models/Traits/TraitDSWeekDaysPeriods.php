@@ -2,9 +2,9 @@
 
 namespace App\Models\Traits;
 
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriod;
-use TheClinicDataStructures\DataStructures\Time\DSDateTimePeriods;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeekDaysPeriods;
 
 trait TraitDSWeekDaysPeriods
 {

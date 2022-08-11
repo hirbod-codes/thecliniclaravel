@@ -11,8 +11,8 @@ use App\Models\Package\Package;
 use App\Models\Package\PartPackage;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use TheClinicDataStructures\DataStructures\Order\DSPart;
-use TheClinicDataStructures\DataStructures\Order\DSParts;
+use App\DataStructures\Order\DSPart;
+use App\DataStructures\Order\DSParts;
 
 class Part extends Model
 {
