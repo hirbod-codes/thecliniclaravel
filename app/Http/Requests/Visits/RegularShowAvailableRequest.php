@@ -2,11 +2,14 @@
 
 namespace App\Http\Requests\Visits;
 
+use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Foundation\Http\FormRequest;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Order\RegularOrder;
+use App\Models\Privileges\RetrieveVisit;
 
-class RegularShowAvailableRequest extends FormRequest
+class RegularShowAvailableRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -15,7 +18,31 @@ class RegularShowAvailableRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $input = $this->safe()->all();
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $retrieveVisits = $user->authenticatableRole->role->role->retrieveVisitSubjects;
+
+        /** @var RegularOrder $order */
+        $order = RegularOrder::query()->whereKey((int)$input['regularOrderId'])->firstOrFail();
+
+        $targetUser = $order->order->user;
+        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+        $isSelf = $user->getKey() === $targetUser->getKey();
+
+        /** @var RetrieveVisit $retrieveVisit */
+        foreach ($retrieveVisits as $retrieveVisit) {
+            if ($retrieveVisit->relatedBusiness->name !== 'regular') {
+                continue;
+            }
+
+            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

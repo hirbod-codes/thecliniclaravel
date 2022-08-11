@@ -3,53 +3,41 @@
 namespace Database\Interactions\Visits;
 
 use App\Models\Order\LaserOrder;
-use App\Models\User;
 use App\Models\Visit\LaserVisit;
 use App\Models\Visit\Visit;
 use App\PoliciesLogic\Visit\IFindVisit;
 use App\PoliciesLogic\Visit\WeeklyVisit;
 use App\UseCases\Visits\Interfaces\IDataBaseCreateLaserVisit;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisit;
-use TheClinicUseCases\Visits\Interfaces\IDataBaseCreateLaserVisit;
+use Illuminate\Support\Facades\DB;
 
 class DataBaseCreateLaserVisit implements IDataBaseCreateLaserVisit
 {
-    public function createLaserVisit(DSLaserOrder $dsLaserOrder, DSUser $dsTargetUser, IFindVisit $iFindVisit): DSLaserVisit
+    public function createLaserVisit(LaserOrder $laserOrder, IFindVisit $iFindVisit): LaserVisit
     {
-        $founrd = false;
-        foreach (User::query()->whereKey($dsTargetUser->getId())->first()->orders as $order) {
-            if (($laserOrder = $order->laserOrder) !== null && $laserOrder->getKey() === $dsLaserOrder->getId()) {
-                $founrd = true;
+        try {
+            DB::beginTransaction();
+
+            $visit = new Visit;
+            $visit->saveOrFail();
+
+            $laserVisit = new LaserVisit;
+            $laserVisit->{$laserOrder->getForeignKey()} = $laserOrder->getKey();
+            $laserVisit->{$visit->getForeignKey()} = $visit->getKey();
+            $laserVisit->visit_timestamp = $iFindVisit->findVisit();
+            $laserVisit->consuming_time = $laserOrder->needed_time;
+
+            if ($iFindVisit instanceof WeeklyVisit) {
+                $laserVisit->week_days_periods = $iFindVisit->getDSWeekDaysPeriods();
             }
-        }
-        if (!$founrd) {
-            throw new ModelNotFoundException('', 404);
-        }
 
-        if (!($visit = new Visit)->save()) {
-            throw new \RuntimeException('Failed to create a Visit model.', 500);
+            $laserVisit->saveOrFail();
+
+            DB::commit();
+
+            return $laserVisit;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
-
-        $laserOrder = LaserOrder::query()
-            ->whereKey($dsLaserOrder->getId())
-            ->first();
-
-        $LaserVisit = new LaserVisit;
-        $LaserVisit->{$laserOrder->getForeignKey()} = $laserOrder->{$laserOrder->getKeyName()};
-        $LaserVisit->{$visit->getForeignKey()} = $visit->{$visit->getKeyName()};
-        $LaserVisit->visit_timestamp = $iFindVisit->findVisit();
-        $LaserVisit->consuming_time = $dsLaserOrder->getNeededTime();
-        if ($iFindVisit instanceof WeeklyVisit) {
-            $LaserVisit->week_days_periods = $iFindVisit->getDSWeekDaysPeriods();
-        }
-        // $RegularVisit->date_time_period = $dsDateTimePeriods;
-
-        if (!$LaserVisit->save()) {
-            throw new \RuntimeException('Failed to create a LaserVisit model.', 500);
-        }
-
-        return $LaserVisit->getDSLaserVisit();
     }
 }

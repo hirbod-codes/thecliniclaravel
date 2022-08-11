@@ -3,53 +3,41 @@
 namespace Database\Interactions\Visits;
 
 use App\Models\Order\RegularOrder;
-use App\Models\User;
 use App\Models\Visit\RegularVisit;
 use App\Models\Visit\Visit;
 use App\PoliciesLogic\Visit\IFindVisit;
 use App\PoliciesLogic\Visit\WeeklyVisit;
 use App\UseCases\Visits\Interfaces\IDataBaseCreateRegularVisit;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
-use TheClinicUseCases\Visits\Interfaces\IDataBaseCreateRegularVisit;
+use Illuminate\Support\Facades\DB;
 
 class DataBaseCreateRegularVisit implements IDataBaseCreateRegularVisit
 {
-    public function createRegularVisit(DSRegularOrder $dsRegularOrder, DSUser $dsTargetUser, IFindVisit $iFindVisit): DSRegularVisit
+    public function createRegularVisit(RegularOrder $regularOrder, IFindVisit $iFindVisit): RegularVisit
     {
-        $founrd = false;
-        foreach (User::query()->whereKey($dsTargetUser->getId())->first()->orders as $order) {
-            if (($regularOrder = $order->regularOrder) !== null && $regularOrder->getKey() === $dsRegularOrder->getId()) {
-                $founrd = true;
+        try {
+            DB::beginTransaction();
+
+            $visit = new Visit;
+            $visit->saveOrFail();
+
+            $regularVisit = new RegularVisit;
+            $regularVisit->{$regularOrder->getForeignKey()} = $regularOrder->getKey();
+            $regularVisit->{$visit->getForeignKey()} = $visit->getKey();
+            $regularVisit->visit_timestamp = $iFindVisit->findVisit();
+            $regularVisit->consuming_time = $regularOrder->needed_time;
+
+            if ($iFindVisit instanceof WeeklyVisit) {
+                $regularVisit->week_days_periods = $iFindVisit->getDSWeekDaysPeriods();
             }
-        }
-        if (!$founrd) {
-            throw new ModelNotFoundException('', 404);
-        }
 
-        if (!($visit = new Visit)->save()) {
-            throw new \RuntimeException('Failed to create a Visit model.', 500);
+            $regularVisit->saveOrFail();
+
+            DB::commit();
+
+            return $regularVisit;
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
-
-        $regularOrder = RegularOrder::query()
-            ->whereKey($dsRegularOrder->getId())
-            ->first();
-
-        $RegularVisit = new RegularVisit;
-        $RegularVisit->{$regularOrder->getForeignKey()} = $regularOrder->{$regularOrder->getKeyName()};
-        $RegularVisit->{$visit->getForeignKey()} = $visit->{$visit->getKeyName()};
-        $RegularVisit->visit_timestamp = $iFindVisit->findVisit();
-        $RegularVisit->consuming_time = $dsRegularOrder->getNeededTime();
-        if ($iFindVisit instanceof WeeklyVisit) {
-            $RegularVisit->week_days_periods = $iFindVisit->getDSWeekDaysPeriods();
-        }
-        // $RegularVisit->date_time_period = $dsDateTimePeriods;
-
-        if (!$RegularVisit->save()) {
-            throw new \RuntimeException('Failed to create a RegularVisit model.', 500);
-        }
-
-        return $RegularVisit->getDSRegularVisit();
     }
 }

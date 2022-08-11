@@ -2,12 +2,14 @@
 
 namespace App\Http\Requests\Visits;
 
+use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeekDaysPeriods;
-use Illuminate\Support\Facades\Request;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\Order\LaserOrder;
+use App\Models\Privileges\RetrieveVisit;
 
-class LaserShowAvailableRequest extends FormRequest
+class LaserShowAvailableRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -16,7 +18,31 @@ class LaserShowAvailableRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $input = $this->safe()->all();
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $retrieveVisits = $user->authenticatableRole->role->role->retrieveVisitSubjects;
+
+        /** @var LaserOrder $order */
+        $order = LaserOrder::query()->whereKey((int)$input['laserOrderId'])->firstOrFail();
+
+        $targetUser = $order->order->user;
+        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+        $isSelf = $user->getKey() === $targetUser->getKey();
+
+        /** @var RetrieveVisit $retrieveVisit */
+        foreach ($retrieveVisits as $retrieveVisit) {
+            if ($retrieveVisit->relatedBusiness->name !== 'laser') {
+                continue;
+            }
+
+            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -30,7 +56,7 @@ class LaserShowAvailableRequest extends FormRequest
             'laserOrderId' => ['required', 'integer', 'numeric', 'min:1'],
             'weekDaysPeriods' => ['array', 'min:1', 'max:7', function ($attribute, $value, $fail) {
                 foreach ($value as $k => $v) {
-                    if(!in_array($k, DSWeekDaysPeriods::$weekDays)){
+                    if (!in_array($k, DSWeekDaysPeriods::$weekDays)) {
                         $fail(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.weekDaysPeriods', 0)]));
                     }
                 }

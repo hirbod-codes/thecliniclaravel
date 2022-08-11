@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Visits;
 
+use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeekDaysPeriods;
-use Illuminate\Validation\Rule;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
-use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\Order\RegularOrder;
 
-class RegularStoreRequest extends FormRequest
+class RegularStoreRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -17,7 +17,27 @@ class RegularStoreRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $input = $this->safe()->all();
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $createVisits = $user->authenticatableRole->role->role->createVisitSubjects;
+
+        $targetUserRoleName = ($targetUser = ($regularOrder = RegularOrder::query()->whereKey($input['regularOrderId'])->firstOrFail())->order->user)->authenticatableRole->role->roleName->name;
+        $isSelf = $targetUser->getKey() === $user->getKey();
+
+        /** @var CreateVisit $createVisit */
+        foreach ($createVisits as $createVisit) {
+            if ($createVisit->relatedBusiness->name !== 'regular') {
+                continue;
+            }
+
+            if (($isSelf && $createVisit->object !== null) || (!$isSelf && (($createVisit->object === null || ($createVisit->object !== null && $createVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**

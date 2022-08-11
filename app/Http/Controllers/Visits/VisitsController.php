@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Visits;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Visits\LaserIndexRequest;
 use App\Http\Requests\Visits\LaserShowAvailableRequest;
 use App\Http\Requests\Visits\LaserStoreRequest;
-use App\Http\Requests\Visits\RegularIndexRequest;
 use App\Http\Requests\Visits\RegularShowAvailableRequest;
 use App\Http\Requests\Visits\RegularStoreRequest;
 use App\Models\BusinessDefault;
@@ -22,17 +20,16 @@ use Database\Interactions\Visits\DataBaseDeleteLaserVisit;
 use Database\Interactions\Visits\DataBaseDeleteRegularVisit;
 use Database\Interactions\Visits\DataBaseRetrieveLaserVisits;
 use Database\Interactions\Visits\DataBaseRetrieveRegularVisits;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use App\PoliciesLogic\Visit\FastestVisit;
 use App\PoliciesLogic\Visit\WeeklyVisit;
 use App\DataStructures\Time\DSWeekDaysPeriods;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
-use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
-use TheClinicUseCases\Visits\Creation\LaserVisitCreation;
+use App\Http\Requests\Visits\IndexRequest;
+use App\Http\Requests\Visits\LaserDestroyRequest;
+use App\Http\Requests\Visits\RegularDestroyRequest;
+use App\Http\Requests\Visits\VisitsCountRequest;
 use App\UseCases\Visits\Creation\LaserVisitCreation;
 use App\UseCases\Visits\Creation\RegularVisitCreation;
 use App\UseCases\Visits\Deletion\LaserVisitDeletion;
@@ -45,6 +42,7 @@ use App\UseCases\Visits\Interfaces\IDataBaseRetrieveLaserVisits;
 use App\UseCases\Visits\Interfaces\IDataBaseRetrieveRegularVisits;
 use App\UseCases\Visits\Retrieval\LaserVisitRetrieval;
 use App\UseCases\Visits\Retrieval\RegularVisitRetrieval;
+use Illuminate\Database\Eloquent\Builder;
 
 class VisitsController extends Controller
 {
@@ -101,103 +99,131 @@ class VisitsController extends Controller
         $this->iDataBaseRetrieveRegularVisits = $iDataBaseRetrieveRegularVisits ?: new DataBaseRetrieveRegularVisits;
     }
 
-    public function laserIndex(LaserIndexRequest $request): JsonResponse
+    public function index(IndexRequest $request): JsonResponse
     {
         $validateInput = $request->safe()->all();
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
 
-        $args = [$dsAuthenticated];
-
-        if (!isset($validateInput['laserOrderId']) && !isset($validateInput['timestamp']) && !isset($validateInput['operator'])) {
+        if (isset($validateInput['accountId'])) {
             /** @var User $targetUser */
             $targetUser = User::query()->whereKey($validateInput['accountId'])->firstOrFail();
-            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
             $method = 'User';
-            $args[] = $dsTargetUser;
-        } elseif (isset($validateInput['laserOrderId'])) {
-            /** @var LaserOrder $laserOrder */
-            $laserOrder = LaserOrder::query()->whereKey((int)$validateInput['laserOrderId'])->firstOrFail();
-            $dsLaserOrder = $laserOrder->getDSLaserOrder();
+            $args['targetUser'] = $targetUser;
+        } elseif (isset($validateInput['orderId'])) {
+            switch ($validateInput['businessName']) {
+                case 'laser':
+                    /** @var LaserOrder $order */
+                    $order = LaserOrder::query()->whereKey((int)$validateInput['orderId'])->firstOrFail();
+                    break;
 
-            /** @var User $targetUser */
-            $targetUser = $laserOrder->order->user;
-            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
+                case 'regular':
+                    /** @var RegularOrder $order */
+                    $order = RegularOrder::query()->whereKey((int)$validateInput['orderId'])->firstOrFail();
+                    break;
+
+                default:
+                    throw new \LogicException('!!!!', 500);
+                    break;
+            }
 
             $method = 'Order';
-            $args[] = $dsTargetUser;
-            $args[] = $dsLaserOrder;
+            $args[$validateInput['businessName'] . 'Order'] = $order;
         } elseif (isset($validateInput['timestamp']) && isset($validateInput['operator'])) {
             $method = 'Timestamp';
-            $args[] = $validateInput['operator'];
-            $args[] = $validateInput['timestamp'];
+            $args['roleName'] = $validateInput['roleName'];
+            $args['operator'] = $validateInput['operator'];
+            $args['timestamp'] = $validateInput['timestamp'];
+            $args['count'] = $validateInput['count'];
+            if (isset($validateInput['lastVisitTimestamp'])) {
+                $args['lastVisitTimestamp'] = $validateInput['lastVisitTimestamp'];
+            }
         }
 
-        $args[] = $validateInput['sortByTimestamp'];
-        $args[] = $this->iDataBaseRetrieveLaserVisits;
+        $args['sortByTimestamp'] = $validateInput['sortByTimestamp'];
+        $args['db'] = $this->{'iDataBaseRetrieve' . ucfirst($validateInput['businessName']) . 'Visits'};
 
-        /** @var DSLaserVisits $visits */
-        $visits = $this->laserVisitRetrieval->{'getVisitsBy' . $method}(...$args);
+        /** @var array $visits */
+        $visits = $this->{$validateInput['businessName'] . 'VisitRetrieval'}->{'getVisitsBy' . $method}(...$args);
 
-        return response()->json($visits->toArray());
+        return response()->json($visits);
     }
 
-    public function regularIndex(RegularIndexRequest $request): JsonResponse
+    public function visitsCount(VisitsCountRequest $request): Response
     {
-        $validateInput = $request->safe()->all();
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $input = $request->safe()->all();
+        $roleName = $input['roleName'];
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $userRoleName = $user->authenticatableRole->role->roleName->name;
+        $canReadSelf = false;
+        foreach ($user->authenticatableRole->role->role->retrieveVisitSubjects as $retrieveVisit) {
+            if ($retrieveVisit->object !== null) {
+                continue;
+            }
+            $canReadSelf = true;
+            break;
+        }
+        $isSelf = $userRoleName === $roleName;
 
-        $args = [$dsAuthenticated];
+        switch ($input['businessName']) {
+            case 'laser':
+                $query = LaserVisit::query();
+                break;
 
-        if (!isset($validateInput['regularOrderId']) && !isset($validateInput['timestamp']) && !isset($validateInput['operator'])) {
-            /** @var User $targetUser */
-            $targetUser = User::query()->whereKey($validateInput['accountId'])->firstOrFail();
-            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
+            case 'regular':
+                $query = RegularVisit::query();
+                break;
 
-            $method = 'User';
-            $args[] = $dsTargetUser;
-        } elseif (isset($validateInput['regularOrderId'])) {
-            /** @var RegularOrder $regularOrder */
-            $regularOrder = RegularOrder::query()->whereKey((int)$validateInput['regularOrderId'])->firstOrFail();
-            $dsregularOrder = $regularOrder->getDSregularOrder();
-
-            /** @var User $targetUser */
-            $targetUser = $regularOrder->order->user;
-            $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
-
-            $method = 'Order';
-            $args[] = $dsTargetUser;
-            $args[] = $dsregularOrder;
-        } elseif (isset($validateInput['timestamp']) && isset($validateInput['operator'])) {
-            $method = 'Timestamp';
-            $args[] = $validateInput['operator'];
-            $args[] = $validateInput['timestamp'];
+            default:
+                throw new \LogicException('!!!!', 500);
+                break;
         }
 
-        $args[] = $validateInput['sortByTimestamp'];
-        $args[] = $this->iDataBaseRetrieveRegularVisits;
+        $count = $query
+            ->whereHas($input['businessName'] . 'Order', function (Builder $query) use ($roleName, $user, $isSelf, $canReadSelf) {
+                $query->whereHas('order', function (Builder $query) use ($roleName, $user, $isSelf, $canReadSelf) {
+                    $query->whereHas('user', function (Builder $query) use ($roleName, $user, $isSelf, $canReadSelf) {
+                        if ($isSelf && !$canReadSelf) {
+                            $query->whereKeyNot($user->getKey());
+                        }
+                        $i = 0;
+                        foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                            if ($i === 0) {
+                                $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                    $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                        $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                            $query->where('name', '=', $roleName);
+                                        });
+                                    });
+                                });
+                            } else {
+                                $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                    $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                        $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                            $query->where('name', '=', $roleName);
+                                        });
+                                    });
+                                });
+                            }
+                            $i++;
+                        }
+                    });
+                });
+            })
+            ->count()
+            //
+        ;
 
-        /** @var DSRegularVisits $visits */
-        $visits = $this->regularVisitRetrieval->{'getVisitsBy' . $method}(...$args);
-
-        return response()->json($visits->toArray());
+        return response($count);
     }
 
     public function laserStore(LaserStoreRequest $request): JsonResponse|RedirectResponse
     {
         $validateInput = $request->safe()->all();
 
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
         /** @var LaserOrder $laserOrder */
         $laserOrder = LaserOrder::query()
             ->whereKey($validateInput['laserOrderId'])
             ->firstOrFail();
-        $dsLaserOrder = $laserOrder->getDSLaserOrder();
-
-        /** @var User $targetUser */
-        $targetUser = $laserOrder->order->user;
-        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         $now = new \DateTime();
         $futureVisits = LaserVisit::query()
@@ -212,7 +238,7 @@ class VisitsController extends Controller
         if (isset($validateInput['weekDaysPeriods'])) {
             $iFindVisit = new WeeklyVisit(
                 $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($validateInput['weekDaysPeriods']),
-                $dsLaserOrder->getNeededTime(),
+                $laserOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
@@ -223,33 +249,26 @@ class VisitsController extends Controller
         } else {
             $iFindVisit = new FastestVisit(
                 $startPoint = new \DateTime,
-                $dsLaserOrder->getNeededTime(),
+                $laserOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
             );
         }
 
-        $dsLaserVisit = $this->laserVisitCreation->create($dsLaserOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateLaserVisit, $iFindVisit);
+        $laserVisit = $this->laserVisitCreation->create($laserOrder, $this->iDataBaseCreateLaserVisit, $iFindVisit);
 
-        return response()->json($dsLaserVisit->toArray());
+        return response()->json($laserVisit->toArray());
     }
 
     public function regularStore(RegularStoreRequest $request): JsonResponse
     {
         $validateInput = $request->safe()->all();
 
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
         /** @var RegularOrder $regularOrder */
         $regularOrder = RegularOrder::query()
             ->whereKey($validateInput['regularOrderId'])
             ->firstOrFail();
-        $dsRegularOrder = $regularOrder->getDSRegularOrder();
-
-        /** @var User $targetUser */
-        $targetUser = $regularOrder->order->user;
-        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
 
         $now = new \DateTime();
         $futureVisits = RegularVisit::query()
@@ -259,12 +278,12 @@ class VisitsController extends Controller
             ->all()
             //
         ;
-        $futureVisits = RegularVisit::getDSRegularVisits($futureVisits, 'ASC');
+        $futureVisits = RegularVisit::getDSregularVisits($futureVisits, 'ASC');
 
         if (isset($validateInput['weekDaysPeriods'])) {
             $iFindVisit = new WeeklyVisit(
                 $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($validateInput['weekDaysPeriods']),
-                $dsRegularOrder->getNeededTime(),
+                $regularOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
@@ -275,44 +294,16 @@ class VisitsController extends Controller
         } else {
             $iFindVisit = new FastestVisit(
                 $startPoint = new \DateTime,
-                $dsRegularOrder->getNeededTime(),
+                $regularOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
             );
         }
 
-        $dsRegularOrder = $this->regularVisitCreation->create($dsRegularOrder, $dsTargetUser, $dsAuthenticated, $this->iDataBaseCreateRegularVisit, $iFindVisit);
+        $regularVisit = $this->regularVisitCreation->create($regularOrder, $this->iDataBaseCreateRegularVisit, $iFindVisit);
 
-        return response()->json($dsRegularOrder->toArray());
-    }
-
-    public function laserShow(int $timestamp): Response|JsonResponse
-    {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        /** @var DSLaserVisits $visits */
-        $visits = $this->laserVisitRetrieval->getVisitsByTimestamp($dsAuthenticated, '=', $timestamp, 'desc', $this->iDataBaseRetrieveLaserVisits);
-
-        if (count($visits) === 0) {
-            return response(trans_choice('Visits/visits.visit-not-found', 0), 404);
-        }
-
-        return response()->json($visits[0]->toArray());
-    }
-
-    public function regularShow(int $timestamp): Response|JsonResponse
-    {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        /** @var DSRegularVisits $visits */
-        $visits = $this->regularVisitRetrieval->getVisitsByTimestamp($dsAuthenticated, '=', $timestamp, 'desc', $this->iDataBaseRetrieveRegularVisits);
-
-        if (count($visits) === 0) {
-            return response(trans_choice('Visits/visits.visit-not-found', 0), 404);
-        }
-
-        return response()->json($visits[0]->toArray());
+        return response()->json($regularVisit->toArray());
     }
 
     public function laserShowAvailable(LaserShowAvailableRequest $request): JsonResponse|RedirectResponse
@@ -323,7 +314,6 @@ class VisitsController extends Controller
         $laserOrder = LaserOrder::query()
             ->whereKey($validateInput['laserOrderId'])
             ->firstOrFail();
-        $dsLaserOrder = $laserOrder->getDSLaserOrder();
 
         $now = new \DateTime();
         $futureVisits = LaserVisit::query()
@@ -338,7 +328,7 @@ class VisitsController extends Controller
         if (isset($validateInput['weekDaysPeriods'])) {
             $iFindVisit = new WeeklyVisit(
                 $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($validateInput['weekDaysPeriods']),
-                $dsLaserOrder->getNeededTime(),
+                $laserOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
@@ -349,7 +339,7 @@ class VisitsController extends Controller
         } else {
             $iFindVisit = new FastestVisit(
                 $startPoint = new \DateTime,
-                $dsLaserOrder->getNeededTime(),
+                $laserOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
@@ -369,7 +359,6 @@ class VisitsController extends Controller
         $regularOrder = RegularOrder::query()
             ->whereKey($validateInput['regularOrderId'])
             ->firstOrFail();
-        $dsRegularOrder = $regularOrder->getDSRegularOrder();
 
         $now = new \DateTime();
         $futureVisits = RegularVisit::query()
@@ -384,7 +373,7 @@ class VisitsController extends Controller
         if (isset($validateInput['weekDaysPeriods'])) {
             $iFindVisit = new WeeklyVisit(
                 $dsWeekDaysPeriods = DSWeekDaysPeriods::toObject($validateInput['weekDaysPeriods']),
-                $dsRegularOrder->getNeededTime(),
+                $regularOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
@@ -395,7 +384,7 @@ class VisitsController extends Controller
         } else {
             $iFindVisit = new FastestVisit(
                 $startPoint = new \DateTime,
-                $dsRegularOrder->getNeededTime(),
+                $regularOrder->needed_time,
                 $futureVisits,
                 $dsWoekSchedule = BusinessDefault::firstOrFail()->work_schedule,
                 $dsDownTimes = BusinessDefault::firstOrFail()->down_times,
@@ -407,40 +396,30 @@ class VisitsController extends Controller
         return response()->json(['availableVisitTimestamp' => $timestamp]);
     }
 
-    public function laserDestroy(int $laserVisitId): Response
+    public function laserDestroy(LaserDestroyRequest $request,): Response
     {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $input = $request->safe()->all();
 
         /** @var LaserVisit $laserVisit */
         $laserVisit = LaserVisit::query()
-            ->whereKey($laserVisitId)
+            ->whereKey($input['laserOrderId'])
             ->firstOrFail();
-        $dsLaserVisit = $laserVisit->getDSLaserVisit();
 
-        /** @var User $targetUser */
-        $targetUser = $laserVisit->laserOrder->order->user;
-        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
-
-        $this->laserVisitDeletion->delete($dsLaserVisit, $dsTargetUser, $dsAuthenticated, $this->iDataBaseDeleteLaserVisit);
+        $this->laserVisitDeletion->delete($laserVisit, $this->iDataBaseDeleteLaserVisit);
 
         return response(trans_choice('Visits/visits.destroy', 0), 200);
     }
 
-    public function regularDestroy(int $regularVisitId): Response
+    public function regularDestroy(RegularDestroyRequest $request): Response
     {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $input = $request->safe()->all();
 
         /** @var RegularVisit $regularVisit */
         $regularVisit = RegularVisit::query()
-            ->whereKey($regularVisitId)
+            ->whereKey($input['regularOrderId'])
             ->firstOrFail();
-        $dsRegularVisit = $regularVisit->getDSRegularVisit();
 
-        /** @var User $targetUser */
-        $targetUser = $regularVisit->regularOrder->order->user;
-        $dsTargetUser = $targetUser->authenticatableRole()->getDataStructure();
-
-        $this->regularVisitDeletion->delete($dsRegularVisit, $dsTargetUser, $dsAuthenticated, $this->iDataBaseDeleteRegularVisit);
+        $this->regularVisitDeletion->delete($regularVisit, $this->iDataBaseDeleteRegularVisit);
 
         return response(trans_choice('Visits/visits.destroy', 0), 200);
     }
