@@ -22,10 +22,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use TheClinicDataStructures\DataStructures\Order\DSPackages;
-use TheClinicDataStructures\DataStructures\Order\DSParts;
-use TheClinicDataStructures\DataStructures\User\DSPatient;
-use TheClinicUseCases\Privileges\PrivilegesManagement;
+use App\DataStructures\Order\DSPackages;
+use App\DataStructures\Order\DSParts;
+use App\DataStructures\User\DSPatient;
+use App\Models\Auth\Patient;
+use App\UseCases\Privileges\PrivilegesManagement;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +117,8 @@ Route::prefix('{locale}')->group(function () {
                 Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
                 Route::post('/account/verify-phoennumber-verification-code', 'isPhonenumberVerificationCodeVerified')->name('auth.isPhonenumberVerificationCodeVerified');
 
+                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
+
                 Route::post('/account/{roleName}', 'store')->name('account.store');
 
                 Route::get('/account/{placeholder}', 'show')->name('account.show');
@@ -130,31 +133,14 @@ Route::prefix('{locale}')->group(function () {
 
         Route::controller(RolesController::class)
             ->group(function () {
-                Route::get('/roles', 'index')->name('roles.index');
-                Route::get('/privileges', function () {
-                    $authenticated = (new CheckAuthentication)->getAuthenticatedDSUser();
+                Route::get('/dataType/{roleName?}', 'dataType')->name('roles.dataType');
 
-                    return response()->json((new PrivilegesManagement)->getPrivileges($authenticated));
-                })->name('privileges.index');
+                Route::get('/roles', 'index')->name('roles.index');
+
+                Route::get('/role-name/{accountId?}', 'showRoleName')->name('role.showRoleName');
+                Route::get('/role', 'show')->name('role.show');
 
                 Route::post('/role', 'store')->name('role.store');
-
-                Route::get('/privilege/{roleName?}', function (ShowRequest $request) {
-                    $validateInput = $request->safe()->all();
-
-                    $privileges = [];
-                    DB::table((new Role)->getTable())
-                        ->select([(new Privilege)->getTable() . '.name', (new PrivilegeValue)->getTable() . '.privilegeValue'])
-                        ->join((new PrivilegeValue)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Role)->getForeignKey(), '=', (new Role)->getTable() . '.' . (new Role)->getKeyName())
-                        ->join((new Privilege)->getTable(), (new PrivilegeValue)->getTable() . '.' . (new Privilege)->getForeignKey(), '=', (new Privilege)->getTable() . '.' . (new Privilege)->getKeyName())
-                        ->where((new Role)->getTable() . '.name', '=', $validateInput['roleName'])
-                        ->get()
-                        ->map(function ($v, $k) use (&$privileges) {
-                            $privileges[$v->name] = $v->privilegeValue;
-                        });
-
-                    return response()->json($privileges);
-                })->name('privileges.show');
 
                 Route::put('/role', 'update')->name('roles.update');
 
@@ -180,26 +166,7 @@ Route::prefix('{locale}')->group(function () {
                 Route::get('/orders/laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
                 Route::get('/orders/regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
 
-                Route::get('/orders/count/{businessName}', function (string $businessName) {
-                    if ((new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSPatient) {
-                        return response('', 403);
-                    }
-
-                    switch ($businessName) {
-                        case 'laser':
-                            $count = LaserOrder::query()->count();
-                            break;
-
-                        case 'regular':
-                            $count = RegularOrder::query()->count();
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    return response($count);
-                });
+                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('orders.ordersCount');
 
                 Route::post('/order', 'store')->name('orders.store');
 

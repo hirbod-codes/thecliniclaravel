@@ -13,19 +13,21 @@ use App\Models\Order\LaserOrder;
 use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Models\roles\AdminRole;
-use App\Models\roles\DoctorRole;
-use App\Models\roles\OperatorRole;
-use App\Models\roles\PatientRole;
-use App\Models\roles\SecretaryRole;
+use App\Models\Auth\Admin;
+use App\Models\Auth\Doctor;
+use App\Models\Auth\Operator;
+use App\Models\Auth\Patient;
+use App\Models\Auth\Secretary;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
-use TheClinicDataStructures\DataStructures\Order\DSPackages;
-use TheClinicDataStructures\DataStructures\Order\DSParts;
-use TheClinicDataStructures\DataStructures\User\DSPatient;
+use App\DataStructures\Order\DSPackages;
+use App\DataStructures\Order\DSParts;
+use App\DataStructures\User\DSPatient;
+use App\Models\Role;
+use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
@@ -162,43 +164,7 @@ Route::middleware('auth:web')->group(function () {
 
                 Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-                Route::get('/accountsCount/{roleName}', function (string $roleName) {
-                    if (!in_array($roleName, ['admin', 'doctor', 'secretary', 'operator', 'patient'])) {
-                        return response(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.role-name', 0)]), 403);
-                    }
-
-                    if ((new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSPatient) {
-                        return response('', 403);
-                    }
-
-                    switch ($roleName) {
-                        case 'admin':
-                            $modelClassFullName = AdminRole::class;
-                            break;
-
-                        case 'doctor':
-                            $modelClassFullName = DoctorRole::class;
-                            break;
-
-                        case 'secretary':
-                            $modelClassFullName = SecretaryRole::class;
-                            break;
-
-                        case 'operator':
-                            $modelClassFullName = OperatorRole::class;
-                            break;
-
-                        case 'patient':
-                            $modelClassFullName = PatientRole::class;
-                            break;
-
-                        default:
-                            return response('!!', 500);
-                            break;
-                    }
-
-                    return response($modelClassFullName::query()->count());
-                });
+                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
 
                 // Phonenumber Verification Message Sender Route
                 Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
@@ -210,20 +176,20 @@ Route::middleware('auth:web')->group(function () {
                 Route::get('/account', 'showSelf')->name('account.showSelf');
 
                 Route::put('/account/{accountId}', 'update')->name('account.update');
-                Route::put('/account', 'updateSelf')->name('account.updateSelf');
 
                 Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
-                Route::delete('/account', 'destroySelf')->name('account.destroySelf');
             });
 
         Route::controller(RolesController::class)
             ->group(function () {
+                Route::get('/dataType/{roleName?}', 'dataType')->name('roles.dataType');
+
                 Route::get('/roles', 'index')->name('roles.index');
 
                 Route::post('/role', 'store')->name('role.store');
 
-                Route::get('/privileges/show/{accountId?}', 'showAll')->name('privileges.show');
-                Route::get('/privilege/show/{accountId?}/{privilege?}', 'show')->name('privilege.show');
+                Route::get('/role-name/{accountId?}', 'showRoleName')->name('role.showRoleName');
+                Route::get('/role', 'show')->name('role.show');
 
                 Route::put('/role', 'update')->name('roles.update');
 
@@ -248,35 +214,13 @@ Route::middleware('auth:web')->group(function () {
             ->group(function () {
                 Route::get('/dashboard/order', fn () => view('app'))->name('order.laser.page');
 
-                Route::get('/orders/laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-                Route::get('/orders/regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
-
-                Route::get('/orders/count/{businessName}', function (string $businessName) {
-                    if ((new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSPatient) {
-                        return response('', 403);
-                    }
-
-                    switch ($businessName) {
-                        case 'laser':
-                            $count = LaserOrder::query()->count();
-                            break;
-
-                        case 'regular':
-                            $count = RegularOrder::query()->count();
-                            break;
-
-                        default:
-                            break;
-                    }
-
-                    return response($count);
-                });
+                Route::get('/orders/laser/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
+                Route::get('/orders/regular/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('orders.ordersCount');
 
                 Route::post('/order', 'store')->name('orders.store');
 
-                Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
-
-                Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+                Route::delete('/order', 'destroy')->name('orders.destroy');
 
                 Route::get('/laser/parts/{gender?}', function (Request $request) {
                     $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
@@ -316,14 +260,11 @@ Route::middleware('auth:web')->group(function () {
             ->group(function () {
                 Route::get('/dashboard/visit', fn () => view('app'))->name('visit.laser.page');
 
-                Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
-                Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
+                Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name('visits.index');
+                Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name('visits.visitsCount');
 
                 Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
                 Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
-
-                Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
-                Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
 
                 Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
                 Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
