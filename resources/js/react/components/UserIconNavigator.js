@@ -142,13 +142,13 @@ export class UserIconNavigator extends Component {
                                     </Link>
                                 </MenuItem>
                             }
-                            {window.location.pathname !== '/settings' &&
+                            {/* {window.location.pathname !== '/settings' &&
                                 <MenuItem >
                                     <Link to='/settings' style={{ textDecoration: 'none' }} >
                                         {translate('general/setting/plural/ucFirstLetterFirstWord')}
                                     </Link>
                                 </MenuItem>
-                            }
+                            } */}
                         </Menu>
 
                         <SlidingDialog
