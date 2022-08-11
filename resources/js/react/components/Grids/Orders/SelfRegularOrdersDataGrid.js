@@ -13,6 +13,7 @@ import OrdersDataGrid from './OrdersDataGrid';
 import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * SelfRegularOrdersDataGrid
@@ -20,9 +21,10 @@ import { updateState } from '../../helpers';
  */
 export class SelfRegularOrdersDataGrid extends Component {
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         account: PropTypes.object.isRequired,
     }
+
+    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -55,7 +57,7 @@ export class SelfRegularOrdersDataGrid extends Component {
     }
 
     addColumns(columns) {
-        if (this.props.privileges.selfRegularOrderDelete) {
+        if (this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf('self') !== -1) {
             columns.push({
                 field: 'actions',
                 description: 'actions',
@@ -90,7 +92,6 @@ export class SelfRegularOrdersDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    privileges={this.props.privileges}
                     businessName='regular'
 
                     username={this.props.account.username}
@@ -109,14 +110,18 @@ export class SelfRegularOrdersDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {this.props.privileges.selfRegularOrderCreate ?
+                                        {(this.context.createOrder !== undefined && this.context.createOrder.regular !== undefined && this.context.createOrder.regular.indexOf('self') !== -1) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
                                                 <>
-                                                    <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='text' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
-                                                    <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='text' variant='standard' label={translate('pages/orders/order/columns/neededTime')} value={this.state.timeConsumption} />
+                                                    {this.context.privileges !== undefined && this.context.privileges.editRegularOrderPrice !== undefined && this.context.privileges.editRegularOrderNeededTime !== undefined &&
+                                                        <>
+                                                            <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='text' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
+                                                            <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='text' variant='standard' label={translate('pages/orders/order/columns/needed_time')} value={this.state.timeConsumption} />
+                                                        </>
+                                                    }
                                                     <Button variant='text' onClick={(e) => this.handleOnCreate(this.props.account)} size='small' startIcon={<AddIcon />}>
                                                         {translate('general/create/single/ucFirstLetterFirstWord')}
                                                     </Button>
@@ -151,7 +156,7 @@ export class SelfRegularOrdersDataGrid extends Component {
     }
 
     async handleOnCreate(account) {
-        if (!this.props.privileges.selfRegularOrderCreate) {
+        if (!(this.context.createOrder !== undefined && this.context.createOrder.regular !== undefined && this.context.createOrder.regular.indexOf('self') !== -1)) {
             return;
         }
 
@@ -182,7 +187,7 @@ export class SelfRegularOrdersDataGrid extends Component {
     }
 
     async handleDeletedRow(params) {
-        if (!this.props.privileges.selfRegularOrderDelete) {
+        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf('self') !== -1)) {
             return;
         }
 
@@ -190,7 +195,12 @@ export class SelfRegularOrdersDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let r = await fetchData('delete', '/orders/regular/' + this.props.account.id + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+        let data = {
+            businessName: 'regular',
+            childOrderId: params.row.id,
+        };
+
+        let r = await fetchData('delete', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

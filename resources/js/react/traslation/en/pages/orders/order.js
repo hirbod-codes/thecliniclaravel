@@ -30,12 +30,12 @@ order.columns = {};
 
 order.columns.packages = order.package.plural.ucFirstLetterFirstWord;
 order.columns.parts = order.part.plural.ucFirstLetterFirstWord;
-order.columns.neededTime = 'Needed time';
+order.columns.needed_time = 'Needed time';
 order.columns.price = 'Price';
-order.columns.priceWithDiscount = order.columns.price + ' with discount';
+order.columns.price_with_discount = order.columns.price + ' with discount';
 
 order['total-price'] = general.total.single.ucFirstLetterFirstWord + ' ' + order.columns.price;
-order['total-priceWithoutDiscount'] = general.total.single.ucFirstLetterFirstWord + ' ' + order.columns.priceWithDiscount;
+order['total-priceWithoutDiscount'] = general.total.single.ucFirstLetterFirstWord + ' ' + order.columns.price_with_discount;
 order['total-neededTime'] = general.total.single.ucFirstLetterFirstWord + ' ' + order.columns.neededTime;
 
 export { order };

@@ -12,6 +12,7 @@ import { updateState } from '../../helpers'
 import { fetchData } from '../../Http/fetch'
 import LoadingButton from '@mui/lab/LoadingButton';
 import FindAccount from '../Account/FindAccount';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * LaserOrderCreation
@@ -20,8 +21,11 @@ import FindAccount from '../Account/FindAccount';
 export class LaserOrderCreation extends Component {
     static propTypes = {
         account: PropTypes.object,
+        accountRole: PropTypes.string,
         onCreated: PropTypes.func,
     }
+
+    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -69,6 +73,7 @@ export class LaserOrderCreation extends Component {
 
             accountModalOpen: false,
             account: null,
+            accountRole: null,
 
             selectedParts: [],
             selectedPackages: [],
@@ -87,8 +92,8 @@ export class LaserOrderCreation extends Component {
     }
 
     componentDidMount() {
-        if (Object.hasOwnProperty.call(this.props, 'account')) {
-            this.setState({ account: this.props.account });
+        if (this.props.account !== undefined && this.props.accountRole !== undefined) {
+            this.setState({ account: this.props.account, accountRole: this.props.accountRole });
         } else {
             this.setState({ accountModalOpen: true });
         }
@@ -193,7 +198,7 @@ export class LaserOrderCreation extends Component {
     render() {
         return (
             <>
-                {this.state.account === null ? null :
+                {(this.state.account === null || this.state.accountRole === null) ? null :
                     <Stack sx={{ height: '100%' }} >
                         <Stepper >
                             <Step key={0} completed={this.state.steps[0].completed} active={true}>
@@ -259,7 +264,7 @@ export class LaserOrderCreation extends Component {
                     onClose={this.closeAccountModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <FindAccount handleAccount={(account) => this.setState({ account: account, accountModalOpen: false, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' })} />
+                        <FindAccount handleAccount={(account, roleName) => this.setState({ accountRole: roleName, account: account, accountModalOpen: false, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' })} />
                     </Paper>
                 </Modal>
 
@@ -328,6 +333,8 @@ export class LaserOrderCreation extends Component {
     }
 
     async submit(e) {
+        if (!(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf(this.state.accountRole) !== -1)) { return; }
+
         this.setState({ isCalculating: true });
         let data = {
             accountId: this.state.account.id,

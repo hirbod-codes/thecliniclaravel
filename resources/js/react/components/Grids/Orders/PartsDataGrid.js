@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
 
-import PropTypes from 'prop-types';
+// import PropTypes from 'prop-types';
 
 import { DataGrid, GridFooterContainer, GridPagination, GridSelectedRowCount } from '@mui/x-data-grid';
 
@@ -67,9 +67,9 @@ export class PartsDataGrid extends Component {
             if (Object.hasOwnProperty.call(this.props, 'rows') && this.props.rows && Array.isArray(this.props.rows)) {
                 rows = this.props.rows;
             } else {
-                if (Object.hasOwnProperty.call(this.props, 'accountId') && Object.hasOwnProperty.call(this.props, 'orderId') && Object.hasOwnProperty.call(this.props, 'businessName')) {
-                    rows = await fetchData('get', '/orders/' + this.props.businessName + '/' + this.props.accountId + '/' + this.props.orderId);
-                    rows = rows.value.parts;
+                if (Object.hasOwnProperty.call(this.props, 'username') && Object.hasOwnProperty.call(this.props, 'orderId') && Object.hasOwnProperty.call(this.props, 'businessName')) {
+                    rows = await fetchData('get', '/orders/' + this.props.businessName + '?username=' + this.props.username);
+                    rows = rows.value.filter((o) => o.id === this.props.orderId)[0].parts;
                 } else {
                     if (Object.hasOwnProperty.call(this.props, 'gender') && Object.hasOwnProperty.call(this.props, 'businessName')) {
                         rows = await fetchData('get', '/' + this.props.businessName + '/parts?gender=' + this.props.gender);
@@ -105,7 +105,7 @@ export class PartsDataGrid extends Component {
                             column.valueFormatter = formatToNumber;
                             break;
 
-                        case 'neededTime':
+                        case 'needed_time':
                             column.headerName = translate('pages/orders/order/columns/' + k);
                             column.type = 'number';
                             column.valueFormatter = formatToTime;
@@ -123,14 +123,14 @@ export class PartsDataGrid extends Component {
                             column.type = 'string';
                             break;
 
-                        case 'createdAt':
+                        case 'created_at':
                             column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'dateTime';
                             column.valueGetter = ({ value }) => value && new Date(value);
                             column.minWidth = 170;
                             break;
 
-                        case 'updatedAt':
+                        case 'updated_at':
                             column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'dateTime';
                             column.valueGetter = ({ value }) => value && new Date(value);
@@ -138,7 +138,7 @@ export class PartsDataGrid extends Component {
                             break;
 
                         case 'gender':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                            column.headerName = translate('general/columns/account/' + k + '/single/ucFirstLetterFirstWord');
                             break;
 
                         default:
@@ -154,6 +154,8 @@ export class PartsDataGrid extends Component {
     }
 
     render() {
+        console.log('parts', this.state);
+        console.log('parts', this.props);
         return (
             <DataGrid
                 loading={this.state.isLoading}

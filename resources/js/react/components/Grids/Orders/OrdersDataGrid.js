@@ -6,8 +6,7 @@ import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import { fetchData } from '../../Http/fetch';
 import DataGridComponent from '../DataGridComponent';
-import AnOrderVisitsDataGrid from '../Visits/AnOrderVisitsDataGrid';
-import { Button, Modal, Paper } from '@mui/material';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * OrdersDataGrid
@@ -15,9 +14,9 @@ import { Button, Modal, Paper } from '@mui/material';
  */
 export class OrdersDataGrid extends Component {
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
 
+        roleName: PropTypes.string,
         username: PropTypes.string,
         lastOrderId: PropTypes.number,
         operator: PropTypes.string,
@@ -44,6 +43,8 @@ export class OrdersDataGrid extends Component {
         onSelectionModelChange: PropTypes.func,
         selectionModel: PropTypes.arrayOf(PropTypes.number),
     }
+
+    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -72,31 +73,35 @@ export class OrdersDataGrid extends Component {
             let url = '/orders/' + this.props.businessName + '?';
             if (this.props.username !== undefined) {
                 url += 'username=' + this.props.username;
+                url += '&';
             } else {
+                url += 'roleName=' + this.props.roleName;
+                url += '&';
+
                 if (this.props.lastOrderId !== undefined) {
                     url += 'count=' + this.state.pageSize;
+                    url += '&';
                 }
             }
 
-            url += '&';
-
             if (this.props.lastOrderId !== undefined) {
                 url += 'lastOrderId=' + this.props.lastOrderId;
+                url += '&';
             }
-
-            url += '&';
 
             if (this.props.operator !== undefined && (this.props.price !== undefined || this.props.timeConsumption !== undefined)) {
                 url += 'operator=' + this.props.operator + '&price=' + this.props.price + '&timeConsumption=' + this.props.timeConsumption;
             }
 
-            let data = await fetchData('get', url, {}, { 'X-CSRF-TOKEN': this.state.token });
+            let r = await fetchData('get', url, {}, { 'X-CSRF-TOKEN': this.state.token });
+            console.log('r', r);
 
-            if (data.response.status !== 200) {
-                reject();
+            if (r.response.status !== 200) {
+                resolve([]);
             }
 
-            data = data.value.orders;
+            let data = r.value;
+            console.log('data', data);
 
             if (this.props.afterGetData !== undefined) {
                 this.props.afterGetData(data);
@@ -113,82 +118,59 @@ export class OrdersDataGrid extends Component {
 
         let columns = [];
         for (const k in rows[0]) {
-            if (Object.hasOwnProperty.call(rows[0], k)) {
-                let column = {
-                    field: k,
-                };
-
-                switch (k) {
-                    case 'visits':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
-                        column.renderCell = (params) => {
-                            return (
-                                <>
-                                    <Button type='button' onClick={() => {
-                                        let t = this.state.openVisitsModal;
-                                        t[params.row.id] = true;
-                                        this.setState({ openVisitsModal: t });
-                                    }}>
-                                        {translate('general/show/single/ucFirstLetterFirstWord')}
-                                    </Button>
-                                    <Modal
-                                        open={this.state.openVisitsModal[params.row.id] === true}
-                                        onClose={() => {
-                                            let t = this.state.openVisitsModal;
-                                            delete t[params.row.id];
-                                            this.setState({ openVisitsModal: t });
-                                        }}
-                                    >
-                                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                                            <AnOrderVisitsDataGrid orderId={params.row.id} businessName={this.props.businessName} privileges={this.props.privileges}  />
-                                        </Paper>
-                                    </Modal>
-                                </>
-                            );
-                        };
-                        break;
-
-                    case 'id':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
-                        column.type = 'number';
-                        column.valueFormatter = formatToNumber;
-                        break;
-
-                    case 'neededTime':
-                        column.headerName = translate('pages/orders/order/columns/' + k);
-                        column.type = 'number';
-                        column.valueFormatter = formatToTime;
-                        column.valueGetter = formatToNumber;
-                        column.minWidth = 170;
-                        break;
-
-                    case 'price':
-                        column.headerName = translate('pages/orders/order/columns/' + k);
-                        column.type = 'number';
-                        column.valueFormatter = formatToNumber;
-                        break;
-
-                    case 'createdAt':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
-                        column.type = 'dateTime';
-                        column.valueGetter = ({ value }) => value && new Date(value);
-                        column.minWidth = 170;
-                        break;
-
-                    case 'updatedAt':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
-                        column.type = 'dateTime';
-                        column.valueGetter = ({ value }) => value && new Date(value);
-                        column.minWidth = 170;
-                        break;
-
-                    default:
-                        continue;
-                }
-
-                column.description = column.headerName;
-                columns.push(column);
+            if (!Object.hasOwnProperty.call(rows[0], k)) {
+                continue;
             }
+
+            let column = {
+                field: k,
+            };
+            let pass = false;
+
+            switch (k) {
+                case 'id':
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                    column.type = 'number';
+                    column.valueFormatter = formatToNumber;
+                    break;
+
+                case 'needed_time':
+                    column.headerName = translate('pages/orders/order/columns/' + k);
+                    column.type = 'number';
+                    column.valueFormatter = formatToTime;
+                    column.minWidth = 170;
+                    break;
+
+                case 'price':
+                    column.headerName = translate('pages/orders/order/columns/' + k);
+                    column.type = 'number';
+                    column.valueFormatter = formatToNumber;
+                    break;
+
+                case 'created_at':
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                    column.type = 'dateTime';
+                    column.valueGetter = ({ value }) => value && new Date(value);
+                    column.minWidth = 170;
+                    break;
+
+                case 'updated_at':
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                    column.type = 'dateTime';
+                    column.valueGetter = ({ value }) => value && new Date(value);
+                    column.minWidth = 170;
+                    break;
+
+                default:
+                    continue;
+            }
+
+            if (pass) {
+                continue;
+            }
+
+            column.description = column.headerName;
+            columns.push(column);
         }
 
         if (this.props.addColumns !== undefined) {

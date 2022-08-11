@@ -18,7 +18,6 @@ export class FindOrder extends Component {
     static propTypes = {
         businessName: PropTypes.string.isRequired,
         account: PropTypes.object.isRequired,
-        privileges: PropTypes.object.isRequired,
 
         onSelectionModelChange: PropTypes.func.isRequired,
     }
@@ -54,17 +53,11 @@ export class FindOrder extends Component {
         });
 
         columns.push({
-            field: 'priceWithDiscount',
-            headerName: translate('pages/orders/order/columns/priceWithDiscount'),
-            description: translate('pages/orders/order/columns/priceWithDiscount'),
+            field: 'price_with_discount',
+            headerName: translate('pages/orders/order/columns/price_with_discount'),
+            description: translate('pages/orders/order/columns/price_with_discount'),
             type: 'number',
             valueFormatter: formatToNumber,
-        });
-
-        columns.push({
-            field: 'gender',
-            headerName: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
-            description: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
         });
 
         return columns;
@@ -79,13 +72,13 @@ export class FindOrder extends Component {
     }
 
     render() {
+        console.log('aaa', this.props);
+        console.log('aaa', this.state);
         return (
             <Stack direction='column' divider={<Divider orientation='horizontal' />} spacing={2} sx={{ height: '100%' }} >
                 <div>{translate('pages/visits/visit/choose-one-order')}</div>
 
                 <OrdersDataGrid
-                    privileges={this.props.privileges}
-
                     businessName={this.props.businessName}
                     username={this.props.account.username}
 

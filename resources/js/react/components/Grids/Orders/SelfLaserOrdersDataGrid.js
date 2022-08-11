@@ -17,6 +17,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { formatToNumber } from '../formatters';
 import PartsDataGridModal from './Modals/PartsDataGridModal';
 import PackagesDataGridModal from './Modals/PackagesDataGridModal';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * SelfLaserOrdersDataGrid
@@ -24,9 +25,11 @@ import PackagesDataGridModal from './Modals/PackagesDataGridModal';
  */
 export class SelfLaserOrdersDataGrid extends Component {
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         account: PropTypes.object.isRequired,
+        accountRole: PropTypes.string.isRequired,
     }
+
+    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -61,31 +64,25 @@ export class SelfLaserOrdersDataGrid extends Component {
             field: 'parts',
             headerName: translate('pages/orders/order/columns/parts'),
             description: translate('pages/orders/order/columns/parts'),
-            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} />,
+            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.row.parts }} />,
         });
 
         columns.push({
             field: 'packages',
             headerName: translate('pages/orders/order/columns/packages'),
             description: translate('pages/orders/order/columns/packages'),
-            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.value.packages }} />,
+            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.row.packages }} />,
         });
 
         columns.push({
-            field: 'priceWithDiscount',
-            headerName: translate('pages/orders/order/columns/priceWithDiscount'),
-            description: translate('pages/orders/order/columns/priceWithDiscount'),
+            field: 'price_with_discount',
+            headerName: translate('pages/orders/order/columns/price_with_discount'),
+            description: translate('pages/orders/order/columns/price_with_discount'),
             type: 'number',
             valueFormatter: formatToNumber,
         });
 
-        columns.push({
-            field: 'gender',
-            headerName: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
-            description: translate('general/columns/gender/single/ucFirstLetterFirstWord'),
-        });
-
-        if (this.props.privileges.selfLaserOrderDelete) {
+        if (this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1) {
             columns.push({
                 field: 'actions',
                 description: 'actions',
@@ -121,9 +118,6 @@ export class SelfLaserOrdersDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-
-
-                    privileges={this.props.privileges}
                     businessName='laser'
 
                     username={this.props.account.username}
@@ -142,7 +136,7 @@ export class SelfLaserOrdersDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {this.props.privileges.selfLaserOrderCreate ?
+                                        {(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf('self') !== -1) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -176,22 +170,20 @@ export class SelfLaserOrdersDataGrid extends Component {
                     </Alert>
                 </Snackbar>
 
-                {this.props.privileges.laserOrderCreate &&
-                    <Modal
-                        open={this.state.openCreationModal}
-                        onClose={this.closeCreationModal}
-                    >
-                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <LaserOrderCreation account={this.props.account} onCreated={this.handleOnCreate} />
-                        </Paper>
-                    </Modal>
-                }
+                <Modal
+                    open={this.state.openCreationModal}
+                    onClose={this.closeCreationModal}
+                >
+                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        <LaserOrderCreation accountRole={this.props.accountRole} account={this.props.account} onCreated={this.handleOnCreate} />
+                    </Paper>
+                </Modal>
             </>
         )
     }
 
     async handleDeletedRow(params) {
-        if (!this.props.privileges.selfLaserOrderDelete) {
+        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1)) {
             return;
         }
 
@@ -199,7 +191,12 @@ export class SelfLaserOrdersDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let r = await fetchData('delete', '/orders/laser/' + this.props.account.id + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+        let data = {
+            businessName: 'laser',
+            childOrderId: params.row.id,
+        };
+
+        let r = await fetchData('delete', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
