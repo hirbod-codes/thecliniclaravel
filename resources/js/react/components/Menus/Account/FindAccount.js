@@ -3,11 +3,11 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types';
 
 import { Button, Divider, FormControl, FormHelperText, Stack, TextField } from '@mui/material'
+import LoadingButton from '@mui/lab/LoadingButton';
 
 import { translate } from '../../../traslation/translate'
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
-import LoadingButton from '@mui/lab/LoadingButton';
 
 /**
  * FindAccount
@@ -39,6 +39,76 @@ export class FindAccount extends Component {
 
             isSubmiting: false,
         };
+    }
+
+    async handleSubmit(e) {
+        await updateState(this, { isSubmiting: true, errors: [] });
+
+        let placeholder = '';
+        for (const k in this.state) {
+            if (Object.hasOwnProperty.call(this.state, k)) {
+                const val = this.state[k];
+                if (val !== '' && k !== 'errors') {
+                    if (k === 'firstname' || k === 'lastname') {
+                        placeholder = this.state.firstname + '-' + this.state.lastname;
+                    } else {
+                        placeholder = val;
+                    }
+                    break;
+                }
+            }
+        }
+
+        let r = await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': this.state.token });
+
+        if (r.response.status !== 200) {
+            let messages = [];
+            if (r.value.errors !== undefined) {
+                for (const k in r.value.errors) {
+                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                        const error = r.value.errors[k];
+
+                        error.forEach((v, i) => {
+                            messages.push(<FormHelperText key={i} error> {v}</ FormHelperText>);
+                        });
+                    }
+                }
+            }
+
+            this.setState({ errors: messages });
+        } else {
+            let role = await fetchData('get', '/role-name?accountId=' + r.value.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+
+            if (role.response.status === 200) {
+                this.props.handleAccount(r.value, role.value);
+            }
+        }
+
+        await updateState(this, { isSubmiting: false });
+    }
+
+    render() {
+        return (
+            <>
+                <FormControl sx={{ backgroundColor: theme => theme.palette.secondary, justifyContent: 'space-around', width: '100%', height: '100%' }}>
+                    {this.state.errors}
+
+                    <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2} justifyContent='space-around'>
+                        <TextField fullWidth type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                        <TextField fullWidth type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    </Stack>
+
+                    <TextField fullWidth type='text' value={this.state.username} onInput={this.handleUsername} label={translate('general/username/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    <TextField fullWidth type='text' value={this.state.phonenumber} onInput={this.handlePhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                    <TextField fullWidth type='text' value={this.state.email} onInput={this.handleEmail} label={translate('general/email/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+
+                    {this.state.isSubmiting ?
+                        <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord')}</LoadingButton> :
+                        <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>
+                    }
+                </FormControl>
+            </>
+        )
     }
 
     handleFirstName(e) {
@@ -87,70 +157,6 @@ export class FindAccount extends Component {
             phonenumber: '',
             email: e.target.value,
         });
-    }
-
-    async handleSubmit(e) {
-        await updateState(this, { isSubmiting: true, errors: [] });
-
-        let placeholder = '';
-        for (const k in this.state) {
-            if (Object.hasOwnProperty.call(this.state, k)) {
-                const val = this.state[k];
-                if (val !== '' && k !== 'errors') {
-                    if (k === 'firstname' || k === 'lastname') {
-                        placeholder = this.state.firstname + '-' + this.state.lastname;
-                    } else {
-                        placeholder = val;
-                    }
-                    break;
-                }
-            }
-        }
-
-        let r = await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': this.state.token });
-
-        await updateState(this, { isSubmiting: false });
-
-        if (r.response.status !== 200) {
-            let messages = [];
-            if (r.value.errors !== undefined) {
-                for (const k in r.value.errors) {
-                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                        const error = r.value.errors[k];
-
-                        error.forEach((v, i) => {
-                            messages.push(<FormHelperText key={i} error> {v}</ FormHelperText>);
-                        });
-                    }
-                }
-            }
-
-            this.setState({ errors: messages });
-        }
-    }
-
-    render() {
-        return (
-            <>
-                <FormControl sx={{ backgroundColor: theme => theme.palette.secondary, justifyContent: 'space-around', width: '100%', height: '100%' }}>
-                    {this.state.errors}
-
-                    <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2} justifyContent='space-around'>
-                        <TextField fullWidth type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
-                        <TextField fullWidth type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
-                    </Stack>
-
-                    <TextField fullWidth type='text' value={this.state.username} onInput={this.handleUsername} label={translate('general/username/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
-                    <TextField fullWidth type='text' value={this.state.phonenumber} onInput={this.handlePhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
-                    <TextField fullWidth type='text' value={this.state.email} onInput={this.handleEmail} label={translate('general/email/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
-
-                    {this.state.isSubmiting ?
-                        <LoadingButton varient='contained' type='button' loading>{translate('general/submit/single/ucFirstLetterFirstWord')}</LoadingButton> :
-                        <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>
-                    }
-                </FormControl>
-            </>
-        )
     }
 }
 

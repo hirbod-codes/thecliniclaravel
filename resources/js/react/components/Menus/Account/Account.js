@@ -13,6 +13,7 @@ import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
 import { LocaleContext } from '../../localeContext';
 import { updateState } from '../../helpers';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * Account
@@ -20,10 +21,12 @@ import { updateState } from '../../helpers';
  */
 export class Account extends Component {
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         account: PropTypes.object.isRequired,
-        isSelf: PropTypes.bool.isRequired,
+        accountRole: PropTypes.string.isRequired,
+        onUpdateSuccess: PropTypes.func,
     }
+
+    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -76,10 +79,8 @@ export class Account extends Component {
 
             isUpdatingPhonenumber: false,
             isUpdatingPassword: false,
-
-            isUpdatable: false,
             isUpdating: false,
-            isDeletable: false,
+
             isDeleting: false,
 
             loadingGenders: true,
@@ -106,14 +107,6 @@ export class Account extends Component {
     }
 
     componentDidMount() {
-        if (Boolean(this.props.privileges[(this.props.isSelf ? 'selfAccountUpdate' : 'accountUpdate')]) === true && this.state.isUpdatable === false) {
-            this.setState({ isUpdatable: true });
-        }
-
-        if (Boolean(this.props.privileges[(this.props.isSelf ? 'selfAccountDelete' : 'accountDelete')]) === true && this.state.isDeletable === false) {
-            this.setState({ isDeletable: true });
-        }
-
         if (this.props.account.gender !== undefined) {
             this.getGenders();
         }
@@ -166,8 +159,6 @@ export class Account extends Component {
     }
 
     render() {
-        console.log('this.props', this.props);
-        console.log('this.state', this.state);
         return (
             <>
                 <Stack
@@ -180,39 +171,116 @@ export class Account extends Component {
                         <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
                             <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
                                 {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
-                                <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} id='avatar' type='file' onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : ''; return state; })} required label={translate('general/avatar/single/ucFirstLetterFirstWord')} variant='standard' sx={{ display: 'none' }} />
+                                <TextField
+                                    disabled={!(this.context.privileges !== undefined && this.context.privileges.editAvatar !== undefined && this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && Number(this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].boolean_value) === 1) || this.state.isUpdating}
+                                    id='avatar'
+                                    type='file'
+                                    onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : ''; return state; })}
+                                    required
+                                    label={translate('general/avatar/single/ucFirstLetterFirstWord')}
+                                    variant='standard'
+                                    sx={{ display: 'none' }}
+                                />
                             </Button>
-                            <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = ''; return state; })} >{translate('general/reset/single/ucFirstLetterFirstWord')}</Button>
+                            <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = ''; return state; })} >{
+                                translate('general/reset/single/ucFirstLetterFirstWord')}
+                            </Button>
                         </Box>
 
-                        <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} onInput={(e) => this.setState((state) => { state.inputs.firstname = e.target.value; return state; })} label={translate('general/firstname/single/ucFirstLetterAllWords')} value={this.state.inputs.firstname !== '' ? this.state.inputs.firstname : this.props.account.firstname} required variant='standard' sx={{ m: 1 }} />
-                        <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} onInput={(e) => this.setState((state) => { state.inputs.lastname = e.target.value; return state; })} label={translate('general/lastname/single/ucFirstLetterAllWords')} value={this.state.inputs.lastname !== '' ? this.state.inputs.lastname : this.props.account.lastname} required variant='standard' sx={{ m: 1 }} />
-                        <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} onInput={(e) => this.setState((state) => { state.inputs.username = e.target.value; return state; })} label={translate('general/username/single/ucFirstLetterAllWords')} value={this.state.inputs.username !== '' ? this.state.inputs.username : this.props.account.username} required variant='standard' sx={{ m: 1 }} />
-                        <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} onInput={(e) => this.setState((state) => { state.inputs.email = e.target.value; return state; })} label={translate('general/email-address/single/ucFirstLetterFirstWord')} value={this.state.inputs.email !== '' ? this.state.inputs.email : this.props.account.email} type='email' variant='standard' sx={{ m: 1 }} />
+                        <TextField
+                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('firstname') !== -1) || this.state.isUpdating}
+                            onInput={(e) => this.setState((state) => { state.inputs.firstname = e.target.value; return state; })}
+                            label={translate('general/firstname/single/ucFirstLetterAllWords')}
+                            value={this.state.inputs.firstname !== '' ? this.state.inputs.firstname : (this.props.account.firstname === null ? '' : this.props.account.firstname)}
+                            required
+                            variant='standard'
+                            sx={{ m: 1 }}
+                        />
+                        <TextField
+                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('lastname') !== -1) || this.state.isUpdating}
+                            onInput={(e) => this.setState((state) => { state.inputs.lastname = e.target.value; return state; })}
+                            label={translate('general/lastname/single/ucFirstLetterAllWords')}
+                            value={this.state.inputs.lastname !== '' ? this.state.inputs.lastname : (this.props.account.lastname === null ? '' : this.props.account.lastname)}
+                            required
+                            variant='standard'
+                            sx={{ m: 1 }} />
+                        <TextField
+                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('username') !== -1) || this.state.isUpdating}
+                            onInput={(e) => this.setState((state) => { state.inputs.username = e.target.value; return state; })}
+                            label={translate('general/username/single/ucFirstLetterAllWords')}
+                            value={this.state.inputs.username !== '' ? this.state.inputs.username : (this.props.account.username === null ? '' : this.props.account.username)}
+                            required
+                            variant='standard'
+                            sx={{ m: 1 }} />
+                        <TextField
+                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('email') !== -1) || this.state.isUpdating}
+                            onInput={(e) => this.setState((state) => { state.inputs.email = e.target.value; return state; })}
+                            label={translate('general/email-address/single/ucFirstLetterFirstWord')}
+                            value={this.state.inputs.email !== '' ? this.state.inputs.email : (this.props.account.email === null ? '' : this.props.account.email)}
+                            type='email'
+                            variant='standard'
+                            sx={{ m: 1 }} />
 
-                        {this.state.isUpdating ? <LoadingButton loading variant='contained'>{translate('pages/account/account/update-your-password')}</LoadingButton>
-                            : <Button disabled={!this.state.isUpdatable} variant='contained' type='button' onClick={() => this.setState({ isUpdatingPassword: true, openSendModal: true })} >{translate('pages/account/account/update-your-password')}</Button>
+                        {this.state.isUpdating
+                            ? <LoadingButton loading variant='contained'>{translate('pages/account/account/update-your-password')}</LoadingButton>
+                            : <Button
+                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('password') !== -1) || this.state.isUpdating}
+                                variant='contained'
+                                type='button'
+                                onClick={() => this.setState({ isUpdatingPassword: true, openSendModal: true })}
+                            >
+                                {translate('pages/account/account/update-your-password')}
+                            </Button>
                         }
 
-                        <TextField disabled label={translate('general/phonenumber/single/ucFirstLetterAllWords')} value={this.props.account.phonenumber} required variant='standard' sx={{ m: 1 }} />
+                        <TextField
+                            disabled
+                            label={translate('general/phonenumber/single/ucFirstLetterAllWords')}
+                            value={(this.props.account.phonenumber === null ? '' : this.props.account.phonenumber)}
+                            required
+                            variant='standard'
+                            sx={{ m: 1 }}
+                        />
                         {this.state.isUpdating ? <LoadingButton loading variant='contained'>{translate('pages/account/account/update-your-phone')}</LoadingButton>
-                            : <Button disabled={!this.state.isUpdatable} variant='contained' type='button' onClick={() => this.setState({ isUpdatingPhonenumber: true, openSendModal: true })} >{translate('pages/account/account/update-your-phone')}</Button>
+                            : <Button
+                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('phonenumber') !== -1) || this.state.isUpdating}
+                                variant='contained'
+                                type='button'
+                                onClick={() => this.setState({ isUpdatingPhonenumber: true, openSendModal: true })}
+                            >
+                                {translate('pages/account/account/update-your-phone')}
+                            </Button>
                         }
 
                         {this.state.loadingGenders && <LoadingButton loading variant='contained'>{translate('general/gender/single/ucFirstLetterFirstWord')}</LoadingButton>}
                         {!this.state.loadingGenders && <Autocomplete
                             sx={{ m: 1 }}
                             disablePortal
-                            defaultValue={this.props.account.gender}
+                            defaultValue={(this.props.account.gender === null ? '' : this.props.account.gender)}
                             options={this.genders}
                             onChange={this.handleGender}
-                            renderInput={(params) => <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} {...params} label={translate('general/gender/single/ucFirstLetterFirstWord')} required variant='standard' />}
+                            renderInput={(params) => <TextField
+                                {...params}
+                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('gender') !== -1) || this.state.isUpdating}
+                                label={translate('general/gender/single/ucFirstLetterFirstWord')}
+                                required
+                                variant='standard'
+                            />}
                         />}
 
                         {/* ------------------------------------------------------------------ */}
 
                         {this.props.account.age !== undefined ?
-                            <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} type='number' onInput={(e) => this.setState((state) => { state.inputs.age = e.target.value; return state; })} required value={this.state.inputs.age !== '' ? this.state.inputs.age : this.props.account.age} label={translate('general/age/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} min={1} />
+                            <TextField
+                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('age') !== -1) || this.state.isUpdating}
+                                type='number'
+                                onInput={(e) => this.setState((state) => { state.inputs.age = e.target.value; return state; })}
+                                required value={this.state.inputs.age !== '' ? this.state.inputs.age : (this.props.account.age === null ? '' : this.props.account.age)}
+                                label={translate('general/age/single/ucFirstLetterFirstWord')}
+                                variant='standard'
+                                sx={{ m: 1 }}
+                                min={1}
+                            />
                             : null
                         }
 
@@ -222,10 +290,16 @@ export class Account extends Component {
                                 {!this.state.loadingStates && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
-                                    defaultValue={this.props.account.state}
+                                    defaultValue={(this.props.account.state === null ? '' : this.props.account.state)}
                                     options={this.states}
                                     onChange={this.handleState}
-                                    renderInput={(params) => <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} {...params} label={translate('general/state/single/ucFirstLetterFirstWord')} required variant='standard' />}
+                                    renderInput={(params) => <TextField
+                                        {...params}
+                                        disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('state') !== -1) || this.state.isUpdating}
+                                        label={translate('general/state/single/ucFirstLetterFirstWord')}
+                                        required
+                                        variant='standard'
+                                    />}
                                 />}
                             </>
                             : null
@@ -238,21 +312,40 @@ export class Account extends Component {
                                 {!this.state.loadingCities && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
-                                    defaultValue={this.props.account.city}
+                                    defaultValue={(this.props.account.city === null ? '' : this.props.account.city)}
                                     options={this.cities}
                                     onChange={this.handleCity}
-                                    renderInput={(params) => <TextField disabled={!this.state.isUpdatable || this.state.isUpdating} {...params} label={translate('general/city/single/ucFirstLetterFirstWord')} required variant='standard' />}
+                                    renderInput={(params) => <TextField
+                                        {...params}
+                                        disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('city') !== -1) || this.state.isUpdating}
+                                        label={translate('general/city/single/ucFirstLetterFirstWord')}
+                                        required
+                                        variant='standard'
+                                    />}
                                 />}
                             </>
                             : null
                         }
 
                         {this.props.account.address !== undefined ?
-                            <TextField onInput={(e) => this.setState((state) => { state.inputs.address = e.target.value; return state; })} disabled={!this.state.isUpdatable || this.state.isUpdating} multiline value={this.state.inputs.address !== '' ? this.state.inputs.address : this.props.account.address} label={translate('general/address/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
+                            <TextField
+                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('address') !== -1) || this.state.isUpdating}
+                                onInput={(e) => this.setState((state) => { state.inputs.address = e.target.value; return state; })}
+                                multiline
+                                value={this.state.inputs.address !== '' ? this.state.inputs.address : (this.props.account.address === null ? '' : this.props.account.address)}
+                                label={translate('general/address/single/ucFirstLetterFirstWord')}
+                                variant='standard'
+                                sx={{ m: 1 }}
+                            />
                             : null
                         }
 
-                        {(this.state.isUpdatable && !this.state.isUpdating) ?
+                        {(
+                            this.context.updatableColumns !== undefined &&
+                            this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined &&
+                            this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0 &&
+                            !this.state.isUpdating
+                        ) ?
                             <Button type='submit' variant='contained' onClick={this.hsndleUpdate} fullWidth>
                                 {translate('general/update/single/ucFirstLetterFirstWord')}
                             </Button> :
@@ -260,23 +353,31 @@ export class Account extends Component {
                         }
                     </FormControl>
 
-                    <Button type='button' variant='contained' onClick={(e) => { this.setState({ openLaserOrdersViewModal: true }); }} fullWidth>
-                        {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/orders/order/laser-orders')}
-                    </Button>
+                    {(this.context.retrieveOrder.laser !== undefined && this.context.retrieveOrder.laser.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                        <Button type='button' variant='contained' onClick={(e) => { this.setState({ openLaserOrdersViewModal: true }); }} fullWidth>
+                            {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/orders/order/laser-orders')}
+                        </Button>
+                    }
 
-                    <Button type='button' variant='contained' onClick={(e) => { this.setState({ openRegularOrdersViewModal: true }); }} fullWidth>
-                        {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/orders/order/regular-orders')}
-                    </Button>
+                    {(this.context.retrieveOrder.regular !== undefined && this.context.retrieveOrder.regular.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                        <Button type='button' variant='contained' onClick={(e) => { this.setState({ openRegularOrdersViewModal: true }); }} fullWidth>
+                            {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/orders/order/regular-orders')}
+                        </Button>
+                    }
 
-                    <Button type='button' variant='contained' onClick={(e) => { this.setState({ openLaserVisitsViewModal: true }); }} fullWidth>
-                        {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/visits/visit/laser-visit')}
-                    </Button>
+                    {(this.context.retrieveVisit.laser !== undefined && this.context.retrieveVisit.laser.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                        <Button type='button' variant='contained' onClick={(e) => { this.setState({ openLaserVisitsViewModal: true }); }} fullWidth>
+                            {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/visits/visit/laser-visit')}
+                        </Button>
+                    }
 
-                    <Button type='button' variant='contained' onClick={(e) => { this.setState({ openRegularVisitsViewModal: true }); }} fullWidth>
-                        {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/visits/visit/regular-visit')}
-                    </Button>
+                    {(this.context.retrieveVisit.regular !== undefined && this.context.retrieveVisit.regular.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                        <Button type='button' variant='contained' onClick={(e) => { this.setState({ openRegularVisitsViewModal: true }); }} fullWidth>
+                            {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/visits/visit/regular-visit')}
+                        </Button>
+                    }
 
-                    {(this.state.isDeletable && !this.state.isDeleting) ?
+                    {(this.context.deleteUser !== undefined && this.context.deleteUser.length > 0 && this.context.deleteUser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1 && !this.state.isDeleting) ?
                         <Button type='submit' variant='contained' onClick={this.hsndleDelete} fullWidth color='error' >
                             {translate('general/delete/single/ucFirstLetterFirstWord')}
                         </Button>
@@ -300,7 +401,6 @@ export class Account extends Component {
                         </Stack>
                     </Paper>
                 </Modal>
-
                 <Modal
                     open={this.state.openCodeModal}
                     onClose={this.closeCodeModal}
@@ -333,7 +433,7 @@ export class Account extends Component {
                     onClose={this.closeLaserOrdersViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfLaserOrdersDataGrid account={this.props.account} privileges={this.props.privileges} />
+                        <SelfLaserOrdersDataGrid account={this.props.account} />
                     </Paper>
                 </Modal>
                 <Modal
@@ -341,15 +441,16 @@ export class Account extends Component {
                     onClose={this.closeRegularOrdersViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfRegularOrdersDataGrid account={this.props.account} privileges={this.props.privileges} />
+                        <SelfRegularOrdersDataGrid account={this.props.account} />
                     </Paper>
                 </Modal>
+
                 <Modal
                     open={this.state.openLaserVisitsViewModal}
                     onClose={this.closeLaserVisitsViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfVisitsDataGrid businessName='laser' account={this.props.account} privileges={this.props.privileges} />
+                        <SelfVisitsDataGrid businessName='laser' account={this.props.account} />
                     </Paper>
                 </Modal>
                 <Modal
@@ -357,7 +458,7 @@ export class Account extends Component {
                     onClose={this.closeRegularVisitsViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfVisitsDataGrid businessName='regular' account={this.props.account} privileges={this.props.privileges} />
+                        <SelfVisitsDataGrid businessName='regular' account={this.props.account} />
                     </Paper>
                 </Modal>
 
@@ -437,7 +538,7 @@ export class Account extends Component {
     }
 
     async hsndleUpdate(e) {
-        if (Boolean(this.props.privileges[(this.props.isSelf ? 'selfAccountUpdate' : 'accountUpdate')]) !== true || this.state.isUpdating === true) {
+        if (!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0) || this.state.isUpdating) {
             return;
         }
 
@@ -463,8 +564,10 @@ export class Account extends Component {
         }
 
         let r = await fetchData('put', '/account/' + this.props.account.id, data, { 'X-CSRF-TOKEN': this.state.token });
-        console.log(r);
         if (r.response.status === 200) {
+            if (this.props.onUpdateSuccess !== undefined) {
+                this.props.onUpdateSuccess();
+            }
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
         } else {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
@@ -474,7 +577,7 @@ export class Account extends Component {
     }
 
     async hsndleDelete(e) {
-        if (Boolean(this.props.privileges[(this.props.isSelf ? 'selfAccountDelete' : 'accountDelete')]) !== true || this.state.isDeleting === true) {
+        if (!(this.context.deleteUser !== undefined && this.context.deleteUser.length > 0 && this.context.deleteUser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) || this.state.isDeleting) {
             return;
         }
 

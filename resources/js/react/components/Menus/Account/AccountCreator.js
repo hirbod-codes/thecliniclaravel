@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, Autocomplete, Box, Button, FormControl, FormControlLabel, FormLabel, IconButton, Radio, RadioGroup, Slide, Snackbar, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, FormControl, FormControlLabel, FormHelperText, FormLabel, IconButton, Radio, RadioGroup, Slide, Snackbar, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { LocaleContext } from '../../localeContext';
@@ -16,6 +16,8 @@ import { updateState } from '../../helpers';
  */
 export class AccountCreator extends Component {
     static propTypes = {
+        dataType: PropTypes.string.isRequired,
+        rules: PropTypes.arrayOf(PropTypes.string).isRequired,
         onSuccess: PropTypes.func,
         onFailure: PropTypes.func,
     }
@@ -30,6 +32,7 @@ export class AccountCreator extends Component {
 
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
 
+        this.submit = this.submit.bind(this);
         this.submitPhonenumber = this.submitPhonenumber.bind(this);
         this.submitCode = this.submitCode.bind(this);
 
@@ -47,6 +50,10 @@ export class AccountCreator extends Component {
             feedbackOpen: false,
             feedbackMessage: '',
             feedbackColor: 'info',
+
+            loadingGenders: true,
+            loadingStates: true,
+            loadingCities: true,
 
             steps: [
                 {
@@ -70,7 +77,7 @@ export class AccountCreator extends Component {
             ],
             activeStep: 0,
 
-            rule: '',
+            rule: this.props.rules[0],
 
             phonenumberSubnitionErrors: [],
             isSubmittingPhonenumber: false,
@@ -87,6 +94,10 @@ export class AccountCreator extends Component {
 
             code: '',
 
+            genders: [],
+            states: [],
+            cities: [],
+
             inputs: {
                 firstname: '',
                 lastname: '',
@@ -96,7 +107,7 @@ export class AccountCreator extends Component {
                 password: '',
                 password_confirmation: '',
                 age: '',
-                avatar: null,
+                avatar: '',
             },
 
             patient: {
@@ -108,9 +119,12 @@ export class AccountCreator extends Component {
         };
     }
 
-    componentDidMount() {
-        if (this.state.rule === 'patient') {
+    componentDidUpdate(prevProps, prevState) {
+        if (prevState.steps[prevState.activeStep].name !== this.state.steps[this.state.activeStep].name && this.state.steps[this.state.activeStep].name === 'submission') {
             this.getGenders();
+        }
+
+        if (prevState.rule !== this.state.rule && this.state.rule === 'patient') {
             this.getStates();
         }
     }
@@ -216,7 +230,7 @@ export class AccountCreator extends Component {
 
                     <Slide direction={this.state.steps[0].animationDirection} timeout={this.duration} in={this.state.steps[0].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            {this.state.phonenumberSubnitionErrors !== null && this.state.phonenumberSubnitionErrors}
+                            {this.state.phonenumberSubnitionErrors.map((v, i) => <FormHelperText key={i} error>{v}</FormHelperText>)}
 
                             <TextField onInput={(e) => this.setState((state) => { state.inputs.phonenumber = e.target.value; return state; })} value={this.state.inputs.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
@@ -227,18 +241,18 @@ export class AccountCreator extends Component {
 
                     <Slide direction={this.state.steps[1].animationDirection} timeout={this.duration} in={this.state.steps[1].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            {this.state.codeSubnitionErrors !== null && this.state.codeSubnitionErrors}
+                            {this.state.codeSubnitionErrors.map((v, i) => <FormHelperText key={i} error>{v}</FormHelperText>)}
 
-                            <TextField type='number' onInput={(e) => this.setState({ code: e.target.value })} value={this.state.inputs.phonenumber} required label={translate('general/code/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                            <TextField type='number' onInput={(e) => this.setState({ code: e.target.value })} required label={translate('general/code/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
                             {this.state.isSubmittingCode && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase')}</LoadingButton>}
                             {!this.state.isSubmittingCode && <Button type='submit' fullWidth onClick={this.submitCode} variant='contained' >{translate('general/submit/single/ucFirstLetterFirstWord')}</Button>}
                         </FormControl>
                     </Slide>
 
-                    <Slide direction={this.state.steps[2].animationDirection} timeout={this.duration} in={this.state.steps[1].in} mountOnEnter unmountOnExit>
+                    <Slide direction={this.state.steps[2].animationDirection} timeout={this.duration} in={this.state.steps[2].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            {this.state.errors}
+                            {this.state.errors.map((v, i) => <FormHelperText key={i} error>{v}</FormHelperText>)}
 
                             <FormLabel id="demo-row-radio-buttons-group-label">{translate('general/rule/plural/ucFirstLetterFirstWord')}</FormLabel>
                             <RadioGroup
@@ -247,47 +261,100 @@ export class AccountCreator extends Component {
                                 row
                                 name="row-radio-buttons-group"
                             >
-                                <FormControlLabel value="admin" control={<Radio />} label={translate('general/admin/single/ucFirstLetterFirstWord')} />
-                                <FormControlLabel value="doctor" control={<Radio />} label={translate('general/doctor/single/ucFirstLetterFirstWord')} />
-                                <FormControlLabel value="secretary" control={<Radio />} label={translate('general/secretary/single/ucFirstLetterFirstWord')} />
-                                <FormControlLabel value="operator" control={<Radio />} label={translate('general/operator/single/ucFirstLetterFirstWord')} />
-                                <FormControlLabel value="patient" control={<Radio />} label={translate('general/patient/single/ucFirstLetterFirstWord')} />
+                                {this.props.rules.map((v, i) => <FormControlLabel defaultChecked={v === this.props.rules[0]} value={v} control={<Radio />} label={v} key={i} />)}
                             </RadioGroup>
 
                             <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
                                 <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
                                     {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
-                                    <TextField id='avatar' type='file' onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : ''; return state; })} required label={translate('general/avatar/single/ucFirstLetterFirstWord')} variant='standard' sx={{ display: 'none' }} />
+                                    <TextField
+                                        id='avatar'
+                                        type='file'
+                                        onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : ''; return state; })}
+                                        required
+                                        label={translate('general/avatar/single/ucFirstLetterFirstWord')}
+                                        variant='standard'
+                                        sx={{ display: 'none' }}
+                                    />
                                 </Button>
                                 <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = ''; return state; })} >{translate('general/reset/single/ucFirstLetterFirstWord')}</Button>
                             </Box>
 
-                            <TextField value={this.state.inputs.firstname} onInput={(e) => this.setState((state) => { state.inputs.firstname = e.target.value; return state; })} label={translate('general/firstname/single/ucFirstLetterAllWords')} required variant='standard' sx={{ m: 1 }} />
-                            <TextField value={this.state.inputs.lastname} onInput={(e) => this.setState((state) => { state.inputs.lastname = e.target.value; return state; })} label={translate('general/lastname/single/ucFirstLetterAllWords')} required variant='standard' sx={{ m: 1 }} />
-                            <TextField value={this.state.inputs.username} onInput={(e) => this.setState((state) => { state.inputs.username = e.target.value; return state; })} label={translate('general/username/single/ucFirstLetterAllWords')} required variant='standard' sx={{ m: 1 }} />
-                            <TextField value={this.state.inputs.email} onInput={(e) => this.setState((state) => { state.inputs.email = e.target.value; return state; })} label={translate('general/email-address/single/ucFirstLetterFirstWord')} type='email' variant='standard' sx={{ m: 1 }} />
+                            <TextField
+                                value={this.state.inputs.firstname}
+                                onInput={(e) => this.setState((state) => { state.inputs.firstname = e.target.value; return state; })}
+                                label={translate('general/firstname/single/ucFirstLetterAllWords')}
+                                required
+                                variant='standard'
+                                sx={{ m: 1 }}
+                            />
+                            <TextField
+                                value={this.state.inputs.lastname}
+                                onInput={(e) => this.setState((state) => { state.inputs.lastname = e.target.value; return state; })}
+                                label={translate('general/lastname/single/ucFirstLetterAllWords')}
+                                required
+                                variant='standard'
+                                sx={{ m: 1 }}
+                            />
+                            <TextField
+                                value={this.state.inputs.username}
+                                onInput={(e) => this.setState((state) => { state.inputs.username = e.target.value; return state; })}
+                                label={translate('general/username/single/ucFirstLetterAllWords')}
+                                required
+                                variant='standard'
+                                sx={{ m: 1 }}
+                            />
+                            <TextField
+                                value={this.state.inputs.email}
+                                onInput={(e) => this.setState((state) => { state.inputs.email = e.target.value; return state; })}
+                                label={translate('general/email-address/single/ucFirstLetterFirstWord')} type='email' variant='standard' sx={{ m: 1 }} />
 
-                            <TextField value={this.state.inputs.password} onInput={(e) => this.setState((state) => { state.inputs.password = e.target.value; return state; })} label={translate('general/password-address/single/ucFirstLetterFirstWord')} type='password' variant='standard' sx={{ m: 1 }} />
-                            <TextField value={this.state.inputs.password_confirmation} onInput={(e) => this.setState((state) => { state.inputs.password_confirmation = e.target.value; return state; })} label={translate('general/password_confirmation/single/ucFirstLetterFirstWord')} type='password' variant='standard' sx={{ m: 1 }} error={this.state.inputs.password_confirmation !== this.state.inputs.password} />
+                            <TextField
+                                value={this.state.inputs.password}
+                                required
+                                onInput={(e) => this.setState((state) => { state.inputs.password = e.target.value; return state; })}
+                                label={translate('general/password/single/ucFirstLetterFirstWord')}
+                                type='password'
+                                variant='standard'
+                                sx={{ m: 1 }}
+                            />
+                            <TextField
+                                value={this.state.inputs.password_confirmation}
+                                required
+                                onInput={(e) => this.setState((state) => { state.inputs.password_confirmation = e.target.value; return state; })}
+                                label={translate('general/password_confirmation/single/ucFirstLetterFirstWord')}
+                                type='password'
+                                variant='standard'
+                                sx={{ m: 1 }}
+                                error={this.state.inputs.password_confirmation !== this.state.inputs.password}
+                            />
 
-                            <TextField disabled value={this.state.inputs.phonenumber} onInput={(e) => this.setState((state) => { state.inputs.phonenumber = e.target.value; return state; })} label={translate('general/phonenumber/single/ucFirstLetterAllWords')} required variant='standard' sx={{ m: 1 }} />
+                            <TextField
+                                disabled
+                                value={this.state.inputs.phonenumber}
+                                onInput={(e) => this.setState((state) => { state.inputs.phonenumber = e.target.value; return state; })}
+                                label={translate('general/phonenumber/single/ucFirstLetterAllWords')}
+                                required
+                                variant='standard'
+                                sx={{ m: 1 }}
+                            />
 
                             {this.state.loadingGenders && <LoadingButton loading variant='contained'>{translate('general/gender/single/ucFirstLetterFirstWord')}</LoadingButton>}
                             {!this.state.loadingGenders && <Autocomplete
                                 sx={{ m: 1 }}
                                 disablePortal
-                                options={this.genders}
+                                options={this.state.genders}
                                 onChange={this.handleGender}
                                 renderInput={(params) => <TextField {...params} label={translate('general/gender/single/ucFirstLetterFirstWord')} required variant='standard' />}
                             />
                             }
 
-                            {this.state.rule === 'admin' ? null : null}
-                            {this.state.rule === 'doctor' ? null : null}
-                            {this.state.rule === 'secretary' ? null : null}
-                            {this.state.rule === 'operator' ? null : null}
+                            {this.props.dataType === 'admin' ? null : null}
+                            {this.props.dataType === 'doctor' ? null : null}
+                            {this.props.dataType === 'secretary' ? null : null}
+                            {this.props.dataType === 'operator' ? null : null}
 
-                            {this.state.rule === 'patient' ?
+                            {this.props.dataType === 'patient' ?
                                 <>
                                     <TextField type='number' onInput={(e) => this.setState((state) => { state.patient.age = e.target.value; return state; })} required value={this.state.patient.age} label={translate('general/age/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} min={1} />
 
@@ -296,7 +363,7 @@ export class AccountCreator extends Component {
                                         sx={{ m: 1 }}
                                         disablePortal
                                         value={this.state.patient.state}
-                                        options={this.states}
+                                        options={this.state.states}
                                         onChange={this.handleState}
                                         renderInput={(params) => <TextField {...params} label={translate('general/state/single/ucFirstLetterFirstWord')} required variant='standard' />}
                                     />}
@@ -306,7 +373,7 @@ export class AccountCreator extends Component {
                                         sx={{ m: 1 }}
                                         disablePortal
                                         value={this.state.patient.city}
-                                        options={this.cities}
+                                        options={this.state.cities}
                                         onChange={this.handleCity}
                                         renderInput={(params) => <TextField {...params} label={translate('general/city/single/ucFirstLetterFirstWord')} required variant='standard' />}
                                     />}
@@ -357,20 +424,28 @@ export class AccountCreator extends Component {
         for (const k in this.state.inputs) {
             if (Object.hasOwnProperty.call(this.state.inputs, k)) {
                 const input = this.state.inputs[k];
+                if (input === '' || input === null) {
+                    continue;
+                }
 
                 data[k] = input;
             }
         }
 
-        for (const j in this.state[this.state.rule]) {
-            if (Object.hasOwnProperty.call(this.state[this.state.rule], j)) {
-                const ruleInput = this.state[this.state.rule][j];
+        for (const j in this.state[this.props.dataType]) {
+            if (Object.hasOwnProperty.call(this.state[this.props.dataType], j)) {
+                const ruleInput = this.state[this.props.dataType][j];
+                if (ruleInput === '' || ruleInput === null) {
+                    continue;
+                }
 
                 data[j] = ruleInput;
             }
         }
 
-        let r = await fetchData('post', '/account/' + this.state.rule, data);
+        let r = await fetchData('post', '/account/' + this.state.rule, data, { 'X-CSRF-TOKEN': this.state.token });
+        this.setState({ isSubmitting: false });
+
         if (r.response.status === 200) {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
             this.nextStep();
@@ -379,12 +454,21 @@ export class AccountCreator extends Component {
             }
         } else {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            if (r.response.status === 422 && r.value.errors !== undefined) {
+                let errors = [];
+                for (const k in r.value.errors) {
+                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
+                        const v = r.value.errors[k];
+
+                        errors = errors.concat(v);
+                    }
+                }
+                this.setState({ errors: errors });
+            }
             if (this.props.onFailure !== undefined) {
                 this.props.onFailure();
             }
         }
-
-        this.setState({ isSubmitting: false });
     }
 
     async submitPhonenumber(e) {
@@ -392,6 +476,7 @@ export class AccountCreator extends Component {
 
         let data = { phonenumber: this.state.inputs.phonenumber };
         let r = await fetchData('post', '/account/send-phoennumber-verification-code', data, { 'X-CSRF-TOKEN': this.state.token });
+        this.setState({ isSubmittingPhonenumber: false });
 
         if (r.response.status === 200) {
             this.setState({
@@ -405,7 +490,7 @@ export class AccountCreator extends Component {
             this.nextStep();
         } else {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-            if (r.response.status === 422) {
+            if (r.response.status === 422 && r.value.errors !== undefined) {
                 let messages = [];
                 for (const k in r.value.errors) {
                     if (Object.hasOwnProperty.call(r.value.errors, k)) {
@@ -419,8 +504,6 @@ export class AccountCreator extends Component {
                 this.setState({ phonenumberSubnitionErrors: messages });
             }
         }
-
-        this.setState({ isSubmittingPhonenumber: false });
     }
 
     async submitCode(e) {
@@ -434,7 +517,9 @@ export class AccountCreator extends Component {
             phonenumber_encrypted: this.state.phonenumber_encrypted,
         };
 
-        let r = await fetch('post', '/account/verify-phoennumber-verification-code', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/account/verify-phoennumber-verification-code', data, { 'X-CSRF-TOKEN': this.state.token });
+        this.setState({ isSubmittingCode: false });
+
         if (r.response.status === 200) {
             this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
             this.nextStep();
@@ -454,8 +539,6 @@ export class AccountCreator extends Component {
                 this.setState({ codeSubnitionErrors: messages });
             }
         }
-
-        this.setState({ isSubmittingCode: false });
     }
 
     async getGenders() {
@@ -465,13 +548,13 @@ export class AccountCreator extends Component {
             return;
         }
 
-        this.genders = [];
+        let genders = [];
         for (let i = 0; i < r.value.length; i++) {
             const gender = r.value[i];
 
-            this.genders.push(gender);
+            genders.push(gender);
         }
-        this.setState({ loadingGenders: false });
+        this.setState({ genders: genders, loadingGenders: false });
     }
 
     async getStates() {
@@ -481,13 +564,13 @@ export class AccountCreator extends Component {
             return;
         }
 
-        this.states = [];
+        let states = [];
         for (let i = 0; i < r.value.length; i++) {
             const state = r.value[i];
 
-            this.states.push(state);
+            states.push(state);
         }
-        this.setState({ loadingStates: false });
+        this.setState({ states: states, loadingStates: false });
     }
 
     async getCities(state) {
@@ -503,13 +586,13 @@ export class AccountCreator extends Component {
             return;
         }
 
-        this.cities = [];
+        let cities = [];
         for (let i = 0; i < r.value.length; i++) {
             const city = r.value[i];
 
-            this.cities.push(city);
+            cities.push(city);
         }
-        this.setState({ loadingCities: false });
+        this.setState({ cities: cities, loadingCities: false });
     }
 
     handleGender(e) {

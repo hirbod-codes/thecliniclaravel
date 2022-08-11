@@ -35,6 +35,7 @@ general = addWordTo(general, 'email', 'emails');
 general = addWordTo(general, 'email', 'emails');
 general = addWordTo(general, 'password', 'passwords');
 general = addWordTo(general, 'confirm password', null, 'confirm-password');
+general = addWordTo(general, 'confirm password', null, 'password_confirmation');
 general = addWordTo(general, 'phone number', 'phone numbers', 'phonenumber');
 general = addWordTo(general, 'gender', 'genders');
 general = addWordTo(general, 'avatar', 'avatars');
@@ -72,15 +73,28 @@ general = addWordTo(general, 'visit dashboard', null, 'visit-dashboard');
 general = addWordTo(general, 'laser order', null, 'laser-order');
 general = addWordTo(general, 'regular order', null, 'regular-order');
 
-general.columns = {};
+general.columns = {
+    account: {}
+};
+
+general.columns.account = addWordTo(general.columns.account, 'firstname', 'firstnames');
+general.columns.account = addWordTo(general.columns.account, 'lastname', 'lastnames');
+general.columns.account = addWordTo(general.columns.account, 'username', 'usernames');
+general.columns.account = addWordTo(general.columns.account, 'email verified at', 'emails verified at', 'email_verified_at');
+general.columns.account = addWordTo(general.columns.account, 'phonenumber', 'phonenumbers');
+general.columns.account = addWordTo(general.columns.account, 'phonenumber verified at', 'phonenumbers verified at', 'phonenumber_verified_at');
+general.columns.account = addWordTo(general.columns.account, 'age');
+general.columns.account = addWordTo(general.columns.account, 'state', 'states');
+general.columns.account = addWordTo(general.columns.account, 'city', 'cities');
+general.columns.account = addWordTo(general.columns.account, 'address', 'addresses');
+general.columns.account = addWordTo(general.columns.account, 'gender');
 
 general.columns = addWordTo(general.columns, 'action', 'actions');
 general.columns = addWordTo(general.columns, 'id');
 general.columns = addWordTo(general.columns, 'name');
-general.columns = addWordTo(general.columns, 'gender');
 general.columns = addWordTo(general.columns, 'order', 'orders');
 general.columns = addWordTo(general.columns, 'visits');
-general.columns = addWordTo(general.columns, 'Created At', null, 'createdAt');
-general.columns = addWordTo(general.columns, 'Updated At', null, 'updatedAt');
+general.columns = addWordTo(general.columns, 'Created At', null, 'created_at');
+general.columns = addWordTo(general.columns, 'Updated At', null, 'updated_at');
 
 export { general };

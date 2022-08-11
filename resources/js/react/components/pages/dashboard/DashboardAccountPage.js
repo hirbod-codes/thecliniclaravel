@@ -3,13 +3,13 @@ import { Link } from 'react-router-dom'
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Grid, IconButton, Snackbar, Tab, Tabs } from '@mui/material'
-import LoadingButton from '@mui/lab/LoadingButton'
 
 import Header from '../../headers/Header'
 import { translate } from '../../../traslation/translate'
 import TabPanel from '../../Menus/TabPanel'
 import Account from '../../Menus/Account/Account';
 import AccountsServerDataGrid from '../../Grids/Accounts/AccountsServerDataGrid';
+import { PrivilegesContext } from '../../privilegesContext';
 
 export class DashboardAccountPage extends Component {
     constructor(props) {
@@ -31,7 +31,7 @@ export class DashboardAccountPage extends Component {
     }
 
     handleAccountPageTabChange(e, newValue) {
-        this.setState({ accountPageTabsValue: newValue })
+        this.setState({ accountPageTabsValue: newValue });
     }
 
     handleFeedbackClose(event, reason) {
@@ -40,62 +40,61 @@ export class DashboardAccountPage extends Component {
 
     render() {
         return (
-            <Grid container spacing={1} sx={{ minHeight: '100vh', }} alignContent='flex-start' >
-                <Grid item xs={12} >
-                    <Header
-                        title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('pages/account/account/account/plural/ucFirstLetterFirstWord')}</ Link>}
-                        isAuthenticated={this.props.isAuthenticated}
-                        isAuthenticationLoading={this.props.isAuthenticationLoading}
-                        navigator={this.props.navigator}
-                    />
-                </Grid>
-                <Grid item xs={12} style={{ minHeight: '70vh' }} >
-                    {!this.props.privileges
-                        ? <LoadingButton loading variant='contained' fullWidth></LoadingButton>
-                        : <>
+            <PrivilegesContext.Consumer >
+                {(p) =>
+                    <Grid container spacing={1} sx={{ minHeight: '100vh', }} alignContent='flex-start' >
+                        <Grid item xs={12} >
+                            <Header
+                                title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('pages/account/account/account/plural/ucFirstLetterFirstWord')}</ Link>}
+                                isAuthenticated={this.props.isAuthenticated}
+                                isAuthenticationLoading={this.props.isAuthenticationLoading}
+                                navigator={this.props.navigator}
+                            />
+                        </Grid>
+                        <Grid item xs={12} style={{ minHeight: '70vh' }} >
                             <Tabs value={this.state.accountPageTabsValue} onChange={this.handleAccountPageTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                {(this.props.privileges.selfAccountRead) &&
+                                {p.retrieveUser.indexOf('self') !== -1 &&
                                     <Tab label={translate('pages/account/account/your-account')} />
                                 }
-                                {(this.props.privileges.accountRead) &&
+                                {((p.retrieveUser.length > 1) || (p.retrieveUser.length === 1 && p.retrieveUser[0] !== 'self')) &&
                                     <Tab label={translate('pages/account/account/others-accounts')} />
                                 }
                             </Tabs>
-                            {(this.props.privileges.selfAccountRead) &&
+                            {p.retrieveUser.indexOf('self') !== -1 &&
                                 <TabPanel value={this.state.accountPageTabsValue} index={0} style={{ height: '100%' }} >
-                                    <Account isSelf={true} account={this.props.account} privileges={this.props.privileges} />
+                                    <Account isSelf={true} account={this.props.account} accountRole={p.role} />
                                 </TabPanel>
                             }
-                            {(this.props.privileges.accountRead) &&
+                            {((p.retrieveUser.length > 1) || (p.retrieveUser.length === 1 && p.retrieveUser[0] !== 'self')) &&
                                 <TabPanel value={this.state.accountPageTabsValue} index={1} style={{ height: '100%' }} >
-                                    <AccountsServerDataGrid account={this.props.account} privileges={this.props.privileges} />
+                                    <AccountsServerDataGrid roles={p.retrieveUser.map((v) => { return v !== 'self' ? v : p.role; })} account={this.props.account} />
                                 </TabPanel>
                             }
-                        </>
-                    }
 
-                    <Snackbar
-                        open={this.state.feedbackOpen}
-                        autoHideDuration={6000}
-                        onClose={this.handleFeedbackClose}
-                        action={
-                            <IconButton
-                                size="small"
-                                onClick={this.handleFeedbackClose}
+                            <Snackbar
+                                open={this.state.feedbackOpen}
+                                autoHideDuration={6000}
+                                onClose={this.handleFeedbackClose}
+                                action={
+                                    <IconButton
+                                        size="small"
+                                        onClick={this.handleFeedbackClose}
+                                    >
+                                        <CloseIcon fontSize="small" />
+                                    </IconButton>
+                                }
                             >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        }
-                    >
-                        <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
-                            {this.state.feedbackMessage}
-                        </Alert>
-                    </Snackbar>
-                </Grid>
-                <Grid item xs={12} sx={{ mb: 0 }}>
-                    {/* <Footer /> */}
-                </Grid>
-            </Grid>
+                                <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
+                                    {this.state.feedbackMessage}
+                                </Alert>
+                            </Snackbar>
+                        </Grid>
+                        <Grid item xs={12} sx={{ mb: 0 }}>
+                            {/* <Footer /> */}
+                        </Grid>
+                    </Grid>
+                }
+            </PrivilegesContext.Consumer>
         );
     }
 }

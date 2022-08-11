@@ -13,7 +13,6 @@ import { formatToNumber } from '../formatters';
  */
 export class AccountsDataGrid extends Component {
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         account: PropTypes.object.isRequired,
 
         role: PropTypes.string.isRequired,
@@ -71,6 +70,35 @@ export class AccountsDataGrid extends Component {
             }
 
             data = data.value;
+            console.log(data);
+            let computedData = [];
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                let newRow = {};
+                for (const k in row) {
+                    if (Object.hasOwnProperty.call(row, k)) {
+                        const v = row[k];
+
+                        if (k !== 'user') {
+                            newRow[k] = v;
+                            continue;
+                        }
+
+                        for (const j in v) {
+                            if (Object.hasOwnProperty.call(v, j)) {
+                                const userValue = v[j];
+
+                                if (newRow[j] === undefined) {
+                                    newRow[j] = userValue;
+                                }
+                            }
+                        }
+                    }
+                }
+                computedData.push(newRow);
+            }
+            data = computedData;
+            console.log(data);
 
             if (this.props.afterGetData !== undefined) {
                 this.props.afterGetData(data);
@@ -104,15 +132,15 @@ export class AccountsDataGrid extends Component {
 
                 switch (k) {
                     case 'firstname':
-                        column.headerName = translate('pages/account/account/columns/firstname/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/firstname/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'lastname':
-                        column.headerName = translate('pages/account/account/columns/lastname/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/lastname/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'username':
-                        column.headerName = translate('pages/account/account/columns/username/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/username/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'email':
@@ -120,18 +148,18 @@ export class AccountsDataGrid extends Component {
                         break;
 
                     case 'emailVerifiedAt':
-                        column.headerName = translate('pages/account/account/columns/emailVerifiedAt/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/emailVerifiedAt/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => value && new Date(value);
                         column.minWidth = 170;
                         break;
 
                     case 'phonenumber':
-                        column.headerName = translate('pages/account/account/columns/phonenumber/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/phonenumber/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'phonenumberVerifiedAt':
-                        column.headerName = translate('pages/account/account/columns/phonenumberVerifiedAt/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/phonenumberVerifiedAt/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => value && new Date(value);
                         column.minWidth = 170;
@@ -142,20 +170,20 @@ export class AccountsDataGrid extends Component {
                         break;
 
                     case 'age':
-                        column.headerName = translate('pages/account/account/columns/age/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/age/single/ucFirstLetterFirstWord');
                         column.type = 'number';
                         break;
 
                     case 'state':
-                        column.headerName = translate('pages/account/account/columns/state/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/state/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'city':
-                        column.headerName = translate('pages/account/account/columns/city/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/city/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'address':
-                        column.headerName = translate('pages/account/account/columns/address/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/account/address/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'createdAt':
