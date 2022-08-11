@@ -8,8 +8,6 @@
         "doctrine/dbal": "^3.3",
         "guzzlehttp/guzzle": "^7.2",
         "hirbod-codes/sms": "^0",
-        "hirbod-codes/theclinicdatastructures": "^1.0",
-        "hirbod-codes/theclinicusecases": "^1.0",
         "laravel/framework": "^9",
         "laravel/passport": "^10",
         "laravel/sanctum": "^2",
