@@ -7,11 +7,12 @@ use App\Models\Package\Package;
 use App\Models\Part\Part;
 use App\Rules\Orders\PartsPackagesRequirement;
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\Privileges\CreateOrder;
+use App\Models\User;
 
-class StoreRequest extends FormRequest
+class StoreRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -20,7 +21,26 @@ class StoreRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $input = $this->safe()->all();
+        $targetUser = User::query()->whereKey(intval($input['accountId']))->firstOrFail();
+        $isSelf = $targetUser->getKey() === $user->getKey();
+        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+
+        /** @var CreateOrder $createOrder */
+        foreach ($user->authenticatableRole->role->role->createOrderSubjects as $createOrder) {
+            if ($createOrder->relatedBusiness->name !== $input['businessName']) {
+                continue;
+            }
+
+            if (($isSelf && $createOrder->object !== null) || (!$isSelf && ($createOrder->object === null || ($createOrder->object !== null && $createOrder->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -30,8 +50,6 @@ class StoreRequest extends FormRequest
      */
     public function rules()
     {
-        $dsUser = (new CheckAuthentication)->getAuthenticatedDSUser();
-
         $parts = array_map(function (Part $part) {
             return $part->name;
         }, Part::query()->get()->all());
@@ -40,8 +58,8 @@ class StoreRequest extends FormRequest
         }, Package::query()->get()->all());
 
         $array = [
-            'accountId' => ['integer', 'numeric', 'min:1'],
-            'businessName' => ['required', 'string', Rule::in(['laser', 'regular'])],
+            'accountId' => ['integer', 'numeric', 'min:1', 'exists:' . (new User)->getTable() . ',' . (new User)->getKeyName()],
+            'businessName' => (include(base_path() . '/app/Rules/BuiltInRules/business.php'))['businessNames'],
 
             'packages' => ['prohibited_unless:businessName,laser', 'array'],
             'packages.*' => ['required_unless:packages,null', 'string', Rule::in($packages)],

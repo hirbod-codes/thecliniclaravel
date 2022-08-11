@@ -44,7 +44,7 @@ use App\UseCases\Orders\Retrieval\LaserOrderRetrieval;
 use App\UseCases\Orders\Retrieval\RegularOrderRetrieval;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
-use TheClinicUseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
+use Illuminate\Database\Eloquent\Builder;
 
 class OrdersController extends Controller
 {
@@ -127,13 +127,12 @@ class OrdersController extends Controller
 
     private function index(array $input): JsonResponse
     {
-        $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
-
         $args = [];
-        $args['user'] = $dsUser;
         $args['db'] = $this->{'iDataBaseRetrieve' . ucfirst($input['businessName']) . 'Orders'};
 
         if (!isset($input['username'])) {
+            $args['roleName'] = $input['roleName'];
+
             if (isset($input['lastOrderId'])) {
                 $args['lastOrderId'] = $input['lastOrderId'];
             }
@@ -141,7 +140,7 @@ class OrdersController extends Controller
             // $args['lastOrderId'] = isset($input['lastOrderId']) ? $input['lastOrderId'] : null;
             $args['count'] = $input['count'];
         } else {
-            $args['targetUser'] = User::query()->where('username', $input['username'])->first()->authenticatableRole()->getDataStructure();
+            $args['targetUser'] = User::query()->where('username', $input['username'])->firstOrFail();
         }
 
         if (isset($input['priceOtherwiseTime'])) {
@@ -166,28 +165,27 @@ class OrdersController extends Controller
             ) .
             (!isset($input['username']) ? '' : 'ByUser');
 
-        /** @var DSOrders $dsOrders */
-        $dsOrders = $this->{strtolower($input['businessName']) . 'OrderRetrieval'}->{$method}(...$args);
+        /** @var array $orders */
+        $orders = $this->{strtolower($input['businessName']) . 'OrderRetrieval'}->{$method}(...$args);
 
-        return response()->json($dsOrders->toArray());
+        return response()->json($orders);
     }
 
     public function store(StoreRequest $request): RedirectResponse|JsonResponse
     {
         $validatedInput = $request->safe()->all();
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $authenticated = $this->checkAuthentication->getAuthenticated();
 
         if (!isset($validatedInput['accountId'])) {
-            $dsUser = $dsAuthenticated;
+            $user = $authenticated;
         } else {
             /** @var User $user */
-            $user = User::query()
-                ->whereKey($validatedInput['accountId'])
-                ->first();
-            $dsUser = $user->authenticatableRole()->getDataStructure();
+            $user = User::query()->whereKey($validatedInput['accountId'])->firstOrFail();
         }
+        $userRoleName = $user->authenticatableRole->role->roleName->name;
 
-        $gender = $dsUser->getGender();
+        $isSelf = $user->getKey() === $authenticated->getKey();
+        $gender = $user->gender;
 
         $businessName = strtolower($validatedInput['businessName']);
         switch ($businessName) {
@@ -196,14 +194,35 @@ class OrdersController extends Controller
 
                 $packages = $this->collectDSPacakgesFromNames(!isset($validatedInput['packages']) ? [] : $validatedInput['packages'], $gender);
 
-                $order = $this->laserOrderCreation->createLaserOrder($dsUser, $dsAuthenticated, $this->iDataBaseCreateLaserOrder, $parts, $packages);
+                $order = $this->laserOrderCreation->createLaserOrder($user, $this->iDataBaseCreateLaserOrder, $parts, $packages);
                 break;
 
             case 'regular':
-                if ($dsAuthenticated instanceof DSAdmin && isset($validatedInput['price'])  && isset($validatedInput['timeConsumption'])) {
-                    $order = $this->regularOrderCreation->createRegularOrder($validatedInput['price'], $validatedInput['timeConsumption'], $dsUser, $dsAuthenticated, $this->iDataBaseCreateRegularOrder);
+                $editRegularOrderPrice = $editRegularOrderNeededTime = false;
+                foreach ($user->authenticatableRole->role->role->privilegesSubjects as $privilege) {
+                    $privilegeName = $privilege->privilegeName->name;
+
+                    if (!in_array($privilegeName, ['editRegularOrderPrice', 'editRegularOrderNeededTime'])) {
+                        continue;
+                    }
+
+                    if (($isSelf && $privilege->object !== null) || (!$isSelf && ($privilege->object === null || ($privilege->object !== null && $privilege->relatedObject->childRoleModel->roleName->name !== $userRoleName)))) {
+                        continue;
+                    }
+
+                    if ($privilegeName === 'editRegularOrderPrice') {
+                        $editRegularOrderPrice = true;
+                    } elseif ($privilegeName === 'editRegularOrderNeededTime') {
+                        $editRegularOrderNeededTime = true;
+                    }
+                }
+
+                if ($editRegularOrderPrice && $editRegularOrderNeededTime && isset($validatedInput['price'])  && isset($validatedInput['timeConsumption'])) {
+                    $order = $this->regularOrderCreation->createRegularOrder($validatedInput['price'], $validatedInput['timeConsumption'], $user, $this->iDataBaseCreateRegularOrder);
+                } elseif (isset($validatedInput['price'])  || isset($validatedInput['timeConsumption'])) {
+                    throw new \RuntimeException(trans_choice('auth.User-Not-Authorized', 0), 403);
                 } else {
-                    $order = $this->regularOrderCreation->createDefaultRegularOrder($dsUser, $dsAuthenticated, $this->iDataBaseCreateDefaultRegularOrder);
+                    $order = $this->regularOrderCreation->createDefaultRegularOrder($user, $this->iDataBaseCreateDefaultRegularOrder);
                 }
                 break;
 
@@ -245,125 +264,71 @@ class OrdersController extends Controller
         return Part::getDSParts($parts, $gender);
     }
 
-    public function show(string $businessName, int $accountId, int $childOrderId): JsonResponse
+    public function ordersCount(OrdersCountRequest $request): Response
     {
-        switch (strtolower($businessName)) {
+        $input = $request->safe()->all();
+        /** @var Builder $query */
+        switch ($input['businessName']) {
             case 'laser':
-                return $this->laserShow($accountId, $childOrderId);
+                $query = LaserOrder::query();
                 break;
 
             case 'regular':
-                return $this->regularShow($accountId, $childOrderId);
+                $query = RegularOrder::query();
                 break;
 
             default:
-                throw new \LogicException('Failed to find business', 404);
                 break;
         }
-    }
 
-    private function laserShow(int $accountId, int $laserOrderId): JsonResponse
-    {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        /** @var User $user */
-        $user = User::query()->where((new User)->getKeyName(), '=', $accountId)->first();
-        $dsUser = $user->authenticatableRole()->getDataStructure();
-
-        $dsLaserOrders = $this->laserOrderRetrieval->getLaserOrdersByUser($dsUser, $dsAuthenticated, $this->iDataBaseRetrieveLaserOrders);
-
-        foreach ($dsLaserOrders as $dsLaserOrder) {
-            if ($dsLaserOrder->getId() === $laserOrderId) {
-                break;
-            }
-        }
-
-        /** @var LaserOrder $laserOrder */
-        $laserOrder = LaserOrder::query()->whereKey($laserOrderId)->firstOrFail();
-        /** @var User $user */
-        $user = $laserOrder->order->user;
-        $dsUser = $user->authenticatableRole()->getDataStructure();
-
-        return response()->json($dsLaserOrder->toArray());
-    }
-
-    private function regularShow(int $accountId, int $regularOrderId): JsonResponse
-    {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        /** @var User $user */
-        $user = User::query()->where((new User)->getKeyName(), '=', $accountId)->first();
-        $dsUser = $user->authenticatableRole()->getDataStructure();
-
-        $regularOrders = $this->regularOrderRetrieval->getRegularOrdersByUser($dsUser, $dsAuthenticated, $this->iDataBaseRetrieveRegularOrders);
-
-        /** @var DSLaserOrder $regularOrder */
-        foreach ($regularOrders as $regularOrder) {
-            if ($regularOrder->getId() === $regularOrderId) {
-                break;
-            }
-        }
-
-        return response()->json($regularOrder->toArray());
-    }
-
-    public function destroy(string $businessName, int $accountId, int $childOrderId): Response|ResponseFactory
-    {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        $found = false;
-        switch (strtolower($businessName)) {
-            case 'regular':
-                /**
-                 * @var User $user
-                 * @var Order $order
-                 * */
-                foreach (($user = User::query()->whereKey($accountId)->firstOrFail())->orders as $order) {
-                    /** @var RegularOrder $regularOrder */
-                    if (($regularOrder = $order->regularOrder) !== null && $regularOrder->getKey() === $childOrderId) {
-                        $found = true;
-                        break;
+        $count = $query
+            ->whereHas('order', function (Builder $query) use ($input) {
+                $query->whereHas('user', function (Builder $query) use ($input) {
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        $query->orWhereHas($relation, function (Builder $query) use ($input) {
+                            $query->whereHas('role', function (Builder $query) use ($input) {
+                                $query->whereHas('roleName', function (Builder $query) use ($input) {
+                                    $query->where('name', '=', $input['roleName']);
+                                });
+                            });
+                        });
                     }
-                }
-                if (!$found) {
-                    throw new \LogicException('Failed to find the requested order.', 404);
-                }
+                });
+            })
+            ->count()
+            //
+        ;
+        return response($count);
+    }
 
-                $this->regularOrderDeletion->deleteRegularOrder($regularOrder->getDSRegularOrder(), $user->authenticatableRole()->getDataStructure(), $dsAuthenticated, $this->iDataBaseDeleteRegularOrder);
-                break;
+    public function destroy(DestroyRequest $request): Response|ResponseFactory
+    {
+        $validatedInput = $request->safe()->all();
 
+        switch ($validatedInput['businessName']) {
             case 'laser':
-                /**
-                 * @var User $user
-                 * @var Order $order
-                 * */
-                foreach (($user = User::query()->whereKey($accountId)->firstOrFail())->orders as $order) {
-                    /** @var LaserOrder $laserOrder */
-                    if (($laserOrder = $order->laserOrder) !== null && $laserOrder->getKey() === $childOrderId) {
-                        $found = true;
-                        break;
-                    }
-                }
-                if (!$found) {
-                    throw new \LogicException('Failed to find the requested order.', 404);
-                }
+                $order = LaserOrder::query()->whereKey($validatedInput['childOrderId'])->firstOrFail();
+                break;
 
-                $this->laserOrderDeletion->deleteLaserOrder($laserOrder->getDSLaserOrder(), $user->authenticatableRole()->getDataStructure(), $dsAuthenticated, $this->iDataBaseDeleteLaserOrder);
+            case 'regular':
+                $order = RegularOrder::query()->whereKey($validatedInput['childOrderId'])->firstOrFail();
                 break;
 
             default:
-                throw new \LogicException('Failed to find business.', 404);
+                throw new \LogicException('!!!', 500);
                 break;
         }
 
-        return response(trans_choice('Orders/destroy.successfull', 0));
+        $this->{$validatedInput['businessName'] . 'OrderDeletion'}->{'delete' . ucfirst($validatedInput['businessName']) . 'Order'}($order, $this->{'iDataBaseDelete' . ucfirst($validatedInput['businessName']) . 'Order'});
+
+        return response(trans_choice('Orders/destroy.successfull', 200));
     }
 
     public function calculateTime(CalculatePartsAndPackagesRquest $request): Response
     {
         $validatedInput = $request->safe()->all();
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-        $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $dsAuthenticated->getGender();
+        $user = $this->checkAuthentication->getAuthenticated();
+        $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $user->gender;
 
         return response((new LaserLaserOrder)->calculateTimeConsumption(
             $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
@@ -375,8 +340,8 @@ class OrdersController extends Controller
     public function calculatePrice(CalculatePartsAndPackagesRquest $request): JsonResponse
     {
         $validatedInput = $request->safe()->all();
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-        $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $dsAuthenticated->getGender();
+        $user = $this->checkAuthentication->getAuthenticated();
+        $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $user->gender;
 
         return response()->json([
             'price' => (new LaserLaserOrder)->calculatePrice(

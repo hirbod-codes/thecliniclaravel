@@ -11,18 +11,12 @@ use App\UseCases\Orders\Interfaces\IDataBaseCreateRegularOrder;
 
 class DatabaseCreateRegularOrder implements IDataBaseCreateRegularOrder
 {
-    public function createRegularOrder(
-        DSUser $targetUser,
-        int|null $price,
-        int|null $timeConsumption
-    ): DSRegularOrder {
-        /** @var User $userModel */
-        $userModel = User::query()->where('username', $targetUser->getUsername())->first();
-
+    public function createRegularOrder(User $targetUser, int|null $price, int|null $timeConsumption): RegularOrder
+    {
         DB::beginTransaction();
 
         try {
-            $order = $userModel->orders()->create();
+            $order = $targetUser->orders()->create();
 
             $regularOrder = new RegularOrder;
             $regularOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
@@ -34,7 +28,7 @@ class DatabaseCreateRegularOrder implements IDataBaseCreateRegularOrder
 
             DB::commit();
 
-            return $regularOrder->getDSRegularOrder();
+            return $regularOrder->fresh();
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;

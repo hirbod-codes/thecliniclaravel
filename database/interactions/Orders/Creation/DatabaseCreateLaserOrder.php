@@ -8,7 +8,6 @@ use App\Models\Order\LaserOrderPart;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
 use App\Models\User;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use App\DataStructures\Order\DSPackage;
 use App\DataStructures\Order\DSPackages;
@@ -19,23 +18,12 @@ use App\UseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
 
 class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
 {
-    public function createLaserOrder(
-        DSUser $targetUser,
-        int $price,
-        int $timeConsumption,
-        int $priceWithoutDiscount,
-        ?DSParts $parts = null,
-        ?DSPackages $packages = null
-    ): DSLaserOrder {
-        /** @var User $userModel */
-        if (($userModel = User::query()->where('username', $targetUser->getUsername())->first()) === null) {
-            throw new ModelNotFoundException('', 404);
-        }
-
-        DB::beginTransaction();
-
+    public function createLaserOrder(User $targetUser, int $price, int $timeConsumption, int $priceWithoutDiscount, ?DSParts $parts = null, ?DSPackages $packages = null): LaserOrder
+    {
         try {
-            $order = $userModel->orders()->create();
+            DB::beginTransaction();
+
+            $order = $targetUser->orders()->create();
 
             $laserOrder = new LaserOrder;
             $laserOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
@@ -70,7 +58,7 @@ class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
 
             DB::commit();
 
-            return $laserOrder->getDSLaserOrder();
+            return $laserOrder->fresh();
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;

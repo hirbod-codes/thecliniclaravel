@@ -8,22 +8,18 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\DataStructures\Order\Regular\DSRegularOrder;
 use App\UseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
-use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 
 class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegularOrder
 {
-    public function createDefaultRegularOrder(DSUser $targetUser): DSRegularOrder
+    public function createDefaultRegularOrder(User $targetUser): RegularOrder
     {
-        /** @var User $userModel */
-        $userModel = User::query()->where('username', $targetUser->getUsername())->first();
-
         DB::beginTransaction();
 
         try {
-            $order = $userModel->orders()->create();
+            $order = $targetUser->orders()->create();
 
             $regularOrder = new RegularOrder;
-            $regularOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
+            $regularOrder->{$order->getForeignKey()} = $order->getKey();
             $regularOrder->price = BusinessDefault::firstOrFail()->default_regular_order_price;
             $regularOrder->needed_time = BusinessDefault::firstOrFail()->default_regular_order_time_consumption;
             if (!$regularOrder->save()) {
@@ -32,7 +28,7 @@ class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegular
 
             DB::commit();
 
-            return $regularOrder->getDSRegularOrder();
+            return $regularOrder->fresh();
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;

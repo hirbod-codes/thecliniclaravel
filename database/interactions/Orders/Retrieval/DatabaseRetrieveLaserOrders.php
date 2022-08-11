@@ -3,39 +3,33 @@
 namespace Database\Interactions\Orders\Retrieval;
 
 use App\Models\Order\LaserOrder;
-use App\Models\Order\Order;
 use App\Models\User;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use Illuminate\Database\Eloquent\Builder;
 
 class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
 {
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param \TheClinicDataStructures\DataStructures\User\DSUser $targetUser
-     * @return \TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrders
+     * @param \App\Models\User $targetUser
+     * @return array
      */
-    public function getLaserOrdersByPriceByUser(string $operator, int $price, DSUser $targetUser): DSLaserOrders
+    public function getLaserOrdersByPriceByUser(string $operator, int $price, User $targetUser): array
     {
-        /** @var User $user */
-        $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-
         $orders = LaserOrder::query()
-            ->whereHas('order', function ($query) use ($user) {
-                $query
-                    ->where($user->getForeignKey(), '=', $user->getKey())
-                    //
-                ;
+            ->where('needed_time', $operator, $price)
+            ->whereHas('order', function ($query) use ($targetUser) {
+                $query->whereHas('user', function (Builder $query) use ($targetUser) {
+                    $query->whereKey($targetUser->getKey());
+                });
             })
-            ->where('price', $operator, $price)
             ->with(['parts', 'packages'])
             ->get()
-            ->all()
             //
         ;
 
-        return LaserOrder::getDSLaserOrders($orders);
+        return $orders->toArray();
     }
 
     /**
@@ -43,122 +37,186 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
      * @param integer $count
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param \TheClinicDataStructures\DataStructures\User\DSUser $targetUser
-     * @return \TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrders
+     * @param \App\DataStructures\User\DSUser $targetUser
+     * @return array
      */
-    public function getLaserOrdersByPrice(int $lastOrderId = null, int $count, string $operator, int $price): DSLaserOrders
+    public function getLaserOrdersByPrice(string $roleName, int $lastOrderId = null, int $count, string $operator, int $price): array
     {
-        $orders = LaserOrder::query()->orderBy((new LaserOrder)->getKeyName(), 'desc');
+        $query = LaserOrder::query();
 
         if ($lastOrderId) {
-            $orders = $orders->where((new LaserOrder)->getKeyName(), '<', $lastOrderId);
+            $query->where((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), '<', $lastOrderId);
         }
 
-        $orders = $orders
-            ->where('price', $operator, $price)
+        $orders = $query
+            ->orderBy((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), 'desc')
+            ->where('needed_time', $operator, $price)
+            ->whereHas('order', function ($query) use ($roleName) {
+                $query->whereHas('user', function (Builder $query) use ($roleName) {
+                    $i = 0;
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
+                    }
+                });
+            })
             ->with(['parts', 'packages'])
             ->take($count)
             ->get()
-            ->all()
             //
         ;
 
-        return LaserOrder::getMixedDSLaserOrders($orders);
+        return $orders->toArray();
     }
 
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $timeCosumption
-     * @param \TheClinicDataStructures\DataStructures\User\DSUser $targetUser
-     * @return \TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrders
+     * @param \App\Models\User $targetUser
+     * @return array
      */
-    public function getLaserOrdersByTimeConsumptionByUser(string $operator, int $timeCosumption, DSUser $targetUser): DSLaserOrders
+    public function getLaserOrdersByTimeConsumptionByUser(string $operator, int $timeCosumption, User $targetUser): array
     {
-        /** @var User $user */
-        $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-
         $orders = LaserOrder::query()
-            ->whereHas('order', function ($query) use ($user) {
-                $query
-                    ->where($user->getForeignKey(), '=', $user->getKey())
-                    //
-                ;
-            })
             ->where('needed_time', $operator, $timeCosumption)
+            ->whereHas('order', function ($query) use ($targetUser) {
+                $query->whereHas('user', function (Builder $query) use ($targetUser) {
+                    $query->whereKey($targetUser->getKey());
+                });
+            })
             ->with(['parts', 'packages'])
             ->get()
-            ->all()
             //
         ;
 
-        return LaserOrder::getDSLaserOrders($orders);
+        return $orders->toArray();
     }
 
     /**
      * @param integer $count
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param \TheClinicDataStructures\DataStructures\User\DSUser $targetUser
      * @param integer $lastOrderId
-     * @return \TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrders
+     * @return array
      */
-    public function getLaserOrdersByTimeConsumption(int $count, string $operator, int $timeCosumption, int $lastOrderId = null): DSLaserOrders
+    public function getLaserOrdersByTimeConsumption(string $roleName, int $count, string $operator, int $timeCosumption, int $lastOrderId = null): array
     {
-        $orders = LaserOrder::query()->orderBy((new LaserOrder)->getKeyName(), 'desc');
+        $query = LaserOrder::query();
 
         if ($lastOrderId) {
-            $orders = $orders->where((new LaserOrder)->getKeyName(), '<', $lastOrderId);
+            $query->where((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), '<', $lastOrderId);
         }
 
-        $orders = $orders
+        $orders = $query
+            ->orderBy((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), 'desc')
             ->where('needed_time', $operator, $timeCosumption)
+            ->whereHas('order', function ($query) use ($roleName) {
+                $query->whereHas('user', function (Builder $query) use ($roleName) {
+                    $i = 0;
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
+                    }
+                });
+            })
             ->with(['parts', 'packages'])
             ->take($count)
             ->get()
-            ->all()
             //
         ;
 
-        return LaserOrder::getMixedDSLaserOrders($orders);
+        return $orders->toArray();
     }
 
-    public function getLaserOrdersByUser(DSUser $targetUser): DSLaserOrders
+    public function getLaserOrdersByUser(User $targetUser): array
     {
-        /** @var User $user */
-        $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-
         $orders = LaserOrder::query()
-            ->whereHas('order', function ($query) use ($user) {
-                $query
-                    ->where($user->getForeignKey(), '=', $user->getKey())
-                    //
-                ;
+            ->whereHas('order', function ($query) use ($targetUser) {
+                $query->whereHas('user', function (Builder $query) use ($targetUser) {
+                    $query->whereKey($targetUser->getKey());
+                });
             })
             ->with(['parts', 'packages'])
             ->get()
-            ->all()
             //
         ;
 
-        return LaserOrder::getDSLaserOrders($orders);
+        return $orders->toArray();
     }
 
-    public function getLaserOrders(int $count, int $lastOrderId = null): DSLaserOrders
+    public function getLaserOrders(string $roleName, int $count, int $lastOrderId = null): array
     {
-        $orders = LaserOrder::query()->orderBy((new LaserOrder)->getKeyName(), 'desc');
+        $query = LaserOrder::query();
 
         if ($lastOrderId) {
-            $orders = $orders->where((new LaserOrder)->getKeyName(), '<', $lastOrderId);
+            $query->where((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), '<', $lastOrderId);
         }
 
-        $orders = $orders
+        $orders = $query
+            ->orderBy((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), 'desc')
+            ->whereHas('order', function ($query) use ($roleName) {
+                $query->whereHas('user', function (Builder $query) use ($roleName) {
+                    $i = 0;
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
+                    }
+                });
+            })
             ->with(['parts', 'packages'])
             ->take($count)
             ->get()
-            ->all()
             //
         ;
 
-        return LaserOrder::getMixedDSLaserOrders($orders);
+        return $orders->toArray();
     }
 }

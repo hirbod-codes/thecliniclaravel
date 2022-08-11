@@ -2,153 +2,211 @@
 
 namespace Database\Interactions\Orders\Retrieval;
 
-use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
 use App\Models\User;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use Illuminate\Database\Eloquent\Builder;
 
 class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
 {
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param DSUser $targetUser
-     * @return DSRegularOrders
+     * @param \App\Models\User $targetUser
+     * @return array
      */
-    public function getRegularOrdersByPriceByUser(string $operator, int $price, DSUser $targetUser): DSRegularOrders
+    public function getRegularOrdersByPriceByUser(string $operator, int $price, User $targetUser): array
     {
-        /** @var User $user */
-        $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-
         $orders = RegularOrder::query()
-            ->whereHas('order', function ($query) use ($user) {
-                $query
-                    ->where($user->getForeignKey(), '=', $user->getKey())
-                    //
-                ;
+            ->where('needed_time', $operator, $price)
+            ->whereHas('order', function ($query) use ($targetUser) {
+                $query->whereHas('user', function (Builder $query) use ($targetUser) {
+                    $query->whereKey($targetUser->getKey());
+                });
             })
-            ->where('price', $operator, $price)
             ->get()
-            ->all()
             //
         ;
 
-        return RegularOrder::getDSRegularOrders($orders);
+        return $orders->toArray();
     }
 
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param DSUser $targetUser
-     * @return DSRegularOrders
+     * @return array
      */
-    public function getRegularOrdersByPrice(int $lastOrderId = null, int $count, string $operator, int $price): DSRegularOrders
+    public function getRegularOrdersByPrice(string $roleName, int $lastOrderId = null, int $count, string $operator, int $price): array
     {
-        $orders = RegularOrder::query()->orderBy((new RegularOrder)->getKeyName(), 'desc');
+        $query = RegularOrder::query();
 
         if ($lastOrderId) {
-            $orders = $orders->where((new RegularOrder)->getKeyName(), '<', $lastOrderId);
+            $query->where((new RegularOrder)->getTable() . '.' . (new RegularOrder)->getKeyName(), '<', $lastOrderId);
         }
 
-        $orders = $orders
-            ->where('price', $operator, $price)
+        $orders = $query
+            ->orderBy((new RegularOrder)->getTable() . '.' . (new RegularOrder)->getKeyName(), 'desc')
+            ->where('needed_time', $operator, $price)
+            ->whereHas('order', function ($query) use ($roleName) {
+                $query->whereHas('user', function (Builder $query) use ($roleName) {
+                    $i = 0;
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
+                    }
+                });
+            })
             ->take($count)
             ->get()
-            ->all()
             //
         ;
 
-        return RegularOrder::getMixedDSRegularOrders($orders);
+        return $orders->toArray();
     }
 
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param DSUser $targetUser
-     * @return DSRegularOrders
+     * @param \App\Models\User $targetUser
+     * @return array
      */
-    public function getRegularOrdersByTimeConsumptionByUser(string $operator, int $timeCosumption, DSUser $targetUser): DSRegularOrders
+    public function getRegularOrdersByTimeConsumptionByUser(string $operator, int $timeCosumption, User $targetUser): array
     {
-        /** @var User $user */
-        $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-
         $orders = RegularOrder::query()
-            ->whereHas('order', function ($query) use ($user) {
-                $query
-                    ->where($user->getForeignKey(), '=', $user->getKey())
-                    //
-                ;
-            })
             ->where('needed_time', $operator, $timeCosumption)
+            ->whereHas('order', function ($query) use ($targetUser) {
+                $query->whereHas('user', function (Builder $query) use ($targetUser) {
+                    $query->whereKey($targetUser->getKey());
+                });
+            })
             ->get()
-            ->all()
             //
         ;
 
-        return RegularOrder::getDSRegularOrders($orders);
+        return $orders->toArray();
     }
 
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
-     * @param DSUser $targetUser
-     * @return DSRegularOrders
+     * @param User $targetUser
+     * @return array
      */
-    public function getRegularOrdersByTimeConsumption(int $count, string $operator, int $timeCosumption, int $lastOrderId = null): DSRegularOrders
+    public function getRegularOrdersByTimeConsumption(string $roleName, int $count, string $operator, int $timeCosumption, int $lastOrderId = null): array
     {
-        $orders = RegularOrder::query()->orderBy((new RegularOrder)->getKeyName(), 'desc');
+        $query = RegularOrder::query();
 
         if ($lastOrderId) {
-            $orders = $orders->where((new RegularOrder)->getKeyName(), '<', $lastOrderId);
+            $query->where((new RegularOrder)->getTable() . '.' . (new RegularOrder)->getKeyName(), '<', $lastOrderId);
         }
 
-        $orders = $orders
+        $orders = $query
+            ->orderBy((new RegularOrder)->getTable() . '.' . (new RegularOrder)->getKeyName(), 'desc')
             ->where('needed_time', $operator, $timeCosumption)
+            ->whereHas('order', function ($query) use ($roleName) {
+                $query->whereHas('user', function (Builder $query) use ($roleName) {
+                    $i = 0;
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
+                    }
+                });
+            })
             ->take($count)
             ->get()
-            ->all()
             //
         ;
 
-        return RegularOrder::getMixedDSRegularOrders($orders);
+        return $orders->toArray();
     }
 
-    public function getRegularOrdersByUser(DSUser $targetUser): DSRegularOrders
+    public function getRegularOrdersByUser(User $targetUser): array
     {
-        /** @var User $user */
-        $user = User::query()->where('username', '=', $targetUser->getUsername())->first();
-
         $orders = RegularOrder::query()
-            ->whereHas('order', function ($query) use ($user) {
-                $query
-                    ->where($user->getForeignKey(), '=', $user->getKey())
-                    //
-                ;
+            ->whereHas('order', function ($query) use ($targetUser) {
+                $query->whereHas('user', function (Builder $query) use ($targetUser) {
+                    $query->whereKey($targetUser->getKey());
+                });
             })
             ->get()
-            ->all()
             //
         ;
 
-        return RegularOrder::getDSRegularOrders($orders);
+        return $orders->toArray();
     }
 
-    public function getRegularOrders(int $count, int $lastOrderId = null): DSRegularOrders
+    public function getRegularOrders(string $roleName, int $count, int $lastOrderId = null): array
     {
-        $orders = RegularOrder::query()->orderBy((new RegularOrder)->getKeyName(), 'desc');
+        $query = RegularOrder::query();
 
         if ($lastOrderId) {
-            $orders = $orders->where((new RegularOrder)->getKeyName(), '<', $lastOrderId);
+            $query->where((new RegularOrder)->getTable() . '.' . (new RegularOrder)->getKeyName(), '<', $lastOrderId);
         }
 
-        $orders = $orders
+        $orders = $query
+            ->orderBy((new RegularOrder)->getTable() . '.' . (new RegularOrder)->getKeyName(), 'desc')
+            ->whereHas('order', function ($query) use ($roleName) {
+                $query->whereHas('user', function (Builder $query) use ($roleName) {
+                    $i = 0;
+                    foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($roleName) {
+                                $query->whereHas('role', function (Builder $query) use ($roleName) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($roleName) {
+                                        $query->where('name', '=', $roleName);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
+                    }
+                });
+            })
             ->take($count)
             ->get()
-            ->all()
             //
         ;
 
-        return RegularOrder::getMixedDSRegularOrders($orders);
+        return $orders->toArray();
     }
 }

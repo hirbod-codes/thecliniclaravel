@@ -3,16 +3,14 @@
 namespace Database\Interactions\Orders\Deletion;
 
 use App\Models\Order\LaserOrder;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
+use App\Models\User;
 use App\UseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
 
 class DataBaseDeleteLaserOrder implements IDataBaseDeleteLaserOrder
 {
-    public function deleteLaserOrder(DSLaserOrder $laserOrder, DSUser $targetUser): void
+    public function deleteLaserOrder(LaserOrder $laserOrder, User $targetUser): void
     {
-        if (($laserOrder = LaserOrder::query()->whereKey($laserOrder->getId())->first()) === null) {
-            throw new \LogicException('Failed to find the requested laser order.', 404);
-        }
+        $laserOrder = LaserOrder::query()->whereKey($laserOrder->getKey())->firstOrFail();
 
         $laserOrder->delete();
     }
