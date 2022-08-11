@@ -7,7 +7,6 @@ import { translate } from '../../traslation/translate.js';
 
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
@@ -27,7 +26,7 @@ export class Header extends Component {
 
                             {this.props.rightSide}
 
-                            {this.props.isAuthenticationLoading && <LoadingButton loading variant='contained' >AuthenticationLoading</LoadingButton>}
+                            {this.props.isAuthenticationLoading && <LoadingButton loading >AuthenticationLoading</LoadingButton>}
 
                             {!this.props.isAuthenticationLoading &&
                                 (
@@ -36,26 +35,22 @@ export class Header extends Component {
                                             <>
                                                 {this.props.navigator}
 
-                                                <Button type='button' variant='contained' onClick={(e) => { window.location.href = '/logout'; }} sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }} >
+                                                <Link to='/logout' onClick={(e) => { window.location.href = '/logout'; }} style={{ color: 'white', m: 1 }} >
                                                     {translate('general/log-out/single/ucFirstLetterAllWords')}
-                                                </Button>
+                                                </ Link>
                                             </>
                                         ) :
                                         (
                                             window.location.pathname === '/login' ?
                                                 (
-                                                    <Button type='button' variant='contained' sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }} >
-                                                        <Link to='/register' style={{ textDecoration: 'none', color: 'white' }} >
-                                                            {translate('general/sign-up/single/ucFirstLetterAllWords')}
-                                                        </ Link>
-                                                    </Button>
+                                                    <Link to='/register' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
+                                                        {translate('general/sign-up/single/ucFirstLetterAllWords')}
+                                                    </ Link>
                                                 ) :
                                                 (
-                                                    <Button type='button' variant='contained' sx={{ a: { textDecoration: 'none', color: 'white' }, m: 1 }} >
-                                                        <Link to='/login' style={{ textDecoration: 'none', color: 'white' }} >
-                                                            {translate('general/log-in/single/ucFirstLetterAllWords')}
-                                                        </ Link>
-                                                    </Button>
+                                                    <Link to='/login' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
+                                                        {translate('general/log-in/single/ucFirstLetterAllWords')}
+                                                    </ Link>
                                                 )
                                         )
                                 )
