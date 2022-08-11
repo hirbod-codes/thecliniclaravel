@@ -38,7 +38,7 @@ export class DataGridComponent extends Component {
             isLoading: true,
 
             page: 0,
-            pageSize: 10,
+            pageSize: (this.props.rowsPerPageOptions !== undefined) ? this.props.rowsPerPageOptions[0] : 10,
 
             rows: [],
             rowCount: 0,
