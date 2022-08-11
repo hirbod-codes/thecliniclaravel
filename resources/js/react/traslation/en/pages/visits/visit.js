@@ -18,10 +18,10 @@ visit['week-of-the-day'] = 'Week of the day';
 visit['current-timezone'] = 'Current timezone is:';
 
 visit.columns = {
-    weekDaysPeriods: 'Weekly time periods',
-    dateTimePeriod: 'Time periods',
-    visitTimestamp: 'Visit due',
-    consumingTime: 'Visit duration',
+    week_days_periods: 'Weekly time periods',
+    date_time_period: 'Time periods',
+    visit_timestamp: 'Visit due',
+    consuming_time: 'Visit duration',
 };
 
 export { visit };

@@ -11,18 +11,24 @@ import { formatToNumber, formatToTime } from '../formatters';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
 import { convertWeekDays, getDateTimeFormatObject, resolveTimeZone } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * VisitsDataGrid
  * @augments {Component<Props, State>}
  */
 export class VisitsDataGrid extends Component {
+    static contextType = PrivilegesContext;
+
     static propTypes = {
         businessName: PropTypes.string.isRequired,
 
+        roleName: PropTypes.string,
         sort: PropTypes.oneOf(['asc', 'desc']),
         timestamp: PropTypes.number,
         operator: PropTypes.string,
+        lastVisitId: PropTypes.number,
+        count: PropTypes.number,
         orderId: PropTypes.number,
         accountId: PropTypes.number,
 
@@ -72,13 +78,13 @@ export class VisitsDataGrid extends Component {
                 return;
             } else {
                 if (this.props.timestamp !== undefined && this.props.operator !== undefined) {
-                    data = await fetchData('get', '/visits/' + this.props.businessName + '?timestamp=' + this.props.timestamp + '&sortByTimestamp=' + this.props.sort + '&operator=' + this.props.operator, {}, { 'X-CSRF-TOKEN': this.state.token });
+                    data = await fetchData('get', '/visits?businessName=' + this.props.businessName + '&roleName=' + this.props.roleName + '&timestamp=' + this.props.timestamp + '&sortByTimestamp=' + this.props.sort + '&operator=' + this.props.operator + '&count=' + this.state.pageSize + ((this.props.lastVisitTimestamp && this.props.lastVisitTimestamp !== 0) ? ('&lastVisitTimestamp=' + this.props.lastVisitTimestamp) : ''), {}, { 'X-CSRF-TOKEN': this.state.token });
                 } else {
                     if (this.props.orderId !== undefined) {
-                        data = await fetchData('get', '/visits/' + this.props.businessName + '?sortByTimestamp=' + this.props.sort + '&' + this.props.businessName + 'OrderId=' + this.props['orderId'], {}, { 'X-CSRF-TOKEN': this.state.token });
+                        data = await fetchData('get', '/visits?businessName=' + this.props.businessName + '&sortByTimestamp=' + this.props.sort + '&' + this.props.businessName + 'OrderId=' + this.props['orderId'], {}, { 'X-CSRF-TOKEN': this.state.token });
                     } else {
                         if (this.props.accountId !== undefined) {
-                            data = await fetchData('get', '/visits/' + this.props.businessName + '?accountId=' + this.props.accountId + '&sortByTimestamp=' + this.props.sort, {}, { 'X-CSRF-TOKEN': this.state.token });
+                            data = await fetchData('get', '/visits?businessName=' + this.props.businessName + '&accountId=' + this.props.accountId + '&sortByTimestamp=' + this.props.sort, {}, { 'X-CSRF-TOKEN': this.state.token });
                         } else {
                             reject();
                         }
@@ -90,7 +96,8 @@ export class VisitsDataGrid extends Component {
                 reject();
             }
 
-            data = data.value.visits;
+            data = data.value;
+            console.log(data);
 
             if (this.props.afterGetData !== undefined) {
                 this.props.afterGetData(data);
@@ -119,22 +126,21 @@ export class VisitsDataGrid extends Component {
                         column.valueFormatter = formatToNumber;
                         break;
 
-                    case 'consumingTime':
+                    case 'consuming_time':
                         column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.type = 'number';
                         column.valueFormatter = formatToTime;
-                        column.valueGetter = formatToNumber;
                         break;
 
-                    case 'dateTimePeriod':
+                    case 'date_time_period':
                         column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.valueGetter = ({ value }) => { if (!value) { return 'N/A'; } else { return value; } };
                         break;
 
-                    case 'weekDaysPeriods':
+                    case 'week_days_periods':
                         column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.renderCell = (params) => {
-                            const weekDaysPeriods = params.row.weekDaysPeriods;
+                            const weekDaysPeriods = params.row.week_days_periods;
                             if (!weekDaysPeriods) {
                                 return 'N/A';
                             }
@@ -144,8 +150,8 @@ export class VisitsDataGrid extends Component {
 
                             let weekDayInputComponents = [];
                             if (weekDays !== null) {
-                                for (const k in weekDaysPeriods) {
-                                    if (Object.hasOwnProperty.call(weekDaysPeriods, k)) {
+                                for (const k in weekDays) {
+                                    if (Object.hasOwnProperty.call(weekDays, k)) {
                                         weekDayInputComponents.push(weekDayInputComponents.length);
                                     }
                                 }
@@ -156,6 +162,7 @@ export class VisitsDataGrid extends Component {
                                 props.weekDays = weekDays;
                                 props.weekDayInputComponents = weekDayInputComponents;
                             }
+                            console.log(props);
 
                             return (
                                 <>
@@ -184,7 +191,7 @@ export class VisitsDataGrid extends Component {
                         };
                         break;
 
-                    case 'visitTimestamp':
+                    case 'visit_timestamp':
                         column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.type = 'dateTime';
                         const locale = LocaleContext._currentValue.currentLocale.shortName;
@@ -193,14 +200,14 @@ export class VisitsDataGrid extends Component {
                         column.minWidth = 330;
                         break;
 
-                    case 'createdAt':
+                    case 'created_at':
                         column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => { if (!value) { return ''; } return new Date(value); };
                         column.minWidth = 170;
                         break;
 
-                    case 'updatedAt':
+                    case 'updated_at':
                         column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => { if (!value) { return ''; } return new Date(value); };

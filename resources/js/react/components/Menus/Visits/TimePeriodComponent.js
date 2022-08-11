@@ -40,14 +40,15 @@ export class TimePeriodComponent extends Component {
     }
 
     async componentDidMount() {
+        console.log(this.props);
         if (this.props.start !== undefined && this.state.start === '') {
             let start = new Date(this.props.start);
-            await updateState(this, { start: start.getHours() + ':' + start.getMinutes() });
+            await updateState(this, { start: start.toLocaleString('en-US', { hour: '2-digit', hourCycle: 'h24', minute: '2-digit' }) });
         }
 
         if (this.props.end !== undefined && this.state.end === '') {
             let end = new Date(this.props.end);
-            await updateState(this, { end: end.getHours() + ':' + end.getMinutes() });
+            await updateState(this, { end: end.toLocaleString('en-US', { hour: '2-digit', hourCycle: 'h24', minute: '2-digit' }) });
         }
     }
 

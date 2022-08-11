@@ -10,18 +10,20 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, GridToolbarDensitySelector, GridToolbarExport, GridToolbarFilterButton } from '@mui/x-data-grid';
 
 import VisitsDataGrid from './VisitsDataGrid';
-import { translate, ucFirstLetterFirstWord } from '../../../traslation/translate';
+import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * SelfVisitsDataGrid
  * @augments {Component<Props, State>}
  */
 export class SelfVisitsDataGrid extends Component {
+    static contextType = PrivilegesContext;
+
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         account: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
     }
@@ -55,7 +57,7 @@ export class SelfVisitsDataGrid extends Component {
     }
 
     addColumns(columns) {
-        if (this.props.privileges['self' + ucFirstLetterFirstWord(this.props.businessName) + 'VisitDelete']) {
+        if (this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf('self') !== -1) {
             columns.push({
                 field: 'actions',
                 type: 'actions',
@@ -107,7 +109,7 @@ export class SelfVisitsDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {this.props.privileges['self' + ucFirstLetterFirstWord(this.props.businessName) + 'VisitCreate'] ?
+                                        {this.context.createVisit !== undefined && this.context.createVisit[this.props.businessName] !== undefined && this.context.createVisit[this.props.businessName].indexOf('self') !== -1 ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -123,32 +125,31 @@ export class SelfVisitsDataGrid extends Component {
                     }}
                 />
 
-                {this.props.privileges['self' + ucFirstLetterFirstWord(this.props.businessName) + 'VisitCreate'] &&
-                    <Modal
-                        open={this.state.openVisitCreatorModal}
-                        onClose={this.closeVisitCreatorModal}
-                    >
-                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <VisitCreator
-                                account={this.props.account}
+                <Modal
+                    open={this.state.openVisitCreatorModal}
+                    onClose={this.closeVisitCreatorModal}
+                >
+                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        <VisitCreator
+                            account={this.props.account}
 
-                                onSuccess={() => {
-                                    this.closeVisitCreatorModal();
-                                    this.setState({ isCreating: false, reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-                                }}
-                                onClose={() => {
-                                    this.setState({ isCreating: false });
-                                    this.closeVisitCreatorModal();
-                                }}
-                                onFailure={() => {
-                                    this.setState({ isCreating: false, feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-                                }}
+                            onSuccess={() => {
+                                this.closeVisitCreatorModal();
+                                this.setState({ isCreating: false, reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+                            }}
+                            onClose={() => {
+                                this.setState({ isCreating: false });
+                                this.closeVisitCreatorModal();
+                            }}
+                            onFailure={() => {
+                                this.setState({ isCreating: false, feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+                            }}
 
-                                privileges={this.props.privileges} businessName={this.props.businessName}
-                            />
-                        </Paper>
-                    </Modal>
-                }
+                            businessName={this.props.businessName}
+                            targetRoleName='self'
+                        />
+                    </Paper>
+                </Modal>
 
                 <Snackbar
                     open={this.state.feedbackOpen}
@@ -172,7 +173,7 @@ export class SelfVisitsDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!this.props.privileges['self' + ucFirstLetterFirstWord(this.props.businessName) + 'VisitDelete']) {
+        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf('self') !== -1)) {
             return;
         }
 
@@ -180,7 +181,10 @@ export class SelfVisitsDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+        let data = {};
+        data[this.props.businessName + 'OrderId'] = params.row.id;
+
+        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token });
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

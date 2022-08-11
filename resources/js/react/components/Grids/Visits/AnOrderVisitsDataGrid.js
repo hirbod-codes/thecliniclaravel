@@ -14,14 +14,17 @@ import { translate } from '../../../traslation/translate';
 import { updateState } from '../../helpers';
 import { fetchData } from '../../Http/fetch';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * AnOrderVisitsDataGrid
  * @augments {Component<Props, State>}
  */
 export class AnOrderVisitsDataGrid extends Component {
+    static contextType = PrivilegesContext;
+
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
+        roleName: PropTypes.string,
         businessName: PropTypes.string.isRequired,
         orderId: PropTypes.number.isRequired,
     }
@@ -55,7 +58,7 @@ export class AnOrderVisitsDataGrid extends Component {
     }
 
     addColumns(columns) {
-        if (this.props.privileges[this.props.businessName + 'VisitDelete']) {
+        if (this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].filter((v) => v !== 'self').length > 0) {
             columns.push({
                 field: 'actions',
                 type: 'actions',
@@ -89,8 +92,6 @@ export class AnOrderVisitsDataGrid extends Component {
         return (
             <>
                 <VisitsDataGrid
-
-
                     reload={this.state.reload}
                     afterReload={() => this.setState({ reload: false })}
 
@@ -109,7 +110,7 @@ export class AnOrderVisitsDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {this.props.privileges[this.props.businessName + 'VisitCreate'] ?
+                                        {(this.context.createVisit !== undefined && this.context.createVisit[this.props.businessName] !== undefined && this.context.createVisit[this.props.businessName].filter((v) => v !== 'self').length > 0) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -143,22 +144,20 @@ export class AnOrderVisitsDataGrid extends Component {
                     </Alert>
                 </Snackbar>
 
-                {this.props.privileges[this.props.businessName + 'VisitCreate'] &&
-                    <Modal
-                        open={this.state.openCreationModal}
-                        onClose={this.closeCreationModal}
-                    >
-                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <WeekDayInputComponents handleVisitInfo={this.handleOnCreate} />
-                        </Paper>
-                    </Modal>
-                }
+                <Modal
+                    open={this.state.openCreationModal}
+                    onClose={this.closeCreationModal}
+                >
+                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        <WeekDayInputComponents handleVisitInfo={this.handleOnCreate} />
+                    </Paper>
+                </Modal>
             </>
         )
     }
 
     async handleDeletedRow(e, params) {
-        if (!this.props.privileges[this.props.businessName + 'VisitDelete']) {
+        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].filter((v) => v !== 'self').length > 0)) {
             return;
         }
 
@@ -166,7 +165,10 @@ export class AnOrderVisitsDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
+        let data = {};
+        data[this.props.businessName + 'OrderId'] = params.row.id;
+
+        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token })
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
@@ -181,6 +183,10 @@ export class AnOrderVisitsDataGrid extends Component {
 
     async handleOnCreate(weekDaysPeriods = null) {
         this.closeCreationModal();
+
+        if (!(this.context.createVisit !== undefined && this.context.createVisit[this.props.businessName] !== undefined && this.context.createVisit[this.props.businessName].filter((v) => v !== 'self').length > 0)) {
+            return;
+        }
 
         this.setState({ isCreating: true });
 

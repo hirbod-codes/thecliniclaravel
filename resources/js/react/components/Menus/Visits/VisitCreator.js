@@ -13,15 +13,18 @@ import WeekDayInputComponents from './WeekDayInputComponents';
 import { getDateTimeFormatObject, updateState } from '../../helpers';
 import { fetchData } from '../../Http/fetch';
 import { LocaleContext } from '../../localeContext';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * VisitCreator
  * @augments {Component<Props, State>}
  */
 export class VisitCreator extends Component {
+    static contextType = PrivilegesContext;
+
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
+        targetRoleName: PropTypes.string.isRequired,
 
         account: PropTypes.object,
         orderId: PropTypes.number,
@@ -141,78 +144,84 @@ export class VisitCreator extends Component {
     render() {
         return (
             <>
-                <Modal
-                    open={this.state.openAccountSearchModal}
-                    onClose={this.closeAccountSearchModal}
-                >
-                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <FindAccount handleAccount={async (account) => { await updateState(this, { account: account }); this.closeAccountSearchModal(null, null); this.openOrderSearchModal(); }} />
-                    </Paper>
-                </Modal>
-                <Modal
-                    open={this.state.openOrderSearchModal}
-                    onClose={this.closeOrderSearchModal}
-                >
-                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <FindOrder account={this.state.account} privileges={this.props.privileges} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} />
-                    </Paper>
-                </Modal>
-                <Modal
-                    open={this.state.openVisitInfoModal}
-                    onClose={this.closeVisitInfoModal}
-                >
-                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <Stack direction='column' spacing={2} style={{ height: '100%' }} >
-                            <Tabs value={this.state.visitFinderTabsValue} onChange={this.handleVisitFinderTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                <Tab label={translate('pages/visits/visit/closest-visit-available')} />
-                                <Tab label={translate('pages/visits/visit/weekly-visit-available')} />
-                            </Tabs>
-                            <TabPanel value={this.state.visitFinderTabsValue} index={0} style={{ height: '100%' }} >
-                                <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
-                                    {this.state.closestVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.closestVisitRefresh}</p> : null}
-                                    {this.state.isRefreshingClosestVisit ?
-                                        <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
-                                        </LoadingButton> :
-                                        <Button variant='contained' type='button' onClick={this.closestVisitRefresh}>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
-                                        </Button>
-                                    }
-                                    {this.state.isSubmittingVisit ?
-                                        <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
-                                        </LoadingButton> :
-                                        <Button variant='contained' type='button' onClick={async (e) => { await updateState(this, { weekDaysPeriods: null }); this.handleOnCreate(); }}>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
-                                        </Button>
-                                    }
-                                </Stack>
-                            </TabPanel>
-                            <TabPanel value={this.state.visitFinderTabsValue} index={1} style={{ height: '100%' }} >
-                                <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
-                                    <WeekDayInputComponents handleVisitInfo={this.handleVisitInfo} />
-                                    {this.state.weeklyVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.weeklyVisitRefresh}</p> : null}
-                                    {this.state.isRefreshingWeeklyVisit || (this.state.weekDaysPeriods === null) ?
-                                        <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
-                                        </LoadingButton> :
-                                        <Button variant='contained' type='button' onClick={this.weeklyVisitRefresh}>
-                                            {translate('general/refresh/single/ucFirstLetterFirstWord')}
-                                        </Button>
-                                    }
-                                    {this.state.isSubmittingVisit || (this.state.weekDaysPeriods === null) ?
-                                        <LoadingButton loading fullWidth variant='contained'>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
-                                        </LoadingButton> :
-                                        <Button variant='contained' type='button' onClick={this.handleOnCreate}>
-                                            {translate('general/submit/single/ucFirstLetterFirstWord')}
-                                        </Button>
-                                    }
-                                </Stack>
-                            </TabPanel>
-                        </Stack>
-                    </Paper>
-                </Modal>
+                {(this.context.retrieveUser !== undefined && this.context.retrieveUser.indexOf(this.props.targetRoleName) !== -1) &&
+                    <Modal
+                        open={this.state.openAccountSearchModal}
+                        onClose={this.closeAccountSearchModal}
+                    >
+                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                            <FindAccount handleAccount={async (account) => { await updateState(this, { account: account }); this.closeAccountSearchModal(null, null); this.openOrderSearchModal(); }} />
+                        </Paper>
+                    </Modal>
+                }
+                {(this.context.retrieveOrder !== undefined && this.context.retrieveOrder[this.props.businessName] !== undefined && this.context.retrieveOrder[this.props.businessName].indexOf(this.props.targetRoleName) !== -1) &&
+                    <Modal
+                        open={this.state.openOrderSearchModal}
+                        onClose={this.closeOrderSearchModal}
+                    >
+                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                            <FindOrder account={this.state.account} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} />
+                        </Paper>
+                    </Modal>
+                }
+                {(this.context.createOrder !== undefined && this.context.createOrder[this.props.businessName] !== undefined && this.context.createOrder[this.props.businessName].indexOf(this.props.targetRoleName) !== -1) &&
+                    <Modal
+                        open={this.state.openVisitInfoModal}
+                        onClose={this.closeVisitInfoModal}
+                    >
+                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                            <Stack direction='column' spacing={2} style={{ height: '100%' }} >
+                                <Tabs value={this.state.visitFinderTabsValue} onChange={this.handleVisitFinderTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                    <Tab label={translate('pages/visits/visit/closest-visit-available')} />
+                                    <Tab label={translate('pages/visits/visit/weekly-visit-available')} />
+                                </Tabs>
+                                <TabPanel value={this.state.visitFinderTabsValue} index={0} style={{ height: '100%' }} >
+                                    <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
+                                        {this.state.closestVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.closestVisitRefresh}</p> : null}
+                                        {this.state.isRefreshingClosestVisit ?
+                                            <LoadingButton loading fullWidth variant='contained'>
+                                                {translate('general/refresh/single/ucFirstLetterFirstWord')}
+                                            </LoadingButton> :
+                                            <Button variant='contained' type='button' onClick={this.closestVisitRefresh}>
+                                                {translate('general/refresh/single/ucFirstLetterFirstWord')}
+                                            </Button>
+                                        }
+                                        {this.state.isSubmittingVisit ?
+                                            <LoadingButton loading fullWidth variant='contained'>
+                                                {translate('general/submit/single/ucFirstLetterFirstWord')}
+                                            </LoadingButton> :
+                                            <Button variant='contained' type='button' onClick={async (e) => { await updateState(this, { weekDaysPeriods: null }); this.handleOnCreate(); }}>
+                                                {translate('general/submit/single/ucFirstLetterFirstWord')}
+                                            </Button>
+                                        }
+                                    </Stack>
+                                </TabPanel>
+                                <TabPanel value={this.state.visitFinderTabsValue} index={1} style={{ height: '100%' }} >
+                                    <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
+                                        <WeekDayInputComponents handleVisitInfo={this.handleVisitInfo} />
+                                        {this.state.weeklyVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.weeklyVisitRefresh}</p> : null}
+                                        {this.state.isRefreshingWeeklyVisit || (this.state.weekDaysPeriods === null) ?
+                                            <LoadingButton loading fullWidth variant='contained'>
+                                                {translate('general/refresh/single/ucFirstLetterFirstWord')}
+                                            </LoadingButton> :
+                                            <Button variant='contained' type='button' onClick={this.weeklyVisitRefresh}>
+                                                {translate('general/refresh/single/ucFirstLetterFirstWord')}
+                                            </Button>
+                                        }
+                                        {this.state.isSubmittingVisit || (this.state.weekDaysPeriods === null) ?
+                                            <LoadingButton loading fullWidth variant='contained'>
+                                                {translate('general/submit/single/ucFirstLetterFirstWord')}
+                                            </LoadingButton> :
+                                            <Button variant='contained' type='button' onClick={this.handleOnCreate}>
+                                                {translate('general/submit/single/ucFirstLetterFirstWord')}
+                                            </Button>
+                                        }
+                                    </Stack>
+                                </TabPanel>
+                            </Stack>
+                        </Paper>
+                    </Modal>
+                }
             </>
         )
     }

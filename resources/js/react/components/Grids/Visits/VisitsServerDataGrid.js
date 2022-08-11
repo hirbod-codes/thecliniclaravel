@@ -5,23 +5,25 @@ import PropTypes from 'prop-types';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Alert, IconButton, Snackbar, Modal, Paper, CircularProgress, Button, Stack } from '@mui/material';
+import { Alert, IconButton, Snackbar, Modal, Paper, CircularProgress, Button, Stack, Autocomplete, TextField } from '@mui/material';
 import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, GridToolbarDensitySelector, GridToolbarExport, GridToolbarFilterButton } from '@mui/x-data-grid';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import VisitsDataGrid from './VisitsDataGrid';
 import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
-import { getDateTimeFormatObjectForUTC, updateState } from '../../helpers';
+import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
+import { PrivilegesContext } from '../../privilegesContext';
 
 /**
  * VisitsServerDataGrid
  * @augments {Component<Props, State>}
  */
 export class VisitsServerDataGrid extends Component {
+    static contextType = PrivilegesContext;
+
     static propTypes = {
-        privileges: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
     }
 
@@ -29,10 +31,13 @@ export class VisitsServerDataGrid extends Component {
         super(props);
 
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
-
         this.closeVisitCreatorModal = this.closeVisitCreatorModal.bind(this);
         this.openVisitCreatorModal = this.openVisitCreatorModal.bind(this);
 
+        this.onPageChange = this.onPageChange.bind(this);
+        this.onPageSizeChange = this.onPageSizeChange.bind(this);
+
+        this.getRowCount = this.getRowCount.bind(this);
         this.addColumns = this.addColumns.bind(this);
 
         this.handleDeletedRow = this.handleDeletedRow.bind(this);
@@ -45,6 +50,11 @@ export class VisitsServerDataGrid extends Component {
             feedbackOpen: false,
             feedbackMessage: '',
             feedbackColor: 'info',
+
+            role: null,
+
+            page: 0,
+            pagesLastVisitId: [0],
 
             deletingRowIds: [],
 
@@ -63,8 +73,15 @@ export class VisitsServerDataGrid extends Component {
         }
     }
 
+    getRowCount() {
+        return new Promise(async (resolve) => {
+            let rowCount = await fetchData('get', '/visitsCount?businessName=' + this.props.businessName + '&roleName=' + (this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role), {}, { 'X-CSRF-TOKEN': this.state.token });
+            resolve(rowCount.value);
+        })
+    }
+
     addColumns(columns) {
-        if (this.props.privileges[this.props.businessName + 'VisitDelete']) {
+        if (this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf(this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role) !== -1) {
             columns.push({
                 field: 'actions',
                 type: 'actions',
@@ -76,6 +93,21 @@ export class VisitsServerDataGrid extends Component {
             });
         }
         return columns;
+    }
+
+    onPageChange(newPage) {
+        this.setState({ page: newPage });
+        if (this.state.pagesLastVisitId[newPage] !== undefined) {
+            this.setState({ reload: true });
+        } else {
+            let pagesLastVisitId = this.state.pagesLastVisitId;
+            pagesLastVisitId.push(this.state.lastVisitTimestamp);
+            this.setState({ pagesLastVisitId: pagesLastVisitId, reload: true });
+        }
+    }
+
+    onPageSizeChange(newPageSize) {
+        this.setState({ page: 0, pagesLastVisitId: [0], lastVisitTimestamp: 0, reload: true });
     }
 
     handleFeedbackClose(event, reason) {
@@ -100,18 +132,25 @@ export class VisitsServerDataGrid extends Component {
     }
 
     render() {
-        getDateTimeFormatObjectForUTC().formatToParts(new Date());
         return (
             <>
                 <VisitsDataGrid
+                    paginationMode='server'
+
+                    roleName={this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role}
                     businessName={this.props.businessName}
                     sort='asc'
                     operator='>='
                     timestamp={Math.floor(Date.parse(new Date()) / 1000)}
+                    lastVisitTimestamp={this.state.pagesLastVisitId[this.state.page]}
 
-
+                    afterGetData={(data) => this.setState({ lastVisitTimestamp: data[data.length - 1].visit_timestamp })}
+                    getRowCount={this.getRowCount}
                     reload={this.state.reload}
                     afterReload={() => this.setState({ reload: false })}
+
+                    onPageChange={this.onPageChange}
+                    onPageSizeChange={this.onPageSizeChange}
 
                     addColumns={this.addColumns}
 
@@ -124,7 +163,7 @@ export class VisitsServerDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {this.props.privileges[this.props.businessName + 'VisitCreate'] ?
+                                        {(this.context.createVisit !== undefined && this.context.createVisit[this.props.businessName] !== undefined && this.context.createVisit[this.props.businessName].indexOf(this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role) !== -1) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -134,35 +173,55 @@ export class VisitsServerDataGrid extends Component {
                                                 </Button>
                                             ) : null
                                         }
+                                        <Autocomplete
+                                            sx={{ minWidth: '130px' }}
+                                            size='small'
+                                            disablePortal
+                                            value={this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role}
+                                            options={this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')}
+                                            onChange={(e) => {
+                                                const elm = e.target;
+
+                                                let v = '';
+                                                if (elm.tagName === 'INPUT') {
+                                                    v = elm.getAttribute('value');
+                                                } else {
+                                                    v = elm.innerText;
+                                                }
+
+                                                this.setState({ role: v, page: 0, pagesLastVisitId: [0], lastVisitTimestamp: 0, reload: true })
+                                            }}
+                                            renderInput={(params) => <TextField {...params} sx={{ mt: 0 }} label={translate('general/rule/plural/ucFirstLetterFirstWord')} variant='standard' />}
+                                        />
                                     </Stack>
                                 </GridToolbarContainer>
                         }
                     }}
                 />
 
-                {this.props.privileges[this.props.businessName + 'VisitCreate'] &&
-                    <Modal
-                        open={this.state.openVisitCreatorModal}
-                        onClose={this.closeVisitCreatorModal}
-                    >
-                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <VisitCreator
-                                onSuccess={() => {
-                                    this.closeVisitCreatorModal();
-                                    this.setState({ isCreating: false, reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-                                }}
-                                onClose={() => {
-                                    this.setState({ isCreating: false });
-                                    this.closeVisitCreatorModal();
-                                }}
-                                onFailure={() => {
-                                    this.setState({ isCreating: false, feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-                                }}
-                                privileges={this.props.privileges} businessName={this.props.businessName}
-                            />
-                        </Paper>
-                    </Modal>
-                }
+                <Modal
+                    open={this.state.openVisitCreatorModal}
+                    onClose={this.closeVisitCreatorModal}
+                >
+                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        <VisitCreator
+                            onSuccess={() => {
+                                this.closeVisitCreatorModal();
+                                this.setState({ isCreating: false, reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+                            }}
+                            onClose={() => {
+                                this.setState({ isCreating: false });
+                                this.closeVisitCreatorModal();
+                            }}
+                            onFailure={() => {
+                                this.setState({ isCreating: false, feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+                            }}
+
+                            businessName={this.props.businessName}
+                            targetRoleName={this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role}
+                        />
+                    </Paper>
+                </Modal>
 
                 <Snackbar
                     open={this.state.feedbackOpen}
@@ -186,7 +245,7 @@ export class VisitsServerDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!this.props.privileges[this.props.businessName + 'VisitDelete']) {
+        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf(this.state.role) !== -1)) {
             return;
         }
 
@@ -194,7 +253,10 @@ export class VisitsServerDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+        let data = {};
+        data[this.props.businessName + 'OrderId'] = params.row.id;
+
+        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token });
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

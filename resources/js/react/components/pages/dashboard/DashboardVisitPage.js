@@ -3,15 +3,17 @@ import { Link } from 'react-router-dom';
 
 import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Grid, IconButton, Snackbar, Tab, Tabs } from '@mui/material';
-import LoadingButton from '@mui/lab/LoadingButton';
 
 import { translate } from '../../../traslation/translate';
 import SelfVisitsDataGrid from '../../Grids/Visits/SelfVisitsDataGrid';
 import Header from '../../headers/Header';
 import TabPanel from '../../Menus/TabPanel';
 import VisitsServerDataGrid from '../../Grids/Visits/VisitsServerDataGrid';
+import { PrivilegesContext } from '../../privilegesContext';
 
 export class DashboardVisitPage extends Component {
+    static contextType = PrivilegesContext;
+
     constructor(props) {
         super(props);
 
@@ -53,6 +55,29 @@ export class DashboardVisitPage extends Component {
     }
 
     render() {
+        let retrieveVisit = this.context.retrieveVisit;
+        let retrieveVisitKeys = Object.keys(retrieveVisit ? retrieveVisit : {});
+        let canRetrieveSelfVisit, canRetrieveVisit = false;
+        if (retrieveVisit && retrieveVisitKeys.length > 0) {
+            retrieveVisitKeys.some((k) => {
+                let r = retrieveVisit[k].some((v) => {
+                    if (v === 'self') {
+                        canRetrieveSelfVisit = true;
+                    } else {
+                        canRetrieveVisit = true;
+                    }
+
+                    if (canRetrieveSelfVisit === true && canRetrieveVisit === true) { return true; }
+                    return false;
+                });
+
+                if (r === true) { return true; }
+                return false;
+            });
+        }
+        console.log('this.context', this.context);
+        console.log('canRetrieveSelfVisit', canRetrieveSelfVisit);
+        console.log('canRetrieveVisit', canRetrieveVisit);
         return (
             <Grid container spacing={1} sx={{ minHeight: '100vh' }} alignContent='flex-start' >
                 <Grid item xs={12} >
@@ -64,62 +89,57 @@ export class DashboardVisitPage extends Component {
                     />
                 </Grid>
                 <Grid item xs={12} style={{ minHeight: '70vh' }} >
-                    {!this.props.privileges
-                        ? <LoadingButton loading variant='contained' fullWidth></LoadingButton>
-                        : <>
-                            <Tabs value={this.state.visitPageTabsValue} onChange={this.handleVisitPageTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                {(this.props.privileges.selfLaserVisitRetrieve || this.props.privileges.selfRegularVisitRetrieve) &&
-                                    <Tab label={translate('pages/visits/visit/your-visit')} />
+                    <Tabs value={this.state.visitPageTabsValue} onChange={this.handleVisitPageTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                        {canRetrieveSelfVisit &&
+                            <Tab label={translate('pages/visits/visit/your-visit')} />
+                        }
+                        {canRetrieveVisit &&
+                            <Tab label={translate('pages/visits/visit/others-visit')} />
+                        }
+                    </Tabs>
+                    {canRetrieveSelfVisit &&
+                        <TabPanel value={this.state.visitPageTabsValue} index={0} style={{ height: '100%' }} >
+                            <Tabs value={this.state.selfVisitTabsValue} onChange={this.handleSelfVisitTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                {retrieveVisit.laser.indexOf('self') !== -1 &&
+                                    <Tab label={translate('pages/visits/visit/laser-visit')} />
                                 }
-                                {(this.props.privileges.laserVisitRetrieve || this.props.privileges.regularVisitRetrieve) &&
-                                    <Tab label={translate('pages/visits/visit/others-visit')} />
+                                {retrieveVisit.regular.indexOf('self') !== -1 &&
+                                    <Tab label={translate('pages/visits/visit/regular-visit')} />
                                 }
                             </Tabs>
-                            {(this.props.privileges.selfLaserVisitRetrieve || this.props.privileges.selfRegularVisitRetrieve) &&
-                                <TabPanel value={this.state.visitPageTabsValue} index={0} style={{ height: '100%' }} >
-                                    <Tabs value={this.state.selfVisitTabsValue} onChange={this.handleSelfVisitTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                        {(this.props.privileges.selfLaserVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/laser-visit')} />
-                                        }
-                                        {(this.props.privileges.selfRegularVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/regular-visit')} />
-                                        }
-                                    </Tabs>
-                                    {(this.props.privileges.selfLaserVisitRetrieve) &&
-                                        <TabPanel value={this.state.selfVisitTabsValue} index={0} style={{ height: '100%' }} >
-                                            <SelfVisitsDataGrid businessName='laser' account={this.props.account} privileges={this.props.privileges} />
-                                        </TabPanel>
-                                    }
-                                    {(this.props.privileges.selfRegularVisitRetrieve) &&
-                                        <TabPanel value={this.state.selfVisitTabsValue} index={1} style={{ height: '100%' }} >
-                                            <SelfVisitsDataGrid businessName='regular' account={this.props.account} privileges={this.props.privileges} />
-                                        </TabPanel>
-                                    }
+                            {retrieveVisit.laser.indexOf('self') !== -1 &&
+                                <TabPanel value={this.state.selfVisitTabsValue} index={0} style={{ height: '100%' }} >
+                                    <SelfVisitsDataGrid businessName='laser' account={this.props.account} />
                                 </TabPanel>
                             }
-                            {(this.props.privileges.laserVisitRetrieve || this.props.privileges.regularVisitRetrieve) &&
-                                <TabPanel value={this.state.visitPageTabsValue} index={1} style={{ height: '100%' }} >
-                                    <Tabs value={this.state.visitTabsValue} onChange={this.handleVisitTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                                        {(this.props.privileges.laserVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/laser-visit')} />
-                                        }
-                                        {(this.props.privileges.regularVisitRetrieve) &&
-                                            <Tab label={translate('pages/visits/visit/regular-visit')} />
-                                        }
-                                    </Tabs>
-                                    {(this.props.privileges.laserVisitRetrieve) &&
-                                        <TabPanel value={this.state.visitTabsValue} index={0} style={{ height: '100%' }} >
-                                            <VisitsServerDataGrid businessName='laser' privileges={this.props.privileges} />
-                                        </TabPanel>
-                                    }
-                                    {(this.props.privileges.regularVisitRetrieve) &&
-                                        <TabPanel value={this.state.visitTabsValue} index={1} style={{ height: '100%' }} >
-                                            <VisitsServerDataGrid businessName='regular' privileges={this.props.privileges} />
-                                        </TabPanel>
-                                    }
+                            {retrieveVisit.regular.indexOf('self') !== -1 &&
+                                <TabPanel value={this.state.selfVisitTabsValue} index={1} style={{ height: '100%' }} >
+                                    <SelfVisitsDataGrid businessName='regular' account={this.props.account} />
                                 </TabPanel>
                             }
-                        </>
+                        </TabPanel>
+                    }
+                    {canRetrieveVisit &&
+                        <TabPanel value={this.state.visitPageTabsValue} index={1} style={{ height: '100%' }} >
+                            <Tabs value={this.state.visitTabsValue} onChange={this.handleVisitTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                                {((retrieveVisit.laser.indexOf('self') === -1 && retrieveVisit.laser.length > 0) || (retrieveVisit.laser.indexOf('self') !== -1 && retrieveVisit.laser.length > 1)) &&
+                                    <Tab label={translate('pages/visits/visit/laser-visit')} />
+                                }
+                                {((retrieveVisit.regular.indexOf('self') === -1 && retrieveVisit.regular.length > 0) || (retrieveVisit.regular.indexOf('self') !== -1 && retrieveVisit.regular.length > 1)) &&
+                                    <Tab label={translate('pages/visits/visit/regular-visit')} />
+                                }
+                            </Tabs>
+                            {((retrieveVisit.laser.indexOf('self') === -1 && retrieveVisit.laser.length > 0) || (retrieveVisit.laser.indexOf('self') !== -1 && retrieveVisit.laser.length > 1)) &&
+                                <TabPanel value={this.state.visitTabsValue} index={0} style={{ height: '100%' }} >
+                                    <VisitsServerDataGrid businessName='laser' />
+                                </TabPanel>
+                            }
+                            {((retrieveVisit.regular.indexOf('self') === -1 && retrieveVisit.regular.length > 0) || (retrieveVisit.regular.indexOf('self') !== -1 && retrieveVisit.regular.length > 1)) &&
+                                <TabPanel value={this.state.visitTabsValue} index={1} style={{ height: '100%' }} >
+                                    <VisitsServerDataGrid businessName='regular' />
+                                </TabPanel>
+                            }
+                        </TabPanel>
                     }
 
                     <Snackbar

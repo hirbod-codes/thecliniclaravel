@@ -7,7 +7,6 @@ import AddIcon from '@mui/icons-material/Add';
 import { Box, Divider, Fab, FormControl, InputLabel, MenuItem, Select, Stack } from '@mui/material'
 
 import { translate } from '../../../traslation/translate'
-import { LocaleContext } from '../../localeContext'
 import { updateState } from '../../helpers';
 import TimePeriodComponent from './TimePeriodComponent';
 
