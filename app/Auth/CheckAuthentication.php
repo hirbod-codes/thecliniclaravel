@@ -3,15 +3,9 @@
 namespace App\Auth;
 
 use App\Models\Auth\User as Authenticatable;
-use App\Models\Model;
 use Illuminate\Support\Facades\Auth;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicDataStructures\DataStructures\User\ICheckAuthentication;
-use TheClinicUseCases\Accounts\ICheckForAuthenticatedUsers;
 
-class CheckAuthentication implements
-    ICheckAuthentication,
-    ICheckForAuthenticatedUsers
+class CheckAuthentication
 {
     public function checkIfThereIsNoAuthenticated(): bool
     {
@@ -27,30 +21,5 @@ class CheckAuthentication implements
         }
 
         return null;
-    }
-
-    public function getAuthenticatedDSUser(): DSUser
-    {
-        /** @var \App\Models\User $user */
-        if (($user = $this->getAuthenticated()) === null) {
-            throw new \RuntimeException('There is no authenticated user.', 401);
-        }
-
-        return $user->authenticatableRole()->getDataStructure();
-    }
-
-    public function isAuthenticated(DSUser $user): bool
-    {
-        if (($authenticated = $this->getAuthenticated()) === null) {
-            return false;
-        }
-
-        if ($authenticated instanceof Model) {
-            $primaryKey = (new $authenticated)->getKeyName();
-        } else {
-            $primaryKey = 'id';
-        }
-
-        return !is_null($authenticated) && isset($authenticated->{$primaryKey}) && $authenticated->{$primaryKey} === $user->getId();
     }
 }
