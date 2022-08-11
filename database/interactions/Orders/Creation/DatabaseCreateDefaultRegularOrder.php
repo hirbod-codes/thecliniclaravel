@@ -6,8 +6,8 @@ use App\Models\BusinessDefault;
 use App\Models\Order\RegularOrder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\DataStructures\Order\Regular\DSRegularOrder;
+use App\UseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 
 class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegularOrder

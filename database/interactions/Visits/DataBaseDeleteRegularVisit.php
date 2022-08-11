@@ -4,7 +4,7 @@ namespace Database\Interactions\Visits;
 
 use App\Models\User;
 use App\Models\Visit\RegularVisit;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\UseCases\Visits\Interfaces\IDataBaseDeleteRegularVisit;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
 use TheClinicUseCases\Visits\Interfaces\IDataBaseDeleteRegularVisit;

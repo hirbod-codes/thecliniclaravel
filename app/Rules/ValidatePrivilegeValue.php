@@ -3,7 +3,7 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\DataStructures\User\DSUser;
 
 class ValidatePrivilegeValue implements Rule
 {

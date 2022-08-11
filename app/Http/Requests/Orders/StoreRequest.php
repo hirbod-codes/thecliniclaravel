@@ -9,7 +9,7 @@ use App\Rules\Orders\PartsPackagesRequirement;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use TheClinicDataStructures\DataStructures\User\DSAdmin;
+use App\Http\Requests\BaseFormRequest;
 
 class StoreRequest extends FormRequest
 {

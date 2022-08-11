@@ -4,8 +4,7 @@ namespace Database\Interactions\Orders\Deletion;
 
 use App\Models\Order\LaserOrder;
 use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
+use App\UseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
 
 class DataBaseDeleteLaserOrder implements IDataBaseDeleteLaserOrder
 {

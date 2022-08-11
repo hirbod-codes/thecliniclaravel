@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Visits;
 
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Foundation\Http\FormRequest;
+use App\DataStructures\Time\DSWeekDaysPeriods;
 use Illuminate\Validation\Rule;
 use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
 use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;

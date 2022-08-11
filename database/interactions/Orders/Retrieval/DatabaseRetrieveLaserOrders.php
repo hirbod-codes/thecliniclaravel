@@ -5,9 +5,8 @@ namespace Database\Interactions\Orders\Retrieval;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
 use App\Models\User;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrders;
+use App\UseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 
 class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
 {

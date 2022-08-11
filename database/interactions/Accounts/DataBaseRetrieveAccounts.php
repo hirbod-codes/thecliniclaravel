@@ -9,6 +9,7 @@ use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 
 class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
 {

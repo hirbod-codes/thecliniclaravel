@@ -5,9 +5,9 @@ namespace Database\Interactions\Accounts;
 use App\Models\User;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Support\Facades\DB;
+use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Illuminate\Support\Facades\Schema;
 use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 
 class DataBaseUpdateAccount implements IDataBaseUpdateAccount
 {

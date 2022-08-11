@@ -4,7 +4,7 @@ namespace Database\Interactions\Visits;
 
 use App\Models\User;
 use App\Models\Visit\LaserVisit;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\UseCases\Visits\Interfaces\IDataBaseDeleteLaserVisit;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisit;
 use TheClinicUseCases\Visits\Interfaces\IDataBaseDeleteLaserVisit;

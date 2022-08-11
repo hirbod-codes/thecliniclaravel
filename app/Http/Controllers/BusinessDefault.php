@@ -7,7 +7,7 @@ use App\Models\BusinessDefault as ModelsBusinessDefault;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use TheClinicDataStructures\DataStructures\Interfaces\Arrayable;
+use App\DataStructures\Interfaces\Arrayable;
 
 class BusinessDefault extends Controller
 {

@@ -10,13 +10,12 @@ use App\Models\Part\Part;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
-use TheClinicDataStructures\DataStructures\Order\DSPackage;
-use TheClinicDataStructures\DataStructures\Order\DSPackages;
-use TheClinicDataStructures\DataStructures\Order\DSPart;
-use TheClinicDataStructures\DataStructures\Order\DSParts;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
+use App\DataStructures\Order\DSPackage;
+use App\DataStructures\Order\DSPackages;
+use App\DataStructures\Order\DSPart;
+use App\DataStructures\Order\DSParts;
+use App\DataStructures\Order\Laser\DSLaserOrder;
+use App\UseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
 
 class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
 {

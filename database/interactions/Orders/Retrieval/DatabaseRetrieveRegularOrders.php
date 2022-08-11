@@ -5,9 +5,8 @@ namespace Database\Interactions\Orders\Retrieval;
 use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
 use App\Models\User;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrders;
+use App\UseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
 use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
 
 class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
 {

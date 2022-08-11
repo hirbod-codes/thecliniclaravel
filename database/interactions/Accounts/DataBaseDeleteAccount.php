@@ -7,8 +7,9 @@ use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\DataStructures\User\DSUser;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
+use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
 
 class DataBaseDeleteAccount implements IDataBaseDeleteAccount
 {

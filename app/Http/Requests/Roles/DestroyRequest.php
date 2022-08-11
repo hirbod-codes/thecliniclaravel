@@ -6,7 +6,7 @@ use App\Models\Role;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\DataStructures\User\DSUser;
 
 class DestroyRequest extends FormRequest
 {

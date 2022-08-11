@@ -6,7 +6,7 @@ use App\Models\Order\RegularOrder;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Models\Visit\RegularVisit;
-use Illuminate\Support\Facades\DB;
+use App\UseCases\Visits\Interfaces\IDataBaseRetrieveRegularVisits;
 use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;

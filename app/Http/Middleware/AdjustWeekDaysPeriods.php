@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeekDaysPeriods;
 
 class AdjustWeekDaysPeriods
 {

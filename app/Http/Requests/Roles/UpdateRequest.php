@@ -6,7 +6,7 @@ use App\Rules\ProhibitExtraFeilds;
 use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\DataStructures\User\DSUser;
 
 class UpdateRequest extends FormRequest
 {

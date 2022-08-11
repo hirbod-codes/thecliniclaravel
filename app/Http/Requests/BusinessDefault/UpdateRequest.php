@@ -5,8 +5,8 @@ namespace App\Http\Requests\BusinessDefault;
 use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
-use TheClinicDataStructures\DataStructures\Time\DSWorkSchedule;
-use TheClinicDataStructures\DataStructures\User\DSAdmin;
+use App\DataStructures\Time\DSWorkSchedule;
+use App\DataStructures\User\DSAdmin;
 
 class UpdateRequest extends FormRequest
 {

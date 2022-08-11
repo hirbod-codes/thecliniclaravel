@@ -7,7 +7,7 @@ use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\DataStructures\User\DSUser;
 
 class StoreRequest extends FormRequest
 {

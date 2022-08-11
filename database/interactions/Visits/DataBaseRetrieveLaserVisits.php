@@ -6,7 +6,7 @@ use App\Models\Order\LaserOrder;
 use App\Models\Order\Order;
 use App\Models\User;
 use App\Models\Visit\LaserVisit;
-use Illuminate\Support\Facades\DB;
+use App\UseCases\Visits\Interfaces\IDataBaseRetrieveLaserVisits;
 use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
 use TheClinicDataStructures\DataStructures\User\DSUser;
 use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;

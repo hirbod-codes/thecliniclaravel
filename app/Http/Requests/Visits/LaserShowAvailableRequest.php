@@ -3,9 +3,9 @@
 namespace App\Http\Requests\Visits;
 
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Foundation\Http\FormRequest;
+use App\DataStructures\Time\DSWeekDaysPeriods;
 use Illuminate\Support\Facades\Request;
-use TheClinicDataStructures\DataStructures\Time\DSWeekDaysPeriods;
+use App\Models\Order\LaserOrder;
 
 class LaserShowAvailableRequest extends FormRequest
 {

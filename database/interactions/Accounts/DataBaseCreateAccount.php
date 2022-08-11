@@ -9,7 +9,7 @@ use App\Models\User;
 use Database\Traits\ResolveUserModel;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
 use TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount;
 use Illuminate\Support\Facades\Schema;
 
