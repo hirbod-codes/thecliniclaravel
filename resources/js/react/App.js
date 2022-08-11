@@ -25,7 +25,7 @@ import DashboardOrderPage from './components/pages/dashboard/DashboardOrderPage'
 import DashboardVisitPage from './components/pages/dashboard/DashboardVisitPage';
 import UserIconNavigator from './components/UserIconNavigator';
 import { updateState } from './components/helpers';
-import { PrivilegesContext } from './components/privilegesContext';
+import { formatPrivileges, PrivilegesContext } from './components/privilegesContext';
 
 export class App extends Component {
     constructor(props) {
@@ -60,6 +60,7 @@ export class App extends Component {
             isAuthenticated: false,
             isAccountLoading: true,
             account: null,
+            arePrivilegesLoading: true,
             privileges: null,
 
             isEmailVerified: false,
@@ -120,12 +121,13 @@ export class App extends Component {
                         updateState(this, { isAvatarLoading: false, image: 'data:image/png;base64,' + avatarResponse.value });
                     }
                 });
+            });
 
-                fetchData('get', '/privileges/show?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((privilegesResponse) => {
-                    if (privilegesResponse.response.status === 200) {
-                        updateState(this, { privileges: privilegesResponse.value });
-                    }
-                });
+            fetchData('get', '/role', {}, { 'X-CSRF-TOKEN': this.state.token }).then((privilegesResponse) => {
+                if (privilegesResponse.response.status === 200) {
+                    updateState(this, { privileges: privilegesResponse.value, arePrivilegesLoading: false });
+                }
+                updateState(this, { arePrivilegesLoading: false });
             });
         });
 
@@ -204,8 +206,9 @@ export class App extends Component {
             navigator = <UserIconNavigator image={this.state.image} isAvatarLoading={this.state.isAvatarLoading} isEmailVerified={this.state.isEmailVerified} />;
         }
 
+
         return (
-            this.state.localeContext.isLocaleLoading || this.state.themeContext.isThemeLoading || this.state.isAccountLoading ?
+            this.state.localeContext.isLocaleLoading || this.state.themeContext.isThemeLoading || this.state.isAccountLoading || this.state.arePrivilegesLoading ?
                 <>
                     {inputGlobalStyles}
                     < div ></div >
@@ -213,7 +216,7 @@ export class App extends Component {
                 <LocaleContext.Provider value={this.state.localeContext}>
                     <ThemeContext.Provider value={this.state.themeContext}>
                         <ThemeProvider theme={this.state.themeContext.theme}>
-                            <PrivilegesContext.Provider value={this.state.privileges}>
+                            <PrivilegesContext.Provider value={formatPrivileges(this.state.privileges)}>
                                 {inputGlobalStyles}
                                 <BrowserRouter>
                                     <Routes>
