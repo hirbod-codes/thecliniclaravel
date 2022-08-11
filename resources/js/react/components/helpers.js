@@ -28,6 +28,39 @@ function doesExist(value) {
     return !(value === null || value === undefined);
 }
 
+const MY_FAVORITE_DATE_FORMAT = { weekday: 'short', month: 'short', year: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit' };
+
+function localizeDate(initialTimezone, isoFormattedDate, locale, returnString = false, onlyChangeTimezone = false) {
+    let date = DateTime.fromISO(isoFormattedDate, { zone: initialTimezone });
+
+    switch (locale) {
+        case 'en':
+            date = date.setZone('utc');
+            if (returnString) {
+                date = date.toLocaleString(MY_FAVORITE_DATE_FORMAT);
+            }
+            break;
+
+        case 'fa':
+            date = date.setZone('Asia/Tehran');
+            if (onlyChangeTimezone === false) {
+                date = date.reconfigure({ locale: 'fa-IR', outputCalendar: 'persian', numberingSystem: 'arabic' });
+            }
+            if (returnString) {
+                date = date.toLocaleString(MY_FAVORITE_DATE_FORMAT);
+            }
+            break;
+
+        default:
+            if (returnString) {
+                date = date.toLocaleString(MY_FAVORITE_DATE_FORMAT);
+            }
+            break;
+    }
+
+    return date;
+}
+
 function getFormatedDateAccordingToLocale(locale, timeIdentifier = '') {
     let date = getDateObject(timeIdentifier);
     return getDateTimeFormatObject(locale).format(date);
@@ -49,6 +82,17 @@ function getDateTimeFormatObject(locale) {
     return formatter;
 }
 
+function getDateTimeFormatOptions(locale) {
+    let formatter = null;
+    if (locale === 'fa') {
+        formatter = getDateTimeFormatOptionsForTehran();
+    } else {
+        formatter = getDateTimeFormatOptionsForUTC();
+    }
+
+    return formatter;
+}
+
 // For controlled input components
 function getDateTimeFormatObjectInEnglish(locale) {
     let formatter = null;
@@ -61,8 +105,23 @@ function getDateTimeFormatObjectInEnglish(locale) {
     return formatter;
 }
 
+function getDateTimeFormatOptionsInEnglish(locale) {
+    let formatter = null;
+    if (locale === 'fa') {
+        formatter = getDateTimeFormatOptionsForTehranInEnglish();
+    } else {
+        formatter = getDateTimeFormatOptionsForUTC();
+    }
+
+    return formatter;
+}
+
 function getDateTimeFormatObjectForTehran() {
-    return new Intl.DateTimeFormat('fa-IR', {
+    return new Intl.DateTimeFormat('fa-IR', getDateTimeFormatOptionsForTehran());
+}
+
+function getDateTimeFormatOptionsForTehran() {
+    return {
         calendar: 'persian',
         numberingSystem: 'arabic',
         year: 'numeric',
@@ -75,11 +134,15 @@ function getDateTimeFormatObjectForTehran() {
         second: '2-digit',
 
         timeZone: 'Asia/Tehran'
-    });
+    };
 }
 
 function getDateTimeFormatObjectForTehranInEnglish() {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat('en-US', getDateTimeFormatOptionsForTehranInEnglish());
+}
+
+function getDateTimeFormatOptionsForTehranInEnglish() {
+    return {
         year: 'numeric',
         month: 'numeric',
         day: 'numeric',
@@ -90,11 +153,15 @@ function getDateTimeFormatObjectForTehranInEnglish() {
         second: '2-digit',
 
         timeZone: 'Asia/Tehran'
-    });
+    };
 }
 
 function getDateTimeFormatObjectForUS() {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat('en-US', getDateTimeFormatOptionsForUS());
+}
+
+function getDateTimeFormatOptionsForUS() {
+    return {
         year: 'numeric',
         month: 'numeric',
         day: 'numeric',
@@ -105,11 +172,15 @@ function getDateTimeFormatObjectForUS() {
         second: '2-digit',
         timeZone: 'UTC',
         timeZoneName: 'shortGeneric'
-    }).formatToParts();
+    };
 }
 
 function getDateTimeFormatObjectForUTC() {
-    return new Intl.DateTimeFormat('en-US', {
+    return new Intl.DateTimeFormat('en-US', getDateTimeFormatOptionsForUTC());
+}
+
+function getDateTimeFormatOptionsForUTC() {
+    return {
         year: 'numeric',
         month: 'numeric',
         day: 'numeric',
@@ -120,7 +191,7 @@ function getDateTimeFormatObjectForUTC() {
         second: '2-digit',
         timeZone: 'UTC',
         timeZoneName: 'shortGeneric'
-    });
+    };
 }
 
 function getDateObject(timeIdentifier) {
@@ -306,6 +377,14 @@ function convertWeekDays(weekDaysPeriods, fromTimezone, toTimezone) {
 }
 
 export {
+    MY_FAVORITE_DATE_FORMAT,
+    localizeDate,
+    getDateTimeFormatOptions,
+    getDateTimeFormatOptionsInEnglish,
+    getDateTimeFormatOptionsForTehran,
+    getDateTimeFormatOptionsForTehranInEnglish,
+    getDateTimeFormatOptionsForUS,
+    getDateTimeFormatOptionsForUTC,
     resolveTimeZone,
     convertWeekDays,
     getFormatedDateAccordingToLocaleInEnglish,
