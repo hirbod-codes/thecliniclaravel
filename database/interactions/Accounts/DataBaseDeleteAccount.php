@@ -3,40 +3,26 @@
 namespace Database\Interactions\Accounts;
 
 use App\Models\User;
-use Database\Traits\ResolveUserModel;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\DataStructures\User\DSUser;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
+use App\Helpers\TraitRoleResolver;
 use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
 
 class DataBaseDeleteAccount implements IDataBaseDeleteAccount
 {
-    use ResolveUserModel;
+    use TraitRoleResolver;
 
-    public function deleteAccount(DSUser $user): void
+    public function deleteAccount(User $user): void
     {
         try {
             DB::beginTransaction();
 
-            $theModelClassFullName = $this->resolveRuleModelFullName($this->resolveRuleName($user));
-
-            $theModel = $theModelClassFullName::where((new $theModelClassFullName)->getKeyName(), $user->getId())->first();
-
-            if ($theModel === null) {
-                throw new ModelNotFoundException('Failed to find the user.', 404);
-            }
-
-            /** @var User $theUserModel */
-            $theUserModel = $theModel->user;
-
-            $theModel->delete();
-            $theUserModel->delete();
+            DB::table((new User)->getTable())->delete($user->getKey());
 
             DB::commit();
 
-            Storage::disk('local')->delete('images/avatars' . strval($theUserModel->getKey()));
+            Storage::disk('local')->delete('images/avatars' . strval($user->getKey()));
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;

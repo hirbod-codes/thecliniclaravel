@@ -2,94 +2,63 @@
 
 namespace Database\Interactions\Accounts;
 
+use App\Models\RoleName;
 use App\Models\User;
-use Database\Traits\ResolveUserModel;
 use Illuminate\Support\Facades\DB;
 use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
+use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
-use TheClinicDataStructures\DataStructures\User\DSUser;
 
 class DataBaseUpdateAccount implements IDataBaseUpdateAccount
 {
-    use ResolveUserModel;
-
-    public function massUpdateAccount(array $input, DSUser $user): DSUser
+    public function massUpdateAccount(array $input, User $user): User
     {
-        $theModelClassFullName = $this->resolveRuleModelFullName($this->resolveRuleName($user));
-        $theModelClassPrimaryKey = (new $theModelClassFullName)->getKeyName();
-
-        if (isset($input['firstname']) || isset($input['lastname'])) {
-            if (!isset($input['firstname'])) {
-                $input['firstname'] = User::where($theModelClassPrimaryKey, $user->getId())->firstOrFail()->firstname;
-            } elseif (!isset($input['lastname'])) {
-                $input['lastname'] = User::where($theModelClassPrimaryKey, $user->getId())->firstOrFail()->lastname;
-            }
-
-            if (User::where('firstname', $input['firstname'])->where('lastname', $input['lastname'])->first() !== null) {
-                throw new \RuntimeException('A user with same first name and last name already exists.', 500);
-            }
-        }
-
-        $userInput = [];
-        foreach (Schema::getColumnListing((new User)->getTable()) as $column) {
-            if (array_search($column, array_keys($input)) !== false) {
-                $userInput[$column] = $input[$column];
-                unset($input[$column]);
-            }
-        }
-        $roleInput = $input;
+        $authenticatable = $user->authenticatableRole();
 
         try {
             DB::beginTransaction();
 
-            if (
-                User::where('username', $user->getUsername())->first()->update($userInput) &&
-                $theModelClassFullName::where($theModelClassPrimaryKey, $user->getId())->first()->update($roleInput)
-            ) {
-                DB::commit();
-                return $theModelClassFullName::where($theModelClassPrimaryKey, $user->getId())->first()->getDataStructure();
-            } else {
-                throw new \RuntimeException('Failed to update the user.', 500);
+            $userAattributes = [];
+            foreach (Schema::getColumnListing((new User)->getTable()) as $column) {
+                if (array_search($column, array_keys($input)) !== false) {
+                    if ($column === 'password') {
+                        $userAattributes[$column] = bcrypt($input[$column]);
+                        continue;
+                    }
+
+                    $userAattributes[$column] = $input[$column];
+                }
             }
+
+            $targetId = intval(array_reverse(explode('/', Request::path()))[0]);
+            $targetUser = User::query()->whereKey($targetId)->firstOrFail();
+            $modelFullName = get_class($targetUser->authenticatableRole);
+
+            $authAattributes = [];
+            foreach (Schema::getColumnListing((new $modelFullName)->getTable()) as $column) {
+                if (array_search($column, array_keys($input)) !== false) {
+                    $authAattributes[$column] = $input[$column];
+                }
+            }
+
+            if (!(isset($userAattributes) && $user->update($userAattributes)) || !(isset($authAattributes) && $authenticatable->update($authAattributes))) {
+                throw new \RuntimeException('', 500);
+            }
+
+            DB::commit();
+            return $user->refresh();
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;
         }
     }
 
-    public function updateAccount(string $attribute, mixed $newValue, DSUser $user): DSUser
+    public function updateAccount(string $attribute, mixed $newValue, User $user): User
     {
-        $authenticatable = User::where('username', $user->getUsername())->first();
-
-        if (array_search($attribute, Schema::getColumnListing((new User)->getTable())) !== false) {
-            if ($attribute === 'firstname' || $attribute === 'lastname') {
-                $firstname = $authenticatable->firstname;
-                $lastname = $authenticatable->lastname;
-
-                if ($attribute === 'firstname') {
-                    $firstname = $newValue;
-                } else {
-                    $lastname = $newValue;
-                }
-
-                if (User::where('firstname', $firstname)->where('lastname', $lastname)->first() !== null) {
-                    throw new \RuntimeException('A user with same first name and last name already exists.', 500);
-                }
-            }
-
-            $authenticatable->{$attribute} = $newValue;
-        } else {
-            $authenticatable = $authenticatable->authenticatableRole();
-
-            $authenticatable->{$attribute} = $newValue;
+        if (!$user->update([$attribute => $newValue])) {
+            throw new \RuntimeException('', 500);
         }
 
-        if (!$authenticatable->save()) {
-            throw new \RuntimeException('Failed to update user\'s ' . $attribute . '.', 500);
-        } elseif ($authenticatable instanceof User) {
-            return $authenticatable->authenticatableRole()->getDataStructure();
-        } else {
-            return $authenticatable->getDataStructure();
-        }
+        return $user->refresh();
     }
 }

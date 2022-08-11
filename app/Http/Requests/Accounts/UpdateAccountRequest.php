@@ -2,17 +2,13 @@
 
 namespace App\Http\Requests\Accounts;
 
-use App\Models\Role;
+use App\Auth\CheckAuthentication;
+use App\Http\Requests\BaseFormRequest;
 use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
-use Database\Traits\ResolveUserModel;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
 
-class UpdateAccountRequest extends FormRequest
+class UpdateAccountRequest extends BaseFormRequest
 {
-    use ResolveUserModel;
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -20,6 +16,37 @@ class UpdateAccountRequest extends FormRequest
      */
     public function authorize()
     {
+        /** @var User $user */
+        $user = (new CheckAuthentication)->getAuthenticated();
+
+        $accountId = intval(array_reverse(explode('/', $this->path()))[0]);
+        if ($accountId === $user->getKey()) {
+            $isSelf = true;
+        } else {
+            $isSelf = false;
+        }
+        /** @var User $user */
+        $targetUser = User::query()->whereKey($accountId)->firstOrFail();
+        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+        $input = $this->safe()->all();
+
+        $updateUserModels = $user->authenticatableRole->role->role->updateUserSubjects;
+        foreach ($input as $key => $value) {
+            foreach ($updateUserModels as $updateUserModel) {
+                if ($updateUserModel->relatedColumn->name !== $key) {
+                    continue;
+                }
+
+                if (($isSelf && $updateUserModel->object !== null) || (!$isSelf && ($updateUserModel->object === null || ($updateUserModel->object !== null && $updateUserModel->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+                    continue;
+                }
+
+                continue 2;
+            }
+
+            return false;
+        }
+
         return true;
     }
 
@@ -31,27 +58,12 @@ class UpdateAccountRequest extends FormRequest
     public function rules()
     {
         $accountId = intval(array_reverse(explode('/', $this->path()))[0]);
-
         /** @var User $user */
         $user = User::query()->whereKey($accountId)->firstOrFail();
-        $dsUser = $user->authenticatableRole()->getDataStructure();
 
         $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php');
 
-        $role = $this->resolveRuleName($dsUser);
-        $role = $this->resolveRuleType($role);
-        if ($role === 'custom') {
-            $role = null;
-        } elseif (Str::contains($role, 'custom')) {
-            $role = Str::replace('custom_', '', $role);
-        }
-
-        if (!is_null($role)) {
-            $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . Str::studly($role) . '/updateRules.php'));
-        } else {
-            $array['data'][] = 'array';
-            $array['data'][] = 'min:1';
-        }
+        $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($user->authenticatableRole) . '/updateRules.php'));
 
         if (isset($array['phonenumber'])) {
             unset($array['phonenumber']);

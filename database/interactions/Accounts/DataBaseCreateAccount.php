@@ -2,22 +2,23 @@
 
 namespace Database\Interactions\Accounts;
 
+use App\Helpers\TraitRoleResolver;
 use App\Http\Controllers\AccountDocumentsController;
 use App\Models\Auth\User as Authenticatable;
-use App\Models\Role;
+use App\Models\RoleName;
 use App\Models\User;
-use Database\Traits\ResolveUserModel;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount;
 use Illuminate\Support\Facades\Schema;
 
 class DataBaseCreateAccount implements IDataBaseCreateAccount
 {
-    use ResolveUserModel;
-
-    public function createAccount(array $input): DSUser
+    /**
+     * @param array $input ['typeAttributes*' => [], 'userAttributes*' => [], 'role*' => 'admin', 'avatar' => '']
+     * @return \App\Models\User
+     */
+    public function createAccount(array $input): User
     {
         try {
             DB::beginTransaction();
@@ -41,7 +42,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
             $ruleName = $input["role"];
             unset($input["role"]);
 
-            $modelFullName = $this->resolveRuleModelFullName($ruleName);
+            $modelFullName = ($childRoleModel = RoleName::query()->where('name', '=', $ruleName)->firstOrFail()->childRoleModel)->getUserTypeModelFullname();
 
             $authAattributes = [];
             foreach (Schema::getColumnListing((new $modelFullName)->getTable()) as $column) {
@@ -55,9 +56,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
                 unset($input["avatar"]);
             }
 
-            $userModel = new User;
-            $userModel->{(new Role)->getForeignKeyForName()} = Role::where('name', $ruleName)->firstOrFail()->name;
-
+            $userModel = new User();
             foreach ($userAattributes as $key => $value) {
                 $userModel->{$key} = $value;
             }
@@ -66,26 +65,24 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
 
             /** @var Authenticatable $roleModel */
             $roleModel = new $modelFullName;
-            $roleModel->{(new $modelFullName)->getKeyName()} = $userModel->{(new User)->getKeyName()};
-            $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKeyForName()};
-
             foreach ($authAattributes as $key => $value) {
                 $roleModel->{$key} = $value;
             }
-
+            $roleModel->{(new User)->getForeignKey()} = $userModel->getKey();
+            $roleModel->{$childRoleModel->getForeignKey()} = $childRoleModel->getKey();
             $roleModel->saveOrFail();
 
             if (isset($avatar)) {
                 (new AccountDocumentsController)->makeAvatar($avatar, $userModel->getKey() . '.jpg', 'private');
             }
 
-            $dsRoleModel = $roleModel->getDataStructure();
-
             DB::commit();
+
+            $userModel->authenticatableRole;
 
             event(new Registered($userModel));
 
-            return $dsRoleModel;
+            return $userModel;
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;

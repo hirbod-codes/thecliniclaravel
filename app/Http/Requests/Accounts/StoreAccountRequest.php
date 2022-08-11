@@ -2,17 +2,15 @@
 
 namespace App\Http\Requests\Accounts;
 
-use App\Models\Role;
+use App\Auth\CheckAuthentication;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\RoleName;
 use App\Rules\CheckEnryptedValuesIds;
 use App\Rules\ProhibitExtraFeilds;
-use Database\Traits\ResolveUserModel;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Request;
 
-class StoreAccountRequest extends FormRequest
+class StoreAccountRequest extends BaseFormRequest
 {
-    use ResolveUserModel;
-
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -20,7 +18,18 @@ class StoreAccountRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        /** @var User $user */
+        $user = (new CheckAuthentication)->getAuthenticated();
+
+        $createUser = $user->authenticatableRole->role->role->createUserSubjects;
+
+        foreach ($createUser as $createUserModel) {
+            if ($createUserModel->object !== null && $createUserModel->relatedObject->childRoleModel->roleName->name === class_basename(Request::path())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -31,22 +40,11 @@ class StoreAccountRequest extends FormRequest
     public function rules()
     {
         $roleName = array_reverse(explode('/', $this->path()))[0];
+        $userTypeModelFullname = RoleName::query()->where('name', '=', $roleName)->firstOrFail()->childRoleModel->getUserTypeModelFullname();
 
         $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php');
 
-        $role = $this->resolveRuleType($roleName);
-        if ($role === 'custom') {
-            $role = null;
-        } elseif (Str::contains($role, 'custom')) {
-            $role = Str::replace('custom_', '', $role);
-        }
-
-        if (!is_null($role)) {
-            $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . Str::studly($role) . '/updateRules.php'));
-        } else {
-            $array['data'][] = 'json';
-            $array['data'][] = 'min:1';
-        }
+        $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($userTypeModelFullname) . '/updateRules.php'));
 
         $array['code_created_at_encrypted'] = ['required', 'string'];
         $array['code_encrypted'] = ['required', 'string'];

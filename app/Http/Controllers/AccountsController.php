@@ -3,19 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
+use App\Http\Requests\Accounts\AccountsCountRequest;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\isPhonenumberVerificationCodeVerified;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
-use App\Http\Requests\Accounts\UpdateSelfAccountRequest;
+use App\Models\RoleName;
 use App\Models\User;
 use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\DataBaseUpdateAccount;
-use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
@@ -31,14 +31,9 @@ use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
 use App\UseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
 use App\UseCases\Exceptions\AdminModificationByUserException;
 use App\UseCases\Exceptions\AdminsCollisionException;
-use TheClinicUseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
-use TheClinicUseCases\Exceptions\AdminModificationByUserException;
-use TheClinicUseCases\Exceptions\AdminsCollisionException;
 
 class AccountsController extends Controller
 {
-    use ResolveUserModel;
-
     public const SEPARATOR = '!!!__!!!';
 
     private CheckAuthentication $checkAuthentication;
@@ -54,8 +49,6 @@ class AccountsController extends Controller
     private IDataBaseDeleteAccount $dataBaseDeleteAccount;
 
     public function __construct(
-        Authentication|null $authentication = null,
-        PrivilegesManagement|null $privilegesManagement = null,
         CheckAuthentication|null $checkAuthentication = null,
         AccountsManagement|null $accountsManagement = null,
         IDataBaseRetrieveAccounts|null $dataBaseRetrieveAccounts = null,
@@ -64,7 +57,7 @@ class AccountsController extends Controller
         IDataBaseDeleteAccount|null $dataBaseDeleteAccount = null,
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
-        $this->accountsManagement = $accountsManagement ?: new AccountsManagement($authentication ?: new Authentication, $privilegesManagement ?: new PrivilegesManagement);
+        $this->accountsManagement = $accountsManagement ?: new AccountsManagement();
 
         $this->dataBaseRetrieveAccounts = $dataBaseRetrieveAccounts ?: new DataBaseRetrieveAccounts;
         $this->dataBaseCreateAccount = $dataBaseCreateAccount ?: new DataBaseCreateAccount;
@@ -77,17 +70,19 @@ class AccountsController extends Controller
     public function index(IndexAccountsRequest $request): JsonResponse
     {
         $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
         $roleName = $validatedInput['roleName'];
         $lastAccountId = isset($validatedInput['lastAccountId']) ? $validatedInput['lastAccountId'] : null;
         $count = $validatedInput['count'];
 
-        $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
+        return response()->json($this->accountsManagement->getAccounts($lastAccountId, $count, $roleName, $this->dataBaseRetrieveAccounts));
+    }
 
-        $array = array_map(function (DSUser $dsUser) {
-            return $dsUser->toArray();
-        }, $this->accountsManagement->getAccounts($lastAccountId, $count, $roleName, $dsUser, $this->dataBaseRetrieveAccounts));
-
-        return response()->json($array);
+    public function accountsCount(AccountsCountRequest $request): Response
+    {
+        $input = $request->safe()->all();
+        $roleName = RoleName::query()->where('name', '=', $input['roleName'])->firstOrFail();
+        return response(count($roleName->childRoleModel->userType));
     }
 
     public function sendPhonenumberVerificationCode(SendPhonenumberVerificationCodeRequest $request): JsonResponse
@@ -135,29 +130,23 @@ class AccountsController extends Controller
         unset($validatedInput['phonenumber_encrypted']);
         unset($validatedInput['password_confirmation']);
 
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $user = $this->accountsManagement->createAccount($validatedInput, $this->dataBaseCreateAccount);
 
-        $username = $this->accountsManagement->createAccount($validatedInput, $dsAuthenticated, $this->dataBaseCreateAccount)->getUsername();
-
-        /** @var \App\Models\Auth\User $newAccount */
-        $newAccount = User::query()->where('username', '=', $username)->firstOrFail();
-
-        return response()->json($newAccount->authenticatableRole()->getDataStructure()->toArray());
+        return response()->json($user->toArray());
     }
 
-    public function isPhonenumberVerificationCodeVerified(isPhonenumberVerificationCodeVerified $request): Response
+    public function isPhonenumberVerificationCodeVerified(isPhonenumberVerificationCodeVerified $request): Response|JsonResponse
     {
         $validated = $request->safe()->all();
 
-        return $this->verifyPhonenumberVerificationCode($validated['codeCreatedAtEncrypted'], $validated['codeEncrypted'], $validated['code'], $validated['phonenumber'], $validated['phonenumber_encrypted']);
+        return $this->verifyPhonenumberVerificationCode($validated['code_created_at_encrypted'], $validated['code_encrypted'], $validated['code'], $validated['phonenumber'], $validated['phonenumber_encrypted']);
     }
 
-    private function verifyPhonenumberVerificationCode(string $codeCreatedAtEncrypted, string $codeEncrypted, int $code, string $phonenumber, string $phonenumber_encrypted): Response
+    private function verifyPhonenumberVerificationCode(string $codeCreatedAtEncrypted, string $codeEncrypted, int $code, string $phonenumber, string $phonenumberEncrypted): Response|JsonResponse
     {
         $codeCreatedAtDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($codeCreatedAtEncrypted))[0]);
         $codeDecrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($codeEncrypted))[0]);
-        $phonenumber = intval(explode(self::SEPARATOR, Crypt::decryptString($phonenumber))[0]);
-        $phonenumber_encrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($phonenumber_encrypted))[0]);
+        $phonenumberEncrypted = intval(explode(self::SEPARATOR, Crypt::decryptString($phonenumberEncrypted))[0]);
 
         $code = intval($code);
 
@@ -169,7 +158,7 @@ class AccountsController extends Controller
             return response()->json(['errors' => ['code' => [trans_choice('auth.phonenumber_verification_failed_code', 0)]]], 422);
         }
 
-        if ($phonenumber !== explode(self::SEPARATOR, Crypt::decryptString($phonenumber_encrypted))[0]) {
+        if ($phonenumber !== explode(self::SEPARATOR, Crypt::decryptString($phonenumberEncrypted))[0]) {
             return response()->json(['errors' => ['code' => [trans_choice('auth.phonenumber_not_verification', 0)]]], 422);
         }
 
@@ -191,9 +180,7 @@ class AccountsController extends Controller
             return $username;
         }
 
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        $dsUser = $this->accountsManagement->getAccount($username, $dsAuthenticated, $this->dataBaseRetrieveAccounts);
+        $dsUser = $this->accountsManagement->getAccount($username, $this->dataBaseRetrieveAccounts);
 
         return response()->json($dsUser->toArray());
     }
@@ -247,11 +234,11 @@ class AccountsController extends Controller
 
     public function showSelf(): JsonResponse
     {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
+        $user = $this->checkAuthentication->getAuthenticated();
 
-        $dsAuthenticated = $this->accountsManagement->getAccount($dsAuthenticated->getUsername(), $dsAuthenticated, $this->dataBaseRetrieveAccounts);
+        $user = $this->accountsManagement->getAccount($user->username, $this->dataBaseRetrieveAccounts);
 
-        return response()->json($dsAuthenticated->toArray());
+        return response()->json($user->toArray());
     }
 
     public function update(UpdateAccountRequest $request, int $accountId): JsonResponse|Response
@@ -264,16 +251,13 @@ class AccountsController extends Controller
             return response(trans_choice('general.no-data', 0), 422);
         }
 
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
         try {
             /** @var User $targetUser*/
             $targetUser = User::query()->whereKey($accountId)->firstOrFail();
 
             $dsUpdatedUser = $this->accountsManagement->massUpdateAccount(
                 $input,
-                $targetUser->authenticatableRole()->getDataStructure(),
-                $dsAuthenticated,
+                $targetUser,
                 $this->dataBaseUpdateAccount
             );
         } catch (AdminsCollisionException $e) {
@@ -283,52 +267,17 @@ class AccountsController extends Controller
         return response()->json($dsUpdatedUser->toArray());
     }
 
-    public function updateSelf(UpdateSelfAccountRequest $request): JsonResponse|Response
-    {
-        $dsAuthenticated = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        try {
-            $dsUpdatedAuthenticated = $this->accountsManagement->massUpdateAccount(
-                $request->safe()->all(),
-                $dsAuthenticated,
-                $dsAuthenticated,
-                $this->dataBaseUpdateAccount
-            );
-        } catch (AdminsCollisionException $e) {
-            return response(trans_choice('auth.admin_conflict', 0), 403);
-        }
-
-        return response()->json($dsUpdatedAuthenticated->toArray());
-    }
-
     public function destroy(int $accountId): Response
     {
-        $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
-
         try {
             /** @var User $targetUser*/
             $targetUser = User::query()->whereKey($accountId)->first();
 
-            $this->accountsManagement->deleteAccount($targetUser->authenticatableRole()->getDataStructure(), $dsUser, $this->dataBaseDeleteAccount);
+            $this->accountsManagement->deleteAccount($targetUser, $this->dataBaseDeleteAccount);
         } catch (AdminTemptsToDeleteAdminException $e) {
             return response($e->getMessage(), $e->getCode());
         } catch (AdminModificationByUserException $e) {
             return response($e->getMessage(), $e->getCode());
-        }
-
-        return response('The user successfuly deleted.');
-    }
-
-    public function destroySelf(): Response
-    {
-        $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
-
-        try {
-            $this->accountsManagement->deleteAccount($dsUser, $dsUser, $this->dataBaseDeleteAccount);
-        } catch (AdminTemptsToDeleteAdminException $e) {
-            return response(trans_choice('auth.admin_conflict', 0), 403);
-        } catch (AdminModificationByUserException $e) {
-            return response(trans_choice('auth.admin_conflict', 0), 403);
         }
 
         return response('The user successfuly deleted.');

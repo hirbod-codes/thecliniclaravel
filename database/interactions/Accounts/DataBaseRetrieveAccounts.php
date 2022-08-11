@@ -2,58 +2,58 @@
 
 namespace Database\Interactions\Accounts;
 
-use App\Models\Model;
-use App\Models\roles\AdminRole;
 use App\Models\User;
-use Database\Traits\ResolveUserModel;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use App\Helpers\TraitRoleResolver;
+use App\Models\RoleName;
 use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 
 class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
 {
-    use ResolveUserModel;
+    use TraitRoleResolver;
 
     /**
      * @param integer|null $lastAccountId
      * @param integer $count
-     * @param string $ruleName
-     * @return \TheClinic\DataStructures\User\DSUser[]
+     * @param string $roleName
+     * @return array [ [ 'columns' => [...], 'rows' => [...] ], ... ]
      */
-    public function getAccounts(int $count, string $ruleName, ?int $lastAccountId = null): array
+    public function getAccounts(int $count, string $roleName, ?int $lastAccountId = null): array
     {
-        /** @var Model $theModelFullName */
-        $theModelFullName = $this->resolveRuleModelFullName($ruleName);
+        $childRoleModel = RoleName::query()->where('name', '=', $roleName)->firstOrFail()->childRoleModel;
+        $userTypeModelFullname = $childRoleModel->getUserTypeModelFullname();
 
-        $maxId = $theModelFullName::orderBy('id', 'desc')->first()->id;
+        $lastUser = User::query()->orderBy((new User)->getKeyName(), 'desc')->first();
+        if ($lastUser === null) {
+            $maxId = 0;
+        } else {
+            $maxId = $lastUser->getKey();
+        }
 
         if (!is_null($lastAccountId) && ($lastAccountId > $maxId || $lastAccountId < 1)) {
             throw new \RuntimeException('Invalid last primary key value, it\'s either greater than max primary key or less than 1.', 500);
         }
 
-        $models = $theModelFullName::query()
-            ->orderBy((new $theModelFullName)->getKeyName(), 'desc')
-            ->where((new AdminRole)->getUserRoleNameFKColumnName(), '=', $ruleName)
-            ->where((new $theModelFullName)->getKeyName(), $lastAccountId === null ? '<=' : '<', $lastAccountId === null ? $maxId : $lastAccountId)
+        $users = $userTypeModelFullname::query()
+            ->orderBy((new User)->getForeignKey(), 'desc')
+            ->where((new $childRoleModel)->getForeignKey(), '=', $childRoleModel->getKey())
+            ->where((new User)->getForeignKey(), $lastAccountId === null ? '<=' : '<', $lastAccountId === null ? $maxId : $lastAccountId)
             ->take($count)
-            ->get();
+            ->with('user')
+            ->get()
+            //
+        ;
 
-        $authenticatables = [];
-        foreach ($models as $authenticatable) {
-            $authenticatables[] = $authenticatable->getDataStructure();
-        }
-
-        return $authenticatables;
+        return $users->toArray();
     }
 
-    public function getAccount(string $targetUserUsername): DSUser
+    public function getAccount(string $targetUserUsername): User
     {
         /** @var User $user */
         if (($user = User::query()->where('username', $targetUserUsername)->first()) === null) {
             throw new ModelNotFoundException("The user not found.", 404);
         }
 
-        return $user->authenticatableRole()->getDataStructure();
+        return $user;
     }
 }

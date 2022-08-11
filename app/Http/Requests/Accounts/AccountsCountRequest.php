@@ -4,11 +4,10 @@ namespace App\Http\Requests\Accounts;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Role;
 use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
 
-class IndexAccountsRequest extends BaseFormRequest
+class AccountsCountRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,9 +20,8 @@ class IndexAccountsRequest extends BaseFormRequest
         $user = (new CheckAuthentication)->getAuthenticated();
         $input = $this->safe()->all();
 
-        $retrieveUser = $user->authenticatableRole->role->role->retrieveUserSubjects;
-
-        foreach ($retrieveUser as $retrieveUserModel) {
+        $retrieveUserModels = $user->authenticatableRole->role->role->retrieveUserSubjects;
+        foreach ($retrieveUserModels as $retrieveUserModel) {
             if ($retrieveUserModel->object !== null && $retrieveUserModel->relatedObject->childRoleModel->roleName->name === $input['roleName']) {
                 return true;
             }
@@ -41,8 +39,6 @@ class IndexAccountsRequest extends BaseFormRequest
     {
         $array = [
             'roleName' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'],
-            'lastAccountId' => ['nullable', 'integer', 'numeric', 'min:1'],
-            'count' => ['required', 'integer', 'numeric']
         ];
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
         return $array;
