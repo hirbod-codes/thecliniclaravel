@@ -2,7 +2,6 @@ import React, { Component } from 'react'
 import { Link } from 'react-router-dom';
 
 import { Avatar, FormHelperText, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
-import LoadingButton from '@mui/lab/LoadingButton';
 
 import { translate } from '../traslation/translate';
 import { fetchData } from './Http/fetch';
@@ -34,8 +33,6 @@ export class UserIconNavigator extends Component {
             anchorEl: null,
             open: false,
 
-            isAvatarLoading: true,
-
             isEmailVerified: false,
             modalOpen: false,
             emailVerificationSlideTimeout: 300,
@@ -58,10 +55,7 @@ export class UserIconNavigator extends Component {
         let isEmailVerified = await fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token });
         isEmailVerified = isEmailVerified.value;
 
-        await updateState(this, {
-            isAvatarLoading: false,
-            isEmailVerified: isEmailVerified.verified,
-        });
+        await updateState(this, { isEmailVerified: isEmailVerified.verified });
     }
 
     sendEmailVerificationCode() {
@@ -92,74 +86,69 @@ export class UserIconNavigator extends Component {
     render() {
         return (
             <>
-                {this.props.isAvatarLoading && <LoadingButton loading variant='contained' >{translate('general/avatar/single/ucFirstLetterFirstWord')}</LoadingButton>}
-                {!this.props.isAvatarLoading &&
-                    <>
-                        <Tooltip title={translate('general/account/single/ucFirstLetterFirstWord')} >
-                            <IconButton onClick={this.handleIconMenuOpen} >
-                                <Avatar alt={translate('general/avatar/single/ucFirstLetterFirstWord')} src={this.props.image} />
-                            </IconButton>
-                        </Tooltip>
-                        <Menu
-                            anchorEl={this.state.anchorEl}
-                            open={this.state.open}
-                            onClose={this.handleIconMenuClose}
+                <Tooltip title={translate('general/account/single/ucFirstLetterFirstWord')} >
+                    <IconButton onClick={this.handleIconMenuOpen} >
+                        <Avatar alt={translate('general/avatar/single/ucFirstLetterFirstWord')} src={this.props.image} />
+                    </IconButton>
+                </Tooltip>
+                <Menu
+                    anchorEl={this.state.anchorEl}
+                    open={this.state.open}
+                    onClose={this.handleIconMenuClose}
+                >
+                    {!this.props.isEmailVerified &&
+                        <SlidingDialog
+                            open={this.state.modalOpen}
+                            onClose={this.handleModalClose}
+                            timeout={this.state.emailVerificationSlideTimeout}
+                            slideTrigger={
+                                <MenuItem onClick={(e) => { this.handleModalOpen(); this.sendEmailVerificationCode(); }}>
+                                    <Link to='/#' style={{ textDecoration: 'none' }} >
+                                        {translate('generalSentences/verify-email-address/ucFirstLetterFirstWord')}
+                                    </Link>
+                                </MenuItem>
+                            }
                         >
-                            {!this.props.isEmailVerified &&
-                                <SlidingDialog
-                                    open={this.state.modalOpen}
-                                    onClose={this.handleModalClose}
-                                    timeout={this.state.emailVerificationSlideTimeout}
-                                    slideTrigger={
-                                        <MenuItem onClick={(e) => { this.handleModalOpen(); this.sendEmailVerificationCode(); }}>
-                                            <Link to='/#' style={{ textDecoration: 'none' }} >
-                                                {translate('generalSentences/verify-email-address/ucFirstLetterFirstWord')}
-                                            </Link>
-                                        </MenuItem>
-                                    }
-                                >
-                                    {translate('generalSentences/send-email-verification-message/ucFirstLetterFirstWord')}
-                                </SlidingDialog>
-                            }
-                            {window.location.pathname !== '/dashboard/account' &&
-                                <MenuItem>
-                                    <Link to='/dashboard/account' style={{ textDecoration: 'none' }} >
-                                        {translate('pages/account/account/account/single/ucFirstLetterFirstWord')}
-                                    </Link>
-                                </MenuItem>
-                            }
-                            {window.location.pathname !== '/dashboard/order' &&
-                                <MenuItem>
-                                    <Link to='/dashboard/order' style={{ textDecoration: 'none' }} >
-                                        {translate('pages/orders/order/order/single/ucFirstLetterFirstWord')}
-                                    </Link>
-                                </MenuItem>
-                            }
-                            {window.location.pathname !== '/dashboard/visit' &&
-                                <MenuItem>
-                                    <Link to='/dashboard/visit' style={{ textDecoration: 'none' }} >
-                                        {translate('pages/visits/visit/visit/single/ucFirstLetterFirstWord')}
-                                    </Link>
-                                </MenuItem>
-                            }
-                            {/* {window.location.pathname !== '/settings' &&
+                            {translate('generalSentences/send-email-verification-message/ucFirstLetterFirstWord')}
+                        </SlidingDialog>
+                    }
+                    {window.location.pathname !== '/dashboard/account' &&
+                        <MenuItem>
+                            <Link to='/dashboard/account' style={{ textDecoration: 'none' }} >
+                                {translate('pages/account/account/account/single/ucFirstLetterFirstWord')}
+                            </Link>
+                        </MenuItem>
+                    }
+                    {window.location.pathname !== '/dashboard/order' &&
+                        <MenuItem>
+                            <Link to='/dashboard/order' style={{ textDecoration: 'none' }} >
+                                {translate('pages/orders/order/order/single/ucFirstLetterFirstWord')}
+                            </Link>
+                        </MenuItem>
+                    }
+                    {window.location.pathname !== '/dashboard/visit' &&
+                        <MenuItem>
+                            <Link to='/dashboard/visit' style={{ textDecoration: 'none' }} >
+                                {translate('pages/visits/visit/visit/single/ucFirstLetterFirstWord')}
+                            </Link>
+                        </MenuItem>
+                    }
+                    {/* {window.location.pathname !== '/settings' &&
                                 <MenuItem >
                                     <Link to='/settings' style={{ textDecoration: 'none' }} >
                                         {translate('general/setting/plural/ucFirstLetterFirstWord')}
                                     </Link>
                                 </MenuItem>
                             } */}
-                        </Menu>
+                </Menu>
 
-                        <SlidingDialog
-                            open={this.state.responseDialogOpen}
-                            slideTrigger={<div></div>}
-                            onClose={this.handleResponseDialogClose}
-                        >
-                            {this.state.responseErrors}
-                        </SlidingDialog>
-                    </>
-                }
+                <SlidingDialog
+                    open={this.state.responseDialogOpen}
+                    slideTrigger={<div></div>}
+                    onClose={this.handleResponseDialogClose}
+                >
+                    {this.state.responseErrors}
+                </SlidingDialog>
             </>
         )
     }

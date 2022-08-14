@@ -72,8 +72,6 @@ export class FindOrder extends Component {
     }
 
     render() {
-        console.log('aaa', this.props);
-        console.log('aaa', this.state);
         return (
             <Stack direction='column' divider={<Divider orientation='horizontal' />} spacing={2} sx={{ height: '100%' }} >
                 <div>{translate('pages/visits/visit/choose-one-order')}</div>

@@ -40,7 +40,6 @@ export class TimePeriodComponent extends Component {
     }
 
     async componentDidMount() {
-        console.log(this.props);
         if (this.props.start !== undefined && this.state.start === '') {
             let start = new Date(this.props.start);
             await updateState(this, { start: start.toLocaleString('en-US', { hour: '2-digit', hourCycle: 'h24', minute: '2-digit' }) });

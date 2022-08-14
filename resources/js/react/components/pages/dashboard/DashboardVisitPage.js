@@ -75,9 +75,6 @@ export class DashboardVisitPage extends Component {
                 return false;
             });
         }
-        console.log('this.context', this.context);
-        console.log('canRetrieveSelfVisit', canRetrieveSelfVisit);
-        console.log('canRetrieveVisit', canRetrieveVisit);
         return (
             <Grid container spacing={1} sx={{ minHeight: '100vh' }} alignContent='flex-start' >
                 <Grid item xs={12} >

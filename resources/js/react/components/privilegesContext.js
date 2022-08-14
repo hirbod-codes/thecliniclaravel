@@ -21,8 +21,6 @@ let PrivilegesContext = React.createContext({});
  */
 
 function formatPrivileges(privileges) {
-    console.log('privileges');
-    console.log(privileges);
     if (privileges === null) { return PrivilegesContext._currentValue; }
 
     let result = {};
@@ -50,8 +48,6 @@ function formatPrivileges(privileges) {
     result.updatableColumns = updatableColumns;
     result.selfUpdatableColumns = selfUpdatableColumns;
 
-    console.log('result');
-    console.log(result);
     return result;
 }
 
