@@ -74,8 +74,15 @@ export class VisitsServerDataGrid extends Component {
     }
 
     getRowCount() {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             let rowCount = await fetchData('get', '/visitsCount?businessName=' + this.props.businessName + '&roleName=' + (this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role), {}, { 'X-CSRF-TOKEN': this.state.token });
+            if (rowCount.response.status !== 200) {
+                let value = null;
+                if (Array.isArray(rowCount.value)) { value = rowCount.value; } else { value = [rowCount.value]; }
+                value = value.map((v, i) => { return { open: true, message: v, color: rowCount.response.status === 200 ? 'success' : 'error' } });
+                this.setState({ feedbackMessages: value });
+                reject();
+            }
             resolve(rowCount.value);
         })
     }
@@ -257,15 +264,17 @@ export class VisitsServerDataGrid extends Component {
         data[this.props.businessName + 'OrderId'] = params.row.id;
 
         let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token });
+        let value = null;
+        if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+        value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+        this.setState({ feedbackMessages: value });
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
         updateState(this, { deletingRowIds: deletingRowIds });
 
         if (r.response.status === 200) {
-            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-        } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            this.setState({ reload: true });
         }
     }
 }

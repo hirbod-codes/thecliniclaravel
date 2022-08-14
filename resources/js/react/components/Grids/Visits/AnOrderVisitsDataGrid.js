@@ -46,9 +46,7 @@ export class AnOrderVisitsDataGrid extends Component {
 
             reload: false,
 
-            feedbackOpen: false,
-            feedbackMessage: '',
-            feedbackColor: 'info',
+            feedbackMessages: [],
 
             deletingRowIds: [],
 
@@ -72,12 +70,14 @@ export class AnOrderVisitsDataGrid extends Component {
         return columns;
     }
 
-    handleFeedbackClose(event, reason) {
+    handleFeedbackClose(event, reason, key) {
         if (reason === 'clickaway') {
             return;
         }
 
-        this.setState({ feedbackOpen: false });
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     closeCreationModal(e) {
@@ -126,24 +126,6 @@ export class AnOrderVisitsDataGrid extends Component {
                     }}
                 />
 
-                <Snackbar
-                    open={this.state.feedbackOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleFeedbackClose}
-                    action={
-                        <IconButton
-                            size="small"
-                            onClick={this.handleFeedbackClose}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    }
-                >
-                    <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
-                        {this.state.feedbackMessage}
-                    </Alert>
-                </Snackbar>
-
                 <Modal
                     open={this.state.openCreationModal}
                     onClose={this.closeCreationModal}
@@ -152,6 +134,27 @@ export class AnOrderVisitsDataGrid extends Component {
                         <WeekDayInputComponents handleVisitInfo={this.handleOnCreate} />
                     </Paper>
                 </Modal>
+
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         )
     }
@@ -168,16 +171,18 @@ export class AnOrderVisitsDataGrid extends Component {
         let data = {};
         data[this.props.businessName + 'OrderId'] = params.row.id;
 
-        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token })
+        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token });
+        let value = null;
+        if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+        value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+        this.setState({ feedbackMessages: value });
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
         updateState(this, { deletingRowIds: deletingRowIds });
 
         if (r.response.status === 200) {
-            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-        } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            this.setState({ reload: true });
         }
     }
 
@@ -203,12 +208,14 @@ export class AnOrderVisitsDataGrid extends Component {
             data.weekDaysPeriods = computedWeekDaysPeriods;
         }
 
-        let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { if (res.status !== 200) { return null; } return res.json(); });
+        let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token });
+        let value = null;
+        if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+        value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+        this.setState({ feedbackMessages: value });
 
         if (r.response.status === 200) {
-            this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-        } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            this.setState({ reload: true });
         }
 
         this.setState({ isCreating: false });

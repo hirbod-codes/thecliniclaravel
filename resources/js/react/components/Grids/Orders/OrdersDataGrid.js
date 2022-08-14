@@ -2,11 +2,13 @@ import React, { Component } from 'react'
 
 import PropTypes from 'prop-types';
 
+import CloseIcon from '@mui/icons-material/Close';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import { fetchData } from '../../Http/fetch';
 import DataGridComponent from '../DataGridComponent';
 import { PrivilegesContext } from '../../privilegesContext';
+import { Alert, IconButton, Snackbar } from '@mui/material';
 
 /**
  * OrdersDataGrid
@@ -49,6 +51,8 @@ export class OrdersDataGrid extends Component {
     constructor(props) {
         super(props);
 
+        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+
         this.getData = this.getData.bind(this);
         this.collectColumns = this.collectColumns.bind(this);
         this.onPageChange = this.onPageChange.bind(this);
@@ -57,10 +61,22 @@ export class OrdersDataGrid extends Component {
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
+            feedbackMessages: [],
+
             openVisitsModal: [],
 
             pageSize: 10,
         };
+    }
+
+    handleFeedbackClose(event, reason, key) {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     getData() {
@@ -94,14 +110,15 @@ export class OrdersDataGrid extends Component {
             }
 
             let r = await fetchData('get', url, {}, { 'X-CSRF-TOKEN': this.state.token });
-            console.log('r', r);
-
             if (r.response.status !== 200) {
+                let value = null;
+                if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+                value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+                this.setState({ feedbackMessages: value });
                 resolve([]);
             }
 
             let data = r.value;
-            console.log('data', data);
 
             if (this.props.afterGetData !== undefined) {
                 this.props.afterGetData(data);
@@ -221,21 +238,44 @@ export class OrdersDataGrid extends Component {
         }
 
         return (
-            <DataGridComponent
-                paginationMode={(this.props.paginationMode !== undefined) ? this.props.paginationMode : 'client'}
+            <>
+                <DataGridComponent
+                    paginationMode={(this.props.paginationMode !== undefined) ? this.props.paginationMode : 'client'}
 
-                reload={(this.props.reload !== undefined) ? this.props.reload : false}
-                beforeReload={(this.props.beforeReload !== undefined) ? this.props.beforeReload : () => { }}
-                afterReload={(this.props.afterReload !== undefined) ? this.props.afterReload : () => { }}
+                    reload={(this.props.reload !== undefined) ? this.props.reload : false}
+                    beforeReload={(this.props.beforeReload !== undefined) ? this.props.beforeReload : () => { }}
+                    afterReload={(this.props.afterReload !== undefined) ? this.props.afterReload : () => { }}
 
-                getData={(this.props.getData !== undefined) ? this.props.getData : this.getData}
-                collectColumns={(this.props.collectColumns !== undefined) ? this.props.collectColumns : this.collectColumns}
+                    getData={(this.props.getData !== undefined) ? this.props.getData : this.getData}
+                    collectColumns={(this.props.collectColumns !== undefined) ? this.props.collectColumns : this.collectColumns}
 
-                onPageChange={this.onPageChange}
-                onPageSizeChange={this.onPageSizeChange}
-                rowsPerPageOptions={[10, 20, 30]}
-                {...props}
-            />
+                    onPageChange={this.onPageChange}
+                    onPageSizeChange={this.onPageSizeChange}
+                    rowsPerPageOptions={[10, 20, 30]}
+                    {...props}
+                />
+
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
+            </>
         )
     }
 }

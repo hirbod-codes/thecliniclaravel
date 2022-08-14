@@ -53,9 +53,7 @@ export class AccountsServerDataGrid extends Component {
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
-            feedbackOpen: false,
-            feedbackMessage: '',
-            feedbackColor: 'info',
+            feedbackMessages: [],
 
             role: this.props.roles[0],
             dataType: '',
@@ -88,19 +86,30 @@ export class AccountsServerDataGrid extends Component {
     }
 
     getRowCount() {
-        return new Promise(async (resolve) => {
+        return new Promise(async (resolve, reject) => {
             let rowCount = await fetchData('get', '/accountsCount?roleName=' + this.state.role, {}, { 'X-CSRF-TOKEN': this.state.token });
+            if (rowCount.response.status !== 200) {
+                let value = null;
+                if (Array.isArray(rowCount.value)) { value = rowCount.value; } else { value = [rowCount.value]; }
+                value = value.map((v, i) => { return { open: true, message: v, color: rowCount.response.status === 200 ? 'success' : 'error' } });
+                this.setState({ feedbackMessages: value });
+                reject();
+            }
             resolve(rowCount.value);
         })
     }
 
     async getDataType() {
         let r = await fetchData('get', '/dataType?roleName=' + this.state.role, {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status === 200) {
-            this.setState({ dataType: r.value });
-        } else {
-            throw new Error('no response for data type from server.');
+
+        if (r.response.status !== 200) {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
+            return;
         }
+        this.setState({ dataType: r.value });
     }
 
     addColumns(columns) {
@@ -156,12 +165,14 @@ export class AccountsServerDataGrid extends Component {
         this.setState({ page: 0, pagesAccountId: [0], lastAccountId: 0, reload: true });
     }
 
-    handleFeedbackClose(event, reason) {
+    handleFeedbackClose(event, reason, key) {
         if (reason === 'clickaway') {
             return;
         }
 
-        this.setState({ feedbackOpen: false });
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     closeCreationModal(e) {
@@ -244,23 +255,26 @@ export class AccountsServerDataGrid extends Component {
                     lastAccountId={this.state.pagesAccountId[this.state.page]}
                 />
 
-                <Snackbar
-                    open={this.state.feedbackOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleFeedbackClose}
-                    action={
-                        <IconButton
-                            size="small"
-                            onClick={this.handleFeedbackClose}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    }
-                >
-                    <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
-                        {this.state.feedbackMessage}
-                    </Alert>
-                </Snackbar>
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
 
                 {(this.context.createUser !== undefined && this.context.createUser.indexOf(this.state.role) !== -1) &&
                     <Modal
@@ -296,27 +310,25 @@ export class AccountsServerDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        fetchData('delete', '/account/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token })
-            .then((r) => {
-                let deletingRowIds = this.state.deletingRowIds;
-                delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
-                updateState(this, { deletingRowIds: deletingRowIds });
-                if (r.response.status === 200) {
-                    this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-                } else {
-                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-                }
-            });
+        let r = await fetchData('delete', '/account/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+        deletingRowIds = this.state.deletingRowIds;
+        delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];
+        updateState(this, { deletingRowIds: deletingRowIds });
+
+        let value = null;
+        if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+        value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+        this.setState({ reload: true, feedbackMessages: value });
     }
 
     async handleUpdatedRow(e, params) {
         this.closeUpdationModal();
-        this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+        this.setState({ reload: true, feedbackMessages: [{ open: true, color: 'success', message: translate('general/successful/single/ucFirstLetterFirstWord') }] });
     }
 
     async handleOnCreate(e) {
         this.closeCreationModal();
-        this.setState({ reload: true, feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+        this.setState({ reload: true, feedbackMessages: [{ open: true, color: 'success', message: translate('general/successful/single/ucFirstLetterFirstWord') }] });
     }
 }
 

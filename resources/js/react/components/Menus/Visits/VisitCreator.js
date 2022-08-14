@@ -2,7 +2,8 @@ import React, { Component } from 'react'
 
 import PropTypes from 'prop-types';
 
-import { Button, Modal, Paper, Stack, Tab, Tabs } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { Alert, Button, IconButton, Modal, Paper, Snackbar, Stack, Tab, Tabs } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import FindAccount from '../Account/FindAccount';
@@ -36,6 +37,8 @@ export class VisitCreator extends Component {
     constructor(props) {
         super(props);
 
+        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+
         this.handleVisitFinderTabChange = this.handleVisitFinderTabChange.bind(this);
 
         this.closeAccountSearchModal = this.closeAccountSearchModal.bind(this);
@@ -54,6 +57,8 @@ export class VisitCreator extends Component {
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
+            feedbackMessages: [],
 
             openAccountSearchModal: false,
             openOrderSearchModal: false,
@@ -87,6 +92,16 @@ export class VisitCreator extends Component {
                 this.openAccountSearchModal();
             }
         }
+    }
+
+    handleFeedbackClose(event, reason, key) {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     closeAccountSearchModal(e, reason) {
@@ -222,6 +237,27 @@ export class VisitCreator extends Component {
                         </Paper>
                     </Modal>
                 }
+
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         )
     }
@@ -236,11 +272,16 @@ export class VisitCreator extends Component {
         let data = {};
         data[this.props.businessName + 'OrderId'] = this.state.orderId;
 
-        let closestVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token })).value;
-        if (closestVisitRefresh.availableVisitTimestamp !== undefined && typeof (closestVisitRefresh.availableVisitTimestamp) === 'number') {
+        let closestVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }));
+        if (closestVisitRefresh.response.status === 200) {
             const locale = LocaleContext._currentValue.currentLocale.shortName;
 
-            this.setState({ closestVisitRefresh: getDateTimeFormatObject(locale).format(new Date(closestVisitRefresh.availableVisitTimestamp * 1000)) });
+            this.setState({ closestVisitRefresh: getDateTimeFormatObject(locale).format(new Date(closestVisitRefresh.value.availableVisitTimestamp * 1000)) });
+        } else {
+            let value = null;
+            if (Array.isArray(closestVisitRefresh.value)) { value = closestVisitRefresh.value; } else { value = [closestVisitRefresh.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: closestVisitRefresh.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isRefreshingClosestVisit: false });
@@ -261,11 +302,16 @@ export class VisitCreator extends Component {
 
         data.weekDaysPeriods = computedWeekDaysPeriods;
 
-        let weeklyVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token })).value;
-        if (weeklyVisitRefresh.availableVisitTimestamp !== undefined && typeof (weeklyVisitRefresh.availableVisitTimestamp) === 'number') {
+        let weeklyVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }));
+        if (weeklyVisitRefresh.response.status === 200) {
             const locale = LocaleContext._currentValue.currentLocale.shortName;
 
-            this.setState({ weeklyVisitRefresh: getDateTimeFormatObject(locale).format(new Date(weeklyVisitRefresh.availableVisitTimestamp * 1000)) });
+            this.setState({ weeklyVisitRefresh: getDateTimeFormatObject(locale).format(new Date(weeklyVisitRefresh.value.availableVisitTimestamp * 1000)) });
+        } else {
+            let value = null;
+            if (Array.isArray(weeklyVisitRefresh.value)) { value = weeklyVisitRefresh.value; } else { value = [weeklyVisitRefresh.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: weeklyVisitRefresh.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isRefreshingWeeklyVisit: false });
@@ -290,12 +336,15 @@ export class VisitCreator extends Component {
         }
 
         let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token });
-
         if (r.response.status === 200) {
             if (this.props.onSuccess !== undefined) {
                 this.props.onSuccess();
             }
         } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
             if (this.props.onFailure !== undefined) {
                 this.props.onFailure();
             }

@@ -8,9 +8,10 @@ import '@fontsource/roboto/400.css';
 import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
+import CloseIcon from '@mui/icons-material/Close';
 import { createTheme } from '@mui/material/styles';
 import { ThemeProvider } from '@emotion/react';
-import { GlobalStyles } from '@mui/material';
+import { Alert, GlobalStyles, IconButton, Snackbar } from '@mui/material';
 
 import { ThemeContext, resolveTheme } from './components/themeContenxt.js';
 import { LocaleContext } from './components/localeContext.js';
@@ -33,6 +34,8 @@ export class App extends Component {
 
         this.getDataSynchronously = this.getDataSynchronously.bind(this);
 
+        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+
         this.changeLocale = async (name) => {
             let r = await fetchData('put', '/locale', { 'locale': name }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': '*/*' });
             if (r.response.status === 200) {
@@ -49,6 +52,8 @@ export class App extends Component {
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
+            feedbackMessages: [],
 
             finishStatus: {
                 locales: false,
@@ -97,6 +102,16 @@ export class App extends Component {
 
     componentDidMount() {
         this.getDataSynchronously();
+    }
+
+    handleFeedbackClose(event, reason, key) {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     // For perfomance reasons we are not using asynchronous programming for this method
@@ -229,6 +244,27 @@ export class App extends Component {
                                         <Route path='/dashboard/visit' element={<DashboardVisitPage navigator={navigator} {...authProps} />} />
                                     </Routes>
                                 </BrowserRouter>
+
+                                {this.state.feedbackMessages.map((m, i) =>
+                                    <Snackbar
+                                        key={i}
+                                        open={m.open}
+                                        autoHideDuration={6000}
+                                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                                        action={
+                                            <IconButton
+                                                size="small"
+                                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                                            >
+                                                <CloseIcon fontSize="small" />
+                                            </IconButton>
+                                        }
+                                    >
+                                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                                            {m.message}
+                                        </Alert>
+                                    </Snackbar>
+                                )}
                             </PrivilegesContext.Provider>
                         </ThemeProvider>
                     </ThemeContext.Provider>

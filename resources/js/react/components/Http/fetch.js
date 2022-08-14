@@ -1,3 +1,5 @@
+import { translate } from "../../traslation/translate";
+
 function fetchData(method, url, data = {}, headers = {}, excludeHeaders = []) {
     switch (method.toLowerCase()) {
         case 'get':
@@ -199,7 +201,53 @@ function deleteData(url, data = {}, headers = {}, excludeHeaders = []) {
     });
 }
 
-function getResponseValue(res) {
+async function getResponseValue(res) {
+    let r = await getRawValue(res);
+    let isJson = false;
+
+    if (res.headers.get('content-type') === 'application/json') {
+        isJson = true;
+    }
+
+    if (res.status === 422) {
+        if (isJson) {
+            if (r.errors !== undefined) {
+                let messages = [];
+                for (const k in r.errors) {
+                    r.errors[k].forEach((v, i) => {
+                        messages.push(v);
+                    });
+                }
+                return messages;
+            } else {
+                if (r.message !== undefined) {
+                    return r.message;
+                } else {
+                    return r;
+                }
+            }
+        } else {
+
+            return r;
+        }
+    }
+
+    if (res.status === 200) {
+        if (isJson && r.message !== undefined) {
+            return r.message;
+        } else {
+            return r;
+        }
+    }
+
+    if (res.status === 500) {
+        return translate('generalSentences/server-error');
+    }
+
+    return translate('generalSentences/server-error');
+}
+
+function getRawValue(res) {
     if (res.headers.get('content-type') === 'application/json') {
         return res.json();
     } else {
@@ -211,5 +259,5 @@ function backendURL() {
     return 'http://localhost:80';
 }
 
-export { getResponseValue, fetchData, getData, postData, putData, deleteData, backendURL };
+export { getRawValue, getResponseValue, fetchData, getData, postData, putData, deleteData, backendURL };
 

@@ -83,9 +83,7 @@ export class LaserOrderCreation extends Component {
             totalNeddedTime: 0,
             isCalculating: false,
 
-            feedbackOpen: false,
-            feedbackColor: 'info',
-            feedbackMessage: '',
+            feedbackMessages: [],
 
             isSubmitDisabled: false,
         };
@@ -183,12 +181,14 @@ export class LaserOrderCreation extends Component {
         });
     }
 
-    handleFeedbackClose(event, reason) {
+    handleFeedbackClose(event, reason, key) {
         if (reason === 'clickaway') {
             return;
         }
 
-        this.setState({ feedbackOpen: false });
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     closeAccountModal(event, reason) {
@@ -268,23 +268,26 @@ export class LaserOrderCreation extends Component {
                     </Paper>
                 </Modal>
 
-                <Snackbar
-                    open={this.state.feedbackOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleFeedbackClose}
-                    action={
-                        <IconButton
-                            size="small"
-                            onClick={this.handleFeedbackClose}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    }
-                >
-                    <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
-                        {this.state.feedbackMessage}
-                    </Alert>
-                </Snackbar>
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         )
     }
@@ -323,12 +326,26 @@ export class LaserOrderCreation extends Component {
         data.gender = this.state.account.gender;
 
         let prices = (await fetchData('post', '/laser/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value;
+        if (prices.response.status !== 200) {
+            let value = null;
+            if (Array.isArray(prices.value)) { value = prices.value; } else { value = [prices.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: prices.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
+        }
+
+        let totalNeddedTime = (await fetchData('post', '/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value;
+        if (totalNeddedTime.response.status !== 200) {
+            let value = null;
+            if (Array.isArray(totalNeddedTime.value)) { value = totalNeddedTime.value; } else { value = [totalNeddedTime.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: totalNeddedTime.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
+        }
 
         await updateState(this, {
             isCalculating: false,
             totalPrice: prices.price,
             totalPriceWithoutDiscount: prices.priceWithoutDiscount,
-            totalNeddedTime: (await fetchData('post', '/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value,
+            totalNeddedTime: totalNeddedTime,
         });
     }
 
@@ -344,20 +361,16 @@ export class LaserOrderCreation extends Component {
         };
 
         let r = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
-
-        let state = {};
-        state.isSubmitDisabled = true;
-        state.feedbackOpen = true;
         if (r.response.status === 200) {
             this.props.onCreated();
-            state.feedbackColor = 'success';
-            state.feedbackMessage = translate('general/successful/single/ucFirstLetterFirstWord');
         } else {
-            state.feedbackColor = 'error';
-            state.feedbackMessage = translate('general/failure/single/ucFirstLetterFirstWord');
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        state.isCalculating = false;
-        this.setState(state);
+
+        this.setState({ isCalculating: false, isSubmitDisabled: true });
     }
 }
 
