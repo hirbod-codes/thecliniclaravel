@@ -27,7 +27,7 @@ class IndexRequest extends BaseFormRequest
             $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
             $isSelf = $user->getKey() === $targetUser->getKey();
 
-            foreach ($targetUser->authenticatablerole->role->role->retrieveOrderSubjects as $retrieveOrder) {
+            foreach ($user->authenticatablerole->role->role->retrieveOrderSubjects as $retrieveOrder) {
                 if ($retrieveOrder->relatedBusiness->name !== ($path = explode('/', Request::path()))[1]) {
                     continue;
                 }
