@@ -107,13 +107,6 @@ Route::get('/', function () {
     return view('app');
 })->name('home');
 
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->name('forgot_password');
-Route::put('/reset-password', [AuthController::class, 'resetPassword'])->name('reset_password');
-
-// Verify Phonenumber
-Route::post('/register/send-phoennumber-verification-code', [AuthController::class, 'sendPhonenumberVerificationCode'])->name('auth.sendPhonenumberVerificationCode');
-Route::put('/reset-phonenumber', [AuthController::class, 'resetPhonenumber'])->name('auth.reset_phonenumber');
-
 Route::middleware('guest:web')->group(function () {
     // Register
     Route::get('/register/{redirecturl?}', function (Request $request) {
@@ -127,12 +120,19 @@ Route::middleware('guest:web')->group(function () {
     // Login
     Route::get('/login', fn () => view('app'))->name('auth.login.page');
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
-
-    // Verify Phonenumber
-    Route::post('/register/verify-phoennumber-verification-code', [AuthController::class, 'verifyPhonenumberVerificationCode'])->name('auth.verifyPhonenumberVerificationCode');
 });
 
-Route::middleware('auth:web')->group(function () {
+Route::get('/auth/phonenumber-availability/{phonenumber?}', [AuthController::class, 'phonenumberAvailability'])->name('auth.phonenumberAvailability');
+
+// Verify Phonenumber
+Route::post('/auth/verify-phonenumber', [AuthController::class, 'verifyPhonenumber'])->name('auth.verifyPhonenumber');
+
+Route::post('/auth/send-code-to-phonenumber', [AuthController::class, 'sendCodeToPhonenumber'])->name('auth.sendCodeToPhonenumber');
+Route::post('/auth/send-code-to-email', [AuthController::class, 'sendCodeToEmail'])->name('auth.sendCodeToEmail');
+
+Route::put('/auth/reset-password', [AuthController::class, 'resetPassword'])->name('auth.resetPassword');
+
+Route::middleware(['auth:web', 'phonenumber_verified'])->group(function () {
     Route::get('/isEmailVerified', function () {
         $user = (new CheckAuthentication)->getAuthenticated();
         return response()->json(['verified' => ($user->email ? ($user->email_verified_at ? true : false) : false)]);
@@ -157,120 +157,116 @@ Route::middleware('auth:web')->group(function () {
     // Logout
     Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
-    Route::middleware('phonenumber_verified')->group(function () {
-        Route::controller(AccountsController::class)
-            ->group(function () {
-                Route::get('/dashboard/account', fn () => view('app'))->name('account.page');
+    Route::put('/auth/update-phonenumber', [AuthController::class, 'updatePhonenumber'])->name('auth.updatePhonenumber');
 
-                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
+    Route::controller(AccountsController::class)
+        ->group(function () {
+            Route::get('/dashboard/account', fn () => view('app'))->name('account.page');
 
-                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
+            Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
-                // Phonenumber Verification Message Sender Route
-                Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
-                Route::post('/account/verify-phoennumber-verification-code', 'isPhonenumberVerificationCodeVerified')->name('auth.isPhonenumberVerificationCodeVerified');
+            Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
 
-                Route::post('/account/{roleName}', 'store')->name('account.store');
+            Route::post('/account/{roleName}', 'store')->name('account.store');
 
-                Route::get('/account/{placeholder}', 'show')->name('account.show');
-                Route::get('/account', 'showSelf')->name('account.showSelf');
+            Route::get('/account/{placeholder}', 'show')->name('account.show');
+            Route::get('/account', 'showSelf')->name('account.showSelf');
 
-                Route::put('/account/{accountId}', 'update')->name('account.update');
+            Route::put('/account/{accountId}', 'update')->name('account.update');
 
-                Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
-            });
+            Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
+        });
 
-        Route::controller(RolesController::class)
-            ->group(function () {
-                Route::get('/dataType/{roleName?}', 'dataType')->name('roles.dataType');
+    Route::controller(RolesController::class)
+        ->group(function () {
+            Route::get('/dataType/{roleName?}', 'dataType')->name('roles.dataType');
 
-                Route::get('/roles', 'index')->name('roles.index');
+            Route::get('/roles', 'index')->name('roles.index');
 
-                Route::post('/role', 'store')->name('role.store');
+            Route::post('/role', 'store')->name('role.store');
 
-                Route::get('/role-name/{accountId?}', 'showRoleName')->name('role.showRoleName');
-                Route::get('/role', 'show')->name('role.show');
+            Route::get('/role-name/{accountId?}', 'showRoleName')->name('role.showRoleName');
+            Route::get('/role', 'show')->name('role.show');
 
-                Route::put('/role', 'update')->name('roles.update');
+            Route::put('/role', 'update')->name('roles.update');
 
-                Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
-            });
+            Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
+        });
 
-        Route::controller(AccountDocumentsController::class)
-            ->group(function () {
-                Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
+    Route::controller(AccountDocumentsController::class)
+        ->group(function () {
+            Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
 
-                Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
-            });
+            Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
+        });
 
-        Route::controller(BusinessDefault::class)
-            ->group(function () {
-                Route::get('/settings', 'index')->name('document.index');
+    Route::controller(BusinessDefault::class)
+        ->group(function () {
+            Route::get('/settings', 'index')->name('document.index');
 
-                Route::put('/setting', 'update')->name('document.update');
-            });
+            Route::put('/setting', 'update')->name('document.update');
+        });
 
-        Route::controller(OrdersController::class)
-            ->group(function () {
-                Route::get('/dashboard/order', fn () => view('app'))->name('order.laser.page');
+    Route::controller(OrdersController::class)
+        ->group(function () {
+            Route::get('/dashboard/order', fn () => view('app'))->name('order.laser.page');
 
-                Route::get('/orders/laser/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-                Route::get('/orders/regular/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
-                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('orders.ordersCount');
+            Route::get('/orders/laser/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
+            Route::get('/orders/regular/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+            Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('orders.ordersCount');
 
-                Route::post('/order', 'store')->name('orders.store');
+            Route::post('/order', 'store')->name('orders.store');
 
-                Route::delete('/order', 'destroy')->name('orders.destroy');
+            Route::delete('/order', 'destroy')->name('orders.destroy');
 
-                Route::get('/laser/parts/{gender?}', function (Request $request) {
-                    $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
-                    if ($validator->fails()) {
-                        return response()->json($validator->errors());
-                    }
-                    $gender = $request->get('gender', null);
+            Route::get('/laser/parts/{gender?}', function (Request $request) {
+                $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
+                if ($validator->fails()) {
+                    return response()->json($validator->errors());
+                }
+                $gender = $request->get('gender', null);
 
-                    $dsParts = new DSParts(ucfirst(strtolower($gender)));
-                    for ($i = 0; $i < count($parts = Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()); $i++) {
-                        $dsParts[] = $parts[$i]->getDSPart();
-                    }
+                $dsParts = new DSParts(ucfirst(strtolower($gender)));
+                for ($i = 0; $i < count($parts = Part::query()->where('gender', '=', ucfirst(strtolower($gender)))->get()); $i++) {
+                    $dsParts[] = $parts[$i]->getDSPart();
+                }
 
-                    return $dsParts->toArray();
-                })->name('orders.laser.parts');
+                return $dsParts->toArray();
+            })->name('orders.laser.parts');
 
-                Route::get('/laser/packages/{gender?}', function (Request $request) {
-                    $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
-                    if ($validator->fails()) {
-                        return response()->json($validator->errors());
-                    }
-                    $gender = $request->get('gender', null);
+            Route::get('/laser/packages/{gender?}', function (Request $request) {
+                $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
+                if ($validator->fails()) {
+                    return response()->json($validator->errors());
+                }
+                $gender = $request->get('gender', null);
 
-                    $dsPackages = new DSPackages(ucfirst(strtolower($gender)));
-                    for ($i = 0; $i < count($packages = Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()); $i++) {
-                        $dsPackages[] = $packages[$i]->getDSPackage();
-                    }
+                $dsPackages = new DSPackages(ucfirst(strtolower($gender)));
+                for ($i = 0; $i < count($packages = Package::query()->where('gender', '=', ucfirst(strtolower($gender)))->with('parts')->get()); $i++) {
+                    $dsPackages[] = $packages[$i]->getDSPackage();
+                }
 
-                    return response()->json($dsPackages->toArray());
-                })->name('orders.laser.packages');
+                return response()->json($dsPackages->toArray());
+            })->name('orders.laser.packages');
 
-                Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
-                Route::post('/laser/price-calculation', 'calculatePrice')->name('priceCalculation');
-            });
+            Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
+            Route::post('/laser/price-calculation', 'calculatePrice')->name('priceCalculation');
+        });
 
-        Route::controller(VisitsController::class)
-            ->group(function () {
-                Route::get('/dashboard/visit', fn () => view('app'))->name('visit.laser.page');
+    Route::controller(VisitsController::class)
+        ->group(function () {
+            Route::get('/dashboard/visit', fn () => view('app'))->name('visit.laser.page');
 
-                Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name('visits.index');
-                Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name('visits.visitsCount');
+            Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name('visits.index');
+            Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name('visits.visitsCount');
 
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
+            Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
+            Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
 
-                Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
-                Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
+            Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
+            Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
-                Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('visits.laserDestroy');
-                Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('visits.regularDestroy');
-            });
-    });
+            Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('visits.laserDestroy');
+            Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('visits.regularDestroy');
+        });
 });
