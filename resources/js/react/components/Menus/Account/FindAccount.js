@@ -2,7 +2,8 @@ import React, { Component } from 'react'
 
 import PropTypes from 'prop-types';
 
-import { Button, Divider, FormControl, FormHelperText, Stack, TextField } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close';
+import { Alert, Button, Divider, FormControl, IconButton, Snackbar, Stack, TextField } from '@mui/material'
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { translate } from '../../../traslation/translate'
@@ -21,6 +22,8 @@ export class FindAccount extends Component {
     constructor(props) {
         super(props);
 
+        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+
         this.handleFirstName = this.handleFirstName.bind(this);
         this.handleLastName = this.handleLastName.bind(this);
         this.handleUsername = this.handleUsername.bind(this);
@@ -30,7 +33,8 @@ export class FindAccount extends Component {
         this.handleSubmit = this.handleSubmit.bind(this);
 
         this.state = {
-            errors: null,
+
+            feedbackMessages: [],
             firstname: '',
             lastname: '',
             username: '',
@@ -39,6 +43,16 @@ export class FindAccount extends Component {
 
             isSubmiting: false,
         };
+    }
+
+    handleFeedbackClose(event, reason, key) {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     async handleSubmit(e) {
@@ -61,27 +75,24 @@ export class FindAccount extends Component {
 
         let r = await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': this.state.token });
 
-        if (r.response.status !== 200) {
-            let messages = [];
-            if (r.value.errors !== undefined) {
-                for (const k in r.value.errors) {
-                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                        const error = r.value.errors[k];
-
-                        error.forEach((v, i) => {
-                            messages.push(<FormHelperText key={i} error> {v}</ FormHelperText>);
-                        });
-                    }
-                }
-            }
-
-            this.setState({ errors: messages });
-        } else {
+        if (r.response.status === 200) {
             let role = await fetchData('get', '/role-name?accountId=' + r.value.id, {}, { 'X-CSRF-TOKEN': this.state.token });
 
-            if (role.response.status === 200) {
-                this.props.handleAccount(r.value, role.value);
+            if (r.response.status === 200) {
+                if (role.response.status === 200) {
+                    this.props.handleAccount(r.value, role.value);
+                }
+            } else {
+                let value = null;
+                if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+                value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+                this.setState({ feedbackMessages: value });
             }
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         await updateState(this, { isSubmiting: false });
@@ -91,8 +102,6 @@ export class FindAccount extends Component {
         return (
             <>
                 <FormControl sx={{ backgroundColor: theme => theme.palette.secondary, justifyContent: 'space-around', width: '100%', height: '100%' }}>
-                    {this.state.errors}
-
                     <Stack direction='row' divider={<Divider orientation='vertical' flexItem></Divider>} spacing={2} justifyContent='space-around'>
                         <TextField fullWidth type='text' value={this.state.firstname} onInput={this.handleFirstName} label={translate('general/firstname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
                         <TextField fullWidth type='text' value={this.state.lastname} onInput={this.handleLastName} label={translate('general/lastname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
@@ -107,6 +116,27 @@ export class FindAccount extends Component {
                         <Button type='submit' fullWidth onClick={this.handleSubmit} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>
                     }
                 </FormControl>
+
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         )
     }

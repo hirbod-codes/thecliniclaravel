@@ -47,9 +47,7 @@ export class AccountCreator extends Component {
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
-            feedbackOpen: false,
-            feedbackMessage: '',
-            feedbackColor: 'info',
+            feedbackMessages: [],
 
             loadingGenders: true,
             loadingStates: true,
@@ -81,15 +79,10 @@ export class AccountCreator extends Component {
 
             phonenumberSubnitionErrors: [],
             isSubmittingPhonenumber: false,
-            code_created_at_encrypted: null,
-            code_encrypted: null,
-            phonenumber_encrypted: null,
-            phonenumber_verified_at_encrypted: null,
 
             codeSubnitionErrors: [],
             isSubmittingCode: false,
 
-            errors: [],
             isSubmitting: false,
 
             code: '',
@@ -129,12 +122,14 @@ export class AccountCreator extends Component {
         }
     }
 
-    handleFeedbackClose(event, reason) {
+    handleFeedbackClose(event, reason, key) {
         if (reason === 'clickaway') {
             return;
         }
 
-        this.setState({ feedbackOpen: false });
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     async previousStep() {
@@ -389,23 +384,26 @@ export class AccountCreator extends Component {
                     </Slide>
                 </Stack>
 
-                <Snackbar
-                    open={this.state.feedbackOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleFeedbackClose}
-                    action={
-                        <IconButton
-                            size="small"
-                            onClick={this.handleFeedbackClose}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    }
-                >
-                    <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
-                        {this.state.feedbackMessage}
-                    </Alert>
-                </Snackbar>
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         )
     }
@@ -413,13 +411,7 @@ export class AccountCreator extends Component {
     async submit(e) {
         this.setState({ isSubmitting: true });
 
-        let data = {
-            code_created_at_encrypted: this.state.code_created_at_encrypted,
-            code_encrypted: this.state.code_encrypted,
-            code: this.state.code,
-            phonenumber_encrypted: this.state.phonenumber_encrypted,
-            phonenumber_verified_at_encrypted: this.state.phonenumber_verified_at_encrypted,
-        };
+        let data = {};
 
         for (const k in this.state.inputs) {
             if (Object.hasOwnProperty.call(this.state.inputs, k)) {
@@ -453,18 +445,10 @@ export class AccountCreator extends Component {
                 this.props.onSuccess();
             }
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-            if (r.response.status === 422 && r.value.errors !== undefined) {
-                let errors = [];
-                for (const k in r.value.errors) {
-                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                        const v = r.value.errors[k];
-
-                        errors = errors.concat(v);
-                    }
-                }
-                this.setState({ errors: errors });
-            }
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
             if (this.props.onFailure !== undefined) {
                 this.props.onFailure();
             }
@@ -475,34 +459,16 @@ export class AccountCreator extends Component {
         this.setState({ isSubmittingPhonenumber: true });
 
         let data = { phonenumber: this.state.inputs.phonenumber };
-        let r = await fetchData('post', '/account/send-phoennumber-verification-code', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/send-code-to-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
         this.setState({ isSubmittingPhonenumber: false });
 
+        let value = null;
+        if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+        value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+        this.setState({ feedbackMessages: value });
+
         if (r.response.status === 200) {
-            this.setState({
-                code_created_at_encrypted: r.value.code_created_at_encrypted,
-                code_encrypted: r.value.code_encrypted,
-                phonenumber_encrypted: r.value.phonenumber_encrypted,
-                phonenumber_verified_at_encrypted: r.value.phonenumber_verified_at_encrypted,
-            });
-
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
             this.nextStep();
-        } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-            if (r.response.status === 422 && r.value.errors !== undefined) {
-                let messages = [];
-                for (const k in r.value.errors) {
-                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                        const errors = r.value.errors[k];
-
-                        errors.forEach((v, i) => {
-                            messages.push(v);
-                        });
-                    }
-                }
-                this.setState({ phonenumberSubnitionErrors: messages });
-            }
         }
     }
 
@@ -512,87 +478,80 @@ export class AccountCreator extends Component {
         let data = {
             code: this.state.code,
             phonenumber: this.state.inputs.phonenumber,
-            code_created_at_encrypted: this.state.code_created_at_encrypted,
-            code_encrypted: this.state.code_encrypted,
-            phonenumber_encrypted: this.state.phonenumber_encrypted,
         };
 
-        let r = await fetchData('post', '/account/verify-phoennumber-verification-code', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
         this.setState({ isSubmittingCode: false });
 
-        if (r.response.status === 200) {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-            this.nextStep();
-        } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
-            if (r.response.status === 422) {
-                let messages = [];
-                for (const k in r.value.errors) {
-                    if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                        const errors = r.value.errors[k];
+        let value = null;
+        if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+        value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+        this.setState({ feedbackMessages: value });
 
-                        errors.forEach((v, i) => {
-                            messages.push(v);
-                        });
-                    }
-                }
-                this.setState({ codeSubnitionErrors: messages });
-            }
+        if (r.response.status === 200) {
+            this.nextStep();
         }
     }
 
     async getGenders() {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
         let r = await fetchData('get', '/api/' + locale + '/genders', {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status !== 200) {
-            return;
-        }
 
-        let genders = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const gender = r.value[i];
+        if (r.response.status === 200) {
+            let genders = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const gender = r.value[i];
 
-            genders.push(gender);
+                genders.push(gender);
+            }
+            this.setState({ genders: genders, loadingGenders: false });
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        this.setState({ genders: genders, loadingGenders: false });
     }
 
     async getStates() {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
         let r = await fetchData('get', '/api/' + locale + '/states', {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status !== 200) {
-            return;
-        }
 
-        let states = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const state = r.value[i];
+        if (r.response.status === 200) {
+            let states = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const state = r.value[i];
 
-            states.push(state);
+                states.push(state);
+            }
+            this.setState({ states: states, loadingStates: false });
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        this.setState({ states: states, loadingStates: false });
     }
 
     async getCities(state) {
         this.setState({ loadingCities: true });
         const locale = LocaleContext._currentValue.currentLocale.shortName;
         let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state, {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status !== 200) {
-            return;
-        }
 
-        if (r.value.message !== undefined) {
-            this.setState({ error: r.value.message });
-            return;
-        }
+        if (r.response.status === 200) {
+            let cities = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const city = r.value[i];
 
-        let cities = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const city = r.value[i];
-
-            cities.push(city);
+                cities.push(city);
+            }
+            this.setState({ cities: cities, loadingCities: false });
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        this.setState({ cities: cities, loadingCities: false });
     }
 
     handleGender(e) {

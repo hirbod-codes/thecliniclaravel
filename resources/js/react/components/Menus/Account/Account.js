@@ -59,9 +59,7 @@ export class Account extends Component {
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
-            feedbackOpen: false,
-            feedbackMessage: '',
-            feedbackColor: 'info',
+            feedbackMessages: [],
 
             openLaserOrdersViewModal: false,
             openRegularOrdersViewModal: false,
@@ -116,12 +114,14 @@ export class Account extends Component {
         }
     }
 
-    handleFeedbackClose(event, reason) {
+    handleFeedbackClose(event, reason, key) {
         if (reason === 'clickaway') {
             return;
         }
 
-        this.setState({ feedbackOpen: false });
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     closeSendModal(e, r) {
@@ -155,7 +155,7 @@ export class Account extends Component {
     }
 
     closeRegularVisitsViewModal() {
-        this.setState({ openLaserVisitsViewModal: false });
+        this.setState({ openRegularVisitsViewModal: false });
     }
 
     render() {
@@ -166,8 +166,6 @@ export class Account extends Component {
                     spacing={2}
                 >
                     <FormControl sx={{ width: '100%' }} >
-                        {this.state.error !== null && this.state.error}
-
                         <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
                             <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
                                 {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
@@ -257,7 +255,7 @@ export class Account extends Component {
                             sx={{ m: 1 }}
                             disablePortal
                             defaultValue={(this.props.account.gender === null ? '' : this.props.account.gender)}
-                            options={this.genders}
+                            options={this.genders !== undefined ? this.genders : []}
                             onChange={this.handleGender}
                             renderInput={(params) => <TextField
                                 {...params}
@@ -291,7 +289,7 @@ export class Account extends Component {
                                     sx={{ m: 1 }}
                                     disablePortal
                                     defaultValue={(this.props.account.state === null ? '' : this.props.account.state)}
-                                    options={this.states}
+                                    options={this.states !== undefined ? this.states : []}
                                     onChange={this.handleState}
                                     renderInput={(params) => <TextField
                                         {...params}
@@ -313,7 +311,7 @@ export class Account extends Component {
                                     sx={{ m: 1 }}
                                     disablePortal
                                     defaultValue={(this.props.account.city === null ? '' : this.props.account.city)}
-                                    options={this.cities}
+                                    options={this.cities !== undefined ? this.cities : []}
                                     onChange={this.handleCity}
                                     renderInput={(params) => <TextField
                                         {...params}
@@ -433,7 +431,7 @@ export class Account extends Component {
                     onClose={this.closeLaserOrdersViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfLaserOrdersDataGrid account={this.props.account} />
+                        <SelfLaserOrdersDataGrid account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
                 <Modal
@@ -441,7 +439,7 @@ export class Account extends Component {
                     onClose={this.closeRegularOrdersViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfRegularOrdersDataGrid account={this.props.account} />
+                        <SelfRegularOrdersDataGrid account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
 
@@ -450,7 +448,7 @@ export class Account extends Component {
                     onClose={this.closeLaserVisitsViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfVisitsDataGrid businessName='laser' account={this.props.account} />
+                        <SelfVisitsDataGrid businessName='laser' account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
                 <Modal
@@ -458,27 +456,30 @@ export class Account extends Component {
                     onClose={this.closeRegularVisitsViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <SelfVisitsDataGrid businessName='regular' account={this.props.account} />
+                        <SelfVisitsDataGrid businessName='regular' account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
 
-                <Snackbar
-                    open={this.state.feedbackOpen}
-                    autoHideDuration={6000}
-                    onClose={this.handleFeedbackClose}
-                    action={
-                        <IconButton
-                            size="small"
-                            onClick={this.handleFeedbackClose}
-                        >
-                            <CloseIcon fontSize="small" />
-                        </IconButton>
-                    }
-                >
-                    <Alert onClose={this.handleFeedbackClose} severity={this.state.feedbackColor} sx={{ width: '100%' }}>
-                        {this.state.feedbackMessage}
-                    </Alert>
-                </Snackbar>
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         );
     }
@@ -486,55 +487,62 @@ export class Account extends Component {
     async getGenders() {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
         let r = await fetchData('get', '/api/' + locale + '/genders', {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status !== 200) {
-            return;
-        }
 
-        this.genders = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const gender = r.value[i];
+        if (r.response.status === 200) {
+            this.genders = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const gender = r.value[i];
 
-            this.genders.push(gender);
+                this.genders.push(gender);
+            }
+            this.setState({ loadingGenders: false });
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        this.setState({ loadingGenders: false });
     }
 
     async getStates() {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
         let r = await fetchData('get', '/api/' + locale + '/states', {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status !== 200) {
-            return;
-        }
 
-        this.states = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const state = r.value[i];
+        if (r.response.status === 200) {
+            this.states = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const state = r.value[i];
 
-            this.states.push(state);
+                this.states.push(state);
+            }
+            this.setState({ loadingStates: false });
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        this.setState({ loadingStates: false });
     }
 
     async getCities(state) {
         this.setState({ loadingCities: true });
         const locale = LocaleContext._currentValue.currentLocale.shortName;
         let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state, {}, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status !== 200) {
-            return;
-        }
 
-        if (r.value.message !== undefined) {
-            this.setState({ error: r.value.message });
-            return;
-        }
+        if (r.response.status === 200) {
+            this.cities = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const city = r.value[i];
 
-        this.cities = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const city = r.value[i];
-
-            this.cities.push(city);
+                this.cities.push(city);
+            }
+            this.setState({ loadingCities: false });
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
-        this.setState({ loadingCities: false });
     }
 
     async hsndleUpdate(e) {
@@ -546,14 +554,12 @@ export class Account extends Component {
 
         let data = {};
         for (const k in this.state.inputs) {
-            console.log('k', k);
             if (k === 'avatar' || k === 'phonenumber' || k === 'password' || k === 'password_confirmation' || k === 'code') {
                 continue;
             }
 
             if (Object.hasOwnProperty.call(this.state.inputs, k)) {
                 const v = this.state.inputs[k];
-                console.log('v', v);
 
                 if (v === '') {
                     continue;
@@ -564,13 +570,16 @@ export class Account extends Component {
         }
 
         let r = await fetchData('put', '/account/' + this.props.account.id, data, { 'X-CSRF-TOKEN': this.state.token });
+
         if (r.response.status === 200) {
             if (this.props.onUpdateSuccess !== undefined) {
                 this.props.onUpdateSuccess();
             }
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isUpdating: false });
@@ -584,13 +593,16 @@ export class Account extends Component {
         this.setState({ isDeleting: true });
 
         let r = await fetchData('delete', '/account/' + this.props.account.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+
         if (r.response.status === 200) {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
             setTimeout(() => {
                 fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { window.location.href = r.response.url; });
             }, 1000);
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isDeleting: false });
@@ -606,13 +618,16 @@ export class Account extends Component {
             data.email = this.props.account.email;
         }
 
-        let r = await fetchData('post', '/forgot-password', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.sendMethod === 'phonenumber' ? 'phonenumber' : 'email'), data, { 'X-CSRF-TOKEN': this.state.token });
+
         if (r.response.status === 200) {
             this.setState({ openCodeModal: true });
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
             this.closeSendModal(null, 'code');
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isSending: false });
@@ -633,19 +648,53 @@ export class Account extends Component {
         } else {
             data.phonenumber = this.props.account.phonenumber;
         }
-        if (this.state.isUpdatingPhonenumber) {
-            data.newPhonenumber = this.state.inputs.phonenumber;
-        } else {
+        if (!this.state.isUpdatingPhonenumber) {
             data.password = this.state.inputs.password;
             data.password_confirmation = this.state.inputs.password_confirmation;
         }
 
-        let r = await fetchData('put', '/reset-' + (this.state.isUpdatingPhonenumber ? 'phonenumber' : 'password'), data, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.status === 200) {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
-            this.closeCodeModal(null, 'code');
+        let r = null;
+        if (this.state.isUpdatingPhonenumber) {
+            r = await fetchData('put', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+
+            if (r.response.status === 200) {
+                let data = {};
+                data.phonenumber = this.props.account.phonenumber;
+                data.newPhonenumber = this.state.inputs.phonenumber;
+                r = await fetchData('put', '/auth/update-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+
+                if (r.response.status === 200) {
+                    this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
+                    this.closeCodeModal(null, 'code');
+                    setTimeout(() => {
+                        document.window.href = document.window.location.pathname;
+                    }, 200);
+                } else {
+                    let value = null;
+                    if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+                    value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+                    this.setState({ feedbackMessages: value });
+                }
+            } else {
+                let value = null;
+                if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+                value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+                this.setState({ feedbackMessages: value });
+            }
         } else {
-            this.setState({ feedbackOpen: true, feedbackMessage: translate('general/failure/single/ucFirstLetterFirstWord'), feedbackColor: 'error' });
+            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token });
+
+            if (r.response.status === 200) {
+                this.closeCodeModal(null, 'code');
+                setTimeout(() => {
+                    document.window.href = document.window.location.pathname;
+                }, 200);
+            } else {
+                let value = null;
+                if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+                value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+                this.setState({ feedbackMessages: value });
+            }
         }
 
         this.setState({ isSendingCode: false });

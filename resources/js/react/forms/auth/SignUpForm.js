@@ -4,11 +4,11 @@ import { translate } from '../../traslation/translate.js';
 import { fetchData } from '../../components/Http/fetch.js';
 import { updateState } from '../../components/helpers.js';
 
+import CloseIcon from '@mui/icons-material/Close';
 import FormControl from '@mui/material/FormControl';
 import TextField from '@mui/material/TextField';
 import Stack from '@mui/material/Stack';
 import Button from '@mui/material/Button';
-import FormHelperText from '@mui/material/FormHelperText';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Autocomplete from '@mui/material/Autocomplete';
 import Stepper from '@mui/material/Stepper';
@@ -17,12 +17,15 @@ import StepLabel from '@mui/material/StepLabel';
 import Box from '@mui/material/Box';
 import Slide from '@mui/material/Slide';
 import { LocaleContext } from '../../components/localeContext.js';
+import { Alert, IconButton, Snackbar } from '@mui/material';
 
 export class SignUpForm extends Component {
     constructor(props) {
         super(props);
 
         this.duration = 500;
+
+        this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
 
         this.previousStep = this.previousStep.bind(this);
         this.nextStep = this.nextStep.bind(this);
@@ -49,6 +52,9 @@ export class SignUpForm extends Component {
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
+            feedbackMessages: [],
+
             steps: [
                 {
                     name: 'phonenumber',
@@ -93,13 +99,27 @@ export class SignUpForm extends Component {
             loadingStates: true,
             loadingCities: true,
 
-            error: null,
             passwordsMatch: true,
 
             isSubmittingPhonenumber: false,
             isSubmittingPhonenumberCode: false,
             isSubmittingRegisteration: false,
         };
+    }
+
+    componentDidMount() {
+        this.getGenders();
+        this.getStates();
+    }
+
+    handleFeedbackClose(event, reason, key) {
+        if (reason === 'clickaway') {
+            return;
+        }
+
+        let feedbackMessages = this.state.feedbackMessages;
+        feedbackMessages[key].open = false;
+        this.setState({ feedbackMessages: feedbackMessages });
     }
 
     async previousStep() {
@@ -190,8 +210,6 @@ export class SignUpForm extends Component {
                     <Slide direction={this.state.steps[0].animationDirection} timeout={this.duration} in={this.state.steps[0].in} mountOnEnter unmountOnExit>
                         <Box component='form' onSubmit={this.handleSubmitPhonenumber} >
                             <FormControl sx={{ width: '100%' }} >
-                                {this.state.error !== null && this.state.error}
-
                                 <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
                                 {this.state.isSubmittingPhonenumber && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase')}</LoadingButton>}
@@ -202,8 +220,6 @@ export class SignUpForm extends Component {
                     <Slide direction={this.state.steps[1].animationDirection} timeout={this.duration} in={this.state.steps[1].in} mountOnEnter unmountOnExit>
                         <Box component='form' onSubmit={this.handleSubmitPhonenumberCode} >
                             <FormControl sx={{ width: '100%' }} >
-                                {this.state.error !== null && this.state.error}
-
                                 <TextField onInput={this.handlePhonenumberCode} required label={translate('pages/auth/signup/security-code')} variant='standard' sx={{ m: 1 }} />
 
                                 {this.state.isSubmittingPhonenumberCode && <LoadingButton loading variant="contained">{translate('general/submit/single/ucFirstLetterFirstWord')}</LoadingButton>}
@@ -214,8 +230,6 @@ export class SignUpForm extends Component {
                     <Slide direction={this.state.steps[2].animationDirection} timeout={this.duration} in={this.state.steps[2].in} mountOnEnter unmountOnExit>
                         <Box component='form' onSubmit={this.handleSubmitRegister} >
                             <FormControl sx={{ width: '100%' }} >
-                                {this.state.error !== null && this.state.error}
-
                                 <TextField onInput={this.handleFirstname} required label={translate('general/firstname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
                                 <TextField onInput={this.handleLastname} required label={translate('general/lastname/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
                                 <TextField onInput={this.handleUsername} required label={translate('general/username/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
@@ -269,24 +283,48 @@ export class SignUpForm extends Component {
                         </Box>
                     </Slide>
                 </Stack>
+
+                {this.state.feedbackMessages.map((m, i) =>
+                    <Snackbar
+                        key={i}
+                        open={m.open}
+                        autoHideDuration={6000}
+                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        action={
+                            <IconButton
+                                size="small"
+                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        }
+                    >
+                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                            {m.message}
+                        </Alert>
+                    </Snackbar>
+                )}
             </>
         )
-    }
-
-    componentDidMount() {
-        this.getGenders();
-        this.getStates();
     }
 
     async getGenders() {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
 
         let r = await fetchData('get', '/api/' + locale + '/genders');
-        this.genders = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const gender = r.value[i];
 
-            this.genders.push({ id: i, label: gender });
+        if (r.response.status === 200) {
+            this.genders = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const gender = r.value[i];
+
+                this.genders.push({ id: i, label: gender });
+            }
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
         this.setState({ loadingGenders: false });
     }
@@ -295,11 +333,19 @@ export class SignUpForm extends Component {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
 
         let r = await fetchData('get', '/api/' + locale + '/states');
-        this.states = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const state = r.value[i];
 
-            this.states.push({ id: i, label: state });
+        if (r.response.status === 200) {
+            this.states = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const state = r.value[i];
+
+                this.states.push({ id: i, label: state });
+            }
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
         this.setState({ loadingStates: false });
     }
@@ -309,17 +355,21 @@ export class SignUpForm extends Component {
         const locale = LocaleContext._currentValue.currentLocale.shortName;
 
         let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state);
-        if (r.value.message) {
-            this.setState({ error: r.value.message });
-            return;
+
+        if (r.response.status === 200) {
+            this.cities = [];
+            for (let i = 0; i < r.value.length; i++) {
+                const city = r.value[i];
+
+                this.cities.push({ id: i, label: city });
+            }
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
-        this.cities = [];
-        for (let i = 0; i < r.value.length; i++) {
-            const city = r.value[i];
-
-            this.cities.push({ id: i, label: city });
-        }
         this.setState({ loadingCities: false });
     }
 
@@ -327,27 +377,27 @@ export class SignUpForm extends Component {
         e.preventDefault();
         this.setState({ isSubmittingPhonenumber: true });
 
-        let input = {};
+        let r = null;
+        r = await fetchData('get', '/auth/phonenumber-availability?phonenumber=' + this.state.phonenumber, {}, { 'X-CSRF-TOKEN': this.state.token });
+        if (r.response.status !== 200) {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
 
-        input.phonenumber = this.state.phonenumber;
+            this.setState({ isSubmittingPhonenumber: false });
+            return;
+        }
 
-        let r = await fetchData('post', '/register/send-phoennumber-verification-code', input, { 'X-CSRF-TOKEN': this.state.token });
-
-        if (r.response.status !== 200 && r.value.errors !== undefined) {
-            let messages = [];
-            for (const k in r.value.errors) {
-                if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                    const error = r.value.errors[k];
-
-                    error.forEach((v, i) => {
-                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
-                    });
-                }
-            }
-            this.setState({ error: messages });
-        } else {
-            this.setState({ error: <FormHelperText>{r.value.message}</FormHelperText> });
+        r = null;
+        r = await fetchData('post', '/auth/send-code-to-phonenumber', { phonenumber: this.state.phonenumber }, { 'X-CSRF-TOKEN': this.state.token });
+        if (r.response.status === 200) {
             this.nextStep();
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isSubmittingPhonenumber: false });
@@ -362,23 +412,15 @@ export class SignUpForm extends Component {
         input.phonenumber = this.state.phonenumber;
         input.code = this.state.phonenumberCode;
 
-        let r = await fetchData('post', '/register/verify-phoennumber-verification-code', input, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/verify-phonenumber', input, { 'X-CSRF-TOKEN': this.state.token });
 
-        if (r.response.status !== 200 && r.value.errors !== undefined) {
-            let messages = [];
-            for (const k in r.value.errors) {
-                if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                    const error = r.value.errors[k];
-
-                    error.forEach((v, i) => {
-                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
-                    });
-                }
-            }
-            this.setState({ error: messages });
-        } else {
-            this.setState({ error: <FormHelperText>{r.value.message}</FormHelperText> });
+        if (r.response.status === 200) {
             this.nextStep();
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isSubmittingPhonenumberCode: false });
@@ -410,21 +452,15 @@ export class SignUpForm extends Component {
 
         let r = await fetchData('post', '/register', input, { 'X-CSRF-TOKEN': this.state.token });
 
-        if (r.response.status !== 200 && r.value.errors !== undefined) {
-            let messages = [];
-            for (const k in r.value.errors) {
-                if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                    const error = r.value.errors[k];
-
-                    error.forEach((v, i) => {
-                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
-                    });
-                }
+        if (r.response.status === 200) {
+            if (r.response.redirected) {
+                window.location.href = r.response.url;
             }
-            this.setState({ error: messages });
         } else {
-            this.setState({ error: <FormHelperText>{r.value.message}</FormHelperText> });
-            this.nextStep();
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
         }
 
         this.setState({ isSubmittingRegisteration: false });
