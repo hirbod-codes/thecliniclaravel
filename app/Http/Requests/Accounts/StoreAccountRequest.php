@@ -5,7 +5,6 @@ namespace App\Http\Requests\Accounts;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\RoleName;
-use App\Rules\CheckEnryptedValuesIds;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Support\Facades\Request;
 
@@ -45,12 +44,6 @@ class StoreAccountRequest extends BaseFormRequest
         $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php');
 
         $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($userTypeModelFullname) . '/updateRules.php'));
-
-        $array['code_created_at_encrypted'] = ['required', 'string'];
-        $array['code_encrypted'] = ['required', 'string'];
-        $array['code'] = ['required', 'string', 'regex:/\A[0-9]{6}\z/'];
-        $array['phonenumber_encrypted'] = ['required', 'string', new CheckEnryptedValuesIds];
-        $array['phonenumber_verified_at_encrypted'] = ['required', 'string'];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
