@@ -24,8 +24,7 @@ class ResetPasswordRequest extends FormRequest
      */
     public function rules()
     {
-        $rules = (new ForgotPasswordRequest())->initialRules();
-
+        $rules = [];
         $rules['code'] = ['required', 'integer', 'numeric'];
         $rules['password'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/password.php'))['password'];
         $rules['password_confirmation'] = ['required', 'string', 'same:password'];

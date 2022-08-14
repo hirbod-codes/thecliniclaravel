@@ -3,16 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Auth\CheckAuthentication;
-use App\Http\Requests\ForgotPasswordRequest;
+use App\Http\Requests\Accounts\PhonenumberAvailabilityRequest;
+use App\Http\Requests\Accounts\SendCodeToEmailRequest;
+use App\Http\Requests\Accounts\SendCodeToPhonenumberRequest;
 use App\Http\Requests\LogInRequest;
 use App\Http\Requests\RegisterUserRequest;
 use App\Http\Requests\ResetPasswordRequest;
-use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
-use App\Http\Requests\ResetPhonenumberRequest;
-use App\Http\Requests\VerifyPhonenumberVerificationCodeRequest;
+use App\Http\Requests\UpdatePhonenumberRequest;
+use App\Http\Requests\VerifyPhonenumberRequest;
 use App\Models\User;
 use App\Notifications\SendEmailPasswordResetCode;
-use App\Notifications\SendPhonenumberPasswordResetCode;
 use App\Notifications\SendPhonenumberVerificationCode;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,9 +28,7 @@ use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\TokenRepository;
 use App\UseCases\Accounts\AccountsManagement;
 use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use TheClinicUseCases\Accounts\Authentication;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use TheClinicUseCases\Privileges\PrivilegesManagement;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -41,14 +39,12 @@ class AuthController extends Controller
     private IDataBaseCreateAccount $dataBaseCreateAccount;
 
     public function __construct(
-        Authentication|null $authentication = null,
-        PrivilegesManagement|null $privilegesManagement = null,
         CheckAuthentication|null $checkAuthentication = null,
         AccountsManagement|null $accountsManagement = null,
         IDataBaseCreateAccount|null $dataBaseCreateAccount = null,
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
-        $this->accountsManagement = $accountsManagement ?: new AccountsManagement($authentication ?: new Authentication, $privilegesManagement ?: new PrivilegesManagement);
+        $this->accountsManagement = $accountsManagement ?: new AccountsManagement();
 
         $this->dataBaseCreateAccount = $dataBaseCreateAccount ?: new DataBaseCreateAccount;
     }
@@ -182,274 +178,153 @@ class AuthController extends Controller
             throw $th;
         }
 
+        Auth::guard('web')->attempt(['password' => $validatedInput['password'], 'username' => $validatedInput['username']], false);
+
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
 
         return redirect('/');
     }
 
-    public function forgotPassword(ForgotPasswordRequest $request): Response|JsonResponse
+    public function phonenumberAvailability(PhonenumberAvailabilityRequest $request): Response
     {
-        $validatedInput = $request->safe()->all();
-        $session = $request->session();
-
-        $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
-        $code = rand(100000, 999999);
-        if (isset($validatedInput['phonenumber'])) {
-            /** @var User $user */
-            $user = User::query()->where('phonenumber', '=', $validatedInput['phonenumber'])->firstOrFail();
-
-            $session->put('code', $code);
-            $session->put('phonenumber', $validatedInput['phonenumber']);
-
-            $user->notify(new SendPhonenumberPasswordResetCode($code));
-
-            $identifier = 'phonenumber';
-        } else {
-            /** @var User $user */
-            $user = User::query()->where('email', '=', $validatedInput['email'])->where('email_verified_at', '<>', null)->firstOrFail();
-
-            $session->put('code', $code);
-            $session->put('email', $validatedInput['email']);
-
-            $user->notify(new SendEmailPasswordResetCode($code));
-
-            $identifier = 'email';
-        }
-
-        $session->put('password_reset_verification_timestamp', (new \DateTime)->getTimestamp());
-
-        if ($request->header('content-type') === 'application/json') {
-            return response()->json(['message' => trans_choice('auth.' . $identifier . '_verification_code_sent', 0)]);
-        } else {
-            return response(trans_choice('auth.' . $identifier . '_verification_code_sent', 0));
-        }
+        $input = $request->safe()->all();
+        return response($input['phonenumber']);
     }
 
-    public function resetPassword(ResetPasswordRequest $request): Response|JsonResponse
+    public function sendCodeToPhonenumber(SendCodeToPhonenumberRequest $request): Response
     {
         $validatedInput = $request->safe()->all();
-        $validatedInput['code'] = intval($validatedInput['code']);
-        $session = $request->session();
-
-        $phonenumber = $session->get('phonenumber');
-        $email = $session->get('email');
-        $code = intval($session->get('code', 0));
-
-        $future = (new \DateTime)->modify('-1 day')->getTimestamp();
-        $password_reset_verification_timestamp = intval($session->get('password_reset_verification_timestamp', $future));
-
-        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp(strval($password_reset_verification_timestamp))->modify('+90 seconds')->getTimestamp()) {
-            $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
-
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.vierfication_code_expired', 0)], 422);
-            } else {
-                return response(trans_choice('auth.vierfication_code_expired', 0), 422);
-            }
-        }
-
-        if (isset($validatedInput['phonenumber']) && ($validatedInput['phonenumber'] !== $phonenumber || $validatedInput['code'] !== $code)) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.phonenumber_verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
-            }
-        } elseif (isset($validatedInput['email']) && ($validatedInput['email'] !== $email || $validatedInput['code'] !== $code)) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.email_verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.email_verification_failed', 0), 422);
-            }
-        } elseif ($phonenumber === null && $email === null) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.verification_failed', 0), 422);
-            }
-        }
-        $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
-
-        if (isset($validatedInput['email'])) {
-            $user = User::query()->where('email', '=', $validatedInput['email'])->where('email_verified_at', '<>', null)->firstOrFail();
-        } elseif (isset($validatedInput['phonenumber'])) {
-            $user = User::query()->where('phonenumber', '=', $validatedInput['phonenumber'])->where('phonenumber_verified_at', '<>', null)->firstOrFail();
-        }
-
-        $user->password  = bcrypt($validatedInput['password']);
-
-        if (!$user->save()) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['message' => trans_choice('auth.password_reset_failed', 0)], 500);
-            } else {
-                return response(trans_choice('auth.password_reset_failed', 0), 500);
-            }
-        }
-
-        $redirecturl = $session->get('redirecturl');
-        $session->forget('redirecturl');
-
-        if ($request->header('content-type') === 'application/json') {
-            return response()->json(['message' => trans_choice('auth.password-reset-successful', 0), 'redirecturl' => $redirecturl ?: '/']);
-        } else {
-            return response(trans_choice('auth.password-reset-successful', 0), 200);
-        }
-    }
-
-    public function sendPhonenumberVerificationCode(SendPhonenumberVerificationCodeRequest $request): Response|JsonResponse
-    {
-        $validatedInput = $request->safe()->all();
+        $code = $this->generateCode();
 
         $session = $request->session();
-
         if (
-            ($phonenumber = $session->get('phonenumber', false)) &&
-            $phonenumber === $validatedInput['phonenumber'] &&
-            ($phonenumber_verification_timestamp = $session->get('phonenumber_verification_timestamp', false)) &&
-            (new \DateTime)->getTimestamp() < (new \DateTime)->setTimestamp($phonenumber_verification_timestamp)->modify('+2 minutes')->getTimestamp()
+            $session->get('code_destination') !== null &&
+            $session->get('code_destination') === 'phonenumber' &&
+            $session->get('phonenumber') !== null &&
+            $session->get('phonenumber') === $validatedInput['phonenumber'] &&
+            $session->get('code_expiration_timestamp') !== null &&
+            (new \DateTime)->getTimestamp() < intval($session->get('code_expiration_timestamp', 0))
         ) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.verification_code_not_expired', 0)], 200);
-            } else {
-                return response(trans_choice('auth.verification_code_not_expired', 0), 200);
-            }
+            return response(trans_choice('auth.verification_code_not_expired', 0), 500);
         }
-
-        $session->put('code', $code = rand(100000, 999999));
-        $session->put('phonenumber', $validatedInput['phonenumber']);
-        $session->put('phonenumber_verification_timestamp', (new \DateTime)->getTimestamp());
+        $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
         Notification::route('phonenumber', $validatedInput['phonenumber'])
             ->notify(new SendPhonenumberVerificationCode($code));
 
-        if ($request->header('content-type') === 'application/json') {
-            return response()->json(['message' => trans_choice('auth.phonenumber_verification_code_sent', 0)], 200);
-        } else {
-            return response(trans_choice('auth.phonenumber_verification_code_sent', 0), 200);
-        }
+        $session->put('code_destination', 'phonenumber');
+        $session->put('code', $code);
+        $session->put('phonenumber', $validatedInput['phonenumber']);
+        $session->put('code_expiration_timestamp', (new \DateTime)->modify('+60 seconds')->getTimestamp());
+
+        return response(trans_choice('auth.phonenumber_verification_code_sent', 0));
     }
 
-    public function verifyPhonenumberVerificationCode(VerifyPhonenumberVerificationCodeRequest $request): Response|JsonResponse
+    public function sendCodeToEmail(SendCodeToEmailRequest $request): Response
     {
-        $validatedInput = $request->safe()->all();
+        $input = $request->safe()->all();
+        $code = $this->generateCode();
+
         $session = $request->session();
-
-        $validatedInput['code'] = intval($validatedInput['code']);
-
-        $phonenumber = $session->get('phonenumber');
-        $code = intval($session->get('code'));
-
-        $future = (new \DateTime)->modify('-1 day')->getTimestamp();
-        $phonenumber_verification_timestamp = intval($session->get('phonenumber_verification_timestamp', $future));
-
-        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp($phonenumber_verification_timestamp)->modify('+90 seconds')->getTimestamp()) {
-            $session->forget(['code', 'phonenumber', 'phonenumber_verification_timestamp']);
-
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.vierfication_code_expired', 0)], 422);
-            } else {
-                return response(trans_choice('auth.vierfication_code_expired', 0), 422);
-            }
+        if ($session->get('code_destination') && $session->get('code_destination') === 'email' && $session->get('code_expiration_timestamp') && ((new \DateTime)->getTimestamp() < intval($session->get('code_expiration_timestamp', 0)))) {
+            return response(trans_choice('auth.verification_code_not_expired', 0), 500);
         }
+        $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
-        if ($phonenumber !== $validatedInput['phonenumber'] || $code !== $validatedInput['code']) {
-            $session->forget(['code', 'phonenumber', 'phonenumber_verification_timestamp']);
+        $user = User::query()->where('email', '=', $input['email'])->firstOrFail();
 
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.phonenumber_verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
-            }
-        }
+        $user->notify(new SendEmailPasswordResetCode($code));
 
-        $session->forget(['code']);
+        $session->put('code_destination', 'email');
+        $session->put('code', $code);
+        $session->put('code_expiration_timestamp', (new \DateTime)->modify('+90 seconds')->getTimestamp());
 
-
-        if ($request->header('content-type') === 'application/json') {
-            return response()->json(['message' => trans_choice('auth.phonenumber_verification_successful', 0)], 200);
-        } else {
-            return response(trans_choice('auth.phonenumber_verification_successful', 0), 200);
-        }
+        return response(trans_choice('auth.email_verification_code_sent', 0));
     }
 
-    public function resetPhonenumber(ResetPhonenumberRequest $request): Response|JsonResponse
+    private function generateCode(): int
     {
-        $user = $this->checkAuthentication->getAuthenticated();
-        $dsUser = $this->checkAuthentication->getAuthenticatedDSUser();
+        return rand(100000, 999999);
+    }
 
-        $validatedInput = $request->safe()->all();
-        $validatedInput['code'] = intval($validatedInput['code']);
+    public function verifyPhonenumber(VerifyPhonenumberRequest $request): Response
+    {
+        $input = $request->safe()->all();
         $session = $request->session();
 
-        if (isset($validatedInput['email'])) {
-            $targetUser = User::query()->where('email', '=', $validatedInput['email'])->where('email_verified_at', '<>', null)->firstOrFail();
-        } elseif (isset($validatedInput['phonenumber'])) {
-            $targetUser = User::query()->where('phonenumber', '=', $validatedInput['phonenumber'])->where('phonenumber_verified_at', '<>', null)->firstOrFail();
+        if (
+            $session->get('code_destination') !== 'phonenumber' ||
+            (intval($session->get('phonenumber', 0)) !== intval($input['phonenumber']))
+        ) {
+            $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+            return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
         }
 
-        if ($user->username !== $targetUser->username || !($dsUser instanceof DSAdmin)) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.User-Not-Authorized', 0)], 403);
-            } else {
-                return response(trans_choice('auth.User-Not-Authorized', 0), 403);
-            }
+        if (intval($input['code']) !== intval($session->get('code', 0))) {
+            return response(trans_choice('auth.phonenumber_verification_failed_code', 0), 422);
         }
 
-        $phonenumber = $session->get('phonenumber');
-        $email = $session->get('email');
-        $code = intval($session->get('code', 0));
-
-        $future = (new \DateTime)->modify('-1 day')->getTimestamp();
-        $password_reset_verification_timestamp = intval($session->get('password_reset_verification_timestamp', $future));
-
-        if ((new \DateTime)->getTimestamp() > (new \DateTime)->setTimestamp(strval($password_reset_verification_timestamp))->modify('+90 seconds')->getTimestamp()) {
-            $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
-
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.vierfication_code_expired', 0)], 422);
-            } else {
-                return response(trans_choice('auth.vierfication_code_expired', 0), 422);
-            }
+        if (((new \DateTime)->getTimestamp() > intval($session->get('code_expiration_timestamp', 0)))) {
+            $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
         }
 
-        if (isset($validatedInput['phonenumber']) && ($validatedInput['phonenumber'] !== $phonenumber || $validatedInput['code'] !== $code)) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.phonenumber_verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
-            }
-        } elseif (isset($validatedInput['email']) && ($validatedInput['email'] !== $email || $validatedInput['code'] !== $code)) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.email_verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.email_verification_failed', 0), 422);
-            }
-        } elseif ($phonenumber === null && $email === null) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['error' => trans_choice('auth.verification_failed', 0)], 422);
-            } else {
-                return response(trans_choice('auth.verification_failed', 0), 422);
-            }
-        }
-        $session->forget(['code', 'email', 'phonenumber', 'password_reset_verification_timestamp']);
+        $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+        $session->put('isPhonenumberVerified', 1);
+        $session->put('phonenumberVerifiedAt', (new \DateTime)->getTimestamp());
 
-        $targetUser->phonenumber  = $validatedInput['newPhonenumber'];
+        return response(trans_choice('auth.phonenumber_verification_successful', 0));
+    }
 
-        if (!$targetUser->save()) {
-            if ($request->header('content-type') === 'application/json') {
-                return response()->json(['message' => trans_choice('auth.password_reset_failed', 0)], 500);
-            } else {
-                return response(trans_choice('auth.password_reset_failed', 0), 500);
-            }
+    public function updatePhonenumber(UpdatePhonenumberRequest $request): Response
+    {
+        $input = $request->safe()->all();
+        $session = $request->session();
+
+        if ($session->get('isPhonenumberVerified') === null) {
+            $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+            return response(trans_choice('auth.phonenumber_update_failure', 0));
         }
 
-        $redirecturl = $session->get('redirecturl');
-        $session->forget('redirecturl');
+        if ($session->get('phonenumber') !== strval($input['phonenumber'])) {
+            $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+            return response(trans_choice('auth.phonenumber_update_failure', 0));
+        }
 
-        if ($request->header('content-type') === 'application/json') {
-            return response()->json(['message' => trans_choice('auth.password-reset-successful', 0), 'redirecturl' => $redirecturl ?: '/']);
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $user->phonenumber = $input['newPhonenumber'];
+        $user->saveOrFail();
+
+        $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+        return response(trans_choice('auth.phonenumber_update_success', 0));
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): Response
+    {
+        $input = $request->safe()->all();
+        $session = $request->session();
+
+        if (intval($input['code']) !== intval($session->get('code', 0))) {
+            return response(trans_choice('auth.phonenumber_verification_failed_code', 0), 422);
+        }
+
+        if ((new \DateTime)->getTimestamp() > intval($session->get('code_expiration_timestamp', 0))) {
+            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+        }
+
+        if ($session->get('code_destination') === 'phonenumber') {
+            $identifier = 'phonenumber';
         } else {
-            return response(trans_choice('auth.password-reset-successful', 0), 200);
+            $identifier = 'email';
         }
+        $identifierValue = $session->get($identifier);
+
+        $user = User::query()->where($identifier, '=', $identifierValue)->firstOrFail();
+        $user->password = bcrypt($input['password']);
+        $user->saveOrFail();
+
+        $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
+        return response(trans_choice('auth.password_update_success', 0));
     }
 }

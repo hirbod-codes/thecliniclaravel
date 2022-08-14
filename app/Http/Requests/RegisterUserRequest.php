@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Http\Requests\Accounts\StorePatientAccountRequest;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -34,7 +33,7 @@ class RegisterUserRequest extends FormRequest
 
         $array = array_merge($array, $specialRules);
 
-        array_unshift($rules[array_key_first($rules)], new ProhibitExtraFeilds($rules));
+        array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
     }
