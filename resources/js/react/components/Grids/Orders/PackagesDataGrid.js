@@ -11,6 +11,7 @@ import PartsDataGridModal from './Modals/PartsDataGridModal';
 import { Alert, Button, CircularProgress, IconButton, Snackbar } from '@mui/material';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * PackagesDataGrid
@@ -47,6 +48,8 @@ export class PackagesDataGrid extends Component {
             isCalculatingPackages: false,
             totalPrice: 0,
             totalNeddedTime: 0,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -130,42 +133,42 @@ export class PackagesDataGrid extends Component {
 
                     switch (k) {
                         case 'id':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             column.type = 'number';
                             column.valueFormatter = formatToNumber;
                             break;
 
                         case 'parts':
-                            column.headerName = translate('pages/orders/order/columns/' + k);
+                            column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
                             column.renderCell = (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} />;
                             break;
 
                         case 'price':
-                            column.headerName = translate('pages/orders/order/columns/' + k);
+                            column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
                             column.type = 'number';
                             column.valueFormatter = formatToNumber;
                             break;
 
                         case 'name':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             break;
 
                         case 'created_at':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             column.type = 'dateTime';
                             column.valueGetter = ({ value }) => value && new Date(value);
                             column.minWidth = 170;
                             break;
 
                         case 'updated_at':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             column.type = 'dateTime';
                             column.valueGetter = ({ value }) => value && new Date(value);
                             column.minWidth = 170;
                             break;
 
                         case 'gender':
-                            column.headerName = translate('general/columns/account/' + k + '/single/ucFirstLetterFirstWord');
+                            column.headerName = translate('general/columns/account/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             break;
 
                         default:

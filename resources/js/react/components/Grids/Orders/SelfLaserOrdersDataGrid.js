@@ -18,6 +18,7 @@ import { formatToNumber } from '../formatters';
 import PartsDataGridModal from './Modals/PartsDataGridModal';
 import PackagesDataGridModal from './Modals/PackagesDataGridModal';
 import { PrivilegesContext } from '../../privilegesContext';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * SelfLaserOrdersDataGrid
@@ -54,28 +55,30 @@ export class SelfLaserOrdersDataGrid extends Component {
 
             isCreating: false,
             openCreationModal: false,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
     addColumns(columns) {
         columns.push({
             field: 'parts',
-            headerName: translate('pages/orders/order/columns/parts'),
-            description: translate('pages/orders/order/columns/parts'),
+            headerName: translate('pages/orders/order/columns/parts', this.state.locale),
+            description: translate('pages/orders/order/columns/parts', this.state.locale),
             renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.row.parts }} />,
         });
 
         columns.push({
             field: 'packages',
-            headerName: translate('pages/orders/order/columns/packages'),
-            description: translate('pages/orders/order/columns/packages'),
+            headerName: translate('pages/orders/order/columns/packages', this.state.locale),
+            description: translate('pages/orders/order/columns/packages', this.state.locale),
             renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.row.packages }} />,
         });
 
         columns.push({
             field: 'price_with_discount',
-            headerName: translate('pages/orders/order/columns/price_with_discount'),
-            description: translate('pages/orders/order/columns/price_with_discount'),
+            headerName: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
+            description: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
             type: 'number',
             valueFormatter: formatToNumber,
         });
@@ -85,7 +88,7 @@ export class SelfLaserOrdersDataGrid extends Component {
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,

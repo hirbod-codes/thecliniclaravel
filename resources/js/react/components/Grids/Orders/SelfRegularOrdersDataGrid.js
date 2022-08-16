@@ -14,6 +14,7 @@ import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { PrivilegesContext } from '../../privilegesContext';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * SelfRegularOrdersDataGrid
@@ -51,6 +52,8 @@ export class SelfRegularOrdersDataGrid extends Component {
             isCreating: false,
             price: '',
             timeConsumption: '',
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -60,7 +63,7 @@ export class SelfRegularOrdersDataGrid extends Component {
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(params); }} label="Delete" />,

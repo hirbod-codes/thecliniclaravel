@@ -18,6 +18,7 @@ import { formatToNumber } from '../formatters';
 import PartsDataGridModal from './Modals/PartsDataGridModal';
 import PackagesDataGridModal from './Modals/PackagesDataGridModal';
 import { PrivilegesContext } from '../../privilegesContext';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * LaserOrdersServerDataGrid
@@ -62,6 +63,8 @@ export class LaserOrdersServerDataGrid extends Component {
 
             isCreating: false,
             openCreationModal: false,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -87,22 +90,22 @@ export class LaserOrdersServerDataGrid extends Component {
     addColumns(columns) {
         columns.push({
             field: 'parts',
-            headerName: translate('pages/orders/order/columns/parts'),
-            description: translate('pages/orders/order/columns/parts'),
+            headerName: translate('pages/orders/order/columns/parts', this.state.locale),
+            description: translate('pages/orders/order/columns/parts', this.state.locale),
             renderCell: (params) => <PartsDataGridModal rows={params.row.parts} />,
         });
 
         columns.push({
             field: 'packages',
-            headerName: translate('pages/orders/order/columns/packages'),
-            description: translate('pages/orders/order/columns/packages'),
+            headerName: translate('pages/orders/order/columns/packages', this.state.locale),
+            description: translate('pages/orders/order/columns/packages', this.state.locale),
             renderCell: (params) => <PackagesDataGridModal rows={params.row.packages} />,
         });
 
         columns.push({
             field: 'price_with_discount',
-            headerName: translate('pages/orders/order/columns/price_with_discount'),
-            description: translate('pages/orders/order/columns/price_with_discount'),
+            headerName: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
+            description: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
             type: 'number',
             valueFormatter: formatToNumber,
         });
@@ -112,7 +115,7 @@ export class LaserOrdersServerDataGrid extends Component {
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
                 getActions: (params) => {
                     return [
@@ -162,7 +165,7 @@ export class LaserOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    roleName={this.state.role ? this.context.retrieveOrder.laser[0].filter((v) => v !== 'self') : this.state.role}
+                    roleName={this.state.role===null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
                     businessName='laser'
 
                     paginationMode='server'
@@ -200,7 +203,7 @@ export class LaserOrdersServerDataGrid extends Component {
                                             sx={{ minWidth: '130px' }}
                                             size='small'
                                             disablePortal
-                                            value={this.state.role ? this.context.retrieveOrder.laser[0].filter((v) => v !== 'self') : this.state.role}
+                                            value={this.state.role===null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
                                             options={this.context.retrieveOrder.laser.filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;

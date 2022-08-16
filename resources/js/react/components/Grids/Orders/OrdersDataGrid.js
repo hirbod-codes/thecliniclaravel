@@ -9,6 +9,8 @@ import { fetchData } from '../../Http/fetch';
 import DataGridComponent from '../DataGridComponent';
 import { PrivilegesContext } from '../../privilegesContext';
 import { Alert, IconButton, Snackbar } from '@mui/material';
+import { localizeDate } from '../../helpers';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * OrdersDataGrid
@@ -66,6 +68,8 @@ export class OrdersDataGrid extends Component {
             openVisitsModal: [],
 
             pageSize: 10,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -133,6 +137,7 @@ export class OrdersDataGrid extends Component {
             return [{ field: 'id' }];
         }
 
+        const locale = this.state.locale;
         let columns = [];
         for (const k in rows[0]) {
             if (!Object.hasOwnProperty.call(rows[0], k)) {
@@ -146,36 +151,38 @@ export class OrdersDataGrid extends Component {
 
             switch (k) {
                 case 'id':
-                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                     column.type = 'number';
                     column.valueFormatter = formatToNumber;
                     break;
 
                 case 'needed_time':
-                    column.headerName = translate('pages/orders/order/columns/' + k);
+                    column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
                     column.type = 'number';
                     column.valueFormatter = formatToTime;
                     column.minWidth = 170;
                     break;
 
                 case 'price':
-                    column.headerName = translate('pages/orders/order/columns/' + k);
+                    column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
                     column.type = 'number';
                     column.valueFormatter = formatToNumber;
                     break;
 
                 case 'created_at':
-                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                     column.type = 'dateTime';
-                    column.valueGetter = ({ value }) => value && new Date(value);
-                    column.minWidth = 170;
+                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
+                    column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
+                    column.minWidth = 200;
                     break;
 
                 case 'updated_at':
-                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                     column.type = 'dateTime';
-                    column.valueGetter = ({ value }) => value && new Date(value);
-                    column.minWidth = 170;
+                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
+                    column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
+                    column.minWidth = 200;
                     break;
 
                 default:

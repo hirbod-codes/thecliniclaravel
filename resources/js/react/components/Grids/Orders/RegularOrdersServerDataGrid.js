@@ -15,6 +15,7 @@ import FindAccount from '../../Menus/Account/FindAccount';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { PrivilegesContext } from '../../privilegesContext';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * RegularOrdersServerDataGrid
@@ -64,6 +65,8 @@ export class RegularOrdersServerDataGrid extends Component {
             isCreating: false,
             price: '',
             timeConsumption: '',
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -91,7 +94,7 @@ export class RegularOrdersServerDataGrid extends Component {
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
                 getActions: (params) => {
                     return [
@@ -148,7 +151,7 @@ export class RegularOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    roleName={this.state.role ? this.context.retrieveOrder.regular[0].filter((v) => v !== 'self') : this.state.role}
+                    roleName={this.state.role === null ? this.context.retrieveOrder.regular.filter((v) => v !== 'self')[0] : this.state.role}
                     businessName='regular'
 
                     paginationMode='server'
@@ -194,7 +197,7 @@ export class RegularOrdersServerDataGrid extends Component {
                                             sx={{ minWidth: '130px' }}
                                             size='small'
                                             disablePortal
-                                            value={this.state.role ? this.context.retrieveOrder.regular[0].filter((v) => v !== 'self') : this.state.role}
+                                            value={this.state.role === null ? this.context.retrieveOrder.regular.filter((v) => v !== 'self')[0] : this.state.role}
                                             options={this.context.retrieveOrder.regular.filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;
