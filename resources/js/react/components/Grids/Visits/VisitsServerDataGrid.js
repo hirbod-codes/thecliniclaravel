@@ -15,6 +15,7 @@ import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
 import { PrivilegesContext } from '../../privilegesContext';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * VisitsServerDataGrid
@@ -70,6 +71,8 @@ export class VisitsServerDataGrid extends Component {
             isRefreshingWeeklyVisit: false,
             isSubmittingWeeklyVisit: false,
             weeklyVisitRefresh: null,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         }
     }
 
@@ -92,7 +95,7 @@ export class VisitsServerDataGrid extends Component {
             columns.push({
                 field: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,

@@ -10,9 +10,10 @@ import { fetchData } from '../../Http/fetch';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import WeekDayInputComponents from '../../Menus/Visits/WeekDayInputComponents';
-import { convertWeekDays, getDateTimeFormatObject, resolveTimeZone } from '../../helpers';
+import { convertWeekDays, localizeDate, resolveTimeZone } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
 import { PrivilegesContext } from '../../privilegesContext';
+import { DateTime } from 'luxon';
 
 /**
  * VisitsDataGrid
@@ -72,6 +73,8 @@ export class VisitsDataGrid extends Component {
             pageSize: 10,
 
             openWeekDaysPeriods: [],
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -130,6 +133,7 @@ export class VisitsDataGrid extends Component {
             return [{ field: 'id' }];
         }
 
+        const locale = this.state.locale;
         let columns = [];
         for (const k in rows[0]) {
             if (Object.hasOwnProperty.call(rows[0], k)) {
@@ -139,31 +143,31 @@ export class VisitsDataGrid extends Component {
 
                 switch (k) {
                     case 'id':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'number';
                         column.valueFormatter = formatToNumber;
                         break;
 
                     case 'consuming_time':
-                        column.headerName = translate('pages/visits/visit/columns/' + k);
+                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
                         column.type = 'number';
                         column.valueFormatter = formatToTime;
+                        column.valueGetter = formatToNumber;
                         break;
 
                     case 'date_time_period':
-                        column.headerName = translate('pages/visits/visit/columns/' + k);
+                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
                         column.valueGetter = ({ value }) => { if (!value) { return 'N/A'; } else { return value; } };
                         break;
 
                     case 'week_days_periods':
-                        column.headerName = translate('pages/visits/visit/columns/' + k);
+                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
                         column.renderCell = (params) => {
                             const weekDaysPeriods = params.row.week_days_periods;
                             if (!weekDaysPeriods) {
                                 return 'N/A';
                             }
 
-                            const locale = LocaleContext._currentValue.currentLocale.shortName;
                             let weekDays = convertWeekDays(weekDaysPeriods, 'UTC', resolveTimeZone(locale));
 
                             let weekDayInputComponents = [];
@@ -209,26 +213,27 @@ export class VisitsDataGrid extends Component {
                         break;
 
                     case 'visit_timestamp':
-                        column.headerName = translate('pages/visits/visit/columns/' + k);
+                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
                         column.type = 'dateTime';
-                        const locale = LocaleContext._currentValue.currentLocale.shortName;
-
-                        column.valueGetter = (props) => { if (!props.value) { return null; } return getDateTimeFormatObject(locale).format(new Date(props.value * 1000)); };
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', DateTime.fromSeconds(Number(props.value), { zone: 'utc' }), locale, true); };
+                        column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', DateTime.fromSeconds(Number(props.value), { zone: 'utc' }), locale, false, true); };
                         column.minWidth = 330;
                         break;
 
                     case 'created_at':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'dateTime';
-                        column.valueGetter = ({ value }) => { if (!value) { return ''; } return new Date(value); };
-                        column.minWidth = 170;
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
+                        column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
+                        column.minWidth = 200;
                         break;
 
                     case 'updated_at':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'dateTime';
-                        column.valueGetter = ({ value }) => { if (!value) { return ''; } return new Date(value); };
-                        column.minWidth = 170;
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
+                        column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
+                        column.minWidth = 200;
                         break;
 
                     default:
