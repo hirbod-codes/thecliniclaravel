@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import { ThemeContext, themes } from '../themeContenxt.js';
 
 import Dropdown from '../Menus/DropDown.js';
+import { translate } from '../../traslation/translate.js';
 
 export class ThemeButton extends Component {
     constructor(props) {
@@ -19,7 +20,7 @@ export class ThemeButton extends Component {
             <ThemeContext.Consumer>
                 {({ theme, changeTheme, currentTheme, isThemeLoading }) => {
                     return <Dropdown
-                        buttonInnerContent={currentTheme}
+                        buttonInnerContent={translate('general/' + currentTheme + '/single/ucFirstLetterFirstWord')}
                         menuItems={this.makeItems()}
                         isLoading={isThemeLoading}
                         buttonProps={this.props.buttonProps}
@@ -42,7 +43,7 @@ export class ThemeButton extends Component {
         return items.map((item, k) => {
             return {
                 props: { value: item },
-                innerText: item
+                innerText: translate('general/' + item + '/single/ucFirstLetterFirstWord')
             }
         });
     }
