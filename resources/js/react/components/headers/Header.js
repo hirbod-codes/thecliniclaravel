@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 
 import ThemeButton from '../buttons/ThemeButton.js';
 import AppLocalButton from '../buttons/AppLocalButton.js';
@@ -10,9 +10,37 @@ import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
+import { Button } from '@mui/material';
 
 export class Header extends Component {
+    constructor(props) {
+        super(props);
+
+        this.onLogout = this.onLogout.bind(this);
+
+        this.state = {
+            goToWelcomePage: false,
+        };
+    }
+
+    onLogout(e) {
+        console.log(this.state);
+        this.setState({ goToWelcomePage: true });
+        if (this.props.onLogout !== undefined) {
+            this.props.onLogout();
+        } else {
+            window.location.href = '/logout';
+        }
+    }
+
     render() {
+        console.log(this.state);
+        if (this.state.goToWelcomePage) {
+            return (
+                <Navigate to='/' />
+            );
+        }
+
         return (
             <>
                 <Box sx={{ flexGrow: 1 }}>
@@ -26,34 +54,29 @@ export class Header extends Component {
 
                             {this.props.rightSide}
 
-                            {this.props.isAuthenticationLoading && <LoadingButton loading >AuthenticationLoading</LoadingButton>}
-
-                            {!this.props.isAuthenticationLoading &&
+                            {this.props.isAuthenticated ?
                                 (
-                                    this.props.isAuthenticated ?
-                                        (
-                                            <>
-                                                {this.props.navigator}
+                                    this.props.isAuthenticationLoading ?
+                                        <LoadingButton loading >AuthenticationLoading</LoadingButton> :
+                                        <>
+                                            {this.props.navigator}
 
-                                                <Link to='/logout' onClick={(e) => { window.location.href = '/logout'; }} style={{ color: 'white', m: 1 }} >
-                                                    {translate('general/log-out/single/ucFirstLetterAllWords')}
-                                                </ Link>
-                                            </>
-                                        ) :
-                                        (
-                                            window.location.pathname === '/login' ?
-                                                (
-                                                    <Link to='/register' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
-                                                        {translate('general/sign-up/single/ucFirstLetterAllWords')}
-                                                    </ Link>
-                                                ) :
-                                                (
-                                                    <Link to='/login' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
-                                                        {translate('general/log-in/single/ucFirstLetterAllWords')}
-                                                    </ Link>
-                                                )
-                                        )
-                                )
+                                            <Button onClick={this.onLogout} style={{ color: 'white', m: 1 }} >
+                                                {translate('general/log-out/single/ucFirstLetterAllWords')}
+                                            </ Button>
+                                        </>
+                                ) :
+                                window.location.pathname === '/login' ?
+                                    (
+                                        <Link to='/register' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
+                                            {translate('general/sign-up/single/ucFirstLetterAllWords')}
+                                        </ Link>
+                                    ) :
+                                    (
+                                        <Link to='/login' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
+                                            {translate('general/log-in/single/ucFirstLetterAllWords')}
+                                        </ Link>
+                                    )
                             }
 
                             <ThemeButton buttonProps={{ sx: { m: 1 } }} />
