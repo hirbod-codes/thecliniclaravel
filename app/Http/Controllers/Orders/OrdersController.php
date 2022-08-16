@@ -267,6 +267,19 @@ class OrdersController extends Controller
     public function ordersCount(OrdersCountRequest $request): Response
     {
         $input = $request->safe()->all();
+        $roleName = $input['roleName'];
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $userRoleName = $user->authenticatableRole->role->roleName->name;
+        $canReadSelf = false;
+        foreach ($user->authenticatableRole->role->role->retrieveOrderSubjects as $retrieveOrder) {
+            if ($retrieveOrder->object !== null) {
+                continue;
+            }
+            $canReadSelf = true;
+            break;
+        }
+        $isSelf = $userRoleName === $roleName;
+
         /** @var Builder $query */
         switch ($input['businessName']) {
             case 'laser':
@@ -282,16 +295,31 @@ class OrdersController extends Controller
         }
 
         $count = $query
-            ->whereHas('order', function (Builder $query) use ($input) {
-                $query->whereHas('user', function (Builder $query) use ($input) {
+            ->whereHas('order', function (Builder $query) use ($input, $user, $isSelf, $canReadSelf) {
+                $query->whereHas('user', function (Builder $query) use ($input, $user, $isSelf, $canReadSelf) {
+                    if ($isSelf && !$canReadSelf) {
+                        $query->whereKeyNot($user->getKey());
+                    }
+                    $i = 0;
                     foreach ((new User)->getChildrenTypesRelationNames() as $relation) {
-                        $query->orWhereHas($relation, function (Builder $query) use ($input) {
-                            $query->whereHas('role', function (Builder $query) use ($input) {
-                                $query->whereHas('roleName', function (Builder $query) use ($input) {
-                                    $query->where('name', '=', $input['roleName']);
+                        if ($i === 0) {
+                            $query->whereHas($relation, function (Builder $query) use ($input) {
+                                $query->whereHas('role', function (Builder $query) use ($input) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($input) {
+                                        $query->where('name', '=', $input['roleName']);
+                                    });
                                 });
                             });
-                        });
+                        } else {
+                            $query->orWhereHas($relation, function (Builder $query) use ($input) {
+                                $query->whereHas('role', function (Builder $query) use ($input) {
+                                    $query->whereHas('roleName', function (Builder $query) use ($input) {
+                                        $query->where('name', '=', $input['roleName']);
+                                    });
+                                });
+                            });
+                        }
+                        $i++;
                     }
                 });
             })
