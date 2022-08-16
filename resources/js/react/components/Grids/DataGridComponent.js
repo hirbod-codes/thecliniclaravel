@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import { DataGrid as MUiDataGrid } from '@mui/x-data-grid';
 import { updateState } from '../helpers';
+import { getDataGridLocaleText } from '../../traslation/translate';
 
 /**
  * DataGridComponent
@@ -91,6 +92,7 @@ export class DataGridComponent extends Component {
     render() {
         return (
             <MUiDataGrid
+                localeText={getDataGridLocaleText()}
                 loading={this.state.isLoading}
 
                 rows={this.state.rows}
