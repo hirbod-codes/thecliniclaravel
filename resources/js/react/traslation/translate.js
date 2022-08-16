@@ -1,8 +1,10 @@
 import { LocaleContext } from '../components/localeContext.js';
 import { translations } from './translations.js';
+import { dataGridTranslations as en_dataGridTranslations } from './en/dataGridTranslations';
+import { dataGridTranslations as fa_dataGridTranslations } from './fa/dataGridTranslations';
 
-function translate(address) {
-    let previousStr, lastFragment, str, locale = '';
+function translate(address, locale = '') {
+    let previousStr, lastFragment, str = '';
     let seekTranslation = (seekLocale) => {
         str = translations[seekLocale];
 
@@ -26,7 +28,9 @@ function translate(address) {
     }
 
     try {
-        locale = LocaleContext._currentValue.currentLocale.shortName;
+        if (locale === '') {
+            locale = LocaleContext._currentValue.currentLocale.shortName;
+        }
 
         return seekTranslation(locale);
 
@@ -108,4 +112,19 @@ function addWordTo(object, single, plural = null, key = null) {
     return object;
 }
 
-export { translate, ucFirstLetterFirstWord, ucFirstLetterAllWords, addWordTo };
+function getDataGridLocaleText() {
+    const locale = LocaleContext._currentValue.currentLocale.shortName;
+
+    switch (locale) {
+        case 'en':
+            return en_dataGridTranslations;
+
+        case 'fa':
+            return fa_dataGridTranslations;
+
+        default:
+            throw new Error('No such locale have founded.');
+    }
+}
+
+export { getDataGridLocaleText, translate, ucFirstLetterFirstWord, ucFirstLetterAllWords, addWordTo };

@@ -2,6 +2,18 @@ import { addWordTo } from '../translate.js';
 
 let general = {};
 
+general = addWordTo(general, 'light');
+general = addWordTo(general, 'light-ltr');
+general = addWordTo(general, 'light-rtl');
+general = addWordTo(general, 'dark');
+general = addWordTo(general, 'dark-ltr');
+general = addWordTo(general, 'dark-rtl');
+
+general = addWordTo(general, 'English', null, 'English');
+general = addWordTo(general, 'فارسی', null, 'Persian');
+general = addWordTo(general, 'English', null, 'en');
+general = addWordTo(general, 'فارسی', null, 'fa');
+
 general = addWordTo(general, 'ok');
 general = addWordTo(general, 'back');
 general = addWordTo(general, 'next');

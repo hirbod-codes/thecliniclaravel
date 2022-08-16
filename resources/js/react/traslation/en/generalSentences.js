@@ -13,4 +13,6 @@ generalSentences['send-email-verification-message'].allLowerCase = 'please check
 generalSentences['send-email-verification-message'].ucFirstLetterFirstWord = ucFirstLetterFirstWord(generalSentences['send-email-verification-message'].allLowerCase);
 generalSentences['send-email-verification-message'].ucFirstLetterAllWords = ucFirstLetterAllWords(generalSentences['send-email-verification-message'].allLowerCase);
 
+generalSentences['server-error'] = 'Unfortunately we encountered an unknown error.';
+
 export { generalSentences };
