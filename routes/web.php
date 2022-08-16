@@ -9,15 +9,8 @@ use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\UpdateLocaleRequest;
-use App\Models\Order\LaserOrder;
-use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Models\Auth\Admin;
-use App\Models\Auth\Doctor;
-use App\Models\Auth\Operator;
-use App\Models\Auth\Patient;
-use App\Models\Auth\Secretary;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -25,9 +18,6 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use App\DataStructures\Order\DSPackages;
 use App\DataStructures\Order\DSParts;
-use App\DataStructures\User\DSPatient;
-use App\Models\Role;
-use App\Models\User;
 
 /*
 |--------------------------------------------------------------------------
