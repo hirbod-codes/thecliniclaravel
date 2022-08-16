@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 
 import { Dropdown } from '../Menus/DropDown.js';
 import { LocaleContext } from '../localeContext';
+import { translate } from '../../traslation/translate.js';
 
 export class AppLocalButton extends Component {
     constructor(props) {
@@ -18,7 +19,7 @@ export class AppLocalButton extends Component {
             <LocaleContext.Consumer>
                 {({ locales, currentLocale, isLocaleLoading, changeLocale }) => {
                     return <Dropdown
-                        buttonInnerContent={currentLocale.longName}
+                        buttonInnerContent={translate('general/' + currentLocale.longName + '/single/ucFirstLetterFirstWord')}
                         menuItems={this.makeItems(locales)}
                         isLoading={isLocaleLoading}
                         buttonProps={this.props.buttonProps}
@@ -39,7 +40,7 @@ export class AppLocalButton extends Component {
                     props: {
                         value: locale.shortName
                     },
-                    innerText: locale.longName
+                    innerText: translate('general/' + locale.longName + '/single/ucFirstLetterFirstWord')
                 });
             }
         }
