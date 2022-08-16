@@ -17,6 +17,7 @@ import AccountCreator from '../../Menus/Account/AccountCreator';
 import { updateState } from '../../helpers';
 import Account from '../../Menus/Account/Account';
 import { PrivilegesContext } from '../../privilegesContext';
+import { LocaleContext } from '../../localeContext';
 
 /**
  * AccountsServerDataGrid
@@ -78,6 +79,8 @@ export class AccountsServerDataGrid extends Component {
 
             isCreating: false,
             openCreationModal: false,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -142,7 +145,7 @@ export class AccountsServerDataGrid extends Component {
             field: 'actions',
             description: 'actions',
             type: 'actions',
-            headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
+            headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
             width: 100,
             getActions: getActions,
         });
