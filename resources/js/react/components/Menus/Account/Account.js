@@ -572,6 +572,7 @@ export class Account extends Component {
         let r = await fetchData('put', '/account/' + this.props.account.id, data, { 'X-CSRF-TOKEN': this.state.token });
 
         if (r.response.status === 200) {
+            this.setState({ feedbackMessages: [{ color: 'success', open: true, message: translate('general/successful/single/ucFirstLetterFirstWord') }] });
             if (this.props.onUpdateSuccess !== undefined) {
                 this.props.onUpdateSuccess();
             }
