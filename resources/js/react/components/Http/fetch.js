@@ -244,7 +244,12 @@ async function getResponseValue(res) {
         return translate('generalSentences/server-error');
     }
 
-    return translate('generalSentences/server-error');
+    if (r.message !== undefined) {
+        return r.message;
+    } else {
+        return translate('generalSentences/server-error');
+    }
+
 }
 
 function getRawValue(res) {
