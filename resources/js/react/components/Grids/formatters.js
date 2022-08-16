@@ -15,19 +15,16 @@ function formatToTime(params) {
         return '';
     }
 
+    const locale = LocaleContext._currentValue.currentLocale.shortName;
     let date = null;
     switch (params.field) {
-        case 'valueconsumingTime ':
+        case 'consuming_time':
             return Math.floor(params.value / 3600) + ':' + Math.floor((params.value % 3600) / 60) + ':' + Math.floor((params.value % 3600) % 60);
 
-        case 'visitTimestamp':
-            return Math.floor(params.value / 3600) + ':' + Math.floor((params.value % 3600) / 60) + ':' + Math.floor((params.value % 3600) % 60);
-
-        case 'neededTime':
+        case 'needed_time':
             return Math.floor(params.value / 3600) + ':' + Math.floor((params.value % 3600) / 60) + ':' + Math.floor((params.value % 3600) % 60);
 
         default:
-            const locale = LocaleContext._currentValue.currentLocale.shortName;
             date = localizeDate('utc', params.value, locale, true);
             break;
     }
