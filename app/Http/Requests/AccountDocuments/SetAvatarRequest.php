@@ -2,10 +2,12 @@
 
 namespace App\Http\Requests\AccountDocuments;
 
+use App\Auth\CheckAuthentication;
+use App\Http\Requests\BaseFormRequest;
+use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Foundation\Http\FormRequest;
 
-class SetAvatarRequest extends FormRequest
+class SetAvatarRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -14,7 +16,25 @@ class SetAvatarRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $user = (new CheckAuthentication)->getAuthenticated();
+        $input = $this->safe()->all();
+        $targetUserRoleName = ($targetUser = User::query()->whereKey($input['accountId'])->firstOrFail())->authenticatableRole->role->roleName->name;
+        $isSelf = $user->getKey() === $targetUser->getKey();
+
+        $privilegesSubjects = $user->authenticatableRole->role->role->privilegesSubjects;
+        foreach ($privilegesSubjects as $privilegesSubject) {
+            if ($privilegesSubject->privilegeName->name !== 'editAvatar' || boolval($privilegesSubject->boolean_value !== true)) {
+                continue;
+            }
+
+            if (($isSelf && $privilegesSubject->object !== null) || (!$isSelf && ($privilegesSubject->object === null || ($privilegesSubject !== null && $privilegesSubject->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
