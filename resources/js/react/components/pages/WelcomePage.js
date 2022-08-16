@@ -9,6 +9,7 @@ export class WelcomePage extends Component {
             <>
                 <Header
                     title={translate('general/welcome/single/ucFirstLetterFirstWord')}
+                    onLogout={this.props.onLogout}
                     isAuthenticated={this.props.isAuthenticated}
                     isAuthenticationLoading={this.props.isAuthenticationLoading}
                     navigator={this.props.navigator}

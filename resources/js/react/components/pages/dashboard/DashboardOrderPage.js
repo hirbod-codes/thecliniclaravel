@@ -60,6 +60,7 @@ export class DashboardOrderPage extends Component {
                 <Grid item xs={12} >
                     <Header
                         title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('pages/orders/order/order/plural/ucFirstLetterFirstWord')}</ Link>}
+                        onLogout={this.props.onLogout}
                         isAuthenticated={this.props.isAuthenticated}
                         isAuthenticationLoading={this.props.isAuthenticationLoading}
                         navigator={this.props.navigator}

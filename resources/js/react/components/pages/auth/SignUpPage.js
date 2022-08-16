@@ -15,6 +15,7 @@ export class SignUpPage extends Component {
                     <Grid item xs={12} >
                         <Header
                             title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/sign-up/single/ucFirstLetterAllWords')}</ Link>}
+                            onLogout={this.props.onLogout}
                             isAuthenticated={this.props.isAuthenticated}
                             isAuthenticationLoading={this.props.isAuthenticationLoading}
                             navigator={this.props.navigator}
@@ -25,7 +26,7 @@ export class SignUpPage extends Component {
                             <Grid item xs >
                             </Grid>
                             <Grid item xs={12} sm={9} md={6} >
-                                <SignUpForm />
+                                <SignUpForm onRegister={this.props.onRegister} />
                             </Grid>
                             <Grid item xs >
                             </Grid>
