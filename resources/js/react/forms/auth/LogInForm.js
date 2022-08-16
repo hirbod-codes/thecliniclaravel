@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Navigate } from 'react-router-dom';
 
 import CloseIcon from '@mui/icons-material/Close';
 import FormControl from '@mui/material/FormControl';
@@ -22,6 +23,7 @@ export class LogInForm extends Component {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
             feedbackMessages: [],
+            goToWelcomePage: false,
 
             username: '',
             email: '',
@@ -101,18 +103,29 @@ export class LogInForm extends Component {
 
         if (r.response.status === 200) {
             if (r.response.redirected) {
-                window.location.href = r.response.url;
+                this.setState({ goToWelcomePage: true });
+                if (this.props.onLogin !== undefined) {
+                    this.props.onLogin();
+                } else {
+                    window.location.href = r.response.url;
+                }
             }
         } else {
             let value = null;
             if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
             value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
             this.setState({ feedbackMessages: value });
+            this.setState({ isLoading: false });
         }
-        this.setState({ isLoading: false });
     }
 
     render() {
+        if (this.state.goToWelcomePage) {
+            return (
+                <Navigate to='/' />
+            );
+        }
+
         return (
             <>
                 <Stack component='form' onSubmit={this.handleSubmit}>

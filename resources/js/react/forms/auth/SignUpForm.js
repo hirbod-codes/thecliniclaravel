@@ -18,6 +18,7 @@ import Box from '@mui/material/Box';
 import Slide from '@mui/material/Slide';
 import { LocaleContext } from '../../components/localeContext.js';
 import { Alert, IconButton, Snackbar } from '@mui/material';
+import { Navigate } from 'react-router-dom';
 
 export class SignUpForm extends Component {
     constructor(props) {
@@ -54,6 +55,7 @@ export class SignUpForm extends Component {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
             feedbackMessages: [],
+            goToWelcomePage: false,
 
             steps: [
                 {
@@ -184,6 +186,12 @@ export class SignUpForm extends Component {
     }
 
     render() {
+        if (this.state.goToWelcomePage) {
+            return (
+                <Navigate to='/' />
+            );
+        }
+
         return (
             <>
                 <Stack >
@@ -454,7 +462,12 @@ export class SignUpForm extends Component {
 
         if (r.response.status === 200) {
             if (r.response.redirected) {
-                window.location.href = r.response.url;
+                this.setState({ goToWelcomePage: true });
+                if (this.props.onRegister !== undefined) {
+                    this.props.onRegister();
+                } else {
+                    window.location.href = r.response.url;
+                }
             }
         } else {
             let value = null;
