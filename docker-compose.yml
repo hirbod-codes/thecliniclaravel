@@ -12,6 +12,7 @@ services:
 
       - ./:/var/www/html/laravel:rw
       - thecliniclaravel_vendor:/var/www/html/laravel/vendor:rw
+      - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
     networks:
       - theclinicbridge
     depends_on:
@@ -24,6 +25,24 @@ services:
     volumes:
       - ./:/var/www/html/laravel:rw
       - thecliniclaravel_vendor:/var/www/html/laravel/vendor:rw
+      - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
+
+      - ./docker/php/addon.ini:/usr/local/etc/php/conf.d/addon.ini:rw
+      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:rw
+      - ./docker/php/conf.d/error_reporting.ini:/usr/local/etc/php/conf.d/error_reporting.ini
+    networks:
+      - theclinicbridge
+    depends_on:
+      - mysql
+  laravel-initializer:
+    container_name: thecliniclaravel-initializer
+    build:
+      context: ./
+      dockerfile: ./Dockerfile_initializer
+    volumes:
+      - ./:/var/www/html/laravel:rw
+      - thecliniclaravel_vendor:/var/www/html/laravel/vendor:rw
+      - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
 
       - ./docker/php/addon.ini:/usr/local/etc/php/conf.d/addon.ini:rw
       - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:rw
@@ -62,6 +81,7 @@ services:
 volumes:
   theclinicreact_node_modules: {}
   thecliniclaravel_vendor: {}
+  thecliniclaravel_node_modules: {}
   mysqldata: {}
 networks:
   theclinicbridge:
