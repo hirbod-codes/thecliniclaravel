@@ -99,7 +99,7 @@ Route::prefix('{locale}')->group(function () {
     });
 
     // Login
-    Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
+    Route::middleware('guest:api')->post('/login', [AuthController::class, 'apiLogin'])->name('api.auth.apiLogin');
 
     Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
         Route::get('/isEmailVerified', function () {
@@ -107,72 +107,72 @@ Route::prefix('{locale}')->group(function () {
         });
 
         // Logout
-        Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
+        Route::middleware('auth:api')->get('/logout', [AuthController::class, 'apiLogout'])->name('api.auth.apiLogout');
 
         Route::controller(AccountsController::class)
             ->group(function () {
-                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
+                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('api.accounts.index');
 
                 // Phonenumber Verification Message Sender Route
-                Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('account.sendPhonenumberVerificationCode');
-                Route::post('/account/verify-phoennumber-verification-code', 'isPhonenumberVerificationCodeVerified')->name('auth.isPhonenumberVerificationCodeVerified');
+                Route::post('/account/send-phoennumber-verification-code', 'sendPhonenumberVerificationCode')->name('api.account.sendPhonenumberVerificationCode');
+                Route::post('/account/verify-phoennumber-verification-code', 'isPhonenumberVerificationCodeVerified')->name('api.auth.isPhonenumberVerificationCodeVerified');
 
-                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
+                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('api.accounts.accountsCount');
 
-                Route::post('/account/{roleName}', 'store')->name('account.store');
+                Route::post('/account/{roleName}', 'store')->name('api.account.store');
 
-                Route::get('/account/{placeholder}', 'show')->name('account.show');
-                Route::get('/account', 'showSelf')->name('account.showSelf');
+                Route::get('/account/{placeholder}', 'show')->name('api.account.show');
+                Route::get('/account', 'showSelf')->name('api.account.showSelf');
 
-                Route::put('/account/{accountId}', 'update')->name('account.update');
-                Route::put('/account', 'updateSelf')->name('account.updateSelf');
+                Route::put('/account/{accountId}', 'update')->name('api.account.update');
+                Route::put('/account', 'updateSelf')->name('api.account.updateSelf');
 
-                Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
-                Route::delete('/account', 'destroySelf')->name('account.destroySelf');
+                Route::delete('/account/{accountId}', 'destroy')->name('api.account.destroy');
+                Route::delete('/account', 'destroySelf')->name('api.account.destroySelf');
             });
 
         Route::controller(RolesController::class)
             ->group(function () {
-                Route::get('/dataType/{roleName?}', 'dataType')->name('roles.dataType');
+                Route::get('/dataType/{roleName?}', 'dataType')->name('api.roles.dataType');
 
-                Route::get('/roles', 'index')->name('roles.index');
+                Route::get('/roles', 'index')->name('api.roles.index');
 
-                Route::get('/role-name/{accountId?}', 'showRoleName')->name('role.showRoleName');
-                Route::get('/role', 'show')->name('role.show');
+                Route::get('/role-name/{accountId?}', 'showRoleName')->name('api.role.showRoleName');
+                Route::get('/role', 'show')->name('api.role.show');
 
-                Route::post('/role', 'store')->name('role.store');
+                Route::post('/role', 'store')->name('api.role.store');
 
-                Route::put('/role', 'update')->name('roles.update');
+                Route::put('/role', 'update')->name('api.roles.update');
 
-                Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
+                Route::delete('/role/{roleName?}', 'destroy')->name('api.roles.destroy');
             });
 
         Route::controller(AccountDocumentsController::class)
             ->group(function () {
-                Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
+                Route::post('/avatar/{accountId?}', 'setAvatar')->name('api.document.setAvatar');
 
-                Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
+                Route::get('/avatar/{accountId?}', 'getAvatar')->name('api.document.getAvatar');
             });
 
         Route::controller(BusinessDefault::class)
             ->group(function () {
-                Route::get('/settings', 'index')->name('document.index');
+                Route::get('/settings', 'index')->name('api.document.index');
 
-                Route::put('/setting', 'update')->name('document.update');
+                Route::put('/setting', 'update')->name('api.document.update');
             });
 
         Route::controller(OrdersController::class)
             ->group(function () {
-                Route::get('/orders/laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-                Route::get('/orders/regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+                Route::get('/orders/laser/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('api.orders.laserIndex');
+                Route::get('/orders/regular/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('api.orders.regularIndex');
 
-                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('orders.ordersCount');
+                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('api.orders.ordersCount');
 
-                Route::post('/order', 'store')->name('orders.store');
+                Route::post('/order', 'store')->name('api.orders.store');
 
-                Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('orders.show');
+                Route::get('/orders/{businessName}/{accountId}/{orderId}', 'show')->name('api.orders.show');
 
-                Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('orders.destroy');
+                Route::delete('/orders/{businessName}/{accountId}/{orderId}', 'destroy')->name('api.orders.destroy');
 
                 Route::get('/laser/parts/{gender?}', function (Request $request) {
                     $gender = $request->get('gender', null);
@@ -187,7 +187,7 @@ Route::prefix('{locale}')->group(function () {
                     }
 
                     return $dsParts->toArray();
-                })->name('orders.laser.parts');
+                })->name('api.orders.laser.parts');
 
                 Route::get('/laser/packages/{gender?}', function (Request $request) {
                     $gender = $request->get('gender', null);
@@ -202,28 +202,28 @@ Route::prefix('{locale}')->group(function () {
                     }
 
                     return response()->json($dsPackages->toArray());
-                })->name('orders.laser.packages');
+                })->name('api.orders.laser.packages');
 
-                Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
-                Route::post('/laser/price-calculation', 'calculatePrice')->name('priceCalculation');
+                Route::post('/laser/time-calculation', 'calculateTime')->name('api.timeCalculation');
+                Route::post('/laser/price-calculation', 'calculatePrice')->name('api.priceCalculation');
             });
 
         Route::controller(VisitsController::class)
             ->group(function () {
-                Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('visits.laserIndex');
-                Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('visits.regularIndex');
+                Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('api.visits.laserIndex');
+                Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('api.visits.regularIndex');
 
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
+                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('api.visits.laserStore');
+                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('api.visits.regularStore');
 
-                Route::get('/visit/laser/{timestamp}', 'laserShow')->name('visits.laserShow');
-                Route::get('/visit/regular/{timestamp}', 'regularShow')->name('visits.regularShow');
+                Route::get('/visit/laser/{timestamp}', 'laserShow')->name('api.visits.laserShow');
+                Route::get('/visit/regular/{timestamp}', 'regularShow')->name('api.visits.regularShow');
 
-                Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
-                Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
+                Route::post('/visit/laser/check', 'laserShowAvailable')->name('api.visits.laserShowAvailable');
+                Route::post('/visit/regular/check', 'regularShowAvailable')->name('api.visits.regularShowAvailable');
 
-                Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('visits.laserDestroy');
-                Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('visits.regularDestroy');
+                Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('api.visits.laserDestroy');
+                Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('api.visits.regularDestroy');
             });
     });
 });
