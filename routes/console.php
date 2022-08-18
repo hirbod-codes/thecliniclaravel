@@ -26,8 +26,11 @@ Artisan::command('initialize', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    if (env('APP_ENV') !== 'local') {
-        $this->comment("Application is not in local environment.");
+    if (in_array(env('APP_ENV'), ['prod', 'production']) && count(array_map(function ($t) {
+        foreach ($t as $key => $v) {
+            return $v;
+        }
+    }, DB::select('SHOW TABLES'))) !== 0) {
         return;
     }
 
@@ -60,7 +63,7 @@ Artisan::command('emptyThenMigrate', function () {
 
     $this->info("Database tables dropped successfully.");
 
-    $this->call('migrate');
+    $this->call('migrate', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--force' => true, '--no-interaction' => true] : []);
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
@@ -122,7 +125,7 @@ Artisan::command('dbSeed', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    $this->call('db:seed');
+    $this->call('db:seed', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--force' => true, '--no-interaction' => true] : []);
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
