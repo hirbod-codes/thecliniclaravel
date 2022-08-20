@@ -23,11 +23,13 @@ WORKDIR /var/www/html/laravel
 
 COPY . .
 
-RUN composer install && composer update
-
-RUN npm install && npm build
-
-RUN php artisan config:cache && \
+RUN composer install && \
+    composer update && \
+    npm install && \
+    npm build && \
+    php artisan config:cache && \
     php artisan route:cache
 
 EXPOSE 9000
+
+CMD sleep 30 && php artisan initialize && docker-php-entrypoint php-fpm
