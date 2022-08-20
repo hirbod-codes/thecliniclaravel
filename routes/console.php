@@ -63,7 +63,7 @@ Artisan::command('emptyThenMigrate', function () {
 
     $this->info("Database tables dropped successfully.");
 
-    $this->call('migrate', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--force' => true, '--no-interaction' => true] : []);
+    $this->call('migrate', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--verbose' => true, '--force' => true, '--no-interaction' => true] : ['--verbose' => true]);
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
@@ -125,7 +125,7 @@ Artisan::command('dbSeed', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    $this->call('db:seed', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--force' => true, '--no-interaction' => true] : []);
+    $this->call('db:seed', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--verbose' => true, '--force' => true, '--no-interaction' => true] : ['--verbose' => true]);
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
