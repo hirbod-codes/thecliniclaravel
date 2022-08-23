@@ -11,10 +11,11 @@ import FindOrder from '../Orders/FindOrder';
 import TabPanel from '../TabPanel';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponents from './WeekDayInputComponents';
-import { getDateTimeFormatObject, updateState } from '../../helpers';
+import { localizeDate, updateState } from '../../helpers';
 import { fetchData } from '../../Http/fetch';
 import { LocaleContext } from '../../localeContext';
 import { PrivilegesContext } from '../../privilegesContext';
+import { DateTime } from 'luxon';
 
 /**
  * VisitCreator
@@ -41,6 +42,8 @@ export class VisitCreator extends Component {
 
         this.handleVisitFinderTabChange = this.handleVisitFinderTabChange.bind(this);
 
+        this.getWorkSchdule = this.getWorkSchdule.bind(this);
+
         this.closeAccountSearchModal = this.closeAccountSearchModal.bind(this);
         this.openAccountSearchModal = this.openAccountSearchModal.bind(this);
         this.closeOrderSearchModal = this.closeOrderSearchModal.bind(this);
@@ -60,6 +63,8 @@ export class VisitCreator extends Component {
 
             feedbackMessages: [],
 
+            workSchdule: {},
+
             openAccountSearchModal: false,
             openOrderSearchModal: false,
             openVisitInfoModal: false,
@@ -77,6 +82,8 @@ export class VisitCreator extends Component {
             isRefreshingWeeklyVisit: false,
             weeklyVisitRefresh: null,
             weekDaysPeriods: null,
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -91,6 +98,15 @@ export class VisitCreator extends Component {
             } else {
                 this.openAccountSearchModal();
             }
+        }
+
+        this.getWorkSchdule();
+    }
+
+    async getWorkSchdule() {
+        let r = await fetchData('get', '/work-schedule', {}, { 'X-CSRF-TOKEN': this.state.token });
+        if (r.response.status === 200) {
+            this.setState({ workSchdule: r.value });
         }
     }
 
@@ -175,7 +191,7 @@ export class VisitCreator extends Component {
                         onClose={this.closeOrderSearchModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                            <FindOrder account={this.state.account} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} />
+                            <FindOrder account={this.state.account === null ? {} : this.state.account} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} />
                         </Paper>
                     </Modal>
                 }
@@ -213,7 +229,7 @@ export class VisitCreator extends Component {
                                 </TabPanel>
                                 <TabPanel value={this.state.visitFinderTabsValue} index={1} style={{ height: '100%' }} >
                                     <Stack direction='column' spacing={2} style={{ height: '100%' }} justifyContent='center' >
-                                        <WeekDayInputComponents handleVisitInfo={this.handleVisitInfo} />
+                                        <WeekDayInputComponents workSchdule={this.state.workSchdule} handleVisitInfo={this.handleVisitInfo} />
                                         {this.state.weeklyVisitRefresh !== null ? <p style={{ textAlign: 'center' }}>{this.state.weeklyVisitRefresh}</p> : null}
                                         {this.state.isRefreshingWeeklyVisit || (this.state.weekDaysPeriods === null) ?
                                             <LoadingButton loading fullWidth variant='contained'>
@@ -274,9 +290,7 @@ export class VisitCreator extends Component {
 
         let closestVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }));
         if (closestVisitRefresh.response.status === 200) {
-            const locale = LocaleContext._currentValue.currentLocale.shortName;
-
-            this.setState({ closestVisitRefresh: getDateTimeFormatObject(locale).format(new Date(closestVisitRefresh.value.availableVisitTimestamp * 1000)) });
+            this.setState({ closestVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(closestVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.state.locale, true) });
         } else {
             let value = null;
             if (Array.isArray(closestVisitRefresh.value)) { value = closestVisitRefresh.value; } else { value = [closestVisitRefresh.value]; }
@@ -304,9 +318,7 @@ export class VisitCreator extends Component {
 
         let weeklyVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }));
         if (weeklyVisitRefresh.response.status === 200) {
-            const locale = LocaleContext._currentValue.currentLocale.shortName;
-
-            this.setState({ weeklyVisitRefresh: getDateTimeFormatObject(locale).format(new Date(weeklyVisitRefresh.value.availableVisitTimestamp * 1000)) });
+            this.setState({ weeklyVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(weeklyVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.state.locale, true) });
         } else {
             let value = null;
             if (Array.isArray(weeklyVisitRefresh.value)) { value = weeklyVisitRefresh.value; } else { value = [weeklyVisitRefresh.value]; }
