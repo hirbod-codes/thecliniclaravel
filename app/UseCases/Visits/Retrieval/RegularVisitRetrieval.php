@@ -32,7 +32,7 @@ class RegularVisitRetrieval
         return $db->getVisitsByOrder($regularOrder, $sortByTimestamp);
     }
 
-    public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, int $lastVisitTimestamp = null, IDataBaseRetrieveRegularVisits $db): array
+    public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, IDataBaseRetrieveRegularVisits $db, int $lastVisitTimestamp = null): array
     {
         if (
             !in_array($sortByTimestamp, ['desc', 'asc']) ||

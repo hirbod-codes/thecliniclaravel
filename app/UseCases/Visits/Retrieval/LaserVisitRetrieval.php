@@ -32,7 +32,7 @@ class LaserVisitRetrieval
         return $db->getVisitsByOrder($laserOrder, $sortByTimestamp);
     }
 
-    public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, int $lastVisitTimestamp = null, IDataBaseRetrieveLaserVisits $db): array
+    public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, IDataBaseRetrieveLaserVisits $db, int $lastVisitTimestamp = null): array
     {
         if (
             !in_array($sortByTimestamp, ['desc', 'asc']) ||
