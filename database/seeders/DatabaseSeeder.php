@@ -29,7 +29,7 @@ class DatabaseSeeder extends Seeder
             (new DatabasePartsSeeder)->run();
             (new DatabasePackagesSeeder)->run();
 
-            if (in_array(strtolower(env('APP_ENV', '')), ['production', 'prod'])) {
+            if (in_array(strtolower(config('app.env')), ['production', 'prod'])) {
                 $user = User::factory()
                     ->state([
                         'username' => 'hirbod',

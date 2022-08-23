@@ -36,7 +36,7 @@ class Model extends EloquentModel
 
         $foreignKeyConstraints = Schema::getConnection()
             ->getDoctrineSchemaManager()
-            ->listTableForeignKeys($this->getTable(), env('DB_DATABASE'));
+            ->listTableForeignKeys($this->getTable(), config('database.connections.mysql.database'));
 
         array_map(function (ForeignKeyConstraint $foreignKeyConstraint) use (&$fkColumns) {
             return array_push($fkColumns, ...$foreignKeyConstraint->getLocalColumns());

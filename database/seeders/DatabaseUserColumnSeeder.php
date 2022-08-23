@@ -32,7 +32,7 @@ class DatabaseUserColumnSeeder extends Seeder
         foreach ($columns as $columnObject) {
             foreach ($columnObject['columns'] as $columnName) {
                 (new UserColumn([
-                    'database' => env('DB_DATABASE'),
+                    'database' => config('database.connections.mysql.database'),
                     'table' => $columnObject['tableName'],
                     'name' => $columnName,
                     'type' => Schema::getColumnType($columnObject['tableName'], $columnName),

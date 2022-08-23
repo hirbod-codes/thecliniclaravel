@@ -43,7 +43,7 @@ class AuthServiceProvider extends ServiceProvider
 
         Passport::hashClientSecrets();
 
-        $minutes = env('SESSION_LIFETIME', '120');
+        $minutes = config('session.lifetime');
         $delay = (new \DateTime)->modify('+' . $minutes . ' minutes');
         Passport::tokensExpireIn($delay);
         Passport::refreshTokensExpireIn($delay);

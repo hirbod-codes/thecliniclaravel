@@ -26,11 +26,12 @@ Artisan::command('initialize', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    if (in_array(env('APP_ENV'), ['prod', 'production']) && count(array_map(function ($t) {
+    if (in_array(config('app.env'), ['prod', 'production']) && count(array_map(function ($t) {
         foreach ($t as $key => $v) {
             return $v;
         }
     }, DB::select('SHOW TABLES'))) !== 0) {
+        $this->info("Application already initialized.");
         return;
     }
 
@@ -57,13 +58,13 @@ Artisan::command('emptyThenMigrate', function () {
 
     DB::statement('SET FOREIGN_KEY_CHECKS = 0');
     foreach (DB::select('SHOW TABLES') as $table) {
-        Schema::dropIfExists($table->{'Tables_in_' . env('DB_DATABASE')});
+        Schema::dropIfExists($table->{'Tables_in_' . config('database.connections.mysql.database')});
     }
     DB::statement('SET FOREIGN_KEY_CHECKS = 1');
 
     $this->info("Database tables dropped successfully.");
 
-    $this->call('migrate', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--verbose' => true, '--force' => true, '--no-interaction' => true] : ['--verbose' => true]);
+    $this->call('migrate', ['--verbose' => true, '--force' => true, '--no-interaction' => true]);
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
@@ -72,7 +73,7 @@ Artisan::command('emptyThenMigrate', function () {
     $this->info("The command emptyThenMigrate duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
     $this->newLine();
     $this->newLine();
-})->purpose('Drop all the tables in your app env(DB_DATABASE), Then run: php artisan migrate.');
+})->purpose('Drop all the tables in your app config(\'database.connections.mysql.database\'), Then run: php artisan migrate.');
 
 Artisan::command('installPassport', function () {
     $t = explode(' ', microtime());
@@ -125,7 +126,7 @@ Artisan::command('dbSeed', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    $this->call('db:seed', in_array(env('APP_ENV'), ['prod', 'production']) ? ['--verbose' => true, '--force' => true, '--no-interaction' => true] : ['--verbose' => true]);
+    $this->call('db:seed', ['--verbose' => true, '--force' => true, '--no-interaction' => true]);
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
