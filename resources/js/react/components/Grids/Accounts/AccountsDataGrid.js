@@ -41,8 +41,6 @@ export class AccountsDataGrid extends Component {
         checkboxSelection: PropTypes.bool,
         onSelectionModelChange: PropTypes.func,
         selectionModel: PropTypes.arrayOf(PropTypes.number),
-
-        locale: LocaleContext._currentValue.currentLocale.shortName,
     }
 
     constructor(props) {
@@ -209,17 +207,17 @@ export class AccountsDataGrid extends Component {
                         column.headerName = translate('general/columns/account/address/single/ucFirstLetterFirstWord', this.state.locale);
                         break;
 
-                    case 'createdAt':
+                    case 'created_at':
                         column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'dateTime';
-                        column.valueFormatter = formatToTime;
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
                         column.minWidth = 170;
                         break;
 
-                    case 'updatedAt':
+                    case 'updated_at':
                         column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'dateTime';
-                        column.valueFormatter = formatToTime;
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
                         column.minWidth = 170;
                         break;
 

@@ -152,12 +152,11 @@ export class VisitsDataGrid extends Component {
                         column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
                         column.type = 'number';
                         column.valueFormatter = formatToTime;
-                        column.valueGetter = formatToNumber;
                         break;
 
                     case 'date_time_period':
                         column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
-                        column.valueGetter = ({ value }) => { if (!value) { return 'N/A'; } else { return value; } };
+                        column.valueFormatter = ({ value }) => { if (!value) { return 'N/A'; } else { return value; } };
                         break;
 
                     case 'week_days_periods':
@@ -215,8 +214,7 @@ export class VisitsDataGrid extends Component {
                     case 'visit_timestamp':
                         column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
                         column.type = 'dateTime';
-                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', DateTime.fromSeconds(Number(props.value), { zone: 'utc' }), locale, true); };
-                        column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', DateTime.fromSeconds(Number(props.value), { zone: 'utc' }), locale, false, true); };
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', DateTime.fromSeconds(Number(props.value), { zone: 'utc' }).toISO(), locale, true); };
                         column.minWidth = 330;
                         break;
 
@@ -224,7 +222,6 @@ export class VisitsDataGrid extends Component {
                         column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'dateTime';
                         column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
-                        column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
                         column.minWidth = 200;
                         break;
 
@@ -232,7 +229,6 @@ export class VisitsDataGrid extends Component {
                         column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                         column.type = 'dateTime';
                         column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
-                        column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
                         column.minWidth = 200;
                         break;
 

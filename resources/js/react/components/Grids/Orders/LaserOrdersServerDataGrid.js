@@ -165,12 +165,12 @@ export class LaserOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    roleName={this.state.role===null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
+                    roleName={this.state.role === null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
                     businessName='laser'
 
                     paginationMode='server'
 
-                    afterGetData={(data) => this.setState({ lastOrderId: data[data.length - 1].id })}
+                    afterGetData={(data) => this.setState({ lastOrderId: (data.length !== undefined || data.length !== 0) ? data[data.length - 1].id : 0 })}
                     getRowCount={this.getRowCount}
                     addColumns={this.addColumns}
 
@@ -184,7 +184,7 @@ export class LaserOrdersServerDataGrid extends Component {
                         components: {
                             Toolbar: () =>
                                 <GridToolbarContainer>
-                                    <Stack direction='row'>
+                                    <Stack direction='row' spacing={1} flexWrap={'wrap'}>
                                         <GridToolbarColumnsButton />
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
@@ -203,7 +203,7 @@ export class LaserOrdersServerDataGrid extends Component {
                                             sx={{ minWidth: '130px' }}
                                             size='small'
                                             disablePortal
-                                            value={this.state.role===null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
+                                            value={this.state.role === null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
                                             options={this.context.retrieveOrder.laser.filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;

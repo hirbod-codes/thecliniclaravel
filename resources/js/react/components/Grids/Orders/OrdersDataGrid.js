@@ -137,7 +137,6 @@ export class OrdersDataGrid extends Component {
             return [{ field: 'id' }];
         }
 
-        const locale = this.state.locale;
         let columns = [];
         for (const k in rows[0]) {
             if (!Object.hasOwnProperty.call(rows[0], k)) {
@@ -172,16 +171,14 @@ export class OrdersDataGrid extends Component {
                 case 'created_at':
                     column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                     column.type = 'dateTime';
-                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
-                    column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
+                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
                     column.minWidth = 200;
                     break;
 
                 case 'updated_at':
                     column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                     column.type = 'dateTime';
-                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
-                    column.valueGetter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, false, true); };
+                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
                     column.minWidth = 200;
                     break;
 

@@ -154,7 +154,7 @@ export class VisitsServerDataGrid extends Component {
                     timestamp={Math.floor(Date.parse(new Date()) / 1000)}
                     lastVisitTimestamp={this.state.pagesLastVisitId[this.state.page]}
 
-                    afterGetData={(data) => this.setState({ lastVisitTimestamp: data[data.length - 1].visit_timestamp })}
+                    afterGetData={(data) => this.setState({ lastVisitTimestamp: (data.length !== undefined || data.length !== 0) ? data[data.length - 1].visit_timestamp : 0 })}
                     getRowCount={this.getRowCount}
                     reload={this.state.reload}
                     afterReload={() => this.setState({ reload: false })}
@@ -168,7 +168,7 @@ export class VisitsServerDataGrid extends Component {
                         components: {
                             Toolbar: () =>
                                 <GridToolbarContainer>
-                                    <Stack direction='row'>
+                                    <Stack direction='row' spacing={1} flexWrap={'wrap'}>
                                         <GridToolbarColumnsButton />
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />

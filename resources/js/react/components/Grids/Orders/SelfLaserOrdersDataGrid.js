@@ -86,7 +86,7 @@ export class SelfLaserOrdersDataGrid extends Component {
         if (this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1) {
             columns.push({
                 field: 'actions',
-                description: 'actions',
+                description: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 type: 'actions',
                 headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
@@ -134,7 +134,7 @@ export class SelfLaserOrdersDataGrid extends Component {
                         components: {
                             Toolbar: () =>
                                 <GridToolbarContainer>
-                                    <Stack direction='row'>
+                                    <Stack direction='row' spacing={1} flexWrap={'wrap'}>
                                         <GridToolbarColumnsButton />
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />

@@ -143,7 +143,7 @@ export class AccountsServerDataGrid extends Component {
 
         columns.push({
             field: 'actions',
-            description: 'actions',
+            description: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
             type: 'actions',
             headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
             width: 100,
@@ -204,7 +204,7 @@ export class AccountsServerDataGrid extends Component {
 
                     paginationMode='server'
 
-                    afterGetData={(data) => { if (data.length === undefined) { return; } this.setState({ lastAccountId: data[data.length - 1].id }); }}
+                    afterGetData={(data) => { if (data.length === undefined || data.length === 0) { return; } this.setState({ lastAccountId: data[data.length - 1].id }); }}
                     getRowCount={this.getRowCount}
                     addColumns={this.addColumns}
 
@@ -218,7 +218,7 @@ export class AccountsServerDataGrid extends Component {
                         components: {
                             Toolbar: () =>
                                 <GridToolbarContainer>
-                                    <Stack direction='row' spacing={1}>
+                                    <Stack direction='row' spacing={1} flexWrap={'wrap'}>
                                         <GridToolbarColumnsButton />
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />

@@ -107,7 +107,7 @@ export class SelfVisitsDataGrid extends Component {
                         components: {
                             Toolbar: () =>
                                 <GridToolbarContainer>
-                                    <Stack direction='row'>
+                                    <Stack direction='row' spacing={1} flexWrap={'wrap'}>
                                         <GridToolbarColumnsButton />
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />

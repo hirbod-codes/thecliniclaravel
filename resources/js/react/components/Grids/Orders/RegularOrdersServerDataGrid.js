@@ -92,7 +92,7 @@ export class RegularOrdersServerDataGrid extends Component {
         if (this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf(this.state.role) !== -1) {
             columns.push({
                 field: 'actions',
-                description: 'actions',
+                description: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 type: 'actions',
                 headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
@@ -156,7 +156,7 @@ export class RegularOrdersServerDataGrid extends Component {
 
                     paginationMode='server'
 
-                    afterGetData={(data) => this.setState({ lastOrderId: data[data.length - 1].id })}
+                    afterGetData={(data) => this.setState({ lastOrderId: (data.length !== undefined || data.length !== 0) ? data[data.length - 1].id : 0 })}
                     getRowCount={this.getRowCount}
                     addColumns={this.addColumns}
 
@@ -170,7 +170,7 @@ export class RegularOrdersServerDataGrid extends Component {
                         components: {
                             Toolbar: () =>
                                 <GridToolbarContainer>
-                                    <Stack direction='row'>
+                                    <Stack direction='row' spacing={1} flexWrap={'wrap'}>
                                         <GridToolbarColumnsButton />
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />

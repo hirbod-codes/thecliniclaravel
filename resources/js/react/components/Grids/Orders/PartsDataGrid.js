@@ -158,14 +158,14 @@ export class PartsDataGrid extends Component {
                         case 'created_at':
                             column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             column.type = 'dateTime';
-                            column.valueGetter = ({ value }) => value && new Date(value);
+                            column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
                             column.minWidth = 170;
                             break;
 
                         case 'updated_at':
                             column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
                             column.type = 'dateTime';
-                            column.valueGetter = ({ value }) => value && new Date(value);
+                            column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
                             column.minWidth = 170;
                             break;
 
