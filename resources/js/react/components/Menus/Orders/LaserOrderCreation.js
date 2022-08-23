@@ -325,7 +325,7 @@ export class LaserOrderCreation extends Component {
         };
         data.gender = this.state.account.gender;
 
-        let prices = (await fetchData('post', '/laser/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value;
+        let prices = (await fetchData('post', '/laser/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token }));
         if (prices.response.status !== 200) {
             let value = null;
             if (Array.isArray(prices.value)) { value = prices.value; } else { value = [prices.value]; }
@@ -333,7 +333,7 @@ export class LaserOrderCreation extends Component {
             this.setState({ feedbackMessages: value });
         }
 
-        let totalNeddedTime = (await fetchData('post', '/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token })).value;
+        let totalNeddedTime = (await fetchData('post', '/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token }));
         if (totalNeddedTime.response.status !== 200) {
             let value = null;
             if (Array.isArray(totalNeddedTime.value)) { value = totalNeddedTime.value; } else { value = [totalNeddedTime.value]; }
