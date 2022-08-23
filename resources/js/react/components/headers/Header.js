@@ -11,6 +11,8 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Button } from '@mui/material';
+import { fetchData } from '../Http/fetch.js';
+import { updateState } from '../helpers.js';
 
 export class Header extends Component {
     constructor(props) {
@@ -19,13 +21,19 @@ export class Header extends Component {
         this.onLogout = this.onLogout.bind(this);
 
         this.state = {
+            token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
             goToWelcomePage: false,
         };
     }
 
-    onLogout(e) {
-        console.log(this.state);
-        this.setState({ goToWelcomePage: true });
+    async onLogout(e) {
+        let r = await fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token });
+        if (r.response.status !== 200) {
+            return;
+        }
+
+        await updateState(this, { goToWelcomePage: true });
         if (this.props.onLogout !== undefined) {
             this.props.onLogout();
         } else {
@@ -34,11 +42,14 @@ export class Header extends Component {
     }
 
     render() {
-        console.log(this.state);
-        if (this.state.goToWelcomePage) {
+        if (this.state.goToWelcomePage && window.location.pathname !== '/') {
             return (
                 <Navigate to='/' />
             );
+        } else {
+            if (this.state.goToWelcomePage && window.location.pathname === '/') {
+                this.setState({ goToWelcomePage: false });
+            }
         }
 
         return (
