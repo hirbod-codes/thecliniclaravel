@@ -3,7 +3,7 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, Autocomplete, Box, Button, FormControl, FormControlLabel, FormHelperText, FormLabel, IconButton, Radio, RadioGroup, Slide, Snackbar, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, FormControl, FormControlLabel, FormLabel, IconButton, Radio, RadioGroup, Slide, Snackbar, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { LocaleContext } from '../../localeContext';
@@ -77,10 +77,8 @@ export class AccountCreator extends Component {
 
             rule: this.props.rules[0],
 
-            phonenumberSubnitionErrors: [],
             isSubmittingPhonenumber: false,
 
-            codeSubnitionErrors: [],
             isSubmittingCode: false,
 
             isSubmitting: false,
@@ -225,8 +223,6 @@ export class AccountCreator extends Component {
 
                     <Slide direction={this.state.steps[0].animationDirection} timeout={this.duration} in={this.state.steps[0].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            {this.state.phonenumberSubnitionErrors.map((v, i) => <FormHelperText key={i} error>{v}</FormHelperText>)}
-
                             <TextField onInput={(e) => this.setState((state) => { state.inputs.phonenumber = e.target.value; return state; })} value={this.state.inputs.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
                             {this.state.isSubmittingPhonenumber && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase')}</LoadingButton>}
@@ -236,8 +232,6 @@ export class AccountCreator extends Component {
 
                     <Slide direction={this.state.steps[1].animationDirection} timeout={this.duration} in={this.state.steps[1].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            {this.state.codeSubnitionErrors.map((v, i) => <FormHelperText key={i} error>{v}</FormHelperText>)}
-
                             <TextField type='number' onInput={(e) => this.setState({ code: e.target.value })} required label={translate('general/code/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
                             {this.state.isSubmittingCode && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase')}</LoadingButton>}
@@ -247,8 +241,6 @@ export class AccountCreator extends Component {
 
                     <Slide direction={this.state.steps[2].animationDirection} timeout={this.duration} in={this.state.steps[2].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            {this.state.errors.map((v, i) => <FormHelperText key={i} error>{v}</FormHelperText>)}
-
                             <FormLabel id="demo-row-radio-buttons-group-label">{translate('general/rule/plural/ucFirstLetterFirstWord')}</FormLabel>
                             <RadioGroup
                                 value={this.state.rule}
