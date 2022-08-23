@@ -75,7 +75,7 @@ class AccountsController extends Controller
         $lastAccountId = isset($validatedInput['lastAccountId']) ? $validatedInput['lastAccountId'] : null;
         $count = $validatedInput['count'];
 
-        return response()->json($this->accountsManagement->getAccounts($lastAccountId, $count, $roleName, $this->dataBaseRetrieveAccounts));
+        return response()->json($this->accountsManagement->getAccounts($count, $roleName, $this->dataBaseRetrieveAccounts, $lastAccountId));
     }
 
     public function accountsCount(AccountsCountRequest $request): Response

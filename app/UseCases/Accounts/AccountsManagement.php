@@ -17,7 +17,7 @@ class AccountsManagement
      * @param IDataBaseRetrieveAccounts $db
      * @return \App\Models\User[]
      */
-    public function getAccounts(int $lastAccountId = null, int $count, string $ruleName, IDataBaseRetrieveAccounts $db): array
+    public function getAccounts(int $count, string $ruleName, IDataBaseRetrieveAccounts $db, int $lastAccountId = null): array
     {
         return $db->getAccounts($count, $ruleName, $lastAccountId);
     }
