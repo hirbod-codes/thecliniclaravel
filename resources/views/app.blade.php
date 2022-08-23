@@ -10,7 +10,7 @@
 
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 
-    <title>{{ $title ?? env('APP_NAME', 'Document') }}</title>
+    <title>{{ $title ?? config('app.name') }}</title>
 </head>
 
 <body>
