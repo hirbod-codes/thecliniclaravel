@@ -18,7 +18,7 @@ class RegularOrderRetrieval
         return $db->getRegularOrdersByPriceByUser($operator, $price, $targetUser);
     }
 
-    public function getRegularOrdersByPrice(string $roleName, int $lastOrderId = null, int $count, string $operator, int $price, IDataBaseRetrieveRegularOrders $db): array
+    public function getRegularOrdersByPrice(string $roleName, int $count, string $operator, int $price, IDataBaseRetrieveRegularOrders $db, int $lastOrderId = null): array
     {
         if (!in_array($operator, self::$operatorValues)) {
             throw new \RuntimeException("The operator parameter has an invalid value.", 500);
@@ -36,7 +36,7 @@ class RegularOrderRetrieval
         return $db->getRegularOrdersByTimeConsumptionByUser($operator, $timeConsumption, $targetUser);
     }
 
-    public function getRegularOrdersByTimeConsumption(string $roleName, int $lastOrderId = null, int $count, string $operator, int $timeConsumption, IDataBaseRetrieveRegularOrders $db): array
+    public function getRegularOrdersByTimeConsumption(string $roleName, int $count, string $operator, int $timeConsumption, IDataBaseRetrieveRegularOrders $db, int $lastOrderId = null): array
     {
         if (!in_array($operator, self::$operatorValues)) {
             throw new \RuntimeException("The operator parameter has an invalid value.", 500);
@@ -50,7 +50,7 @@ class RegularOrderRetrieval
         return $db->getRegularOrdersByUser($targetUser);
     }
 
-    public function getRegularOrders(string $roleName, int $lastOrderId = null, int $count, IDataBaseRetrieveRegularOrders $db): array
+    public function getRegularOrders(string $roleName, int $count, IDataBaseRetrieveRegularOrders $db, int $lastOrderId = null): array
     {
         return $db->getRegularOrders($roleName, $count, $lastOrderId);
     }

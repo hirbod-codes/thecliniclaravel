@@ -18,7 +18,7 @@ class LaserOrderRetrieval
         return $db->getLaserOrdersByPriceByUser($operator, $price, $targetUser);
     }
 
-    public function getLaserOrdersByPrice(string $roleName, int $lastOrderId = null, int $count, string $operator, int $price, IDataBaseRetrieveLaserOrders $db): array
+    public function getLaserOrdersByPrice(string $roleName, int $count, string $operator, int $price, IDataBaseRetrieveLaserOrders $db, int $lastOrderId = null): array
     {
         if (!in_array($operator, self::$operatorValues)) {
             throw new \RuntimeException("The operator parameter has an invalid value.", 500);
@@ -36,7 +36,7 @@ class LaserOrderRetrieval
         return $db->getLaserOrdersByTimeConsumptionByUser($operator, $timeConsumption, $targetUser);
     }
 
-    public function getLaserOrdersByTimeConsumption(string $roleName, int $lastOrderId = null, int $count, string $operator, int $timeConsumption, IDataBaseRetrieveLaserOrders $db): array
+    public function getLaserOrdersByTimeConsumption(string $roleName, int $count, string $operator, int $timeConsumption, IDataBaseRetrieveLaserOrders $db, int $lastOrderId = null): array
     {
         if (!in_array($operator, self::$operatorValues)) {
             throw new \RuntimeException("The operator parameter has an invalid value.", 500);
@@ -50,7 +50,7 @@ class LaserOrderRetrieval
         return $db->getLaserOrdersByUser($targetUser);
     }
 
-    public function getLaserOrders(string $roleName, int $lastOrderId = null, int $count, IDataBaseRetrieveLaserOrders $db): array
+    public function getLaserOrders(string $roleName, int $count, IDataBaseRetrieveLaserOrders $db, int $lastOrderId = null): array
     {
         return $db->getLaserOrders($roleName, $count, $lastOrderId);
     }
