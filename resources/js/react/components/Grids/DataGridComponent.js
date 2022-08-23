@@ -34,6 +34,8 @@ export class DataGridComponent extends Component {
         super(props);
 
         this.reload = this.reload.bind(this);
+        this.onPageChange = this.onPageChange.bind(this);
+        this.onPageSizeChange = this.onPageSizeChange.bind(this);
 
         this.state = {
             isLoading: true,
@@ -89,9 +91,26 @@ export class DataGridComponent extends Component {
         await updateState(this, { isLoading: false, rows: rows, rowCount: Number(rowCount), columns: columns });
     }
 
+    onPageChange(newPage) {
+        this.setState({ page: newPage });
+
+        if (this.props.onPageChange !== undefined) {
+            this.props.onPageChange(newPage);
+        };
+    }
+
+    onPageSizeChange(newPageSize) {
+        this.setState({ page: 0, pageSize: newPageSize });
+
+        if (this.props.onPageSizeChange !== undefined) {
+            this.props.onPageSizeChange(newPageSize);
+        };
+    }
+
     render() {
         return (
             <MUiDataGrid
+                style={{ direction: 'ltr' }}
                 localeText={getDataGridLocaleText()}
                 loading={this.state.isLoading}
 
@@ -103,10 +122,10 @@ export class DataGridComponent extends Component {
 
                 rowsPerPageOptions={(this.props.rowsPerPageOptions !== undefined) ? this.props.rowsPerPageOptions : [10, 20, 30]}
                 page={this.state.page}
-                onPageChange={(newPage) => { this.setState({ page: newPage }); if (this.props.onPageChange !== undefined) { this.props.onPageChange(newPage) } }}
+                onPageChange={this.onPageChange}
 
                 pageSize={this.state.pageSize}
-                onPageSizeChange={(newPageSize) => { this.setState({ page: 0, pageSize: newPageSize }); if (this.props.onPageSizeChange !== undefined) { this.props.onPageSizeChange(newPageSize) } }}
+                onPageSizeChange={this.onPageSizeChange}
 
                 columns={this.state.columns}
 
