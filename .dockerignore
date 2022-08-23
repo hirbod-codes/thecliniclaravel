@@ -7,3 +7,5 @@ yarn-error.log
 .vscode
 workspace
 tests
+public/js
+public/css
