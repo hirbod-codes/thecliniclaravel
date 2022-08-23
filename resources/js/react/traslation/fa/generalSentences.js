@@ -12,4 +12,7 @@ generalSentences['send-email-verification-message'].ucFirstLetterAllWords = 'ل�
 
 generalSentences['server-error'] = 'متاسفانه به یک مشکل غیر منتظره برخوردیم';
 
+generalSentences['minimum-time-range-exceeded'] = 'از حداقل زمان عبور کردید.';
+generalSentences['maximum-time-range-exceeded'] = 'از حداکثر زمان عبور کردید.';
+
 export { generalSentences };

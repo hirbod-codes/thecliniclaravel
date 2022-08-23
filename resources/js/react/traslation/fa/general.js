@@ -56,13 +56,13 @@ general = addWordTo(general, 'سفارش', 'سفارشات', 'order');
 general = addWordTo(general, 'نوبت', 'نوبت ها', 'visit');
 general = addWordTo(general, 'تنظیمات', 'تنظیمات', 'setting');
 
-general = addWordTo(general, 'دوشنبه');
-general = addWordTo(general, 'سه شنبه');
-general = addWordTo(general, 'چهارشنبه');
-general = addWordTo(general, 'پنج شنبه');
-general = addWordTo(general, 'جمعه');
-general = addWordTo(general, 'شنبه');
-general = addWordTo(general, 'یکشنبه');
+general = addWordTo(general, 'دوشنبه', null, 'monday');
+general = addWordTo(general, 'سه شنبه', null, 'tuesday');
+general = addWordTo(general, 'چهارشنبه', null, 'wednesday');
+general = addWordTo(general, 'پنج شنبه', null, 'thursday');
+general = addWordTo(general, 'جمعه', null, 'friday');
+general = addWordTo(general, 'شنبه', null, 'saturday');
+general = addWordTo(general, 'یکشنبه', null, 'sunday');
 
 general = addWordTo(general, 'آدرس ایمیل', 'آدرس های ایمیل', 'email-address');
 

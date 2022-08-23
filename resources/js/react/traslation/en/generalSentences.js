@@ -15,4 +15,7 @@ generalSentences['send-email-verification-message'].ucFirstLetterAllWords = ucFi
 
 generalSentences['server-error'] = 'Unfortunately we encountered an unknown error.';
 
+generalSentences['minimum-time-range-exceeded'] = 'The minimum time exceeded.';
+generalSentences['maximum-time-range-exceeded'] = 'The maximum time exceeded.';
+
 export { generalSentences };
