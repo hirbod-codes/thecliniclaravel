@@ -1,6 +1,7 @@
 import { translate } from "../../traslation/translate";
 
 function fetchData(method, url, data = {}, headers = {}, excludeHeaders = []) {
+
     switch (method.toLowerCase()) {
         case 'get':
             return getData(url, headers, excludeHeaders);
@@ -20,9 +21,10 @@ function fetchData(method, url, data = {}, headers = {}, excludeHeaders = []) {
 }
 
 function getData(url, headers = {}, excludeHeaders = []) {
+    url = backendURL() + url;
+
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('cors', 'no-cors');
         hs.append('Accept', 'application/json');
         hs.append('Connection', 'keep-alive');
         hs.append('Content-Type', 'application/json');
@@ -48,7 +50,9 @@ function getData(url, headers = {}, excludeHeaders = []) {
         let init = {
             method: 'GET',
             headers: hs,
-            redirect: 'follow'
+            mode: 'cors',
+            redirect: 'follow',
+            credentials: 'same-origin',
         };
 
         const response = await fetch(url, init);
@@ -60,7 +64,6 @@ function getData(url, headers = {}, excludeHeaders = []) {
 function postData(url, data = {}, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('cors', 'no-cors');
         hs.append('Accept', 'application/json');
         hs.append('Connection', 'keep-alive');
 
@@ -85,7 +88,9 @@ function postData(url, data = {}, headers = {}, excludeHeaders = []) {
         let init = {
             method: 'POST',
             headers: hs,
-            redirect: 'follow'
+            mode: 'cors',
+            redirect: 'follow',
+            credentials: 'same-origin',
         };
 
         if (data.constructor.name === 'FormData') {
@@ -108,7 +113,6 @@ function postData(url, data = {}, headers = {}, excludeHeaders = []) {
 function putData(url, data = {}, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('cors', 'no-cors');
         hs.append('Accept', 'application/json');
         hs.append('Connection', 'keep-alive');
 
@@ -133,7 +137,9 @@ function putData(url, data = {}, headers = {}, excludeHeaders = []) {
         let init = {
             method: 'PUT',
             headers: hs,
-            redirect: 'follow'
+            mode: 'cors',
+            redirect: 'follow',
+            credentials: 'same-origin',
         };
 
         if (data.constructor.name === 'FormData') {
@@ -156,7 +162,6 @@ function putData(url, data = {}, headers = {}, excludeHeaders = []) {
 function deleteData(url, data = {}, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('cors', 'no-cors');
         hs.append('Accept', 'application/json');
         hs.append('Connection', 'keep-alive');
 
@@ -181,7 +186,9 @@ function deleteData(url, data = {}, headers = {}, excludeHeaders = []) {
         let init = {
             method: 'DELETE',
             headers: hs,
-            redirect: 'follow'
+            mode: 'cors',
+            redirect: 'follow',
+            credentials: 'same-origin',
         };
 
         if (data.constructor.name === 'FormData') {
@@ -261,7 +268,7 @@ function getRawValue(res) {
 }
 
 function backendURL() {
-    return 'http://localhost:80';
+    return 'https://' + window.location.hostname;
 }
 
 export { getRawValue, getResponseValue, fetchData, getData, postData, putData, deleteData, backendURL };
