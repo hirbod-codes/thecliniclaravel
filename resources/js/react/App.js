@@ -207,7 +207,7 @@ class App extends Component {
     }
 
     onLogout() {
-        this.resetAuthInfo()
+        this.resetAuthInfo();
     }
 
     resetAuthInfo() {
@@ -236,7 +236,7 @@ class App extends Component {
                 overflowX: 'hidden'
             },
             '*::-webkit-scrollbar': {
-                width: '0.4em',
+                width: '0.2em',
             },
             '*::-webkit-scrollbar-track': {
                 webkitBoxShadow: 'inset 0 0 6px rgba(0,0,0,0.00)',
@@ -264,7 +264,6 @@ class App extends Component {
 
         const cacheRtl = createCache({ key: "muirtl", stylisPlugins: [prefixer, rtlPlugin] });
 
-        console.log(this.state);
         return (
             (this.state.localeContext.isLocaleLoading || this.state.themeContext.isThemeLoading || (this.state.isAuthenticated && (this.state.isAccountLoading || this.state.arePrivilegesLoading))) ?
                 <>
