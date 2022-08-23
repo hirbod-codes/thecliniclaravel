@@ -6,7 +6,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import { Box, Divider, Fab, FormControl, InputLabel, MenuItem, Select, Stack } from '@mui/material'
 
-import { translate } from '../../../traslation/translate'
+import { translate, ucFirstLetterFirstWord } from '../../../traslation/translate'
 import { updateState } from '../../helpers';
 import TimePeriodComponent from './TimePeriodComponent';
 
@@ -19,7 +19,8 @@ export class WeekDayInputComponent extends Component {
         id: PropTypes.number.isRequired,
         onWeekDayFulfillment: PropTypes.func.isRequired,
         onWeekDayNotFulfilled: PropTypes.func.isRequired,
-        weekDayNames: PropTypes.array.isRequired,
+        workSchdule: PropTypes.objectOf(PropTypes.array),
+        weekDayNames: PropTypes.arrayOf(PropTypes.string),
 
         timePeriodComponents: PropTypes.array,
         weekDay: PropTypes.string,
@@ -49,6 +50,10 @@ export class WeekDayInputComponent extends Component {
     }
 
     componentDidMount() {
+        if (this.props.weekDayNames === undefined && this.props.workSchdule === undefined) {
+            throw new Error('insufficient props for WeekDayInputComponent component');
+        }
+
         if (this.props.timePeriodComponents !== undefined && this.props.weekDay !== undefined && this.props.timePeriods !== undefined) {
             this.setState({
                 timePeriodComponents: this.props.timePeriodComponents,
@@ -133,13 +138,25 @@ export class WeekDayInputComponent extends Component {
     }
 
     render() {
+        let weekDayNames = [];
+        if (this.props.workSchdule !== undefined) {
+            for (const k in this.props.workSchdule) {
+                if (Object.hasOwnProperty.call(this.props.workSchdule, k)) {
+                    const v = this.props.workSchdule[k];
+
+                    weekDayNames.push(<MenuItem disabled={this.props.weekDay !== undefined} value={ucFirstLetterFirstWord(k)} key={k}>{translate('general/' + k.toLocaleLowerCase() + '/single/ucFirstLetterFirstWord')}</MenuItem>);
+                }
+            }
+        } else {
+            weekDayNames = this.props.weekDayNames.map((v, i) => <MenuItem disabled={this.props.weekDay !== undefined} value={ucFirstLetterFirstWord(v)} key={i}>{translate('general/' + v.toLocaleLowerCase() + '/single/ucFirstLetterFirstWord')}</MenuItem>)
+        }
+
         return (
             <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
                 <Stack
                     key={this.props.id}
                     justifyContent='space-around'
                     direction="row"
-                    // divider={<Divider orientation="vertical" flexItem />}
                     spacing={1}
                 >
                     <Box>
@@ -151,13 +168,7 @@ export class WeekDayInputComponent extends Component {
                             label={translate('pages/visits/visit/week-of-the-day')}
                             onChange={this.onWeekDayChange}
                         >
-                            <MenuItem value={'Monday'}>{translate('general/monday/single/ucFirstLetterFirstWord')}</MenuItem>
-                            <MenuItem value={'Tuesday'}>{translate('general/tuesday/single/ucFirstLetterFirstWord')}</MenuItem>
-                            <MenuItem value={'Wednesday'}>{translate('general/wednesday/single/ucFirstLetterFirstWord')}</MenuItem>
-                            <MenuItem value={'Thursday'}>{translate('general/thursday/single/ucFirstLetterFirstWord')}</MenuItem>
-                            <MenuItem value={'Friday'}>{translate('general/friday/single/ucFirstLetterFirstWord')}</MenuItem>
-                            <MenuItem value={'Saturday'}>{translate('general/saturday/single/ucFirstLetterFirstWord')}</MenuItem>
-                            <MenuItem value={'Sunday'}>{translate('general/sunday/single/ucFirstLetterFirstWord')}</MenuItem>
+                            {weekDayNames}
                         </Select>
                     </Box>
 
@@ -166,11 +177,18 @@ export class WeekDayInputComponent extends Component {
                         divider={<Divider orientation="horizontal" />}
                         spacing={2}
                     >
-                        {this.state.timePeriodComponents.map((v, i) => {
+                        {this.state.timePeriodComponents.map((v, i, array) => {
                             let timePeriod = {};
-                            if (this.props.timePeriodComponents !== undefined && this.props.weekDay !== undefined && this.props.timePeriods !== undefined) {
+                            if (this.props.weekDay !== undefined && this.props.timePeriods !== undefined) {
                                 timePeriod.start = this.props.timePeriods[i].start;
                                 timePeriod.end = this.props.timePeriods[i].end;
+                            }
+
+                            if (this.props.weekDay === undefined && this.props.workSchdule !== undefined && this.props.workSchdule[this.state.weekDay] !== undefined) {
+                                timePeriod.minTime = this.props.workSchdule[this.state.weekDay][0].start;
+
+                                let temp = this.props.workSchdule[this.state.weekDay];
+                                timePeriod.maxTime = temp[temp.length - 1].end;
                             }
 
                             return (
@@ -180,7 +198,6 @@ export class WeekDayInputComponent extends Component {
                                     isDisabled={this.state.weekDay === ''}
 
                                     weekDayName={this.props.weekDay !== undefined ? this.props.weekDay : this.state.weekDay}
-                                    weekDayNames={this.props.weekDayNames}
 
                                     onTimePeriodFulfillment={this.onTimePeriodFulfillment}
                                     onTimePeriodNotFulfilled={this.onTimePeriodNotFulfilled}

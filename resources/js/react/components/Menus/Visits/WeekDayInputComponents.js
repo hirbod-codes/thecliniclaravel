@@ -20,6 +20,7 @@ export class WeekDayInputComponents extends Component {
         handleVisitInfo: PropTypes.func,
         weekDayInputComponents: PropTypes.arrayOf(PropTypes.number),
         weekDays: PropTypes.arrayOf(PropTypes.object),
+        workSchdule: PropTypes.objectOf(PropTypes.array),
     }
 
     constructor(props) {
@@ -35,6 +36,7 @@ export class WeekDayInputComponents extends Component {
 
         this.state = {
             weekDayNames: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            workSchdule: null,
             weekDayInputComponents: [],
             weekDays: [],
             isComplete: false,
@@ -42,6 +44,10 @@ export class WeekDayInputComponents extends Component {
     }
 
     componentDidMount() {
+        if (this.props.workSchdule !== undefined) {
+            this.setState({ workSchdule: this.props.workSchdule });
+        }
+
         if (this.props.weekDayInputComponents !== undefined && this.props.weekDays !== undefined) {
             this.setState({
                 weekDayInputComponents: this.props.weekDayInputComponents,
@@ -152,6 +158,12 @@ export class WeekDayInputComponents extends Component {
                             for (let j = 0; j < this.props.weekDays[i].timePeriods.length; j++) {
                                 props.timePeriodComponents[j] = j;
                             }
+                        }
+
+                        if (this.state.workSchdule !== null) {
+                            props.workSchdule = this.state.workSchdule;
+                        } else {
+                            props.weekDayNames = this.state.weekDayNames;
                         }
 
                         return (

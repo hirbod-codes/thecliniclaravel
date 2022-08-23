@@ -19,10 +19,12 @@ export class TimePeriodComponent extends Component {
         onTimePeriodNotFulfilled: PropTypes.func.isRequired,
         isDisabled: PropTypes.bool.isRequired,
         weekDayName: PropTypes.string.isRequired,
-        weekDayNames: PropTypes.array.isRequired,
 
         start: PropTypes.string,
         end: PropTypes.string,
+
+        minTime: PropTypes.string,
+        maxTime: PropTypes.string,
     }
 
     constructor(props) {
@@ -36,6 +38,14 @@ export class TimePeriodComponent extends Component {
         this.state = {
             start: '',
             end: '',
+
+            startError: false,
+            endError: false,
+
+            minTime: '',
+            maxTime: '',
+
+            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -55,22 +65,47 @@ export class TimePeriodComponent extends Component {
         if (prevProps.weekDayName !== this.props.weekDayName) {
             this.checkCompletion();
         }
+        if (this.props.minTime !== undefined && this.props.maxTime !== undefined && this.state.minTime === '' && this.state.maxTime === '') {
+            let array = [this.props.minTime, this.props.maxTime].map((v, i) => {
+                let temp = v.split(' ');
+                if (temp.length === 2) {
+                    return temp[1];
+                } else {
+                    return temp[0];
+                }
+            });
+            console.log('array', array);
+            this.setState({ minTime: array[0], maxTime: array[1] });
+        }
     }
 
     async handleStartingTime(e) {
+        if (this.state.minTime !== '' && ((new Date("2022-01-01 " + e.target.value + ':00')) < (new Date("2022-01-01 " + this.state.minTime)))) {
+            this.setState({ startError: true, start: '' });
+            return;
+        } else {
+            this.setState({ startError: false });
+        }
+
         await updateState(this, { start: e.target.value });
         this.checkCompletion();
     }
 
     async handleEndingTime(e) {
+        if (this.state.maxTime !== '' && ((new Date("2022-01-01 " + e.target.value + ':00')) > (new Date("2022-01-01 " + this.state.maxTime)))) {
+            this.setState({ endError: true, end: '' });
+            return;
+        } else {
+            this.setState({ endError: false });
+        }
+
         await updateState(this, { end: e.target.value });
         this.checkCompletion();
     }
 
     checkCompletion() {
         if (this.state.start && this.state.end) {
-            const locale = LocaleContext._currentValue.currentLocale.shortName;
-            let date = DateTime.local({ zone: resolveTimeZone(locale) });
+            let date = DateTime.local({ zone: resolveTimeZone(this.state.locale) });
             let safety = 0
             while (date.weekdayLong !== this.props.weekDayName && safety < 500) {
                 date = date.plus({ days: 1 });
@@ -92,6 +127,8 @@ export class TimePeriodComponent extends Component {
         return (
             <>
                 <TextField
+                    error={this.state.startError}
+                    helperText={this.state.startError ? translate('generalSentences/minimum-time-range-exceeded') + ': ' + this.state.minTime : undefined}
                     disabled={this.props.isDisabled}
                     type='time'
                     key={0}
@@ -103,6 +140,8 @@ export class TimePeriodComponent extends Component {
                     sx={{ m: 1 }}
                 />
                 <TextField
+                    error={this.state.endError}
+                    helperText={this.state.endError ? translate('generalSentences/maximum-time-range-exceeded') + ': ' + this.state.maxTime : undefined}
                     disabled={this.props.isDisabled}
                     type='time'
                     key={1}
