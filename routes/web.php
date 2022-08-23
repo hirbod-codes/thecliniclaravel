@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use App\DataStructures\Order\DSPackages;
 use App\DataStructures\Order\DSParts;
+use App\Models\BusinessDefault as ModelsBusinessDefault;
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +149,10 @@ Route::middleware(['auth:web', 'phonenumber_verified'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     Route::put('/auth/update-phonenumber', [AuthController::class, 'updatePhonenumber'])->name('auth.updatePhonenumber');
+
+    Route::get('/work-schedule', function () {
+        return response()->json(($t = ModelsBusinessDefault::query()->firstOrFail()->work_schedule)->toArray());
+    })->name('workSchedule');
 
     Route::controller(AccountsController::class)
         ->group(function () {
