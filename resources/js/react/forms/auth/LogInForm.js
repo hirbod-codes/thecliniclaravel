@@ -10,7 +10,7 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { Alert, Divider, IconButton, Snackbar } from '@mui/material';
 
 import { translate } from '../../traslation/translate.js';
-import { fetchData, backendURL } from '../../components/Http/fetch.js';
+import { fetchData } from '../../components/Http/fetch.js';
 import SlidingDialog from '../../components/Menus/SlidingDialog.js';
 
 export class LogInForm extends Component {
@@ -99,7 +99,7 @@ export class LogInForm extends Component {
         }
         input.password = this.state.password;
 
-        let r = await fetchData('post', backendURL() + '/login', input, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/login', input, { 'X-CSRF-TOKEN': this.state.token });
 
         if (r.response.status === 200) {
             if (r.response.redirected) {
