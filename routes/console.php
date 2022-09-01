@@ -21,23 +21,40 @@ Artisan::command('consoleTest', function () {
     $this->info('Console test has finished.');
 });
 
+Artisan::command('unit-tests', function () {
+    return 1;
+});
+
+Artisan::command('integration-tests', function () {
+    return 1;
+});
+
+Artisan::command('initialize-if-needed', function () {
+    if (
+        count(
+            array_map(function ($t) {
+                foreach ($t as $key => $v) {
+                    return $v;
+                }
+            }, DB::select('SHOW TABLES'))
+        )
+        !== 0
+    ) {
+        $this->info("Application already initialized.");
+        return;
+    }
+
+    $this->call('initialize');
+});
+
 Artisan::command('initialize', function () {
     $t = explode(' ', microtime());
     $ms = $t[0];
     $s = $t[1];
 
-    if (in_array(config('app.env'), ['prod', 'production']) && count(array_map(function ($t) {
-        foreach ($t as $key => $v) {
-            return $v;
-        }
-    }, DB::select('SHOW TABLES'))) !== 0) {
-        $this->info("Application already initialized.");
-        return;
-    }
-
     $this->call('emptyThenMigrate');
 
-    $this->call('installPassport');
+    // $this->call('installPassport');
 
     $this->call('dbSeed');
 
