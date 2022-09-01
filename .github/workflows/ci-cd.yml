@@ -105,8 +105,6 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
