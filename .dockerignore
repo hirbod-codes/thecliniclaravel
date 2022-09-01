@@ -14,6 +14,7 @@ tests
 phpunit.xml
 
 .git
+.github
 .gitignore
 .gitattributes
 
@@ -22,5 +23,10 @@ phpunit.xml
 
 .dockerignore
 Dockerfile
-Dockerfile_Nginx
+Dockerfile.nginx
+Dockerfile.mysql
 docker-compose.yml
+docker-compose.override.yml
+docker-compose.test.yml
+docker-compose.development.yml
+docker-compose.production.yml
