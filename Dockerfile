@@ -8,8 +8,10 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     zip \
-    unzip \
-    && docker-php-ext-install pdo \
+    unzip
+
+RUN docker-php-ext-install \
+    pdo \
     pdo_mysql \
     mysqli
 
@@ -37,8 +39,9 @@ FROM base AS development
 
 RUN apt-get install -y \
     procps \
-    nano\
-    && \
+    nano
+
+RUN \
     pecl install xdebug && \
     docker-php-ext-enable xdebug
 
@@ -51,8 +54,9 @@ CMD sleep 30 && php artisan initialize-if-needed && docker-php-entrypoint php-fp
 FROM base_with_composer AS tests
 
 RUN apt-get install -y \
-    acl \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    acl
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 
 COPY . .
 COPY ./docker/php/addon.ini /usr/local/etc/php/conf.d/addon.ini
@@ -70,8 +74,9 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 ENV NODE_VERSION=16.13.0
 
 RUN apt-get install -y \
-    acl \
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+    acl
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
 
 ENV NVM_DIR=/root/.nvm
 
