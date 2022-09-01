@@ -20,13 +20,10 @@ services:
       - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
 
   mysql:
-    build:
-      context: ./
-      dockerfile: Dockerfile.mysql
     environment:
       MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
       MYSQL_PASSWORD_FILE: /run/secrets/mysql-password
-      MYSQL_USER: ${DB_USER}
+      MYSQL_USER: ${DB_USERNAME}
       MYSQL_DATABASE: ${DB_DATABASE}
     secrets:
       - mysql-root-password

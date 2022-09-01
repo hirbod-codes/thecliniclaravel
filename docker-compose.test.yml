@@ -11,11 +11,7 @@ services:
 
   laravel:
     image: "${TESTING_IMAGE}"
-    # build:
-    #   context: ./
-    #   target: production
     working_dir: /var/www/html/laravel
-    command: sleep 30 && php artisan initialize && php artisan integration-tests
     volumes:
       - thecliniclaravel_app:/var/www/html/laravel:rw
       - thecliniclaravel_public:/var/www/html/laravel/public:rw
@@ -23,9 +19,6 @@ services:
       - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
 
   mysql:
-    build:
-      context: ./
-      dockerfile: Dockerfile.mysql
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
