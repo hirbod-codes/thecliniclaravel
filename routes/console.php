@@ -22,11 +22,11 @@ Artisan::command('consoleTest', function () {
 });
 
 Artisan::command('unit-tests', function () {
-    return 1;
+    return 0;
 });
 
 Artisan::command('integration-tests', function () {
-    return 1;
+    return 0;
 });
 
 Artisan::command('initialize-if-needed', function () {
