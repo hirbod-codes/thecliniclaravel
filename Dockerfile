@@ -31,6 +31,8 @@ RUN apt-get install -y \
 
 # Application source codes are provided by mounted volumes from docker-compose-development.yml file
 
+CMD sleep 30 && php artisan initialize-if-needed && docker-php-entrypoint php-fpm
+
 # ------------------------------------------------------------------------------------------------------------------------------
 
 FROM base AS tests
