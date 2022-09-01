@@ -134,7 +134,7 @@ jobs:
           flavor: |
             latest=false
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern={{version}},value=1.0.0
           # type=raw,value=99
           # type=ref,event=pr
           # type=ref,event=branch
