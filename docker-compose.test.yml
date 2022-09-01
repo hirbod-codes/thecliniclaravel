@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  nginx:
+    build:
+      context: ./
+      dockerfile: Dockerfile.nginx
+      target: production
+    volumes_from:
+      - laravel:rw
+
+  laravel:
+    image: "${TESTING_IMAGE}"
+    # build:
+    #   context: ./
+    #   target: production
+    working_dir: /var/www/html/laravel
+    command: sleep 30 && php artisan initialize && php artisan integration-tests
+    volumes:
+      - thecliniclaravel_app:/var/www/html/laravel:rw
+      - thecliniclaravel_public:/var/www/html/laravel/public:rw
+      - thecliniclaravel_vendor:/var/www/html/laravel/vendor:rw
+      - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
+
+  mysql:
+    build:
+      context: ./
+      dockerfile: Dockerfile.mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_DATABASE: ${DB_DATABASE}
+
+volumes:
+  thecliniclaravel_app: {}
+  thecliniclaravel_public: {}
+  thecliniclaravel_vendor: {}
+  thecliniclaravel_node_modules: {}
