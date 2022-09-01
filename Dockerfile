@@ -6,7 +6,6 @@ RUN usermod -G root www-data
 
 RUN apt-get update && apt-get install -y \
     git \
-    acl \
     curl \
     zip \
     unzip \
