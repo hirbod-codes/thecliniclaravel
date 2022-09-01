@@ -61,7 +61,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Unit Testing in Docker
-        run: docker run --rm ghcr.io/hirbod-codes/thecliniclaravel:"$GITHUB_RUN_ID" sleep 30 && php artisan initialize && php artisan unit-tests
+        run: docker run --rm ghcr.io/hirbod-codes/thecliniclaravel:"$GITHUB_RUN_ID" php artisan unit-tests
 
   # NEXT JOB #######################################################################
   integration-tests:
