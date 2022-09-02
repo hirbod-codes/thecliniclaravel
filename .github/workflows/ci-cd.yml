@@ -130,7 +130,7 @@ jobs:
         id: docker_meta
         uses: docker/metadata-action@v3
         with:
-          images: hirbod-codes/thecliniclaravel,ghcr.io/hirbod-codes/thecliniclaravel
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/thecliniclaravel,ghcr.io/hirbod-codes/thecliniclaravel
           flavor: |
             latest=false
           tags: |
