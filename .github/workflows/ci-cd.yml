@@ -135,10 +135,10 @@ jobs:
             latest=false
           tags: |
             type=semver,pattern={{version}},value=1.0.0
-          # type=raw,value=99
-          # type=ref,event=pr
-          # type=ref,event=branch
-          # type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
+            type=ref,event=pr
+            type=ref,event=branch
+            type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
+          # type=raw,value=1.0.0
 
       - name: Docker Build and Push to GHCR and Docker Hub
         uses: docker/build-push-action@v2
@@ -149,4 +149,3 @@ jobs:
           labels: ${{ steps.docker_meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
