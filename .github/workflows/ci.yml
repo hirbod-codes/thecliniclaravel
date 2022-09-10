@@ -1,4 +1,4 @@
-name: ci-cd
+name: ci
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          tags: ghcr.io/hirbod-codes/thecliniclaravel:${{ github.run_id }}
+          tags: ghcr.io/hirbod-codes/${{ github.event.repository.name }}:${{ github.run_id }}
           target: tests
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -61,7 +61,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Unit Testing in Docker
-        run: docker run --rm ghcr.io/hirbod-codes/thecliniclaravel:"$GITHUB_RUN_ID" php artisan unit-tests
+        run: docker run --rm ghcr.io/hirbod-codes/${{ github.event.repository.name }}:"$GITHUB_RUN_ID" php artisan unit-tests
 
   # NEXT JOB #######################################################################
   integration-tests:
@@ -91,61 +91,25 @@ jobs:
 
       - name: Run integration tests with Docker Compose file
         run: |
-          export TESTING_IMAGE=ghcr.io/hirbod-codes/thecliniclaravel:"$GITHUB_RUN_ID"
+          export TESTING_IMAGE=ghcr.io/hirbod-codes/${{ github.event.repository.name }}:"$GITHUB_RUN_ID"
           echo Testing image: "$TESTING_IMAGE"
           docker compose -f docker-compose.yml -f docker-compose.test.yml up --exit-code-from laravel
 
   # NEXT JOB #######################################################################
-  build-final-image:
-    name: Build Final Image
-    needs: [integration-tests, unit-tests]
+  store-env:
+    name: Store environment variables
+    needs: [integration-tests]
     runs-on: ubuntu-latest
 
-    permissions:
-      packages: write
-
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platform: amd64
+      - name: Checkout git repo
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v1
+      - uses: actions/checkout@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          ref: ${{ steps.get-latest-tag.outputs.tag }}
 
-      - name: Login to ghcr.io registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Docker Metadata for Final Image Build
-        id: docker_meta
-        uses: docker/metadata-action@v3
-        with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/thecliniclaravel,ghcr.io/hirbod-codes/thecliniclaravel
-          flavor: |
-            latest=false
-          tags: |
-            type=semver,pattern={{version}},value=1.0.0
-            type=ref,event=pr
-            type=ref,event=branch
-            type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
-          # type=raw,value=1.0.0
-
-      - name: Docker Build and Push to GHCR and Docker Hub
-        uses: docker/build-push-action@v2
-        with:
-          push: true
-          target: production
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Decrypting environment variables
+        run: |
+          gh secret set ENV < .env
