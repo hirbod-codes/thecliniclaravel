@@ -2,6 +2,7 @@ version: "3.8"
 
 services:
   nginx:
+    image: hirb0d/thecliniclaravel_nginx:latest
     build:
       context: ./
       dockerfile: Dockerfile.nginx
@@ -10,9 +11,7 @@ services:
       - laravel:rw
 
   laravel:
-    build:
-      context: ./
-      target: production
+    image: hirb0d/thecliniclaravel:latest
     volumes:
       - thecliniclaravel_app:/var/www/html/laravel:rw
       - thecliniclaravel_public:/var/www/html/laravel/public:rw
@@ -21,22 +20,13 @@ services:
 
   mysql:
     environment:
-      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql-root-password
-      MYSQL_PASSWORD_FILE: /run/secrets/mysql-password
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_DATABASE: ${DB_DATABASE}
-    secrets:
-      - mysql-root-password
-      - mysql-password
 
 volumes:
   thecliniclaravel_app: {}
   thecliniclaravel_public: {}
   thecliniclaravel_vendor: {}
   thecliniclaravel_node_modules: {}
-
-secrets:
-  mysql-root-password:
-    external: true
-  mysql-password:
-    external: true
