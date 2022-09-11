@@ -102,15 +102,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Get latest tag
-        uses: actions-ecosystem/action-get-latest-tag@v1
-        id: get-latest-tag
-
-      - name: Checkout git repo v3
-        uses: actions/checkout@v3
-        with:
-          ref: ${{ steps.get-latest-tag.outputs.tag }}
-
       - name: Storing environment variables in Github secret
         run: |
           cat .env
