@@ -24,7 +24,6 @@ jobs:
         run: |
           touch .env
           echo $ENV_FILE | base64 -d > .env
-          cat .env
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -47,11 +46,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.MY_GITHUB_TOKEN }}
 
-      - name: Docker metadata for final the application image build
+      - name: Docker metadata for the application image build
         id: docker_meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }},ghcr.io/hirbod-codes/${{ github.event.repository.name }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }},ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
           flavor: |
             latest=false
           tags: |
@@ -60,7 +59,7 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
 
-      - name: Docker Build and Push to GHCR and Docker Hub
+      - name: Docker Build and Push the application image to GHCR and Docker Hub
         uses: docker/build-push-action@v2
         with:
           context: ./
@@ -76,7 +75,7 @@ jobs:
         id: docker_meta_nginx
         uses: docker/metadata-action@v3
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}_nginx,ghcr.io/hirbod-codes/${{ github.event.repository.name }}_nginx
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}_nginx,ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}_nginx
           flavor: |
             latest=false
           tags: |
@@ -85,7 +84,7 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
 
-      - name: Docker Build and Push to GHCR and Docker Hub
+      - name: Docker Build and Push the nginx image to GHCR and Docker Hub
         uses: docker/build-push-action@v2
         with:
           context: ./
