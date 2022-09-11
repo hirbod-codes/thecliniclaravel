@@ -45,7 +45,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Docker metadata for final the application image build
         id: docker_meta

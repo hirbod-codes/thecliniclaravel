@@ -31,7 +31,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build and Push to GHCR
         uses: docker/build-push-action@v2
@@ -58,7 +58,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Unit Testing in Docker
         run: docker run --rm ghcr.io/hirbod-codes/${{ github.event.repository.name }}:"$GITHUB_RUN_ID" php artisan unit-tests
@@ -87,7 +87,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Run integration tests with Docker Compose file
         run: |
@@ -106,7 +106,7 @@ jobs:
 
       - name: Storing environment variables in Github secret
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           base64 -d encrypted.env > temp.env
           gh secret set ENV < temp.env
