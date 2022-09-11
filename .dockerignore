@@ -18,6 +18,7 @@ phpunit.xml
 .gitignore
 .gitattributes
 
+encrypted.env
 .env.example
 *.md
 
