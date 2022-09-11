@@ -108,5 +108,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          base64 -d encrypted.env > temp.env
+          touch temp.env
+          cat encrypted.env | base64 -d > temp.env
+          cat temp.env
           gh secret set ENV < temp.env
