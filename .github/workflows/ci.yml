@@ -103,7 +103,7 @@ jobs:
 
     steps:
       - name: Get latest tag
-      - uses: actions-ecosystem/action-get-latest-tag@v1
+        uses: actions-ecosystem/action-get-latest-tag@v1
         id: get-latest-tag
 
       - name: Checkout git repo v3
@@ -112,4 +112,6 @@ jobs:
           ref: ${{ steps.get-latest-tag.outputs.tag }}
 
       - name: Storing environment variables in Github secret
-        run: gh secret set ENV < .env
+        run: |
+          cat .env
+          gh secret set ENV < .env
