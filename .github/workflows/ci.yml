@@ -105,6 +105,8 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Storing environment variables in Github secret
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           base64 -d encrypted.env > temp.env
           gh secret set ENV < temp.env
