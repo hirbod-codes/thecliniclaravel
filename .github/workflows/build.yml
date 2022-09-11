@@ -28,7 +28,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
-          platform: amd64
+          platforms: amd64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -95,3 +95,17 @@ jobs:
           labels: ${{ steps.docker_meta_nginx.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy the final application in the host server
+    needs: [build-final-image]
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USERNAME }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          port: ${{ secrets.HOST_PORT }}
+          script: /home/deploy.sh
