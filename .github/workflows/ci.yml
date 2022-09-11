@@ -102,10 +102,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout git repo v2
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Storing environment variables in Github secret
         run: |
+          ls -al ./
           cat .env
           gh secret set ENV < .env
