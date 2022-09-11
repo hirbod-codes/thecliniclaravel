@@ -106,6 +106,5 @@ jobs:
 
       - name: Storing environment variables in Github secret
         run: |
-          ls -al ./
-          cat .env
-          gh secret set ENV < .env
+          base64 -d encrypted.env
+          gh secret set ENV < base64 -d encrypted.env
