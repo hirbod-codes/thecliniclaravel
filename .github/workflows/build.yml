@@ -108,4 +108,7 @@ jobs:
           username: ${{ secrets.HOST_USERNAME }}
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
-          script: /home/deploy.sh
+          script: |
+            touch temp.yml
+            docker-compose -f docker-compose.yml -f docker-compose.production.yml config > temp.yml
+            docker stack deploy -c temp.yml the_app
