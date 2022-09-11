@@ -23,9 +23,6 @@ jobs:
           ENV_FILE: ${{secrets.ENV}}
         run: |
           touch .env
-          cat .env
-          echo $ENV_FILE > temp.log
-          cat temp.log
           echo $ENV_FILE | base64 -d > .env
           cat .env
 
