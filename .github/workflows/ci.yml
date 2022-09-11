@@ -110,5 +110,4 @@ jobs:
         run: |
           touch temp.env
           cat encrypted.env | base64 -d > temp.env
-          cat temp.env
           gh secret set ENV < temp.env
