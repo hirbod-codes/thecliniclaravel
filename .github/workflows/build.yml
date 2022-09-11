@@ -73,7 +73,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Docker metadata for nginx image build
-        id: docker_meta
+        id: docker_meta_nginx
         uses: docker/metadata-action@v3
         with:
           images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}_nginx,ghcr.io/hirbod-codes/${{ github.event.repository.name }}_nginx
@@ -92,7 +92,7 @@ jobs:
           file: Dockerfile.nginx
           push: true
           target: production
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          labels: ${{ steps.docker_meta.outputs.labels }}
+          tags: ${{ steps.docker_meta_nginx.outputs.tags }}
+          labels: ${{ steps.docker_meta_nginx.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

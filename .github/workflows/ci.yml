@@ -112,5 +112,4 @@ jobs:
           ref: ${{ steps.get-latest-tag.outputs.tag }}
 
       - name: Storing environment variables in Github secret
-        run: |
-          gh secret set ENV < .env
+        run: gh secret set ENV < .env
