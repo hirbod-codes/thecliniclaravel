@@ -16,15 +16,17 @@ jobs:
       packages: write
 
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
       - name: Set the .env file
         env:
           ENV_FILE: ${{secrets.ENV}}
         run: |
-          echo $ENV_FILE | base64 -d > .env
+          touch .env
+          cat .env
           echo $ENV_FILE
+          echo $ENV_FILE | base64 -d > .env
+          cat .env
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
