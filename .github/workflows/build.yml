@@ -104,6 +104,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - run: |
+          cat ./docker-compose.yml
+          apt-get update && apt-get install -y docker-compose
+          echo "DOCKER_CONMPOSE_CONFIG_FILE=$(docker-compose -f ./docker-compose.yml -f ./docker-compose.production.yml config )" >> $GITHUB_ENV
+
       - uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_IP }}
@@ -111,5 +116,8 @@ jobs:
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
           script: |
-            ls -al ./
-            /home/deploy.sh -f ./docker-compose.yml -s ./docker-compose.production.yml
+            echo $DOCKER_CONMPOSE_CONFIG_FILE
+            touch /temp.txt
+            echo $DOCKER_CONMPOSE_CONFIG_FILE > /temp.txt
+            /home/deploy.sh -a /temp.txt
+            rm /temp.txt
