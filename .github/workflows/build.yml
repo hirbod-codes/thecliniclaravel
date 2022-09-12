@@ -102,13 +102,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v2
+
       - uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
-          script: |
-            touch temp.yml
-            docker-compose -f docker-compose.yml -f docker-compose.production.yml config > temp.yml
-            docker stack deploy -c temp.yml the_app
+          script: /home/deploy.sh -f /docker-compose.yml -s /docker-compose.production.yml
