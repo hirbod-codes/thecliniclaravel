@@ -104,11 +104,19 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Echo docker compose files
-        id: cat-docker-compose-files
-        run: |
-          echo '::set-output name=DOCKER_CONMPOSE_CONFIG_FILE_FIRST::$(cat ./docker-compose.yml)'
-          echo '::set-output name=DOCKER_CONMPOSE_CONFIG_FILE_SECOND::$(cat ./docker-compose.production.yml)'
+      - name: FTP-Deploy-Action
+        uses: SamKirkland/FTP-Deploy-Action@3.1.1
+        with:
+          ftp-server: ${{ secrets.HOST_IP }}
+          ftp-username: ${{ secrets.HOST_USERNAME }}
+          ftp-password: ${{ secrets.HOST_PASSWORD }}
+          server-dir: ./
+          local-dir: /home/docker_compose_files
+          exclude: |
+            *
+            **/**
+            !docker-compose.yml
+            !docker-compose.production.yml
 
       - name: SSH to server and run deploy.sh bash script
         uses: appleboy/ssh-action@master
@@ -117,16 +125,4 @@ jobs:
           username: ${{ secrets.HOST_USERNAME }}
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
-          script: |
-            echo "${{ steps.cat-docker-compose-files.outputs.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}"
-            touch /f.txt
-            echo "${{ steps.cat-docker-compose-files.outputs.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}" > /f.txt
-
-            echo "${{ steps.cat-docker-compose-files.outputs.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}"
-            touch /s.txt
-            echo "${{ steps.cat-docker-compose-files.outputs.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}" > /s.txt
-
-            /home/deploy.sh -f /f.txt -s /s.txt
-
-            rm /f.txt
-            rm /s.txt
+          script: /home/deploy.sh
