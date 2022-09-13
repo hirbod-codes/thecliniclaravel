@@ -112,8 +112,8 @@ jobs:
       - name: SSH to server and run deploy.sh bash script
         uses: appleboy/ssh-action@master
         env:
-          DOCKER_CONMPOSE_CONFIG_FILE_FIRST: ${{ cat ./docker-compose.yml }}
-          DOCKER_CONMPOSE_CONFIG_FILE_SECOND: ${{ cat ./docker-compose.production.yml }}
+          DOCKER_CONMPOSE_CONFIG_FILE_FIRST: ${{ env.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}
+          DOCKER_CONMPOSE_CONFIG_FILE_SECOND: ${{ env.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}
         with:
           envs: DOCKER_CONMPOSE_CONFIG_FILE_FIRST,DOCKER_CONMPOSE_CONFIG_FILE_SECOND
           host: ${{ secrets.HOST_IP }}
@@ -121,10 +121,10 @@ jobs:
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
           script: |
-            echo "${{ env.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}"
-            echo "${{ env.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}"
+            echo "$DOCKER_CONMPOSE_CONFIG_FILE_FIRST"
+            echo "$DOCKER_CONMPOSE_CONFIG_FILE_SECOND"
 
-            /home/deploy.sh -f ${{ env.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }} -s ${{ env.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}
+            /home/deploy.sh -f $DOCKER_CONMPOSE_CONFIG_FILE_FIRST -s $DOCKER_CONMPOSE_CONFIG_FILE_SECOND
 
             rm /f.txt
             rm /s.txt
