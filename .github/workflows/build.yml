@@ -107,8 +107,8 @@ jobs:
       - name: SSH to server and run deploy.sh bash script
         uses: appleboy/ssh-action@master
         env:
-          DOCKER_CONMPOSE_CONFIG_FILE_FIRST: echo "$(cat ./docker-compose.yml)"
-          DOCKER_CONMPOSE_CONFIG_FILE_SECOND: echo "$(cat ./docker-compose.production.yml)"
+          DOCKER_CONMPOSE_CONFIG_FILE_FIRST: ${{ cat ./docker-compose.yml }}
+          DOCKER_CONMPOSE_CONFIG_FILE_SECOND: ${{ cat ./docker-compose.production.yml }}
         with:
           envs: DOCKER_CONMPOSE_CONFIG_FILE_FIRST,DOCKER_CONMPOSE_CONFIG_FILE_SECOND
           host: ${{ secrets.HOST_IP }}
@@ -117,14 +117,9 @@ jobs:
           port: ${{ secrets.HOST_PORT }}
           script: |
             echo "$DOCKER_CONMPOSE_CONFIG_FILE_FIRST"
-            touch /f.txt
-            echo "$DOCKER_CONMPOSE_CONFIG_FILE_FIRST" > /f.txt
-
             echo "$DOCKER_CONMPOSE_CONFIG_FILE_SECOND"
-            touch /s.txt
-            echo "$DOCKER_CONMPOSE_CONFIG_FILE_SECOND" > /s.txt
 
-            /home/deploy.sh -f /f.txt -s /s.txt
+            /home/deploy.sh -f $DOCKER_CONMPOSE_CONFIG_FILE_FIRST -s $DOCKER_CONMPOSE_CONFIG_FILE_SECOND
 
             rm /f.txt
             rm /s.txt
