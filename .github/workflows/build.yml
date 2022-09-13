@@ -115,13 +115,13 @@ jobs:
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
           script: |
-            echo $DOCKER_CONMPOSE_CONFIG_FILE_FIRST
+            echo "${{ env.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}"
             touch /f.txt
-            echo $DOCKER_CONMPOSE_CONFIG_FILE_FIRST > /f.txt
+            echo "${{ env.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}" > /f.txt
 
-            echo $DOCKER_CONMPOSE_CONFIG_FILE_SECOND
+            echo "${{ env.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}"
             touch /s.txt
-            echo $DOCKER_CONMPOSE_CONFIG_FILE_SECOND > /s.txt
+            echo "${{ env.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}" > /s.txt
 
             /home/deploy.sh -f /f.txt -s /s.txt
 
