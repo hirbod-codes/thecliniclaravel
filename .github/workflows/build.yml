@@ -104,13 +104,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Concatenating docker-compose.yml files to the environment variables
-        run: |
-          echo "DOCKER_CONMPOSE_CONFIG_FILE_FIRST=$(cat ./docker-compose.yml)" >> $GITHUB_ENV
-          echo "DOCKER_CONMPOSE_CONFIG_FILE_SECOND=$(cat ./docker-compose.production.yml)" >> $GITHUB_ENV
-
       - name: SSH to server and run deploy.sh bash script
         uses: appleboy/ssh-action@master
+        env:
+          DOCKER_CONMPOSE_CONFIG_FILE_FIRST: $(cat ./docker-compose.yml)
+          DOCKER_CONMPOSE_CONFIG_FILE_SECOND: $(cat ./docker-compose.production.yml)
         with:
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
