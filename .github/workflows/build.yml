@@ -104,27 +104,29 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Setting environment variables
-        run: |
-          echo "DOCKER_CONMPOSE_CONFIG_FILE_FIRST=$(cat ./docker-compose.yml)" >> $GITHUB_ENV
-          echo "DOCKER_CONMPOSE_CONFIG_FILE_SECOND=$(cat ./docker-compose.production.yml)" >> $GITHUB_ENV
+      - name: Get latest code
+        uses: actions/checkout@v2
+
+      - name: Sync files
+        uses: SamKirkland/FTP-Deploy-Action@4.3.2
+        with:
+          server: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_USERNAME }}
+          password: ${{ secrets.HOST_PASSWORD }}
+          server-dir: /home/docker_compsoe_files/
+          local-dir: ./
+          exclude: |
+            *
+            **
+            **/**
+            !docker-compose.yml
+            !docker-compose.production.yml
 
       - name: SSH to server and run deploy.sh bash script
         uses: appleboy/ssh-action@master
-        env:
-          DOCKER_CONMPOSE_CONFIG_FILE_FIRST: ${{ env.DOCKER_CONMPOSE_CONFIG_FILE_FIRST }}
-          DOCKER_CONMPOSE_CONFIG_FILE_SECOND: ${{ env.DOCKER_CONMPOSE_CONFIG_FILE_SECOND }}
         with:
-          envs: DOCKER_CONMPOSE_CONFIG_FILE_FIRST,DOCKER_CONMPOSE_CONFIG_FILE_SECOND
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
-          password: ${{ secrets.HOST_PASSWORD }}
+          key: ${{ secrets.HOST_PUBLIC_RSA_KEY }}
           port: ${{ secrets.HOST_PORT }}
-          script: |
-            echo "$DOCKER_CONMPOSE_CONFIG_FILE_FIRST"
-            echo "$DOCKER_CONMPOSE_CONFIG_FILE_SECOND"
-
-            /home/deploy.sh -f $DOCKER_CONMPOSE_CONFIG_FILE_FIRST -s $DOCKER_CONMPOSE_CONFIG_FILE_SECOND
-
-            rm /f.txt
-            rm /s.txt
+          script: /home/deploy.sh
