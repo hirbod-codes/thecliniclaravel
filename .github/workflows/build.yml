@@ -104,23 +104,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Get latest code
-        uses: actions/checkout@v2
-
-      - name: Sync files
-        uses: SamKirkland/FTP-Deploy-Action@4.3.2
-        with:
-          server: ${{ secrets.HOST_IP }}
-          username: ${{ secrets.HOST_USERNAME }}
-          password: ${{ secrets.HOST_PASSWORD }}
-          server-dir: /home/docker_compsoe_files/
-          local-dir: ./
-          exclude: |
-            *
-            **
-            **/**
-            !docker-compose.yml
-            !docker-compose.production.yml
+      # - name: Sync files
+      #   uses: SamKirkland/FTP-Deploy-Action@4.3.2
+      #   with:
+      #     server: ${{ secrets.HOST_IP }}
+      #     username: ${{ secrets.HOST_USERNAME }}
+      #     password: ${{ secrets.HOST_PASSWORD }}
+      #     server-dir: /home/docker_compose_files/
+      #     local-dir: ./
+      #     exclude: |
+      #       *
+      #       **
+      #       **/**
+      #       !docker-compose.yml
+      #       !docker-compose.production.yml
 
       - name: SSH to server and run deploy.sh bash script
         uses: appleboy/ssh-action@master
