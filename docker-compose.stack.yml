@@ -1,32 +1,42 @@
-version: "3.8"
+version: "3"
 
 services:
   nginx:
     image: hirb0d/thecliniclaravel_nginx:latest
-    build:
-      context: ./
-      dockerfile: Dockerfile.nginx
-      target: production
-    volumes_from:
-      - laravel:rw
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - laravel
+      - mysql
+    networks:
+      - theclinic
 
   laravel:
     image: hirb0d/thecliniclaravel:latest
-    volumes:
-      - thecliniclaravel_app:/var/www/html/laravel:rw
-      - thecliniclaravel_public:/var/www/html/laravel/public:rw
-      - thecliniclaravel_vendor:/var/www/html/laravel/vendor:rw
-      - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
+    depends_on:
+      - mysql
+    networks:
+      - theclinic
 
   mysql:
+    image: mysql:5
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+      - theclinicdata:/var/lib/mysql
+    env_file:
+      - ./.env
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_SERVICE_NAME: mysql
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: hirbod
+      MYSQL_DATABASE: thecliniclaravel
+    networks:
+      - theclinic
 
 volumes:
-  thecliniclaravel_app: {}
-  thecliniclaravel_public: {}
-  thecliniclaravel_vendor: {}
-  thecliniclaravel_node_modules: {}
+  theclinicdata:
+
+networks:
+  theclinic:
