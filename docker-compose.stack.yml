@@ -7,25 +7,11 @@ services:
       context: ./
       dockerfile: Dockerfile.nginx
       target: production
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-      update_config:
-        parallelism: 2
-        delay: 10s
     volumes_from:
       - laravel:rw
 
   laravel:
     image: hirb0d/thecliniclaravel:latest
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-      update_config:
-        parallelism: 2
-        delay: 10s
     volumes:
       - thecliniclaravel_app:/var/www/html/laravel:rw
       - thecliniclaravel_public:/var/www/html/laravel/public:rw
@@ -33,13 +19,6 @@ services:
       - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
 
   mysql:
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
-      update_config:
-        parallelism: 2
-        delay: 10s
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
       MYSQL_PASSWORD: ${DB_PASSWORD}
