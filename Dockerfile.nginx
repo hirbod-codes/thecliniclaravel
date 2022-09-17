@@ -6,8 +6,7 @@ RUN usermod -G root nginx
 
 WORKDIR /var/www/html/laravel
 
-COPY ./local_ssl/ ./local_ssl/
-COPY ./docker/nginx/ ./docker/nginx/
+COPY . .
 
 RUN apt-get update && apt-get install -y openssl procps nano
 
@@ -30,7 +29,7 @@ WORKDIR /var/www/html/laravel
 
 RUN apt-get update && apt-get install -y openssl procps nano
 
-COPY ./local_ssl/ ./local_ssl/
+COPY . .
 
 RUN openssl req -x509 -nodes -days 1024 -newkey rsa:2048 -keyout ./local_ssl/localhost.key -out ./local_ssl/localhost.crt -config ./local_ssl/open_ssl.conf -extensions 'v3_req'
 
