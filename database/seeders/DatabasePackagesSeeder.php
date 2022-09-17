@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Package\Package;
 use App\Models\Package\PartPackage;
 use App\Models\Part\Part;
-use Faker\Factory;
 use Illuminate\Database\Seeder;
 use App\PoliciesLogic\Order\Laser\Calculations\PriceCalculator;
 use App\DataStructures\Order\DSPackages;
@@ -19,12 +18,10 @@ class DatabasePackagesSeeder extends Seeder
      */
     public function run()
     {
-        $faker = Factory::create();
-
         for ($i = 0; $i < 10; $i++) {
-            $gender = $faker->randomElement(['Male', 'Female']);
+            $gender = rand(0, 1) === 1 ? "Male" : "Female";
 
-            $parts = Part::query()->where('gender', '=', $gender)->inRandomOrder()->take($faker->numberBetween(2, 5))->get()->all();
+            $parts = Part::query()->where('gender', '=', $gender)->inRandomOrder()->take(rand(2, 5))->get()->all();
 
             $price = (new PriceCalculator)->calculate(Part::getDSParts($parts, $gender), new DSPackages($gender));
 
