@@ -93,4 +93,4 @@ RUN npm install && \
 RUN php artisan config:cache && \
     php artisan route:cache
 
-CMD sleep 30 && php artisan initialize-if-needed && docker-php-entrypoint php-fpm
+CMD echo "the working directory" && ls -al ./ && echo "waiting for 30 seconds..." && sleep 30 && php artisan initialize-if-needed && docker-php-entrypoint php-fpm
