@@ -52,11 +52,18 @@ Artisan::command('initialize', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    $this->call('emptyThenMigrate');
+    DB::beginTransaction();
+    try {
 
-    // $this->call('installPassport');
+        $this->call('emptyThenMigrate');
 
-    $this->call('dbSeed');
+        // $this->call('installPassport');
+
+        $this->call('dbSeed');
+
+        DB::commit();
+    } catch (\Throwable $th) {
+    }
 
     $this->newLine();
     $this->newLine();
