@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -40,6 +41,9 @@ Artisan::command('initialize-if-needed', function () {
         )
         !== 0
     ) {
+        $this->info("Application already initialized.");
+        return;
+    } elseif (User::query()->first() !== null) {
         $this->info("Application already initialized.");
         return;
     }
