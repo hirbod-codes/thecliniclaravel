@@ -12,9 +12,6 @@ jobs:
     name: Build Final Image
     runs-on: ubuntu-latest
 
-    permissions:
-      packages: write
-
     steps:
       - uses: actions/checkout@v2
 
@@ -25,32 +22,17 @@ jobs:
           touch .env
           echo $ENV_FILE | base64 -d > .env
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-        with:
-          platforms: amd64
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to ghcr.io registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.MY_GITHUB_TOKEN }}
-
       - name: Docker metadata for the application image build
         id: docker_meta
         uses: docker/metadata-action@v3
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }},ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}
           flavor: |
             latest=false
           tags: |
@@ -59,7 +41,7 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
 
-      - name: Docker Build and Push the application image to GHCR and Docker Hub
+      - name: Docker Build and Push the application image to Docker Hub
         uses: docker/build-push-action@v2
         with:
           context: ./
@@ -68,14 +50,12 @@ jobs:
           target: production
           tags: ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Docker metadata for nginx image build
         id: docker_meta_nginx
         uses: docker/metadata-action@v3
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}_nginx,ghcr.io/${{ github.actor }}/${{ github.event.repository.name }}_nginx
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}_nginx
           flavor: |
             latest=false
           tags: |
@@ -84,7 +64,7 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
 
-      - name: Docker Build and Push the nginx image to GHCR and Docker Hub
+      - name: Docker Build and Push the nginx image to Docker Hub
         uses: docker/build-push-action@v2
         with:
           context: ./
@@ -93,8 +73,6 @@ jobs:
           target: production
           tags: ${{ steps.docker_meta_nginx.outputs.tags }}
           labels: ${{ steps.docker_meta_nginx.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   deploy:
     name: Deploy the final application in the host server
