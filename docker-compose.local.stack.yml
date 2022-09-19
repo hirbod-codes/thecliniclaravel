@@ -1,0 +1,70 @@
+version: "3"
+
+services:
+  laravel:
+    image: hirb0d/thecliniclaravel:latest
+    volumes:
+      - theclinicapp:/var/www/html/laravel
+    depends_on:
+      - mysql
+    networks:
+      - theclinic
+
+  nginx:
+    image: hirb0d/thecliniclaravel_nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - theclinicapp:/var/www/html/laravel
+    depends_on:
+      - laravel
+      - mysql
+    networks:
+      - theclinic
+
+  mysql:
+    image: mysql:5
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    volumes:
+      - theclinicdata:/var/lib/mysql
+    env_file:
+      - ./.env
+    environment:
+      MYSQL_SERVICE_NAME: mysql
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_PASSWORD: password
+      MYSQL_USER: hirbod
+      MYSQL_DATABASE: thecliniclaravel
+    networks:
+      - theclinic
+
+  visualizer:
+    image: dockersamples/visualizer:stable
+    ports:
+      - "8080:8080"
+    stop_grace_period: 1m30s
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - theclinic
+    deploy:
+      placement:
+        constraints: [ node.role == manager ]
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.0
+    ports:
+      - "1000:80"
+    environment:
+      - PMA_HOST=mysql
+    depends_on:
+      - mysql
+    networks:
+      - theclinic
+
+volumes:
+  theclinicdata:
+  theclinicapp:
+networks:
+  theclinic:
