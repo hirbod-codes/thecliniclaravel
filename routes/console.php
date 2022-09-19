@@ -59,22 +59,27 @@ Artisan::command('initialize', function () {
     $ms = $t[0];
     $s = $t[1];
 
-    DB::beginTransaction();
     try {
+        $this->call('emptyDatabaseThenMigrate');
 
-        $this->call('emptyThenMigrate');
+        DB::beginTransaction();
 
         // $this->call('installPassport');
 
         $this->call('dbSeed');
 
         DB::commit();
-    } catch (\Throwable $th) {
-    }
 
-    $this->newLine();
-    $this->newLine();
-    $this->info("Application initializing has finished.");
+        $this->newLine();
+        $this->newLine();
+        $this->info("Application initialization has finished.");
+    } catch (\Throwable $th) {
+        $this->call('emptyDatabase');
+
+        $this->newLine();
+        $this->newLine();
+        $this->info("Application initialization has failed.");
+    }
 
     $t = explode(' ', microtime());
     $ms1 = $t[0];
@@ -82,7 +87,25 @@ Artisan::command('initialize', function () {
     $this->info("Total duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
 });
 
-Artisan::command('emptyThenMigrate', function () {
+Artisan::command('emptyDatabaseThenMigrate', function () {
+    $t = explode(' ', microtime());
+    $ms = $t[0];
+    $s = $t[1];
+
+    $this->call('emptyDatabase');
+
+    $this->call('migrate', ['--verbose' => true, '--force' => true, '--no-interaction' => true]);
+
+    $t = explode(' ', microtime());
+    $ms1 = $t[0];
+    $s1 = $t[1];
+    $this->newLine();
+    $this->info("The command emptyDatabaseThenMigrate duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+    $this->newLine();
+    $this->newLine();
+})->purpose('Drop all the tables in your app config(\'database.connections.mysql.database\'), Then run: php artisan migrate.');
+
+Artisan::command('emptyDatabase', function () {
     $t = explode(' ', microtime());
     $ms = $t[0];
     $s = $t[1];
@@ -95,16 +118,14 @@ Artisan::command('emptyThenMigrate', function () {
 
     $this->info("Database tables dropped successfully.");
 
-    $this->call('migrate', ['--verbose' => true, '--force' => true, '--no-interaction' => true]);
-
     $t = explode(' ', microtime());
     $ms1 = $t[0];
     $s1 = $t[1];
     $this->newLine();
-    $this->info("The command emptyThenMigrate duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+    $this->info("The command emptyDatabase duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
     $this->newLine();
     $this->newLine();
-})->purpose('Drop all the tables in your app config(\'database.connections.mysql.database\'), Then run: php artisan migrate.');
+})->purpose('Drop all the tables in your app config(\'database.connections.mysql.database\')');
 
 Artisan::command('installPassport', function () {
     $t = explode(' ', microtime());
