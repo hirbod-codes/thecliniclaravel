@@ -86,8 +86,8 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@4.3.2
         with:
           server: ${{ secrets.HOST_IP }}
-          username: ${{ secrets.HOST_USERNAME }}
-          password: ${{ secrets.HOST_PASSWORD }}
+          username: ${{ secrets.HOST_FTP_USERNAME }}
+          password: ${{ secrets.HOST_FTP_PASSWORD }}
           server-dir: /home/hirbod/
           local-dir: ./
           exclude: |
