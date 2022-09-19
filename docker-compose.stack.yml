@@ -1,20 +1,24 @@
 version: "3"
 
 services:
+  laravel:
+    image: hirb0d/thecliniclaravel:latest
+    volumes:
+      - theclinicapp:/var/www/html/laravel
+    depends_on:
+      - mysql
+    networks:
+      - theclinic
+
   nginx:
     image: hirb0d/thecliniclaravel_nginx:latest
+    volumes:
+      - theclinicapp:/var/www/html/laravel
     ports:
       - "80:80"
       - "443:443"
     depends_on:
       - laravel
-      - mysql
-    networks:
-      - theclinic
-
-  laravel:
-    image: hirb0d/thecliniclaravel:latest
-    depends_on:
       - mysql
     networks:
       - theclinic
@@ -37,6 +41,6 @@ services:
 
 volumes:
   theclinicdata:
-
+  theclinicapp:
 networks:
   theclinic:
