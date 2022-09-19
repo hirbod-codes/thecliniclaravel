@@ -31,24 +31,27 @@ Artisan::command('integration-tests', function () {
 });
 
 Artisan::command('initialize-if-needed', function () {
-    if (
-        count(
-            array_map(function ($t) {
-                foreach ($t as $key => $v) {
-                    return $v;
-                }
-            }, DB::select('SHOW TABLES'))
-        )
-        !== 0
-    ) {
-        $this->info("Application already initialized.");
-        return;
-    } elseif (User::query()->first() !== null) {
-        $this->info("Application already initialized.");
+    try {
+        if (
+            count(
+                array_map(function ($t) {
+                    foreach ($t as $key => $v) {
+                        return $v;
+                    }
+                }, DB::select('SHOW TABLES'))
+            )
+            === 0
+        ) {
+            $this->call('initialize');
+        } elseif (User::query()->first() === null) {
+            $this->call('initialize');
+        }
+    } catch (\Throwable $th) {
+        $this->call('initialize');
         return;
     }
 
-    $this->call('initialize');
+    $this->info("Application already initialized.");
 });
 
 Artisan::command('initialize', function () {
