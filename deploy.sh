@@ -41,6 +41,8 @@ while getopts "ha:s:f:" flag; do
     esac
 done
 
+docker pull hirb0d/thecliniclaravel:latest
+
 docker stack deploy -c /home/hirbod/docker-compose.stack.yml the_app
 
 echo "deployed" >> /home/hirbod/deploy.log
