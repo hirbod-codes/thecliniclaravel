@@ -103,4 +103,4 @@ jobs:
           username: ${{ secrets.HOST_USERNAME }}
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
-          script: /home/hirbod/deploy.sh
+          script: chmod u+x /home/hirbod/deploy.sh && /home/hirbod/deploy.sh
