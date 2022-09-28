@@ -4,7 +4,7 @@
     "description": "The clinic's Laravel application.",
     "license": "MIT",
     "require": {
-        "php": "=8.1.9",
+        "php": "~8.1",
         "doctrine/dbal": "=3.4",
         "guzzlehttp/guzzle": "=7.5",
         "hirbod-codes/sms": "=0.2",
