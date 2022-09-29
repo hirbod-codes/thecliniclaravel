@@ -28,6 +28,13 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to local registry
+        uses: docker/login-action@v1
+        with:
+          registry: 5.182.44.231:5000
+          username: ${{ secrets.LOCAL_REGISTRY_USERNAME }}
+          password: ${{ secrets.LOCAL_REGISTRY_PASSWORD }}
+
       - name: Docker metadata for the application image build
         id: docker_meta
         uses: docker/metadata-action@v3
@@ -41,14 +48,16 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
 
-      - name: Docker Build and Push the application image to Docker Hub
+      - name: Docker Build and Push the application image to Docker Hub and local registry
         uses: docker/build-push-action@v2
         with:
           context: ./
           file: Dockerfile
           push: true
           target: production
-          tags: ${{ steps.docker_meta.outputs.tags }}
+          tags: |
+            5.182.44.231:5000/${{ steps.docker_meta.outputs.tags }}
+            ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
 
       - name: Docker metadata for nginx image build
@@ -64,15 +73,24 @@ jobs:
             type=ref,event=branch
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
 
-      - name: Docker Build and Push the nginx image to Docker Hub
+      - name: Docker Build and Push the nginx image to Docker Hub and local registry
         uses: docker/build-push-action@v2
         with:
           context: ./
           file: Dockerfile.nginx
           push: true
           target: production
-          tags: ${{ steps.docker_meta_nginx.outputs.tags }}
+          tags: |
+            ${{ steps.docker_meta_nginx.outputs.tags }}
+            5.182.44.231:5000/${{ steps.docker_meta_nginx.outputs.tags }}
           labels: ${{ steps.docker_meta_nginx.outputs.labels }}
+
+      - name: Push Image from docker hub to local registry
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: docker.io/mysql:5
+          dst: |
+            5.182.44.231:5000/mysql:5
 
   deploy:
     name: Deploy the final application in the host server
@@ -103,4 +121,4 @@ jobs:
           username: ${{ secrets.HOST_USERNAME }}
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
-          script: chmod u+x /home/hirbod/deploy.sh && docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }} && /home/hirbod/deploy.sh
+          script: chmod u+x /home/hirbod/deploy.sh && /home/hirbod/deploy.sh
