@@ -22,8 +22,16 @@ jobs:
           touch .env
           echo $ENV_FILE | base64 -d > .env
 
+      - name: Forcing docker to authorize local registry server's certificates
+        run: |
+          cp ./docler/certs/ca.crt /etc/docker/certs.d/${{ secrets.HOST_IP }}:5000/ca.crt
+          cp ./docler/certs/ca.crt /etc/docker/certs.d/hirbod.info:5000/ca.crt
+          ls -al /etc/docker/certs.d/
+          ls -al /etc/docker/certs.d/${{ secrets.HOST_IP }}:5000
+          ls -al /etc/docker/certs.d/hirbod.info:5000
+
       - name: Login to Docker Hub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -31,7 +39,7 @@ jobs:
       - name: Login to local registry
         uses: docker/login-action@v1
         with:
-          registry: 5.182.44.231:5000
+          registry: ${{ secrets.HOST_IP }}:5000
           username: ${{ secrets.LOCAL_REGISTRY_USERNAME }}
           password: ${{ secrets.LOCAL_REGISTRY_PASSWORD }}
 
@@ -56,7 +64,7 @@ jobs:
           push: true
           target: production
           tags: |
-            5.182.44.231:5000/${{ steps.docker_meta.outputs.tags }}
+            ${{ secrets.HOST_IP }}:5000/${{ steps.docker_meta.outputs.tags }}
             ${{ steps.docker_meta.outputs.tags }}
           labels: ${{ steps.docker_meta.outputs.labels }}
 
@@ -82,7 +90,7 @@ jobs:
           target: production
           tags: |
             ${{ steps.docker_meta_nginx.outputs.tags }}
-            5.182.44.231:5000/${{ steps.docker_meta_nginx.outputs.tags }}
+            ${{ secrets.HOST_IP }}:5000/${{ steps.docker_meta_nginx.outputs.tags }}
           labels: ${{ steps.docker_meta_nginx.outputs.labels }}
 
       - name: Push Image from docker hub to local registry
@@ -90,7 +98,7 @@ jobs:
         with:
           src: docker.io/mysql:5
           dst: |
-            5.182.44.231:5000/mysql:5
+            ${{ secrets.HOST_IP }}:5000/mysql:5
 
   deploy:
     name: Deploy the final application in the host server
