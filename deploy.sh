@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-echo "deploying" >> /home/hirbod/deploy.log
+echo "deploying" >>/home/hirbod/deploy.log
 
 Help() {
     echo "This bash script will deploy an application called the_app in docker swarm."
@@ -20,17 +20,17 @@ while getopts "ha:s:f:" flag; do
 
     a)
         a=${OPTARG}
-        echo "a value=$a, ${OPTARG}" >> /home/hirbod/deploy.log
+        echo "a value=$a, ${OPTARG}" >>/home/hirbod/deploy.log
         ;;
 
     f)
         f1=${OPTARG}
-        echo "f value=$f1, ${OPTARG}" >> /home/hirbod/deploy.log
+        echo "f value=$f1, ${OPTARG}" >>/home/hirbod/deploy.log
         ;;
 
     s)
         f2=${OPTARG}
-        echo "s value=$f2, ${OPTARG}" >> /home/hirbod/deploy.log
+        echo "s value=$f2, ${OPTARG}" >>/home/hirbod/deploy.log
         ;;
 
     \?)
@@ -41,8 +41,10 @@ while getopts "ha:s:f:" flag; do
     esac
 done
 
-docker pull hirb0d/thecliniclaravel:latest
+docker build --tag 5.182.44.231:5000/hirb0d/thecliniclaravel_nginx:latest --target production --file /home/hirbod/application/Dockerfile.nginx .
 
-docker stack deploy -c /home/hirbod/docker-compose.stack.yml the_app
+docker build --tag 5.182.44.231:5000/hirb0d/thecliniclaravel:latest --target production --file /home/hirbod/application/Dockerfile .
 
-echo "deployed" >> /home/hirbod/deploy.log
+docker stack deploy -c ./docker-compose.stack.yml the_app
+
+echo "deployed" >>/home/hirbod/deploy.log
