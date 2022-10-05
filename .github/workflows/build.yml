@@ -24,10 +24,11 @@ jobs:
 
       - name: Forcing docker to authorize local registry server's certificates
         run: |
-          cp ./docker/certs/ca.crt /etc/docker/certs.d/${{ secrets.HOST_IP }}:5000/ca.crt
+          mkdir -p /etc/docker/certs.d/
+          cp ./docker/certs/ca.crt /etc/docker/certs.d/5.182.44.231:5000/ca.crt
           cp ./docker/certs/ca.crt /etc/docker/certs.d/hirbod.info:5000/ca.crt
           ls -al /etc/docker/certs.d/
-          ls -al /etc/docker/certs.d/${{ secrets.HOST_IP }}:5000
+          ls -al /etc/docker/certs.d/5.182.44.231:5000
           ls -al /etc/docker/certs.d/hirbod.info:5000
 
       - name: Login to Docker Hub
