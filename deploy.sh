@@ -3,7 +3,7 @@
 echo "deploying" >>/home/hirbod/deploy.log
 
 Help() {
-    echo "This bash script will deploy an application called the_app in docker swarm."
+    echo "This bash script will deploy an swarm stack called the_app in docker swarm."
     echo
     echo "Syntax: scriptTemplate [-f1|f2|h|]"
     echo "options:"
@@ -11,40 +11,30 @@ Help() {
     echo
 }
 
-while getopts "ha:s:f:" flag; do
-    case "${flag}" in
-    h)
-        Help
-        exit
-        ;;
+# Docker image 5.182.44.231:5000/mysql:5
+docker pull m.docker-registry.ir/mysql:5
+docker tag m.docker-registry.ir/mysql:5 5.182.44.231:5000/mysql:5
+docker image rm m.docker-registry.ir/mysql:5
 
-    a)
-        a=${OPTARG}
-        echo "a value=$a, ${OPTARG}" >>/home/hirbod/deploy.log
-        ;;
+# Docker image 5.182.44.231:5000/composer:latest
+docker pull m.docker-registry.ir/composer:latest
+docker pull 5.182.44.231:5000/composer:latest
+docker image rm m.docker-registry.ir/composer:latest
 
-    f)
-        f1=${OPTARG}
-        echo "f value=$f1, ${OPTARG}" >>/home/hirbod/deploy.log
-        ;;
+# Docker image 5.182.44.231:5000/5.182.44.231:5000/php:8.1.9-fpm-buster
+docker pull m.docker-registry.ir/php:8.1.9-fpm-buster
+docker tag m.docker-registry.ir/php:8.1.9-fpm-buster 5.182.44.231:5000/php:8.1.9-fpm-buster
+docker image rm m.docker-registry.ir/php:8.1.9-fpm-buster
 
-    s)
-        f2=${OPTARG}
-        echo "s value=$f2, ${OPTARG}" >>/home/hirbod/deploy.log
-        ;;
-
-    \?)
-        echo "Invalid option !!!"
-        exit
-        ;;
-
-    esac
-done
+# Docker image 5.182.44.231:5000/5.182.44.231:5000/nginx:1.23.1
+docker pull m.docker-registry.ir/nginx:1.23.1
+docker pull 5.182.44.231:5000/nginx:1.23.1
+docker image rm m.docker-registry.ir/nginx:1.23.1
 
 docker build --tag 5.182.44.231:5000/hirb0d/thecliniclaravel_nginx:latest --target production --file /home/hirbod/application/Dockerfile.nginx .
 
 docker build --tag 5.182.44.231:5000/hirb0d/thecliniclaravel:latest --target production --file /home/hirbod/application/Dockerfile .
 
-docker stack deploy -c ./docker-compose.stack.yml the_app
+docker stack deploy -c /home/hirbod/application/docker-compose.stack.yml the_app
 
 echo "deployed" >>/home/hirbod/deploy.log
