@@ -52,9 +52,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/
 
 FROM production_base AS production_base_with_composer
 
-RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '55ce33d7678c5a611085589f1f3ddf8b3c52d662cd01d4ba75c0ee0459970c2200a51f492d557530c71c15d8dba01eae') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" && \
-    php ./docker/php/composer-setup.php
-
 COPY --from=5.182.44.231:5000/composer:latest /usr/bin/composer /usr/bin/
 
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -95,10 +92,15 @@ FROM production_base_with_composer AS production
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
+RUN apt-get install -y \
+    acl \
+    nodejs \
+    npm
+
 ENV NODE_VERSION=16.13.0
 
-RUN apt-get install -y \
-    acl
+RUN mkdir -p ./docker/nvm/
+COPY ./docker/nvm/install.sh ./docker/nvm/
 
 RUN ./docker/nvm/install.sh
 
