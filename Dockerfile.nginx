@@ -1,3 +1,28 @@
+FROM nginx:1.23.1 AS production_tests
+
+USER root
+
+RUN usermod -G root nginx
+
+WORKDIR /var/www/html/laravel
+
+COPY . .
+
+RUN apt-get update
+RUN apt-get install -y openssl procps nano
+
+RUN openssl req -x509 -nodes -days 1024 -newkey rsa:2048 -keyout ./local_ssl/localhost.key -out ./local_ssl/localhost.crt -config ./local_ssl/open_ssl.conf -extensions 'v3_req'
+
+RUN cp ./local_ssl/localhost.crt /etc/ssl/certs/localhost.crt && \
+    cp ./local_ssl/localhost.key /etc/ssl/private/localhost.key && \
+    cp ./docker/nginx/nginx-default.conf /etc/nginx/conf.d/default.conf && \
+    cp ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
+
+RUN chmod -R g=rwx ./
+
+EXPOSE 80 443
+
+# Because production has network restricitons by the government
 FROM 5.182.44.231:5000/nginx:1.23.1 AS production
 
 USER root
