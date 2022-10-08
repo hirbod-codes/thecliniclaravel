@@ -17,8 +17,8 @@ class TimePeriodsManager
     public function __construct(
         null|ValidateTimeRanges $validateTimeRanges = null,
         null|array|\ArrayAccess|\Countable $parentTimePeriods = null,
-        null|array|\Closure $getParentTimePeriodEndTS = null,
         null|array|\Closure $getParentTimePeriodStartTS = null,
+        null|array|\Closure $getParentTimePeriodEndTS = null,
     ) {
         if (!is_null($parentTimePeriods) && (is_null($getParentTimePeriodStartTS) || is_null($getParentTimePeriodEndTS))) {
             throw new \InvalidArgumentException('The getParentTimePeriodStartTS and getParentTimePeriodEndTS variables are required when parentTimePeriods variable is not null.', 500);
@@ -35,6 +35,8 @@ class TimePeriodsManager
     }
 
     /**
+     * ParentTimePeriod - TimePeriods => result
+     *
      * @param integer $neededTime
      * @param array|\ArrayAccess|\Countable $timePeriods
      * @param array|\Closure $getTimePeriodStartTS
@@ -149,13 +151,15 @@ class TimePeriodsManager
     }
 
     /**
+     * ParentTimePeriod && TimePeriods => result
+     *
      * @param integer $neededTime
      * @param array|\ArrayAccess|\Countable $timePeriods
      * @param array|\Closure $getTimePeriodStartTS
      * @param array|\Closure $getTimePeriodEndTS
      * @return \Generator<int, int[]>
      */
-    public function findIntersectionsOfTimePeriodsFromTimePeriods(
+    public function findIntersectionsOfTimePeriodsFromParentTimePeriods(
         int $neededTime,
         array|\ArrayAccess|\Countable $timePeriods,
         array|\Closure $getTimePeriodStartTS,
