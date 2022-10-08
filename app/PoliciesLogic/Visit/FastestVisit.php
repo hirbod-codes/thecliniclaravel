@@ -4,14 +4,14 @@ namespace App\PoliciesLogic\Visit;
 
 use App\DataStructures\Time\DSDownTimes;
 use App\DataStructures\Visit\DSVisits;
-use App\DataStructures\Time\DSWorkSchedule;
-use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
-use App\PoliciesLogic\Exceptions\Visit\VisitSearchFailure;
 use App\PoliciesLogic\Visit\IFindVisit;
 use App\PoliciesLogic\Visit\Utilities\SearchingBetweenDownTimes;
 use App\PoliciesLogic\Visit\Utilities\ValidateTimeRanges;
-use App\DataStructures\Time\DSDateTimePeriod;
-use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSTimePattern;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
+use App\DataStructures\Time\Util\TimeDSConverter;
+use App\DataStructures\Visit\DSVisit;
+use App\PoliciesLogic\Visit\Utilities\TimePeriodsManager;
 
 class FastestVisit implements IFindVisit
 {
@@ -21,13 +21,11 @@ class FastestVisit implements IFindVisit
 
     private DSVisits $futureVisits;
 
-    private DSWorkSchedule $dsWorkSchedule;
+    private DSWeeklyTimePatterns $workSchedule;
 
     private DSDownTimes $dsDownTimes;
 
-    private SearchingBetweenDownTimes $SearchingBetweenDownTimes;
-
-    private ValidateTimeRanges $validateTimeRanges;
+    private TimePeriodsManager $timePeriodsManager;
 
     private string $oldSort;
 
@@ -35,81 +33,80 @@ class FastestVisit implements IFindVisit
         \DateTime $startPoint,
         int $consumingTime,
         DSVisits $futureVisits,
-        DSWorkSchedule $dsWorkSchedule,
+        DSWeeklyTimePatterns $workSchedule,
         DSDownTimes $dsDownTimes,
-        null|SearchingBetweenDownTimes $SearchingBetweenDownTimes = null,
-        null|ValidateTimeRanges $validateTimeRanges = null
+        null|TimePeriodsManager $timePeriodsManager = null
     ) {
         $this->pointer = $startPoint;
         $this->consumingTime = $consumingTime;
         $this->oldSort = $futureVisits->getSort();
         $futureVisits->setSort('ASC');
         $this->futureVisits = $futureVisits;
-        $this->dsWorkSchedule = $dsWorkSchedule;
+        $this->workSchedule = $workSchedule;
         $this->dsDownTimes = $dsDownTimes;
-        $this->SearchingBetweenDownTimes = $SearchingBetweenDownTimes ?: new SearchingBetweenDownTimes();
-        $this->validateTimeRanges = $validateTimeRanges ?: new ValidateTimeRanges;
+
+        $this->timePeriodsManager = $timePeriodsManager ?: new TimePeriodsManager();
     }
 
     public function findVisit(): int
     {
-        $this->validateTimeRanges->checkConsumingTimeInWorkSchedule($this->dsWorkSchedule, $this->consumingTime);
-        $recursiveSafetyLimit = 0;
+        try {
+            $pointer = (new \DateTime)->setTimestamp($this->pointer->getTimestamp());
 
-        while (!isset($timestamp) && $recursiveSafetyLimit < 500) {
-            $newDSWorkSchedule = $this->dsWorkSchedule->cloneIt();
-            $newDSWorkSchedule->setStartingDay($this->pointer->format("l"));
+            while (1) {
+                /** @var DSTimePattern $timePattern */
+                foreach ($this->workSchedule[$pointer->format("l")] as $timePattern) {
+                    $startTS = (new \DateTime($pointer->format("Y-m-d") . ' ' . $timePattern->getStart()))->getTimestamp();
+                    $endTS = (new \DateTime($pointer->format("Y-m-d") . ' ' . $timePattern->getEnd()))->getTimestamp();
 
-            /** @var DSDateTimePeriods $periods */
-            foreach ($newDSWorkSchedule as $weekDay => $periods) {
-                /** @var DSDateTimePeriod $period */
-                foreach ($periods as $period) {
-                    $periodStartTS = (new \DateTime($this->pointer->format('Y-m-d') . ' ' . $period->getStart()->format('H:i:s')))->getTimestamp();
-                    $periodEndTS = (new \DateTime($this->pointer->format('Y-m-d') . ' ' . $period->getEnd()->format('H:i:s')))->getTimestamp();
+                    foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
+                        $startTS,
+                        $endTS,
+                        $this->consumingTime,
+                        $this->dsDownTimes,
+                        [$this, 'startGetter'],
+                        [$this, 'endGetter'],
+                    ) as $v) {
+                        if (empty($v) || count($v) === 0) {
+                            continue;
+                        }
 
-                    if ($this->pointer->getTimestamp() > $periodEndTS) {
-                        continue;
-                    }
-
-                    if ($this->pointer->getTimestamp() <= $periodStartTS) {
-                        $firstTS = $periodStartTS;
-                    } else {
-                        $firstTS = $this->pointer->getTimestamp();
-                    }
-
-                    if (($periodEndTS - $firstTS) < $this->consumingTime) {
-                        continue;
-                    }
-
-                    try {
-                        $timestamp = $this->SearchingBetweenDownTimes->search(
-                            $firstTS,
-                            $periodEndTS,
+                        foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
+                            $v[0],
+                            $v[1],
+                            $this->consumingTime,
                             $this->futureVisits,
-                            $this->dsDownTimes,
-                            $this->consumingTime
-                        );
-                        // For testing purposes
-                        $t = (new \DateTime)->setTimestamp($timestamp);
-                        break 2;
-                    } catch (VisitSearchFailure $th) {
-                    } catch (NeededTimeOutOfRange $th) {
+                            function (DSVisit $dsVisit): int {
+                                return $dsVisit->getVisitTimestamp();
+                            },
+                            function (DSVisit $dsVisit): int {
+                                return $dsVisit->getVisitTimestamp() + $dsVisit->getConsumingTime();
+                            }
+                        ) as $v1) {
+                            if (empty($v1) || count($v1) === 0) {
+                                continue;
+                            }
+                            return $v1[0];
+                        }
                     }
                 }
-                $this->pointer
-                    ->setTime(0, 0)
-                    ->modify('+1 day');
+
+                do {
+                    $pointer->modify("+1 day");
+                } while (!isset($this->workSchedule[$pointer->format("l")]));
             }
-
-            $recursiveSafetyLimit++;
+        } finally {
+            $this->futureVisits->setSort($this->oldSort);
         }
+    }
 
-        $this->futureVisits->setSort($this->oldSort);
+    public function startGetter(object $value): int
+    {
+        return $value->getStartTimestamp();
+    }
 
-        if (isset($timestamp)) {
-            return $timestamp;
-        } else {
-            throw new \LogicException('Failed to find a visit time.', 500);
-        }
+    public function endGetter(object $value): int
+    {
+        return $value->getEndTimestamp();
     }
 }
