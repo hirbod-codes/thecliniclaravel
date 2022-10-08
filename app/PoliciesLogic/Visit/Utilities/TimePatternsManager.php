@@ -107,6 +107,15 @@ class TimePatternsManager
         }
     }
 
+    /**
+     * @param string $start
+     * @param string $end
+     * @param integer $neededTime
+     * @param array|\ArrayAccess|\Countable $timePatterns
+     * @param array|\Closure $getTimePatternStart
+     * @param array|\Closure $getTimePatternEnd
+     * @return \Generator<int, string[]>
+     */
     public function findIntersectionsOfTimePatternsFromTimePattern(
         string $start,
         string $end,
