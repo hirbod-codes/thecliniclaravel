@@ -20,7 +20,7 @@ trait TimeFactory
 
         /** @var DSDateTimePeriod $dsDateTimePeriod */
         foreach ($dsDateTimePeriods as $dsDateTimePeriod) {
-            $dsDownTimes[] = new DSDownTime($dsDateTimePeriod->getStart(), $dsDateTimePeriod->getEnd(), $this->faker->name());
+            $dsDownTimes[] = new DSDownTime($dsDateTimePeriod->getStart(), $dsDateTimePeriod->getEnd(), $this->faker->unique()->name());
         }
 
         return $dsDownTimes;
@@ -104,26 +104,25 @@ trait TimeFactory
 
         $maximumTimePatternDuration = intval(((24 * 60 * 60) - (($maximumTimePatterns + 1) * $maximumTimeGapeDuration)) / $maximumTimePatterns);
 
-        $pointer = new \DateTime("00:00:00");
-        $pointer->modify("+" . $this->faker->numberBetween(1, $maximumTimeGapeDuration) . " seconds");
-
         $weekDays = $this->faker->randomElements(DSWeeklyTimePatterns::$weekDays, $maximumWeekDays ?: $this->faker->numberBetween(1, 7));
+
         for ($i = 0; $i < count($weekDays); $i++) {
+            $pointer = new \DateTime("00:00:00");
+            $pointer->modify("+" . $this->faker->numberBetween(1, $maximumTimeGapeDuration) . " seconds");
+
+            $dsTimePatterns = new DSTimePatterns;
+
             for ($j = 0; $j < $maximumTimePatterns; $j++) {
-                $dsTimePatterns = new DSTimePatterns;
-
                 $start = $pointer->format("H:i:s");
-
                 $pointer->modify("+" . $this->faker->numberBetween(1, $maximumTimePatternDuration) . " seconds");
-
                 $end = $pointer->format("H:i:s");
 
                 $dsTimePatterns[] = new DSTimePattern($start, $end);
 
-                $dsWeeklyTimePatterns[$weekDays[$i]] = $dsTimePatterns;
-
                 $pointer->modify("+" . $this->faker->numberBetween(1, $maximumTimeGapeDuration) . " seconds");
             }
+
+            $dsWeeklyTimePatterns[$weekDays[$i]] = $dsTimePatterns;
         }
 
         return $dsWeeklyTimePatterns;
