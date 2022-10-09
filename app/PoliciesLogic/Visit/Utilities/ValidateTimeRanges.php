@@ -2,32 +2,35 @@
 
 namespace App\PoliciesLogic\Visit\Utilities;
 
+use App\PoliciesLogic\Exceptions\Visit\InvalidConsumingTime;
 use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
 use App\DataStructures\Time\DSDateTimePeriod;
 use App\DataStructures\Time\DSDateTimePeriods;
-use App\DataStructures\Time\DSWorkSchedule;
+use App\DataStructures\Time\DSTimePattern;
+use App\DataStructures\Time\DSTimePatterns;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 
 class ValidateTimeRanges
 {
     /**
-     * @param DSWorkSchedule $dsWorkSchedule
+     * @param DSWeeklyTimePatterns $workSchedule
      * @param integer $consumingTime
      * @return void
      *
      * @throws NeededTimeOutOfRange
      */
-    public function checkConsumingTimeInWorkSchedule(DSWorkSchedule $dsWorkSchedule, int $consumingTime): void
+    public function checkConsumingTimeInWorkSchedule(DSWeeklyTimePatterns $workSchedule, int $consumingTime): void
     {
         $found = false;
 
         /**
          * @var string $weekDay
-         * @var DSDateTimePeriods $dsDateTimePeriods
+         * @var DSTimePatterns $dsTimePatterns
          */
-        foreach ($dsWorkSchedule as $weekDay => $dsDateTimePeriods) {
-            /** @var DSDateTimePeriod $dsDateTimePeriod */
-            foreach ($dsDateTimePeriods as $dsDateTimePeriod) {
-                if (($dsDateTimePeriod->getEndTimestamp() - $dsDateTimePeriod->getStartTimestamp()) >= $consumingTime) {
+        foreach ($workSchedule as $weekDay => $dsTimePatterns) {
+            /** @var DSTimePattern $dsTimePattern */
+            foreach ($dsTimePatterns as $dsTimePattern) {
+                if (((new \DateTime($dsTimePattern->getEnd()))->getTimestamp() - (new \DateTime($dsTimePattern->getStart()))->getTimestamp()) >= $consumingTime) {
                     $found = true;
                 }
             }
@@ -44,7 +47,7 @@ class ValidateTimeRanges
      * @param integer $consumingTime
      * @return void
      *
-     * @throws NeededTimeOutOfRange
+     * @throws InvalidConsumingTime
      */
     public function checkConsumingTimeInTimeRange(int $firstTS, int $lastTS, int $consumingTime): void
     {
@@ -52,7 +55,7 @@ class ValidateTimeRanges
             $lastTS <= $firstTS ||
             ($lastTS - $firstTS) < $consumingTime
         ) {
-            throw new NeededTimeOutOfRange();
+            throw new InvalidConsumingTime();
         }
     }
 }
