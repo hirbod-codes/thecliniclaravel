@@ -9,6 +9,8 @@ use App\DataStructures\Time\DSTimePatterns;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\DataStructures\Visit\DSVisit;
 use App\DataStructures\Visit\DSVisits;
+use App\PoliciesLogic\Exceptions\Visit\InvalidConsumingTime;
+use App\PoliciesLogic\Exceptions\Visit\VisitTimeSearchFailure;
 use App\PoliciesLogic\Visit\Utilities\TimePatternsManager;
 use App\PoliciesLogic\Visit\Utilities\TimePeriodsManager;
 
@@ -67,9 +69,16 @@ class WeeklyVisit implements IFindVisit
         return $value->getEndTimestamp();
     }
 
+
+    /**
+     * @return integer
+     * @throws NeededTimeOutOfRange if consuming time is bigger than all of the work schedule time patterns.
+     * @throws VisitTimeSearchFailure if it's failing to find a visit time.
+     */
     public function findVisit(): int
     {
         try {
+            $this->validateTimeRanges->checkConsumingTimeInWorkSchedule($this->workSchedule, $this->consumingTime);
             $smallestTimestamp = null;
             $timestamps = [];
 
@@ -84,70 +93,79 @@ class WeeklyVisit implements IFindVisit
                     $dsTimePatterns = $this->dsTimePatterns;
                 }
 
-                /** @var DSTimePattern $timePattern */
-                foreach ($timePatterns as $timePattern) {
-                    foreach ($this->timePatternsManager->findIntersectionsOfTimePatternsFromTimePattern(
-                        $timePattern->getStart(),
-                        $timePattern->getEnd(),
-                        $this->consumingTime,
-                        $dsTimePatterns,
-                        [$this, 'startGetter'],
-                        [$this, 'endGetter'],
-                    ) as $v) {
-                        if (empty($v) || count($v) === 0) {
-                            continue;
-                        }
-
-                        $pointer = $this->movePointerToClosestWeekDay((new \DateTime)->setTimestamp($this->pointer->getTimestamp()), $weekDay);
-
-                        while (1) {
-                            try {
-                                foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
-                                    (new \DateTime($pointer->format("Y-m-d") . ' ' . $v[0]))->getTimestamp(),
-                                    (new \DateTime($pointer->format("Y-m-d") . ' ' . $v[1]))->getTimestamp(),
-                                    $this->consumingTime,
-                                    $this->dsDownTimes,
-                                    [$this, 'startGetter'],
-                                    [$this, 'endGetter'],
-                                ) as $v1) {
-                                    if (empty($v1) || count($v1) === 0) {
-                                        continue;
-                                    }
-
-                                    foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
-                                        $v1[0],
-                                        $v1[1],
-                                        $this->consumingTime,
-                                        $this->futureVisits,
-                                        function (DSVisit $dsVisit): int {
-                                            return $dsVisit->getVisitTimestamp();
-                                        },
-                                        function (DSVisit $dsVisit): int {
-                                            return $dsVisit->getVisitTimestamp() + $dsVisit->getConsumingTime();
-                                        }
-                                    ) as $v2) {
-                                        if (empty($v2) || count($v2) === 0) {
-                                            continue;
-                                        }
-                                        $timestamps[] = $v2[0];
-                                        if ($smallestTimestamp === null || $v2[0] < $smallestTimestamp) {
-                                            $smallestTimestamp = $v2[0];
-                                        }
-                                        goto after_while;
-                                    }
-                                }
-                            } catch (NeededTimeOutOfRange $th) {
+                try {
+                    /** @var DSTimePattern $timePattern */
+                    foreach ($timePatterns as $timePattern) {
+                        foreach ($this->timePatternsManager->findIntersectionsOfTimePatternsFromTimePattern(
+                            $timePattern->getStart(),
+                            $timePattern->getEnd(),
+                            $this->consumingTime,
+                            $dsTimePatterns,
+                            [$this, 'startGetter'],
+                            [$this, 'endGetter'],
+                        ) as $v) {
+                            if (empty($v) || count($v) === 0) {
+                                continue;
                             }
 
-                            $pointer = $this->movePointerToClosestWeekDay($pointer, $weekDay);
-                        }
+                            $pointer = $this->movePointerToClosestWeekDay((new \DateTime)->setTimestamp($this->pointer->getTimestamp()), $weekDay);
 
-                        after_while:
+                            try {
+                                while (1) {
+                                    foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
+                                        (new \DateTime($pointer->format("Y-m-d") . ' ' . $v[0]))->getTimestamp(),
+                                        (new \DateTime($pointer->format("Y-m-d") . ' ' . $v[1]))->getTimestamp(),
+                                        $this->consumingTime,
+                                        $this->dsDownTimes,
+                                        [$this, 'startGetter'],
+                                        [$this, 'endGetter'],
+                                    ) as $v1) {
+                                        if (empty($v1) || count($v1) === 0) {
+                                            continue;
+                                        }
+
+                                        try {
+                                            foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
+                                                $v1[0],
+                                                $v1[1],
+                                                $this->consumingTime,
+                                                $this->futureVisits,
+                                                function (DSVisit $dsVisit): int {
+                                                    return $dsVisit->getVisitTimestamp();
+                                                },
+                                                function (DSVisit $dsVisit): int {
+                                                    return $dsVisit->getVisitTimestamp() + $dsVisit->getConsumingTime();
+                                                }
+                                            ) as $v2) {
+                                                if (empty($v2) || count($v2) === 0) {
+                                                    continue;
+                                                }
+                                                $timestamps[] = $v2[0];
+                                                if ($smallestTimestamp === null || $v2[0] < $smallestTimestamp) {
+                                                    $smallestTimestamp = $v2[0];
+                                                }
+                                                goto after_while;
+                                            }
+                                        } catch (InvalidConsumingTime $th) {
+                                            continue;
+                                        }
+                                    }
+
+                                    $pointer = $this->movePointerToClosestWeekDay($pointer, $weekDay);
+                                }
+                            } catch (InvalidConsumingTime $th) {
+                                continue;
+                            }
+
+                            after_while:
+                        }
                     }
+                } catch (InvalidConsumingTime $th) {
+                    continue;
                 }
             }
 
-            throw new NeededTimeOutOfRange('', 404);
+            throw new VisitTimeSearchFailure('', 404);
         } finally {
             $this->futureVisits->setSort($this->oldSort);
         }
