@@ -3,7 +3,6 @@
 namespace Tests\Feature\Visits;
 
 use App\DataStructures\Time\DSDateTimePeriods;
-use App\DataStructures\Time\DSDownTime;
 use App\DataStructures\Time\DSDownTimes;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\DataStructures\Visit\DSVisits;
@@ -14,7 +13,7 @@ use Faker\Generator;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
-use App\PoliciesLogic\Exceptions\Visit\VisitSearchFailure;
+use App\PoliciesLogic\Exceptions\Visit\VisitTimeSearchFailure;
 use Tests\Feature\Visits\Util\TimeFactory;
 
 class CustomVisitTest extends TestCase
@@ -88,7 +87,7 @@ class CustomVisitTest extends TestCase
                 "workScheduleArray" => $workScheduleArray,
             ],
             JSON_PRETTY_PRINT
-        ));
+        ) . "\n");
 
         $timestamp = $message = null;
         try {
@@ -101,10 +100,8 @@ class CustomVisitTest extends TestCase
             ))->findVisit();
         } catch (NeededTimeOutOfRange $th) {
             $message = "NeededTimeOutOfRange Exception has been thrown.";
-            return ["timestamp" => $timestamp, "message" => $message];
-        } catch (VisitSearchFailure $th) {
-            $message = "VisitSearchFailure Exception has been thrown.";
-            return ["timestamp" => $timestamp, "message" => $message];
+        } catch (VisitTimeSearchFailure $th) {
+            $message = "VisitTimeSearchFailure Exception has been thrown.";
         }
 
         if ($timestamp !== null) {
@@ -119,6 +116,10 @@ class CustomVisitTest extends TestCase
             $content .= $message;
             file_put_contents($fileAddress, $content);
         }
+
+        $content = file_get_contents($fileAddress);
+        $content .= "\n-----------------------------------------------------------END----------------------------------------------------------------------\n";
+        file_put_contents($fileAddress, $content);
 
         return ["timestamp" => $timestamp, "message" => $message];
     }
