@@ -14,6 +14,7 @@ use Faker\Generator;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
+use App\PoliciesLogic\Exceptions\Visit\VisitSearchFailure;
 use Tests\Feature\Visits\Util\TimeFactory;
 
 class CustomVisitTest extends TestCase
@@ -100,6 +101,9 @@ class CustomVisitTest extends TestCase
             ))->findVisit();
         } catch (NeededTimeOutOfRange $th) {
             $message = "NeededTimeOutOfRange Exception has been thrown.";
+            return ["timestamp" => $timestamp, "message" => $message];
+        } catch (VisitSearchFailure $th) {
+            $message = "VisitSearchFailure Exception has been thrown.";
             return ["timestamp" => $timestamp, "message" => $message];
         }
 
