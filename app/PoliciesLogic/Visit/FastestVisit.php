@@ -11,6 +11,8 @@ use App\DataStructures\Time\DSTimePattern;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\DataStructures\Time\Util\TimeDSConverter;
 use App\DataStructures\Visit\DSVisit;
+use App\PoliciesLogic\Exceptions\Visit\InvalidConsumingTime;
+use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
 use App\PoliciesLogic\Visit\Utilities\TimePeriodsManager;
 
 class FastestVisit implements IFindVisit
@@ -27,6 +29,8 @@ class FastestVisit implements IFindVisit
 
     private TimePeriodsManager $timePeriodsManager;
 
+    private ValidateTimeRanges $validateTimeRanges;
+
     private string $oldSort;
 
     public function __construct(
@@ -35,7 +39,8 @@ class FastestVisit implements IFindVisit
         DSVisits $futureVisits,
         DSWeeklyTimePatterns $workSchedule,
         DSDownTimes $dsDownTimes,
-        null|TimePeriodsManager $timePeriodsManager = null
+        null|TimePeriodsManager $timePeriodsManager = null,
+        null|ValidateTimeRanges $validateTimeRanges = null
     ) {
         $this->pointer = $startPoint;
         $this->consumingTime = $consumingTime;
@@ -46,48 +51,68 @@ class FastestVisit implements IFindVisit
         $this->dsDownTimes = $dsDownTimes;
 
         $this->timePeriodsManager = $timePeriodsManager ?: new TimePeriodsManager();
+        $this->validateTimeRanges = $validateTimeRanges ?: new TimePeriodsManager();
     }
 
+    /**
+     * @return integer
+     * @throws NeededTimeOutOfRange if consuming time is bigger than all of the work schedule time patterns
+     */
     public function findVisit(): int
     {
         try {
+            $this->validateTimeRanges->checkConsumingTimeInWorkSchedule($this->workSchedule, $this->consumingTime);
             $pointer = (new \DateTime)->setTimestamp($this->pointer->getTimestamp());
 
             while (1) {
+
                 /** @var DSTimePattern $timePattern */
                 foreach ($this->workSchedule[$pointer->format("l")] as $timePattern) {
                     $startTS = (new \DateTime($pointer->format("Y-m-d") . ' ' . $timePattern->getStart()))->getTimestamp();
                     $endTS = (new \DateTime($pointer->format("Y-m-d") . ' ' . $timePattern->getEnd()))->getTimestamp();
 
-                    foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
-                        $startTS,
-                        $endTS,
-                        $this->consumingTime,
-                        $this->dsDownTimes,
-                        [$this, 'startGetter'],
-                        [$this, 'endGetter'],
-                    ) as $v) {
-                        if (empty($v) || count($v) === 0) {
-                            continue;
-                        }
-
+                    try {
                         foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
-                            $v[0],
-                            $v[1],
+                            $startTS,
+                            $endTS,
                             $this->consumingTime,
-                            $this->futureVisits,
-                            function (DSVisit $dsVisit): int {
-                                return $dsVisit->getVisitTimestamp();
-                            },
-                            function (DSVisit $dsVisit): int {
-                                return $dsVisit->getVisitTimestamp() + $dsVisit->getConsumingTime();
-                            }
-                        ) as $v1) {
-                            if (empty($v1) || count($v1) === 0) {
+                            $this->dsDownTimes,
+                            [$this, 'startGetter'],
+                            [$this, 'endGetter'],
+                        ) as $v) {
+                            if (empty($v) || count($v) === 0) {
                                 continue;
                             }
-                            return $v1[0];
+
+                            try {
+                                foreach ($this->timePeriodsManager->subtractTimePeriodsFromTimePeriod(
+                                    $v[0],
+                                    $v[1],
+                                    $this->consumingTime,
+                                    $this->futureVisits,
+                                    function (DSVisit $dsVisit): int {
+                                        return $dsVisit->getVisitTimestamp();
+                                    },
+                                    function (DSVisit $dsVisit): int {
+                                        return $dsVisit->getVisitTimestamp() + $dsVisit->getConsumingTime();
+                                    }
+                                ) as $v1) {
+                                    if (empty($v1) || count($v1) === 0) {
+                                        continue;
+                                    }
+
+                                    if ($v1[0] < $this->pointer->getTimestamp()) {
+                                        continue;
+                                    }
+
+                                    return $v1[0];
+                                }
+                            } catch (InvalidConsumingTime $th) {
+                                continue;
+                            }
                         }
+                    } catch (InvalidConsumingTime $th) {
+                        continue;
                     }
                 }
 
