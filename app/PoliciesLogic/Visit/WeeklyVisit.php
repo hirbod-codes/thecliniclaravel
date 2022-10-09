@@ -13,6 +13,7 @@ use App\PoliciesLogic\Exceptions\Visit\InvalidConsumingTime;
 use App\PoliciesLogic\Exceptions\Visit\VisitTimeSearchFailure;
 use App\PoliciesLogic\Visit\Utilities\TimePatternsManager;
 use App\PoliciesLogic\Visit\Utilities\TimePeriodsManager;
+use App\PoliciesLogic\Visit\Utilities\ValidateTimeRanges;
 
 class WeeklyVisit implements IFindVisit
 {
@@ -31,6 +32,8 @@ class WeeklyVisit implements IFindVisit
     private TimePeriodsManager $timePeriodsManager;
     private TimePatternsManager $timePatternsManager;
 
+    private ValidateTimeRanges $validateTimeRanges;
+
     private string $oldSort;
 
     public function __construct(
@@ -42,6 +45,7 @@ class WeeklyVisit implements IFindVisit
         null|\DateTime $pointer = null,
         null|TimePatternsManager $timePatternsManager = null,
         null|TimePeriodsManager $timePeriodsManager = null,
+        null|ValidateTimeRanges $validateTimeRanges = null
     ) {
         $this->dsTimePatterns = $dsTimePatterns;
         $this->consumingTime = $consumingTime;
@@ -57,14 +61,26 @@ class WeeklyVisit implements IFindVisit
 
         $this->timePeriodsManager = $timePeriodsManager ?: new TimePeriodsManager();
         $this->timePatternsManager = $timePatternsManager ?: new TimePatternsManager();
+
+        $this->validateTimeRanges = $validateTimeRanges ?: new ValidateTimeRanges();
     }
 
-    public function startGetter(object $value): int
+    public function patternStartGetter(object $value): string
+    {
+        return $value->getStart();
+    }
+
+    public function patternEndGetter(object $value): string
+    {
+        return $value->getEnd();
+    }
+
+    public function periodStartGetter(object $value): int
     {
         return $value->getStartTimestamp();
     }
 
-    public function endGetter(object $value): int
+    public function periodEndGetter(object $value): int
     {
         return $value->getEndTimestamp();
     }
@@ -101,8 +117,8 @@ class WeeklyVisit implements IFindVisit
                             $timePattern->getEnd(),
                             $this->consumingTime,
                             $dsTimePatterns,
-                            [$this, 'startGetter'],
-                            [$this, 'endGetter'],
+                            [$this, 'patternStartGetter'],
+                            [$this, 'patternEndGetter'],
                         ) as $v) {
                             if (empty($v) || count($v) === 0) {
                                 continue;
@@ -117,8 +133,8 @@ class WeeklyVisit implements IFindVisit
                                         (new \DateTime($pointer->format("Y-m-d") . ' ' . $v[1]))->getTimestamp(),
                                         $this->consumingTime,
                                         $this->dsDownTimes,
-                                        [$this, 'startGetter'],
-                                        [$this, 'endGetter'],
+                                        [$this, 'periodStartGetter'],
+                                        [$this, 'periodEndGetter'],
                                     ) as $v1) {
                                         if (empty($v1) || count($v1) === 0) {
                                             continue;
@@ -163,6 +179,10 @@ class WeeklyVisit implements IFindVisit
                 } catch (InvalidConsumingTime $th) {
                     continue;
                 }
+            }
+
+            if ($smallestTimestamp !== null) {
+                return $smallestTimestamp;
             }
 
             throw new VisitTimeSearchFailure('', 404);
