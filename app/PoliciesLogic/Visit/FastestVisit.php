@@ -51,7 +51,7 @@ class FastestVisit implements IFindVisit
         $this->dsDownTimes = $dsDownTimes;
 
         $this->timePeriodsManager = $timePeriodsManager ?: new TimePeriodsManager();
-        $this->validateTimeRanges = $validateTimeRanges ?: new TimePeriodsManager();
+        $this->validateTimeRanges = $validateTimeRanges ?: new ValidateTimeRanges();
     }
 
     /**
