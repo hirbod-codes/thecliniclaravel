@@ -185,7 +185,7 @@ class TimePatternsManager
             ($type instanceof \ReflectionUnionType) ||
             ($type instanceof \ReflectionIntersectionType)
         ) {
-            throw new \InvalidArgumentException('The provided callbacks must have integer as their return type.', 500);
+            throw new \InvalidArgumentException('The provided callbacks must have string as their return type.', 500);
         }
     }
 }
