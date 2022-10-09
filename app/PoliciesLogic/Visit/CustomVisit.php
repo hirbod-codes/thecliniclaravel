@@ -57,7 +57,7 @@ class CustomVisit implements IFindVisit
         $this->timeDSConverter = $timeDSConverter ?: new TimeDSConverter;
         $this->timePeriodsManager = $timePeriodsManager ?: new TimePeriodsManager(null, $dsDateTimePeriods, [$this, 'startGetter'], [$this, 'endGetter']);
 
-        $this->validateTimeRanges = $validateTimeRanges ?: new TimePeriodsManager();
+        $this->validateTimeRanges = $validateTimeRanges ?: new ValidateTimeRanges();
     }
 
     public function startGetter(object $value): int
