@@ -1,0 +1,39 @@
+{
+    "description": "Server-side validation Error",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "errors"
+                ],
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "The validation error."
+                    },
+                    "errors": {
+                        "type": "object",
+                        "properties": {
+                            "theme": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "example": "message"
+                                }
+                            }
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "example": "message"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

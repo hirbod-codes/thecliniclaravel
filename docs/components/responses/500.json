@@ -1,0 +1,13 @@
+{
+    "empty": {
+        "description": "Server Error"
+    },
+    "not-empty": {
+        "description": "Server Error",
+        "content": {
+            "text/plain": {
+                "example": "There is something wrong."
+            }
+        }
+    }
+}

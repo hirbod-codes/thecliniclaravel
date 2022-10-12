@@ -1,0 +1,346 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "The clinic's API",
+        "version": "1"
+    },
+    "servers": [
+        {
+            "url": "https://localhost",
+            "description": "Optional server description, e.g. Main (production) server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "General"
+        },
+        {
+            "name": "Accounts"
+        },
+        {
+            "name": "Orders"
+        },
+        {
+            "name": "Visits"
+        }
+    ],
+    "paths": {
+        "/isAuthenticated": {
+            "get": {
+                "operationId": "is-authenticated",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "authenticated": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/theme": {
+            "get": {
+                "description": "Gets the current theme that is stored in the users's session.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "theme": {
+                                            "type": "string",
+                                            "example": "dark"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            },
+            "post": {
+                "description": "Changes the current theme",
+                "tags": [
+                    "General"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "theme"
+                                ],
+                                "properties": {
+                                    "theme": {
+                                        "type": "string",
+                                        "example": "dark"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "A massage to confirm the theme change."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/General/theme.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/locale": {
+            "get": {
+                "description": "Gets the current locale option that is stored in the users's session.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "longName": {
+                                            "type": "string",
+                                            "example": "English"
+                                        },
+                                        "shortName": {
+                                            "type": "string",
+                                            "example": "en"
+                                        },
+                                        "direction": {
+                                            "type": "string",
+                                            "description": "The direction in which the language is written.",
+                                            "example": "ltr"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            },
+            "put": {
+                "description": "Changes the current locale option that is stored in the users's session.",
+                "tags": [
+                    "General"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "locale"
+                                ],
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "description": "Either short name or long name of the dsired locale.",
+                                        "example": "en"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "A massage to confirm the locale change."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/General/locale.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/locales": {
+            "get": {
+                "description": "Gets all the locale options available.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "longName": {
+                                                "type": "string",
+                                                "example": "English"
+                                            },
+                                            "shortName": {
+                                                "type": "string",
+                                                "example": "en"
+                                            },
+                                            "direction": {
+                                                "type": "string",
+                                                "description": "The direction in which the language is written.",
+                                                "example": "ltr"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Accounts"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "oneOf": [
+                                    {
+                                        "type": "object",
+                                        "required": [
+                                            "password",
+                                            "username"
+                                        ],
+                                        "properties": {
+                                            "username": {
+                                                "type": "string",
+                                                "example": "fooname"
+                                            },
+                                            "password": {
+                                                "type": "string"
+                                            },
+                                            "remember": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    },
+                                    {
+                                        "type": "object",
+                                        "required": [
+                                            "password",
+                                            "email"
+                                        ],
+                                        "properties": {
+                                            "email": {
+                                                "type": "string",
+                                                "example": "example@example.example"
+                                            },
+                                            "password": {
+                                                "type": "string"
+                                            },
+                                            "remember": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "302": {
+                        "description": "Successful, redirects the user to the home page."
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/login.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/auth/phonenumber-availability": {
+            "get": {
+                "description": "Checks whether a phonenumber doesn't already exist in database.",
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "phonenumber",
+                        "schema": {
+                            "type": "string",
+                            "example": "09#########"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/auth-phonenumber-availability.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        }
+    }
+}
