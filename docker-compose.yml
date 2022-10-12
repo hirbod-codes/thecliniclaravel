@@ -28,6 +28,17 @@ services:
             MYSQL_SERVICE_NAME: mysql
         networks:
             - theclinicbridge
+    swaggerUI:
+        container_name: theclinicswaggerui
+        build:
+            context: ./
+            dockerfile: Dockerfile.swaggerui
+        image: swagger-ui:latest
+        ports:
+            - "678:8080"
+        environment:
+            BASE_URL: /api
+            SWAGGER_JSON: /docs/swagger.json
 volumes:
     theclinicdata: {}
 networks:

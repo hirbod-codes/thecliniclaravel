@@ -42,3 +42,6 @@ services:
       - mysql
     networks:
       - theclinicbridge
+  swaggerUI:
+    volumes:
+      - ./docs:/docs
