@@ -15,7 +15,7 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "roleName": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

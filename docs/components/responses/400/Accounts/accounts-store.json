@@ -1,0 +1,57 @@
+{
+    "description": "Server-side validation Error",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "errors"
+                ],
+                "properties": {
+                    "message": {
+                        "$ref": "../../400.json#/error"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "properties": {
+                            "roleName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "phonenumber": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "firstname": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "lastname": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "username": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "email": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "password": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "password_confirmation": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "gender": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "avatar": {
+                                "$ref": "../../400.json#/errors"
+                            }
+                        },
+                        "additionalProperties": {
+                            "$ref": "../../400.json#/errors"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

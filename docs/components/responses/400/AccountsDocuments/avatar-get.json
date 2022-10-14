@@ -15,7 +15,7 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "accountId": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

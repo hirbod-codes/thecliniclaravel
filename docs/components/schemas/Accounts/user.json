@@ -1,0 +1,48 @@
+{
+    "type": "object",
+    "required": [
+        "id",
+        "firstname",
+        "lastname",
+        "username",
+        "phonenumber",
+        "gender",
+        "created_at",
+        "updated_at"
+    ],
+    "properties": {
+        "id": {
+            "$ref": "../data-types.json#/id"
+        },
+        "firstname": {
+            "$ref": "../data-types.json#/firstname"
+        },
+        "lastname": {
+            "$ref": "../data-types.json#/lastname"
+        },
+        "username": {
+            "$ref": "../data-types.json#/username"
+        },
+        "email": {
+            "$ref": "../data-types.json#/email"
+        },
+        "email_verified_at": {
+            "$ref": "../data-types.json#/email_verified_at"
+        },
+        "phonenumber": {
+            "$ref": "../data-types.json#/phonenumber"
+        },
+        "phonenumber_verified_at": {
+            "$ref": "../data-types.json#/phonenumber_verified_at"
+        },
+        "gender": {
+            "$ref": "../data-types.json#/gender"
+        },
+        "created_at": {
+            "$ref": "../data-types.json#/created_at"
+        },
+        "updated_at": {
+            "$ref": "../data-types.json#/updated_at"
+        }
+    }
+}

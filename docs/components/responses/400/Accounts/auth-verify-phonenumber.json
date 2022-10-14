@@ -15,7 +15,10 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "phonenumber": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "code": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

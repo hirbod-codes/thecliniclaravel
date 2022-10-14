@@ -15,7 +15,10 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "childOrderId": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "businessName": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

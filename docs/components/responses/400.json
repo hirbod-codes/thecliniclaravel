@@ -1,25 +1,37 @@
 {
-    "description": "Server-side validation Error",
-    "content": {
-        "application/json": {
-            "schema": {
-                "type": "object",
-                "required": [
-                    "message",
-                    "errors"
-                ],
-                "properties": {
-                    "message": {
-                        "type": "string",
-                        "example": "The validation error."
-                    },
-                    "errors": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "example": "message"
+    "error": {
+        "type": "string",
+        "example": "message"
+    },
+    "errors": {
+        "type": "array",
+        "items": {
+            "$ref": "#/error"
+        }
+    },
+    "default": {
+        "description": "Server-side validation Error",
+        "content": {
+            "application/json": {
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "message",
+                        "errors"
+                    ],
+                    "properties": {
+                        "message": {
+                            "type": "string",
+                            "example": "The validation error."
+                        },
+                        "errors": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "example": "message"
+                                }
                             }
                         }
                     }

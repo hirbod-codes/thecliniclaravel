@@ -15,7 +15,10 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "laserOrderId": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "weekDaysPeriods": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

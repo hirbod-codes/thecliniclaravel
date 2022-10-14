@@ -1,0 +1,66 @@
+{
+    "id-string": {
+        "type": "string",
+        "pattern": "^[0-9]{1}[0-9]*$"
+    },
+    "id": {
+        "type": "integer",
+        "exclusiveMinimum": false,
+        "minimum": 1
+    },
+    "firstname": {
+        "type": "string"
+    },
+    "lastname": {
+        "type": "string"
+    },
+    "username": {
+        "type": "string",
+        "format": "username"
+    },
+    "email": {
+        "type": "string",
+        "format": "email"
+    },
+    "email_verified_at": {
+        "type": "string",
+        "example": "2000-01-01 04:15:59"
+    },
+    "phonenumber": {
+        "type": "string",
+        "format": "phonenumber",
+        "pattern": "^09[0-9]{9}$"
+    },
+    "phonenumber_verified_at": {
+        "type": "string",
+        "example": "2000-01-01 04:15:59"
+    },
+    "password": {
+        "type": "string",
+        "format": "password"
+    },
+    "password_confirmation": {
+        "type": "string",
+        "format": "password",
+        "description": "Must have the same value as password"
+    },
+    "gender": {
+        "type": "string",
+        "enum": [
+            "Male",
+            "Female"
+        ]
+    },
+    "created_at": {
+        "type": "string",
+        "example": "2000-01-01 04:15:59"
+    },
+    "updated_at": {
+        "type": "string",
+        "example": "2000-01-01 04:15:59"
+    },
+    "avatar": {
+        "type": "string",
+        "format": "binary"
+    }
+}

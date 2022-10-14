@@ -10,26 +10,16 @@
                 ],
                 "properties": {
                     "message": {
-                        "type": "string",
-                        "example": "The validation error."
+                        "$ref": "../../400.json#/error"
                     },
                     "errors": {
                         "type": "object",
                         "properties": {
                             "theme": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
+                                "$ref": "../../400.json#/errors"
                         },
                         "additionalProperties": {
-                            "type": "array",
-                            "items": {
-                                "type": "string",
-                                "example": "message"
-                            }
+                            "$ref": "../../400.json#/errors"
                         }
                     }
                 }
