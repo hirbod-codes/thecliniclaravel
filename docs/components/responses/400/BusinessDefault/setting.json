@@ -1,0 +1,48 @@
+{
+    "description": "Server-side validation Error",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "errors"
+                ],
+                "properties": {
+                    "message": {
+                        "$ref": "../../400.json#/error"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "properties": {
+                            "min_age": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "visit_alert_deley": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "default_regular_order_price": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "default_regular_order_time_consumption": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "genders": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "work_schedule": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "down_times": {
+                                "$ref": "../../400.json#/errors"
+                            }
+                        },
+                        "additionalProperties": {
+                            "$ref": "../../400.json#/errors"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

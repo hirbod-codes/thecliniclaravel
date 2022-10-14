@@ -1,0 +1,45 @@
+{
+    "type": "object",
+    "required": [
+        "id",
+        "price",
+        "price_with_discount",
+        "needed_time",
+        "parts",
+        "packages",
+        "created_at",
+        "updated_at"
+    ],
+    "properties": {
+        "id": {
+            "$ref": "../data-types.json#/id"
+        },
+        "price": {
+            "type": "integer"
+        },
+        "price_with_discount": {
+            "type": "integer"
+        },
+        "needed_time": {
+            "type": "integer"
+        },
+        "parts": {
+            "type": "array",
+            "items": {
+                "$ref": "part.json"
+            }
+        },
+        "packages": {
+            "type": "array",
+            "items": {
+                "$ref": "package.json"
+            }
+        },
+        "created_at": {
+            "$ref": "../data-types.json#/created_at"
+        },
+        "updated_at": {
+            "$ref": "../data-types.json#/updated_at"
+        }
+    }
+}

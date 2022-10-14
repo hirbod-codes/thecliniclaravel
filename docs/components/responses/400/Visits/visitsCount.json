@@ -15,7 +15,10 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "businessName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "roleName": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

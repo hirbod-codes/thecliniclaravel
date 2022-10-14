@@ -15,7 +15,13 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "packages": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "parts": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "gender": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

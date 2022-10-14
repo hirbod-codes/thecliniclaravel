@@ -1,0 +1,39 @@
+{
+    "type": "object",
+    "required": [
+        "id",
+        "name",
+        "gender",
+        "price",
+        "needed_time",
+        "created_at",
+        "updated_at"
+    ],
+    "properties": {
+        "id": {
+            "$ref": "../data-types.json#/id"
+        },
+        "name": {
+            "type": "string"
+        },
+        "gender": {
+            "type": "string",
+            "enum": [
+                "Male",
+                "Female"
+            ]
+        },
+        "price": {
+            "type": "integer"
+        },
+        "needed_time": {
+            "type": "integer"
+        },
+        "created_at": {
+            "$ref": "../data-types.json#/created_at"
+        },
+        "updated_at": {
+            "$ref": "../data-types.json#/updated_at"
+        }
+    }
+}

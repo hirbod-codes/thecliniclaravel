@@ -15,7 +15,13 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "roleName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "count": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "lastAccountId": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

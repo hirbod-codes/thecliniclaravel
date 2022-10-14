@@ -15,7 +15,7 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "gender": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

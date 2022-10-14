@@ -15,7 +15,7 @@
                     "errors": {
                         "type": "object",
                         "properties": {
-                            "locale": {
+                            "laserVisitId": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

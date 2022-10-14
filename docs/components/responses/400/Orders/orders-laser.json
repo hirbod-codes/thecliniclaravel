@@ -1,0 +1,51 @@
+{
+    "description": "Server-side validation Error",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "errors"
+                ],
+                "properties": {
+                    "message": {
+                        "$ref": "../../400.json#/error"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "properties": {
+                            "roleName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "username": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "count": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "lastOrderId": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "priceOtherwiseTime": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "operator": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "price": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "timeConsumption": {
+                                "$ref": "../../400.json#/errors"
+                            }
+                        },
+                        "additionalProperties": {
+                            "$ref": "../../400.json#/errors"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -15,17 +15,26 @@
                     "errors": {
                         "type": "object",
                         "properties": {
+                            "roleName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "firstname": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "lastname": {
+                                "$ref": "../../400.json#/errors"
+                            },
                             "username": {
-                            "$ref": "../../400.json#/errors"
+                                "$ref": "../../400.json#/errors"
                             },
                             "email": {
-                            "$ref": "../../400.json#/errors"
+                                "$ref": "../../400.json#/errors"
                             },
-                            "password": {
-                            "$ref": "../../400.json#/errors"
+                            "gender": {
+                                "$ref": "../../400.json#/errors"
                             },
-                            "remember": {
-                            "$ref": "../../400.json#/errors"
+                            "avatar": {
+                                "$ref": "../../400.json#/errors"
                             }
                         },
                         "additionalProperties": {

@@ -1,0 +1,54 @@
+{
+    "description": "Server-side validation Error",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "errors"
+                ],
+                "properties": {
+                    "message": {
+                        "$ref": "../../400.json#/error"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "properties": {
+                            "businessName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "roleName": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "accountId": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "orderId": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "timestamp": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "operator": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "lastVisitTimestamp": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "count": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "sortByTimestamp": {
+                                "$ref": "../../400.json#/errors"
+                            }
+                        },
+                        "additionalProperties": {
+                            "$ref": "../../400.json#/errors"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
