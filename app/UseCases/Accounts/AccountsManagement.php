@@ -3,58 +3,72 @@
 namespace App\UseCases\Accounts;
 
 use App\Models\Auth\User;
-use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
-use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class AccountsManagement
 {
     /**
-     * @param integer $lastAccountId
-     * @param integer $count
-     * @param User $user
-     * @param IDataBaseRetrieveAccounts $db
-     * @return \App\Models\User[]
+     * @param string|integer $placeholder can be user's id or username or email or phonenumber
+     * @return string The username
+     *
+     * @throws ModelNotFoundException
      */
-    public function getAccounts(int $count, string $ruleName, IDataBaseRetrieveAccounts $db, int $lastAccountId = null): array
+    public function resolveUsername(string|int $placeholder): string
     {
-        return $db->getAccounts($count, $ruleName, $lastAccountId);
-    }
-
-    public function getAccount(string $targetUserUsername, IDataBaseRetrieveAccounts $db): User
-    {
-        $targetUser = $db->getAccount($targetUserUsername);
-
-        return $targetUser;
-    }
-
-    public function createAccount(array $input, IDataBaseCreateAccount $db): User
-    {
-        return $db->createAccount($input);
-    }
-
-    public function signupAccount(array $input, IDataBaseCreateAccount $db): User
-    {
-        return $db->createAccount($input);
-    }
-
-    public function deleteAccount(User $targetUser, IDataBaseDeleteAccount $db): void
-    {
-        $db->deleteAccount($targetUser);
-    }
-
-    public function massUpdateAccount(array $input, User $targetUser, IDataBaseUpdateAccount $db): User
-    {
-        if (count($input) === 0) {
-            throw new \InvalidArgumentException('$input is empty', 500);
+        if (is_int($placeholder)) {
+            if (($user = User::query()
+                ->where((new User)->getKeyName(), '=', $placeholder)
+                ->first()) !== null) {
+                return $user->username;
+            } else {
+                throw new ModelNotFoundException('', 404);
+            }
         }
 
-        return $db->massUpdateAccount($input, $targetUser);
-    }
+        if (($user = User::query()
+            ->where('username', '=', $placeholder)
+            ->first()) !== null) {
+            return $user->username;
+        }
 
-    public function updateAccount(string $attribute, mixed $newValue, User $targetUser, IDataBaseUpdateAccount $db): User
-    {
-        return $db->updateAccount($attribute, $newValue, $targetUser);
+        if (($user = User::query()
+            ->where('email', '=', $placeholder)
+            ->first()) !== null) {
+            return $user->username;
+        }
+
+        if (($user = User::query()
+            ->where('phonenumber', '=', $placeholder)
+            ->first()) !== null) {
+            return $user->username;
+        }
+
+        if (Str::contains($placeholder, '-')) {
+            $firstname = explode('-', $placeholder)[0];
+            $lastname = explode('-', $placeholder)[1];
+
+            $firstnameRules = array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/firstname.php'))['firstname_optional'], ['required_with:lastname']);
+            $lastnameRules = array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/lastname.php'))['lastname_optional'], ['required_with:firstname']);
+
+            $validator = Validator::make(['firstname' => $firstname, 'lastname' => $lastname], [
+                'firstname' => $firstnameRules,
+                'lastname' => $lastnameRules,
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()->toArray()], 422);
+            }
+
+            if (($user = User::query()
+                ->where('firstname', '=', $firstname)
+                ->where('lastname', '=', $lastname)
+                ->first()) === null) {
+                return $user->username;
+            }
+        }
+
+        throw new ModelNotFoundException('', 404);
     }
 }
