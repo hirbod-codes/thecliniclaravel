@@ -70,19 +70,17 @@ class AccountsController extends Controller
     public function index(IndexAccountsRequest $request): JsonResponse
     {
         $validatedInput = $request->safe()->all();
-        $validatedInput = $request->all();
         $roleName = $validatedInput['roleName'];
         $lastAccountId = isset($validatedInput['lastAccountId']) ? $validatedInput['lastAccountId'] : null;
         $count = $validatedInput['count'];
 
-        return response()->json($this->accountsManagement->getAccounts($count, $roleName, $this->dataBaseRetrieveAccounts, $lastAccountId));
+        return response()->json($this->dataBaseRetrieveAccounts->getAccounts($count, $roleName, $lastAccountId));
     }
 
     public function accountsCount(AccountsCountRequest $request): Response
     {
         $input = $request->safe()->all();
-        $roleName = RoleName::query()->where('name', '=', $input['roleName'])->firstOrFail();
-        return response(count($roleName->childRoleModel->userType));
+        return response($this->dataBaseRetrieveAccounts->getAccountsCount($input['roleName']));
     }
 
     public function store(StoreAccountRequest $request, string $roleName): Response|JsonResponse
@@ -103,7 +101,7 @@ class AccountsController extends Controller
 
         $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
-        $user = $this->accountsManagement->createAccount($validatedInput, $this->dataBaseCreateAccount);
+        $user = $this->dataBaseCreateAccount->createAccount($validatedInput);
 
         return response()->json($user->toArray());
     }
@@ -118,110 +116,61 @@ class AccountsController extends Controller
             return response()->json($validator->errors()->toArray(), 422);
         }
 
-        $username = $this->findUsername($placeholder);
-        if (gettype($username) === 'object' && get_class($username) === JsonResponse::class) {
-            return $username;
-        }
+        $username = $this->accountsManagement->resolveUsername($placeholder);
 
-        $dsUser = $this->accountsManagement->getAccount($username, $this->dataBaseRetrieveAccounts);
+        $user = $this->dataBaseRetrieveAccounts->getAccount($username);
 
-        return response()->json($dsUser->toArray());
-    }
-
-    private function findUsername(string $placeholder): JsonResponse|string|null
-    {
-        if (($user = User::query()
-            ->where('username', '=', $placeholder)
-            ->first()) !== null) {
-            return $placeholder;
-        }
-
-        if (($user = User::query()
-            ->where('email', '=', $placeholder)
-            ->first()) !== null) {
-            return $placeholder;
-        }
-
-        if (($user = User::query()
-            ->where('phonenumber', '=', $placeholder)
-            ->first()) !== null) {
-            return $placeholder;
-        }
-
-        if (Str::contains($placeholder, '-')) {
-            $firstname = explode('-', $placeholder)[0];
-            $lastname = explode('-', $placeholder)[1];
-
-            $firstnameRules = array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/firstname.php'))['firstname_optional'], ['required_with:lastname']);
-            $lastnameRules = array_merge((include(base_path() . '/app/Rules/BuiltInRules/Models/User/lastname.php'))['lastname_optional'], ['required_with:firstname']);
-
-            $validator = Validator::make(['firstname' => $firstname, 'lastname' => $lastname], [
-                'firstname' => $firstnameRules,
-                'lastname' => $lastnameRules,
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()->toArray()], 422);
-            }
-
-            if (($user = User::query()
-                ->where('firstname', '=', $firstname)
-                ->where('lastname', '=', $lastname)
-                ->first()) === null) {
-                return $user->username;
-            }
-        }
-
-        throw new ModelNotFoundException('', 404);
+        return response()->json($user->toArray());
     }
 
     public function showSelf(): JsonResponse
     {
         $user = $this->checkAuthentication->getAuthenticated();
 
-        $user = $this->accountsManagement->getAccount($user->username, $this->dataBaseRetrieveAccounts);
+        // In order to have a unified data transmission
+        $user = $this->dataBaseRetrieveAccounts->getAccount($user->username);
 
         return response()->json($user->toArray());
     }
 
-    public function update(UpdateAccountRequest $request, int $accountId): JsonResponse|Response
+    public function update(UpdateAccountRequest $request, int $accountId): JsonResponse
     {
         if ($accountId <= 0) {
-            return response(__('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1']), 422);
+            return response()->json([
+                'errors' => ['accountId' => [__('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1'])]],
+                'message' => __('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1'])
+            ], 422);
         }
 
         if (count($input = $request->safe()->all()) === 0) {
-            return response(trans_choice('general.no-data', 0), 422);
+            return response()->json([
+                'errors' => [],
+                'message' => trans_choice('general.no-data', 0)
+            ], 422);
         }
 
-        try {
-            /** @var User $targetUser*/
-            $targetUser = User::query()->whereKey($accountId)->firstOrFail();
+        $targetUser = $this->dataBaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($accountId));
 
-            $dsUpdatedUser = $this->accountsManagement->massUpdateAccount(
-                $input,
-                $targetUser,
-                $this->dataBaseUpdateAccount
-            );
-        } catch (AdminsCollisionException $e) {
-            return response(trans_choice('auth.admin_conflict', 0), 403);
-        }
+        $updatedUser = $this->dataBaseUpdateAccount->massUpdateAccount(
+            $input,
+            $targetUser
+        );
 
-        return response()->json($dsUpdatedUser->toArray());
+        return response()->json($updatedUser->toArray());
     }
 
-    public function destroy(int $accountId): Response
+    public function destroy(int $accountId): Response|JsonResponse
     {
-        try {
-            /** @var User $targetUser*/
-            $targetUser = User::query()->whereKey($accountId)->first();
-
-            $this->accountsManagement->deleteAccount($targetUser, $this->dataBaseDeleteAccount);
-        } catch (AdminTemptsToDeleteAdminException $e) {
-            return response($e->getMessage(), $e->getCode());
-        } catch (AdminModificationByUserException $e) {
-            return response($e->getMessage(), $e->getCode());
+        if ($accountId <= 0) {
+            return response()->json([
+                'errors' => ['accountId' => [__('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1'])]],
+                'message' => __('validation.min.numeric', ['attribute' => 'accountId', 'min' => '1'])
+            ], 422);
         }
+
+        $targetUser = $this->dataBaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($accountId));
+
+        $this->dataBaseDeleteAccount->deleteAccount($targetUser);
 
         return response('The user successfuly deleted.');
     }

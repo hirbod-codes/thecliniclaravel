@@ -3,43 +3,39 @@
 namespace Tests\Unit\app\Http\Controller;
 
 use App\Http\Controllers\AccountsController;
-use TheClinicUseCases\Accounts\Authentication;
-use TheClinicUseCases\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
+use App\Http\Requests\Accounts\AccountsCountRequest;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
-use App\Http\Requests\Accounts\UpdateSelfAccountRequest;
 use App\Models\Auth\User as AuthUser;
-use App\Notifications\SendPhonenumberVerificationCode;
-use TheClinicUseCases\Accounts\AccountsManagement;
+use App\Models\User;
+use App\UseCases\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\DataBaseUpdateAccount;
-use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Illuminate\Notifications\AnonymousNotifiable;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Str;
 use Mockery;
 use Mockery\MockInterface;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
-use TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
+use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
+use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
+use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
+use Illuminate\Contracts\Session\Session;
+use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\User\DSUser;
 
+/**
+ * @covers \App\Http\Controllers\AccountsController
+ */
 class AccountsControllerTest extends TestCase
 {
-    use ResolveUserModel, GetAuthenticatables;
+    use GetAuthenticatables;
 
     private Generator $faker;
 
@@ -47,16 +43,10 @@ class AccountsControllerTest extends TestCase
 
     private AuthUser $user;
 
-    private DSUser $dsUser;
-
     /**
      * @var array<string, \App\Models\Auth\User> ['ruleName' => \App\Models\Auth\User, ...]
      */
     private array $users;
-
-    private Authentication|MockInterface $authentication;
-
-    private PrivilegesManagement|MockInterface $privilegesManagement;
 
     private CheckAuthentication|MockInterface $checkAuthentication;
 
@@ -76,11 +66,8 @@ class AccountsControllerTest extends TestCase
 
         $this->faker = Factory::create();
 
-        /** @var \TheClinicUseCases\Accounts\Authentication|\Mockery\MockInterface $authentication */
-        $this->authentication = Mockery::mock(Authentication::class);
-
-        /** @var \TheClinicUseCases\Privileges\PrivilegesManagement|\Mockery\MockInterface $privilegesManagement */
-        $this->privilegesManagement = Mockery::mock(PrivilegesManagement::class);
+        /** @var \App\Auth\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
+        $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
 
         /** @var \TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount|\Mockery\MockInterface $dataBaseRetrieveAccounts */
         $this->dataBaseRetrieveAccounts = Mockery::mock(IDataBaseRetrieveAccounts::class);
@@ -94,15 +81,15 @@ class AccountsControllerTest extends TestCase
         /** @var \TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount|\Mockery\MockInterface $dataBaseDeleteAccount */
         $this->dataBaseDeleteAccount = Mockery::mock(IDataBaseDeleteAccount::class);
 
-        /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
+        /** @var \App\UseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
         $this->accountsManagement = Mockery::mock(AccountsManagement::class);
+
+        $this->ruleName = $this->faker->randomElement(['admin', 'secretary', 'doctor', 'operator', 'patient']);
     }
 
     private function instantiate(): AccountsController
     {
         return new AccountsController(
-            $this->authentication,
-            $this->privilegesManagement,
             $this->checkAuthentication,
             $this->accountsManagement,
             $this->dataBaseRetrieveAccounts,
@@ -112,51 +99,15 @@ class AccountsControllerTest extends TestCase
         );
     }
 
-    public function testRun()
-    {
-        $methods = [];
-        /** @var \ReflectionMethod $method */
-        foreach ((new \ReflectionClass(static::class))->getMethods() as $method) {
-            if ($method->class !== static::class) {
-                continue;
-            }
-            $methods[] = $method->name;
-        }
-
-        $this->users = $this->getAuthenticatables();
-
-        foreach ($methods as $method) {
-            if (!Str::startsWith($method, 'test') || $method === __FUNCTION__) {
-                continue;
-            }
-
-            // because of perfomance i chose a random user from $this->users.
-            $this->ruleName = $this->faker->randomElement(array_keys($this->users));
-
-            $this->user = $this->users[$this->ruleName];
-
-            $this->dsUser = $this->user->getDataStructure();
-
-            /** @var \App\Http\Controllers\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
-            $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
-            $this->checkAuthentication->shouldReceive("getAuthenticatedDSUser")->andReturn($this->dsUser);
-            $this->checkAuthentication->shouldReceive("getAuthenticated")->andReturn($this->user);
-
-            $this->{$method}();
-        }
-    }
-
-    private function testIndex(): void
+    public function testIndex(): void
     {
         $count = $this->faker->numberBetween(1, 30);
         $lastAccountId = $this->faker->numberBetween(1, 1000);
 
-        $newDSUser = $this->getAuthenticatable($this->ruleName)->getDataStructure();
-
-        $this->accountsManagement->shouldReceive("getAccounts")
+        $this->dataBaseRetrieveAccounts->shouldReceive("getAccounts")
             ->once()
-            ->with($lastAccountId, $count, $this->ruleName, $this->dsUser, $this->dataBaseRetrieveAccounts)
-            ->andReturn([$newDSUser]);
+            ->with($count, $this->ruleName, $lastAccountId)
+            ->andReturn(['a user']);
 
         /** @var IndexAccountsRequest|MockInterface $request */
         $request = Mockery::mock(IndexAccountsRequest::class);
@@ -177,295 +128,364 @@ class AccountsControllerTest extends TestCase
 
         $this->assertIsArray($jsonResponse->original);
         $this->assertCount(1, $jsonResponse->original);
-        $this->assertEquals($newDSUser->toArray(), $jsonResponse->original[0]);
+        $this->assertEquals('a user', $jsonResponse->original[0]);
     }
 
-    private function testSendPhonenumberVerificationCode(): void
+    public function testAccountsCount(): void
     {
         $validatedInput = [
-            'phonenumber' => $phonenumber = $this->faker->phoneNumber(),
+            'roleName' => $this->ruleName,
         ];
 
-        /** @var SendPhonenumberVerificationCodeRequest|MockInterface $request */
-        $request = Mockery::mock(SendPhonenumberVerificationCodeRequest::class);
+        /** @var AccountsCountRequest|MockInterface $request */
+        $request = Mockery::mock(AccountsCountRequest::class);
         $request
             ->shouldReceive('safe->all')
             ->andReturn($validatedInput)
             //
         ;
 
-        Notification::fake();
+        $this->dataBaseRetrieveAccounts
+            ->shouldReceive('getAccountsCount')
+            ->once()
+            ->with($this->ruleName)
+            ->andReturn(5)
+            //
+        ;
 
-        $response = $this->instantiate()->sendPhonenumberVerificationCode($request);
+        $response = $this->instantiate()->accountsCount($request);
+
+        $this->assertInstanceOf(Response::class, $response);
+
+        $this->assertEquals(5, $response->original);
+    }
+
+    public function testStore()
+    {
+        $validatedInput = ['phonenumber' => '09000000000'];
+
+        /** @var Session|MockInterface $session */
+        $session = Mockery::mock(Session::class);
+        $session
+            ->shouldReceive("get")
+            ->with('isPhonenumberVerified')
+            ->andReturn('132132132')
+            //
+        ;
+        $session
+            ->shouldReceive("get")
+            ->with('phonenumber')
+            ->andReturn(123)
+            //
+        ;
+
+        /** @var StoreAccountRequest|MockInterface $request */
+        $request = Mockery::mock(StoreAccountRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn($validatedInput)
+            //
+        ;
+        $request
+            ->shouldReceive('session')
+            ->andReturn($session)
+            //
+        ;
+
+        $response = $this->instantiate()->store($request, $this->ruleName);
+
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertIsString($response->original);
+        $this->assertEquals(422, $response->getStatusCode());
+        unset($response);
+
+        $validatedInput['role'] = $this->ruleName;
+
+        /** @var Session|MockInterface $session */
+        $session = Mockery::mock(Session::class);
+        $session
+            ->shouldReceive("get")
+            ->with('isPhonenumberVerified')
+            ->andReturn('true')
+            //
+        ;
+        $session
+            ->shouldReceive("get")
+            ->with('phonenumber')
+            ->andReturn("09000000000")
+            //
+        ;
+        $session
+            ->shouldReceive("get")
+            ->with('phonenumberVerifiedAt', 0)
+            ->andReturn(strval($timestamp = (new \DateTime)->getTimestamp()))
+            //
+        ;
+
+        $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
+
+        /** @var StoreAccountRequest|MockInterface $request */
+        $request = Mockery::mock(StoreAccountRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn($validatedInput)
+            //
+        ;
+        $request
+            ->shouldReceive('session')
+            ->andReturn($session)
+            //
+        ;
+
+        /** @var User|MockInterface $user */
+        $user = Mockery::mock(User::class);
+        $user
+            ->shouldReceive('toArray')
+            ->once()
+            ->andReturn(['user'])
+            //
+        ;
+
+        $this->dataBaseCreateAccount
+            ->shouldReceive('createAccount')
+            ->once()
+            ->with($validatedInput)
+            ->andReturn($user)
+            //
+        ;
+
+        $response = $this->instantiate()->store($request, $this->ruleName);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
-
-        Notification::assertSentTo(
-            [(new AnonymousNotifiable)->route('sms', $phonenumber)],
-            SendPhonenumberVerificationCode::class
-        );
-
-        $keys = [
-            'code_created_at_encrypted',
-            'code_encrypted',
-            'phonenumber_encrypted',
-            'phonenumber_verified_at_encrypted',
-        ];
-        $this->assertCount(4, $response->original);
-        foreach ($keys as $key) {
-            $this->assertArrayHasKey($key, $response->original);
-            $this->assertNotEmpty($response->original[$key]);
-        }
+        $this->assertIsArray($response->original);
+        $this->assertCount(1, $response->original);
+        $this->assertEquals('user', $response->original[0]);
+        $this->assertEquals(200, $response->getStatusCode());
     }
 
-    private function testStore()
+    public function testShow(): void
     {
-        $phonenumber = $this->faker->phoneNumber();
-        $authenticatables = $this->getAuthenticatables();
+        $placeholder = '***';
 
-        foreach ($authenticatables as $roleName => $authenticatable) {
-            $requestInput = [
-                'code_created_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp())),
-                'code_encrypted' => Crypt::encryptString('123456'),
-                'code' => 123456,
-                'phonenumber_verified_at_encrypted' => Crypt::encryptString(strval((new \DateTime)->getTimestamp())),
-                'phonenumber_encrypted' => Crypt::encryptString($phonenumber),
-                'phonenumber' => $phonenumber,
-                'password_confirmation' => $this->faker->lexify(),
-            ];
+        $validator = Validator::partialMock();
+        $validator
+            ->shouldReceive('make->fails')
+            ->andReturn(false)
+            //
+        ;
 
-            /** @var StoreAccountRequest|MockInterface $request */
-            $request = Mockery::mock(StoreAccountRequest::class);
-            $request->shouldReceive('safe->all')->andreturn($requestInput);
-
-            $dsNewUser = $authenticatable->getDataStructure();
-            $dsNewUserArray = $dsNewUser->toArray();
-
-            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
-            $this->accountsManagement
-                ->shouldReceive("createAccount")
-                ->with(
-                    Mockery::on(function (array $input) use ($requestInput) {
-                        $this->assertArrayHasKey('phonenumber', $input);
-                        $this->assertEquals($requestInput['phonenumber'], $input['phonenumber']);
-                        $this->assertArrayHasKey('phonenumber_verified_at', $input);
-                        $this->assertInstanceOf(\DateTime::class, $input['phonenumber_verified_at']);
-                        return true;
-                    }),
-                    $this->dsUser,
-                    $this->dataBaseCreateAccount
-                )
-                ->andReturn($dsNewUser);
-
-            $accountsController = $this->instantiate();
-
-            $jsonResponse = $accountsController->store($request, $roleName);
-            $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-            $this->assertIsArray($jsonResponse->original);
-            $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
-
-            foreach ($dsNewUserArray as $key => $value) {
-                $this->assertArrayHasKey($key, $jsonResponse->original);
-                $this->assertEquals($jsonResponse->original[$key], $value);
-            }
-        }
-    }
-
-    private function testShow(): void
-    {
-        $authenticatables = $this->getAuthenticatables();
-
-        foreach ($authenticatables as $ruleName => $authenticatable) {
-            $username = $authenticatable->user->username;
-            $dsNewUser = $authenticatable->getDataStructure();
-            $dsNewUserArray = $dsNewUser->toArray();
-
-            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
-            $this->accountsManagement
-                ->shouldReceive("getAccount")
-                ->with($username, $this->dsUser, $this->dataBaseRetrieveAccounts)
-                ->andReturn($dsNewUser);
-
-            $accountsController = $this->instantiate();
-
-            $jsonResponse = $accountsController->show($username);
-            $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-            $this->assertEquals(200, $jsonResponse->getStatusCode());
-            $this->assertIsArray($jsonResponse->original);
-            $this->assertCount(count($dsNewUserArray), $jsonResponse->original);
-
-            foreach ($dsNewUserArray as $key => $value) {
-                $this->assertArrayHasKey($key, $jsonResponse->original);
-                $this->assertEquals($jsonResponse->original[$key], $value);
-            }
-        }
-    }
-
-    private function testShowSelf(): void
-    {
-        $dsUserArray = $this->dsUser->toArray();
-
-        /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-        $this->accountsManagement = Mockery::mock(AccountsManagement::class);
         $this->accountsManagement
+            ->shouldReceive('resolveUsername')
+            ->once()
+            ->with($placeholder)
+            ->andReturn('username')
+            //
+        ;
+
+        /** @var User|MockInterface $user */
+        $user = Mockery::mock(User::class);
+        $user
+            ->shouldReceive('toArray')
+            ->once()
+            ->andReturn(['user'])
+            //
+        ;
+
+        $this->dataBaseRetrieveAccounts
+            ->shouldReceive('getAccount')
+            ->once()
+            ->with('username')
+            ->andReturn($user)
+            //
+        ;
+
+        $response = $this->instantiate()->show($placeholder);
+
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertIsArray($response->original);
+        $this->assertCount(1, $response->original);
+        $this->assertEquals('user', $response->original[0]);
+        $this->assertEquals(200, $response->getStatusCode());
+        unset($response);
+    }
+
+    public function testShowSelf(): void
+    {
+        /** @var User|MockInterface $user */
+        $user = Mockery::mock(User::class);
+        $user
+            ->shouldReceive('getAttribute')
+            ->andReturn('username')
+            //
+        ;
+        $user
+            ->shouldReceive('setAttribute')
+            ->andReturn()
+            //
+        ;
+        $user->username = 'username';
+        $user
+            ->shouldReceive('toArray')
+            ->once()
+            ->andReturn(['user'])
+            //
+        ;
+
+        $this->checkAuthentication
+            ->shouldReceive('getAuthenticated')
+            ->once()
+            ->andReturn($user)
+            //
+        ;
+        $this->dataBaseRetrieveAccounts
             ->shouldReceive("getAccount")
-            ->with($this->dsUser->getUsername(), $this->dsUser, $this->dataBaseRetrieveAccounts)
-            ->andReturn($this->dsUser);
+            ->with($user->username)
+            ->andReturn($user);
 
         $accountsController = $this->instantiate();
 
         $jsonResponse = $accountsController->showSelf();
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
         $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($dsUserArray), $jsonResponse->original);
-
-        foreach ($dsUserArray as $key => $value) {
-            $this->assertArrayHasKey($key, $jsonResponse->original);
-            $this->assertEquals($jsonResponse->original[$key], $value);
-        }
+        $this->assertCount(1, $jsonResponse->original);
+        $this->assertEquals('user', $jsonResponse->original[0]);
+        unset($jsonResponse);
     }
 
-    private function testUpdate(): void
+    public function testUpdate(): void
     {
-        $input = ['input'];
-        $authenticatables = $this->getAuthenticatables(true);
+        /** @var UpdateAccountRequest|MockInterface $request */
+        $request = Mockery::mock(UpdateAccountRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn(['input'])
+            //
+        ;
 
-        foreach ($authenticatables as $ruleName => $authenticatable) {
-            $anotherId = $authenticatable->getKey();
-            $dsNewAuthenticatable = $authenticatable->getDataStructure();
+        $accountsController = $this->instantiate();
 
-            /** @var UpdateAccountRequest|\Mockery\MockInterface $request */
-            $request = Mockery::mock(UpdateAccountRequest::class);
-            $request->shouldReceive('safe->all')->andReturn($input);
+        $response = $accountsController->update($request, 0);
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertIsArray($response->original);
+        $this->assertIsString($response->original['message']);
+        unset($response);
 
-            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
-            $this->accountsManagement
-                ->shouldReceive('massUpdateAccount')
-                ->with(
-                    $input,
-                    \Mockery::on(function (DSUser $arg) use ($dsNewAuthenticatable) {
-                        if ($arg->getUsername() === $dsNewAuthenticatable->getUsername()) {
-                            return true;
-                        }
-                        return false;
-                    }),
-                    $this->dsUser,
-                    \Mockery::type(IDataBaseUpdateAccount::class)
-                )
-                ->andReturn($anotherDSNewUser = $this->getAuthenticatable($ruleName)->getDataStructure());
+        /** @var UpdateAccountRequest|MockInterface $request */
+        $request = Mockery::mock(UpdateAccountRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn([])
+            //
+        ;
 
-            $accountsController = $this->instantiate();
+        $accountsController = $this->instantiate();
 
-            $jsonResponse = $accountsController->update($request, $anotherId);
-            $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-            $this->assertIsArray($jsonResponse->original);
-            $this->assertCount(count($anotherDSNewUser->toArray()), $jsonResponse->original);
+        $response = $accountsController->update($request, 10);
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertIsArray($response->original);
+        $this->assertIsString($response->original['message']);
+        unset($response);
 
-            foreach ($anotherDSNewUser->toArray() as $key => $value) {
-                $this->assertArrayHasKey($key, $jsonResponse->original);
-                $this->assertEquals($jsonResponse->original[$key], $value);
-            }
-        }
-    }
+        /** @var UpdateAccountRequest|MockInterface $request */
+        $request = Mockery::mock(UpdateAccountRequest::class);
+        $request
+            ->shouldReceive('safe->all')
+            ->andReturn(['input'])
+            //
+        ;
 
-    private function testUpdateSelf(): void
-    {
-        $input = ['input'];
-
-        /** @var UpdateSelfAccountRequest|\Mockery\MockInterface $request */
-        $request = Mockery::mock(UpdateSelfAccountRequest::class);
-        $request->shouldReceive('safe->all')->andReturn($input);
-
-        /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-        $this->accountsManagement = Mockery::mock(AccountsManagement::class);
         $this->accountsManagement
+            ->shouldReceive('resolveUsername')
+            ->once()
+            ->with(10)
+            ->andReturn('username')
+            //
+        ;
+
+        /** @var User|MockInterface $targetUser */
+        $targetUser = Mockery::mock(User::class);
+
+        $this->dataBaseRetrieveAccounts
+            ->shouldReceive('getAccount')
+            ->once()
+            ->with('username')
+            ->andReturn($targetUser)
+            //
+        ;
+
+        /** @var User|MockInterface $updatedUser */
+        $updatedUser = Mockery::mock(User::class);
+        $updatedUser
+            ->shouldReceive('toArray')
+            ->once()
+            ->andReturn(['user'])
+            //
+        ;
+
+        $this->dataBaseUpdateAccount
             ->shouldReceive('massUpdateAccount')
-            ->with(
-                $input,
-                // \Mockery::on(function (DSUser $arg) {
-                //     if ($arg->getUsername() === $this->dsUser->getUsername()) {
-                //         return true;
-                //     }
-                //     return false;
-                // }),
-                $this->dsUser,
-                $this->dsUser,
-                \Mockery::type(IDataBaseUpdateAccount::class)
-            )
-            ->andReturn($anotherDSNewUser = $this->getAuthenticatable('admin')->getDataStructure());
+            ->once()
+            ->with(['input'], $targetUser)
+            ->andReturn($updatedUser)
+            //
+        ;
 
         $accountsController = $this->instantiate();
 
-        $jsonResponse = $accountsController->updateSelf($request);
-        $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
-        $this->assertIsArray($jsonResponse->original);
-        $this->assertCount(count($anotherDSNewUser->toArray()), $jsonResponse->original);
-
-        foreach ($anotherDSNewUser->toArray() as $key => $value) {
-            $this->assertArrayHasKey($key, $jsonResponse->original);
-            $this->assertEquals($jsonResponse->original[$key], $value);
-        }
+        $response = $accountsController->update($request, 10);
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertIsArray($response->original);
+        $this->assertCount(1, $response->original);
+        $this->assertEquals('user', $response->original[0]);
+        unset($response);
     }
 
-    private function testDestroy(): void
+    public function testDestroy(): void
     {
-        $authenticatables = $this->getAuthenticatables(true);
+        $accountsController = $this->instantiate();
 
-        foreach ($authenticatables as $ruleName => $authenticatable) {
-            $anotherId = $authenticatable->getKey();
-            $dsNewAuthenticatable = $authenticatable->getDataStructure();
-            $dsNewUserArray = $dsNewAuthenticatable->toArray();
+        $response = $accountsController->destroy(0);
+        $this->assertInstanceOf(JsonResponse::class, $response);
+        $this->assertEquals(422, $response->getStatusCode());
+        $this->assertIsArray($response->original);
+        $this->assertIsString($response->original['message']);
+        unset($response);
 
-
-            /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-            $this->accountsManagement = Mockery::mock(AccountsManagement::class);
-            $this->accountsManagement
-                ->shouldReceive('deleteAccount')
-                ->with(
-                    \Mockery::on(function (DSUser $arg) use ($dsNewAuthenticatable) {
-                        if ($arg->getUsername() === $dsNewAuthenticatable->getUsername()) {
-                            return true;
-                        }
-                        return false;
-                    }),
-                    $this->dsUser,
-                    \Mockery::type(IDataBaseDeleteAccount::class)
-                );
-
-            $accountsController = $this->instantiate();
-
-            $response = $accountsController->destroy($anotherId);
-            $this->assertInstanceOf(Response::class, $response);
-            $this->assertIsString($response->original);
-            $this->assertEquals('The user successfuly deleted.', $response->original);
-        }
-    }
-
-    private function testDestroySelf(): void
-    {
-        /** @var \TheClinicUseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
-        $this->accountsManagement = Mockery::mock(AccountsManagement::class);
         $this->accountsManagement
+            ->shouldReceive('resolveUsername')
+            ->once()
+            ->with(10)
+            ->andReturn('username')
+            //
+        ;
+
+        /** @var User|MockInterface $targetUser */
+        $targetUser = Mockery::mock(User::class);
+
+        $this->dataBaseRetrieveAccounts
+            ->shouldReceive('getAccount')
+            ->once()
+            ->with('username')
+            ->andReturn($targetUser)
+            //
+        ;
+
+        $this->dataBaseDeleteAccount
             ->shouldReceive('deleteAccount')
-            ->with(
-                \Mockery::on(function (DSUser $arg) {
-                    if ($arg->getUsername() === $this->dsUser->getUsername()) {
-                        return true;
-                    }
-                    return false;
-                }),
-                $this->dsUser,
-                \Mockery::type(IDataBaseDeleteAccount::class)
-            );
+            ->once()
+            ->with($targetUser)
+            //
+        ;
 
         $accountsController = $this->instantiate();
 
-        $response = $accountsController->destroySelf();
+        $response = $accountsController->destroy(10);
         $this->assertInstanceOf(Response::class, $response);
+        $this->assertEquals(200, $response->getStatusCode());
         $this->assertIsString($response->original);
-        $this->assertEquals('The user successfuly deleted.', $response->original);
+        unset($response);
     }
 }
