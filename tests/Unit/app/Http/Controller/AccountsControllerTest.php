@@ -267,9 +267,7 @@ class AccountsControllerTest extends TestCase
     {
         $placeholder = '***';
 
-        $validator = Validator::partialMock();
-        $validator
-            ->shouldReceive('make->fails')
+        Validator::shouldReceive('make->fails')
             ->andReturn(false)
             //
         ;
