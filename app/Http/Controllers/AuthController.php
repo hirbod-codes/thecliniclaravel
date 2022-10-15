@@ -28,6 +28,8 @@ use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\TokenRepository;
 use App\UseCases\Accounts\AccountsManagement;
 use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
+use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
 use Illuminate\Http\Request;
 
 class AuthController extends Controller
@@ -37,16 +39,19 @@ class AuthController extends Controller
     private AccountsManagement|null $accountsManagement;
 
     private IDataBaseCreateAccount $dataBaseCreateAccount;
+    private IDataBaseRetrieveAccounts $databaseRetrieveAccounts;
 
     public function __construct(
         CheckAuthentication|null $checkAuthentication = null,
         AccountsManagement|null $accountsManagement = null,
         IDataBaseCreateAccount|null $dataBaseCreateAccount = null,
+        IDataBaseRetrieveAccounts|null $databaseRetrieveAccounts = null,
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
         $this->accountsManagement = $accountsManagement ?: new AccountsManagement();
 
         $this->dataBaseCreateAccount = $dataBaseCreateAccount ?: new DataBaseCreateAccount;
+        $this->databaseRetrieveAccounts = $databaseRetrieveAccounts ?: new DataBaseRetrieveAccounts;
     }
 
     public function logout(): Redirector|RedirectResponse
@@ -165,25 +170,14 @@ class AuthController extends Controller
         $timestamp = intval($session->get('phonenumber_verification_timestamp', (new \DateTime)->getTimestamp()));
         $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
-        try {
-            $newDSUser = $this->accountsManagement->signupAccount($validatedInput, $this->dataBaseCreateAccount, $this->checkAuthentication);
-        } catch (\Throwable $th) {
-            if ($th->getCode() === 422) {
-                if ($request->header('content-type') === 'application/json') {
-                    return response()->json(['error' => $th->getMessage()], $th->getCode());
-                } else {
-                    return response($th->getMessage(), $th->getCode());
-                }
-            }
-            throw $th;
-        }
+        $this->dataBaseCreateAccount->createAccount($validatedInput);
 
         Auth::guard('web')->attempt(['password' => $validatedInput['password'], 'username' => $validatedInput['username']], false);
 
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
 
-        return redirect('/');
+        return redirect($redirecturl === null ? '/' : $redirecturl);
     }
 
     public function phonenumberAvailability(PhonenumberAvailabilityRequest $request): Response
@@ -232,8 +226,7 @@ class AuthController extends Controller
         }
         $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
-        $user = User::query()->where('email', '=', $input['email'])->firstOrFail();
-
+        $user = $this->databaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($input['email']));
         $user->notify(new SendEmailPasswordResetCode($code));
 
         $session->put('code_destination', 'email');
@@ -292,7 +285,7 @@ class AuthController extends Controller
             return response(trans_choice('auth.phonenumber_update_failure', 0));
         }
 
-        $user = (new CheckAuthentication)->getAuthenticated();
+        $user = $this->checkAuthentication->getAuthenticated();
         $user->phonenumber = $input['newPhonenumber'];
         $user->saveOrFail();
 
@@ -320,7 +313,7 @@ class AuthController extends Controller
         }
         $identifierValue = $session->get($identifier);
 
-        $user = User::query()->where($identifier, '=', $identifierValue)->firstOrFail();
+        $user = $this->databaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($identifier));
         $user->password = bcrypt($input['password']);
         $user->saveOrFail();
 
