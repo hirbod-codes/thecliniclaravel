@@ -5,7 +5,6 @@ namespace Database\Interactions\Accounts;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\DataStructures\User\DSUser;
 use App\Helpers\TraitRoleResolver;
 use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
 

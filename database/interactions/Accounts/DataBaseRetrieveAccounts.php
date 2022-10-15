@@ -12,6 +12,13 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
 {
     use TraitRoleResolver;
 
+    public function getAccountsCount(string $roleName): int
+    {
+        $roleName = RoleName::query()->where('name', '=', $roleName)->firstOrFail();
+
+        return count($roleName->childRoleModel->userType);
+    }
+
     /**
      * @param integer|null $lastAccountId
      * @param integer $count
@@ -49,11 +56,6 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
 
     public function getAccount(string $targetUserUsername): User
     {
-        /** @var User $user */
-        if (($user = User::query()->where('username', $targetUserUsername)->first()) === null) {
-            throw new ModelNotFoundException("The user not found.", 404);
-        }
-
-        return $user;
+        return User::query()->where('username', $targetUserUsername)->firstOrFail();
     }
 }
