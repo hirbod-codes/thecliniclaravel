@@ -8,10 +8,7 @@ use App\Http\Requests\Orders\CalculatePartsAndPackagesRquest;
 use App\Http\Requests\Orders\IndexRequest;
 use App\Http\Requests\Orders\StoreRequest;
 use App\Models\Order\LaserOrder;
-use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
-use App\Models\Package\Package;
-use App\Models\Part\Part;
 use App\Models\User;
 use Database\Interactions\Orders\Creation\DatabaseCreateDefaultRegularOrder;
 use Database\Interactions\Orders\Creation\DatabaseCreateLaserOrder;
@@ -22,37 +19,34 @@ use Database\Interactions\Orders\Retrieval\DatabaseRetrieveLaserOrders;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveRegularOrders;
 use Illuminate\Contracts\Routing\ResponseFactory;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Response;
 use App\PoliciesLogic\Order\Laser\Calculations\PriceCalculator;
 use App\PoliciesLogic\Order\Laser\Calculations\TimeConsumptionCalculator;
 use App\PoliciesLogic\Order\Laser\LaserOrder as LaserLaserOrder;
-use App\DataStructures\Order\DSPackages;
-use App\DataStructures\Order\DSParts;
 use App\Http\Requests\Orders\DestroyRequest;
 use App\Http\Requests\Orders\OrdersCountRequest;
-use App\UseCases\Orders\Creation\LaserOrderCreation;
-use App\UseCases\Orders\Creation\RegularOrderCreation;
-use App\UseCases\Orders\Deletion\LaserOrderDeletion;
-use App\UseCases\Orders\Deletion\RegularOrderDeletion;
+use App\PoliciesLogic\Order\ICalculateLaserOrder;
+use App\PoliciesLogic\Order\Laser\ILaserPriceCalculator;
+use App\PoliciesLogic\Order\Laser\ILaserTimeConsumptionCalculator;
+use App\UseCases\Accounts\AccountsManagement;
+use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use App\UseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
 use App\UseCases\Orders\Interfaces\IDataBaseCreateRegularOrder;
 use App\UseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 use App\UseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
 use App\UseCases\Orders\Interfaces\IDataBaseDeleteRegularOrder;
-use App\UseCases\Orders\Retrieval\LaserOrderRetrieval;
-use App\UseCases\Orders\Retrieval\RegularOrderRetrieval;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
+use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
 use Illuminate\Database\Eloquent\Builder;
 
 class OrdersController extends Controller
 {
     private CheckAuthentication $checkAuthentication;
 
-    private RegularOrderCreation $regularOrderCreation;
+    private AccountsManagement $accountsManagement;
 
-    private LaserOrderCreation $laserOrderCreation;
+    private IDataBaseRetrieveAccounts $iDataBaseRetrieveAccounts;
 
     private IDataBaseCreateRegularOrder $iDataBaseCreateRegularOrder;
 
@@ -60,75 +54,59 @@ class OrdersController extends Controller
 
     private IDataBaseCreateDefaultRegularOrder $iDataBaseCreateDefaultRegularOrder;
 
-    private RegularOrderRetrieval $regularOrderRetrieval;
-
-    private LaserOrderRetrieval $laserOrderRetrieval;
-
     private IDataBaseRetrieveLaserOrders $iDataBaseRetrieveLaserOrders;
 
     private IDataBaseRetrieveRegularOrders $iDataBaseRetrieveRegularOrders;
-
-    private RegularOrderDeletion $regularOrderDeletion;
-
-    private LaserOrderDeletion $laserOrderDeletion;
 
     private IDataBaseDeleteLaserOrder $iDataBaseDeleteLaserOrder;
 
     private IDataBaseDeleteRegularOrder $iDataBaseDeleteRegularOrder;
 
+    private ILaserPriceCalculator $iLaserPriceCalculator;
+
+    private ILaserTimeConsumptionCalculator $iLaserTimeConsumptionCalculator;
+
+    private ICalculateLaserOrder $iCalculateLaserOrder;
+
     public function __construct(
         null|CheckAuthentication $checkAuthentication = null,
-        null|RegularOrderRetrieval $regularOrderRetrieval = null,
-        null|LaserOrderRetrieval $laserOrderRetrieval = null,
-        null|RegularOrderCreation $regularOrderCreation = null,
-        null|LaserOrderCreation $laserOrderCreation = null,
+        null|AccountsManagement $accountsManagement = null,
+        null|IDataBaseRetrieveAccounts $iDataBaseRetrieveAccounts = null,
         null|IDataBaseCreateRegularOrder $iDataBaseCreateRegularOrder = null,
         null|IDataBaseCreateLaserOrder $iDataBaseCreateLaserOrder = null,
+        null|ILaserPriceCalculator $iLaserPriceCalculator = null,
+        null|ILaserTimeConsumptionCalculator $iLaserTimeConsumptionCalculator = null,
+        null|ICalculateLaserOrder $iCalculateLaserOrder = null,
         null|IDataBaseRetrieveLaserOrders $iDataBaseRetrieveLaserOrders = null,
         null|IDataBaseRetrieveRegularOrders $iDataBaseRetrieveRegularOrders = null,
         null|IDataBaseCreateDefaultRegularOrder $iDataBaseCreateDefaultRegularOrder = null,
-        null|RegularOrderDeletion $regularOrderDeletion = null,
-        null|LaserOrderDeletion $laserOrderDeletion = null,
         null|IDataBaseDeleteLaserOrder $iDataBaseDeleteLaserOrder = null,
         null|IDataBaseDeleteRegularOrder $iDataBaseDeleteRegularOrder = null
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
+        $this->accountsManagement = $accountsManagement ?: new AccountsManagement;
+        $this->iDataBaseRetrieveAccounts = $iDataBaseRetrieveAccounts ?: new DataBaseRetrieveAccounts;
 
-        $this->regularOrderRetrieval = $regularOrderRetrieval ?: new RegularOrderRetrieval;
-        $this->laserOrderRetrieval = $laserOrderRetrieval ?: new LaserOrderRetrieval;
         $this->iDataBaseRetrieveLaserOrders = $iDataBaseRetrieveLaserOrders ?: new DatabaseRetrieveLaserOrders;
         $this->iDataBaseRetrieveRegularOrders = $iDataBaseRetrieveRegularOrders ?: new DatabaseRetrieveRegularOrders;
 
-        $this->regularOrderCreation = $regularOrderCreation ?: new RegularOrderCreation;
-        $this->laserOrderCreation = $laserOrderCreation ?: new LaserOrderCreation;
         $this->iDataBaseCreateLaserOrder = $iDataBaseCreateLaserOrder ?: new DataBaseCreateLaserOrder;
         $this->iDataBaseCreateRegularOrder = $iDataBaseCreateRegularOrder ?: new DatabaseCreateRegularOrder;
         $this->iDataBaseCreateDefaultRegularOrder = $iDataBaseCreateDefaultRegularOrder ?: new DatabaseCreateDefaultRegularOrder;
 
-        $this->regularOrderDeletion = $regularOrderDeletion ?: new RegularOrderDeletion;
-        $this->laserOrderDeletion = $laserOrderDeletion ?: new LaserOrderDeletion;
+        $this->iLaserPriceCalculator = $iLaserPriceCalculator ?: new PriceCalculator;
+        $this->iLaserTimeConsumptionCalculator = $iLaserTimeConsumptionCalculator ?: new TimeConsumptionCalculator;
+        $this->iCalculateLaserOrder = $iCalculateLaserOrder ?: new LaserLaserOrder();
+
         $this->iDataBaseDeleteLaserOrder = $iDataBaseDeleteLaserOrder ?: new DataBaseDeleteLaserOrder;
         $this->iDataBaseDeleteRegularOrder = $iDataBaseDeleteRegularOrder ?: new DataBaseDeleteRegularOrder;
     }
 
     public function laserIndex(IndexRequest $request): JsonResponse
     {
-        $validatedInput = $request->safe()->all();
-        $validatedInput['businessName'] = 'laser';
-        return $this->index($validatedInput);
-    }
+        $input = $request->safe()->all();
 
-    public function regularIndex(IndexRequest $request): JsonResponse
-    {
-        $validatedInput = $request->safe()->all();
-        $validatedInput['businessName'] = 'regular';
-        return $this->index($validatedInput);
-    }
-
-    private function index(array $input): JsonResponse
-    {
         $args = [];
-        $args['db'] = $this->{'iDataBaseRetrieve' . ucfirst($input['businessName']) . 'Orders'};
 
         if (!isset($input['username'])) {
             $args['roleName'] = $input['roleName'];
@@ -140,7 +118,7 @@ class OrdersController extends Controller
             // $args['lastOrderId'] = isset($input['lastOrderId']) ? $input['lastOrderId'] : null;
             $args['count'] = $input['count'];
         } else {
-            $args['targetUser'] = User::query()->where('username', $input['username'])->firstOrFail();
+            $args['targetUser'] = $this->iDataBaseRetrieveAccounts->getAccount($input['username']);
         }
 
         if (isset($input['priceOtherwiseTime'])) {
@@ -155,7 +133,56 @@ class OrdersController extends Controller
             }
         }
 
-        $method = 'get' . ucfirst($input['businessName']) . 'Orders' .
+        $method = 'getLaserOrders' .
+            (isset($input['priceOtherwiseTime']) && $input['priceOtherwiseTime'] === true
+                ? 'ByPrice'
+                : (isset($input['priceOtherwiseTime']) && $input['priceOtherwiseTime'] === false
+                    ? 'ByTimeConsumption'
+                    : ''
+                )
+            ) .
+            (!isset($input['username']) ? '' : 'ByUser')
+            //
+        ;
+
+        /** @var array $orders */
+        $orders = $this->iDataBaseRetrieveLaserOrders->{$method}(...$args);
+
+        return response()->json($orders);
+    }
+
+    public function regularIndex(IndexRequest $request): JsonResponse
+    {
+        $input = $request->safe()->all();
+
+        $args = [];
+
+        if (!isset($input['username'])) {
+            $args['roleName'] = $input['roleName'];
+
+            if (isset($input['lastOrderId'])) {
+                $args['lastOrderId'] = $input['lastOrderId'];
+            }
+
+            // $args['lastOrderId'] = isset($input['lastOrderId']) ? $input['lastOrderId'] : null;
+            $args['count'] = $input['count'];
+        } else {
+            $args['targetUser'] = $this->iDataBaseRetrieveAccounts->getAccount($input['username']);
+        }
+
+        if (isset($input['priceOtherwiseTime'])) {
+            $input['priceOtherwiseTime'] = boolval($input['priceOtherwiseTime']);
+
+            $args['operator'] = $input['operator'];
+
+            if ($input['priceOtherwiseTime']) {
+                $args['price'] = $input['price'];
+            } else {
+                $args['timeConsumption'] = $input['timeConsumption'];
+            }
+        }
+
+        $method = 'getRegularOrders' .
             (isset($input['priceOtherwiseTime']) && $input['priceOtherwiseTime'] === true
                 ? 'ByPrice'
                 : (isset($input['priceOtherwiseTime']) && $input['priceOtherwiseTime'] === false
@@ -166,12 +193,12 @@ class OrdersController extends Controller
             (!isset($input['username']) ? '' : 'ByUser');
 
         /** @var array $orders */
-        $orders = $this->{strtolower($input['businessName']) . 'OrderRetrieval'}->{$method}(...$args);
+        $orders = $this->iDataBaseRetrieveRegularOrders->{$method}(...$args);
 
         return response()->json($orders);
     }
 
-    public function store(StoreRequest $request): RedirectResponse|JsonResponse
+    public function store(StoreRequest $request): JsonResponse|Response
     {
         $validatedInput = $request->safe()->all();
         $authenticated = $this->checkAuthentication->getAuthenticated();
@@ -179,8 +206,7 @@ class OrdersController extends Controller
         if (!isset($validatedInput['accountId'])) {
             $user = $authenticated;
         } else {
-            /** @var User $user */
-            $user = User::query()->whereKey($validatedInput['accountId'])->firstOrFail();
+            $user = $this->iDataBaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($validatedInput['accountId']));
         }
         $userRoleName = $user->authenticatableRole->role->roleName->name;
 
@@ -190,11 +216,23 @@ class OrdersController extends Controller
         $businessName = strtolower($validatedInput['businessName']);
         switch ($businessName) {
             case 'laser':
-                $parts = $this->collectDSPartsFromNames(!isset($validatedInput['parts']) ? [] : $validatedInput['parts'], $gender);
+                $parts = $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(!isset($validatedInput['parts']) ? [] : $validatedInput['parts'], $gender);
+                $packages = $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(!isset($validatedInput['packages']) ? [] : $validatedInput['packages'], $gender);
 
-                $packages = $this->collectDSPacakgesFromNames(!isset($validatedInput['packages']) ? [] : $validatedInput['packages'], $gender);
+                if (($parts !== null && $user->gender !== $parts->getGender()) || ($packages !== null && $user->gender !== $packages->getGender())) {
+                    return response('User, parts and packages must have the same gender.', 422);
+                } elseif ($parts === null && $packages === null) {
+                    return response('One of the parts or packages must exist.', 422);
+                }
 
-                $order = $this->laserOrderCreation->createLaserOrder($user, $this->iDataBaseCreateLaserOrder, $parts, $packages);
+                $order = $this->iDataBaseCreateLaserOrder->createLaserOrder(
+                    $user,
+                    $this->iCalculateLaserOrder->calculatePrice($parts, $packages, $this->iLaserPriceCalculator),
+                    $this->iCalculateLaserOrder->calculateTimeConsumption($parts, $packages, $this->iLaserTimeConsumptionCalculator),
+                    $this->iCalculateLaserOrder->calculatePriceWithoutDiscount($parts, $packages, $this->iLaserPriceCalculator),
+                    $parts,
+                    $packages
+                );
                 break;
 
             case 'regular':
@@ -215,53 +253,27 @@ class OrdersController extends Controller
                     } elseif ($privilegeName === 'editRegularOrderNeededTime') {
                         $editRegularOrderNeededTime = true;
                     }
+
+                    if ($editRegularOrderPrice && $editRegularOrderNeededTime) {
+                        break;
+                    }
                 }
 
                 if ($editRegularOrderPrice && $editRegularOrderNeededTime && isset($validatedInput['price'])  && isset($validatedInput['timeConsumption'])) {
-                    $order = $this->regularOrderCreation->createRegularOrder($validatedInput['price'], $validatedInput['timeConsumption'], $user, $this->iDataBaseCreateRegularOrder);
+                    $order = $this->iDataBaseCreateRegularOrder->createRegularOrder($user, $validatedInput['price'], $validatedInput['timeConsumption']);
                 } elseif (isset($validatedInput['price'])  || isset($validatedInput['timeConsumption'])) {
-                    throw new \RuntimeException(trans_choice('auth.User-Not-Authorized', 0), 403);
+                    return response(trans_choice('auth.User-Not-Authorized', 0), 403);
                 } else {
-                    $order = $this->regularOrderCreation->createDefaultRegularOrder($user, $this->iDataBaseCreateDefaultRegularOrder);
+                    $order = $this->iDataBaseCreateDefaultRegularOrder->createDefaultRegularOrder($user);
                 }
                 break;
 
             default:
-                throw new \LogicException('There\'s no such business name: ' . strval($validatedInput['businessName']), 500);
+                return response('There\'s no such business name: ' . strval($validatedInput['businessName']), 404);
                 break;
         }
 
         return response()->json($order->toArray());
-    }
-
-    private function collectDSPacakgesFromNames(array $packagesNames = [], string $gender): DSPackages
-    {
-        if (count($packagesNames) === 0) {
-            return new DSPackages($gender);
-        }
-
-        $packages = Package::query();
-        foreach ($requestPackages = $packagesNames as $packageName) {
-            $packages = $packages->where('name', '=', $packageName, count($packagesNames) !== 1 ? 'or' : 'and');
-        }
-        $packages = $packages->get()->all();
-
-        return Package::getDSPackages($packages, $gender);
-    }
-
-    private function collectDSPartsFromNames(array $partsNames = [], string $gender): DSParts
-    {
-        if (count($partsNames) === 0) {
-            return new DSParts($gender);
-        }
-
-        $parts = Part::query();
-        foreach ($requestParts = $partsNames as $partName) {
-            $parts = $parts->where('name', '=', $partName, count($partsNames) !== 1 ? 'or' : 'and');
-        }
-        $parts = $parts->get()->all();
-
-        return Part::getDSParts($parts, $gender);
     }
 
     public function ordersCount(OrdersCountRequest $request): Response
@@ -335,21 +347,21 @@ class OrdersController extends Controller
 
         switch ($validatedInput['businessName']) {
             case 'laser':
-                $order = LaserOrder::query()->whereKey($validatedInput['childOrderId'])->firstOrFail();
+                $order = $this->iDataBaseRetrieveLaserOrders->getLaserOrderById($validatedInput['childOrderId']);
+                $this->iDataBaseDeleteLaserOrder->deleteLaserOrder($order);
                 break;
 
             case 'regular':
-                $order = RegularOrder::query()->whereKey($validatedInput['childOrderId'])->firstOrFail();
+                $order = $this->iDataBaseRetrieveRegularOrders->getRegularOrderById($validatedInput['childOrderId']);
+                $this->iDataBaseDeleteRegularOrder->deleteRegularOrder($order);
                 break;
 
             default:
-                throw new \LogicException('!!!', 500);
+                return response('The provided business name doesn\'t exist.', 404);
                 break;
         }
 
-        $this->{$validatedInput['businessName'] . 'OrderDeletion'}->{'delete' . ucfirst($validatedInput['businessName']) . 'Order'}($order, $this->{'iDataBaseDelete' . ucfirst($validatedInput['businessName']) . 'Order'});
-
-        return response(trans_choice('Orders/destroy.successfull', 200));
+        return response(trans_choice('Orders/destroy.successfull', 0), 200);
     }
 
     public function calculateTime(CalculatePartsAndPackagesRquest $request): Response
@@ -358,10 +370,10 @@ class OrdersController extends Controller
         $user = $this->checkAuthentication->getAuthenticated();
         $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $user->gender;
 
-        return response((new LaserLaserOrder)->calculateTimeConsumption(
-            $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
-            $this->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
-            (new TimeConsumptionCalculator)
+        return response($this->iCalculateLaserOrder->calculateTimeConsumption(
+            $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
+            $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
+            $this->iLaserTimeConsumptionCalculator
         ));
     }
 
@@ -372,15 +384,15 @@ class OrdersController extends Controller
         $gender = isset($validatedInput['gender']) ? $validatedInput['gender'] : $user->gender;
 
         return response()->json([
-            'price' => (new LaserLaserOrder)->calculatePrice(
-                $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
-                $this->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
-                (new PriceCalculator)
+            'price' => $this->iCalculateLaserOrder->calculatePrice(
+                $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
+                $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
+                $this->iLaserPriceCalculator
             ),
-            'priceWithoutDiscount' => (new LaserLaserOrder)->calculatePriceWithoutDiscount(
-                $this->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
-                $this->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
-                (new PriceCalculator)
+            'priceWithoutDiscount' => $this->iCalculateLaserOrder->calculatePriceWithoutDiscount(
+                $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
+                $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
+                $this->iLaserPriceCalculator
             )
         ]);
     }
