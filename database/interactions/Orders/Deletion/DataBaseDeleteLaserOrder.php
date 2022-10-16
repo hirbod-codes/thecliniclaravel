@@ -8,7 +8,7 @@ use App\UseCases\Orders\Interfaces\IDataBaseDeleteLaserOrder;
 
 class DataBaseDeleteLaserOrder implements IDataBaseDeleteLaserOrder
 {
-    public function deleteLaserOrder(LaserOrder $laserOrder, User $targetUser): void
+    public function deleteLaserOrder(LaserOrder $laserOrder): void
     {
         $laserOrder = LaserOrder::query()->whereKey($laserOrder->getKey())->firstOrFail();
 

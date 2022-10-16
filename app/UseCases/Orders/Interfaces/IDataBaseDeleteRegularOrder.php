@@ -7,5 +7,5 @@ use App\Models\User;
 
 interface IDataBaseDeleteRegularOrder
 {
-    public function deleteRegularOrder(RegularOrder $regularOrder, User $targetUser): void;
+    public function deleteRegularOrder(RegularOrder $regularOrder): void;
 }

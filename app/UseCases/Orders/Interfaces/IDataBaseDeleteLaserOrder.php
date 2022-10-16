@@ -8,5 +8,5 @@ use App\Models\User;
 
 interface IDataBaseDeleteLaserOrder
 {
-    public function deleteLaserOrder(LaserOrder $laserOrder, User $targetUser): void;
+    public function deleteLaserOrder(LaserOrder $laserOrder): void;
 }

@@ -2,13 +2,53 @@
 
 namespace Database\Interactions\Orders\Retrieval;
 
+use App\DataStructures\Order\DSPackages;
+use App\DataStructures\Order\DSParts;
 use App\Models\Order\LaserOrder;
+use App\Models\Package\Package;
+use App\Models\Part\Part;
 use App\Models\User;
 use App\UseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 use Illuminate\Database\Eloquent\Builder;
 
 class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
 {
+    public function collectDSPartsFromNames(array $partsNames = [], string $gender): DSParts
+    {
+        if (count($partsNames) === 0) {
+            return new DSParts($gender);
+        }
+
+        $parts = Part::query();
+        foreach ($requestParts = $partsNames as $partName) {
+            $parts = $parts->where('name', '=', $partName, count($partsNames) !== 1 ? 'or' : 'and');
+        }
+        $parts = $parts->get()->all();
+
+        return Part::getDSParts($parts, $gender);
+    }
+
+
+    public function collectDSPacakgesFromNames(array $packagesNames = [], string $gender): DSPackages
+    {
+        if (count($packagesNames) === 0) {
+            return new DSPackages($gender);
+        }
+
+        $packages = Package::query();
+        foreach ($requestPackages = $packagesNames as $packageName) {
+            $packages = $packages->where('name', '=', $packageName, count($packagesNames) !== 1 ? 'or' : 'and');
+        }
+        $packages = $packages->get()->all();
+
+        return Package::getDSPackages($packages, $gender);
+    }
+
+    public function getLaserOrderById(int $id): LaserOrder
+    {
+        return LaserOrder::query()->whereKey($id)->firstOrFail();
+    }
+
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
@@ -87,14 +127,14 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
 
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
-     * @param integer $timeCosumption
+     * @param integer $timeConsumption
      * @param \App\Models\User $targetUser
      * @return array
      */
-    public function getLaserOrdersByTimeConsumptionByUser(string $operator, int $timeCosumption, User $targetUser): array
+    public function getLaserOrdersByTimeConsumptionByUser(string $operator, int $timeConsumption, User $targetUser): array
     {
         $orders = LaserOrder::query()
-            ->where('needed_time', $operator, $timeCosumption)
+            ->where('needed_time', $operator, $timeConsumption)
             ->whereHas('order', function ($query) use ($targetUser) {
                 $query->whereHas('user', function (Builder $query) use ($targetUser) {
                     $query->whereKey($targetUser->getKey());
@@ -115,7 +155,7 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
      * @param integer $lastOrderId
      * @return array
      */
-    public function getLaserOrdersByTimeConsumption(string $roleName, int $count, string $operator, int $timeCosumption, int $lastOrderId = null): array
+    public function getLaserOrdersByTimeConsumption(string $roleName, int $count, string $operator, int $timeConsumption, int $lastOrderId = null): array
     {
         $query = LaserOrder::query();
 
@@ -125,7 +165,7 @@ class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders
 
         $orders = $query
             ->orderBy((new LaserOrder)->getTable() . '.' . (new LaserOrder)->getKeyName(), 'desc')
-            ->where('needed_time', $operator, $timeCosumption)
+            ->where('needed_time', $operator, $timeConsumption)
             ->whereHas('order', function ($query) use ($roleName) {
                 $query->whereHas('user', function (Builder $query) use ($roleName) {
                     $i = 0;

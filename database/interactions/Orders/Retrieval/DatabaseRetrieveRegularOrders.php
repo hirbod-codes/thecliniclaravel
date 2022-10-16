@@ -9,6 +9,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders
 {
+    public function getRegularOrderById(int $id): RegularOrder
+    {
+        return RegularOrder::query()->whereKey($id)->firstOrFail();
+    }
+
     /**
      * @param string $operator Must be one the followings: "<=" ">=" "=" "<>" "<" ">"
      * @param integer $price
