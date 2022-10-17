@@ -9,7 +9,7 @@ use App\Models\RoleName;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
-use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
 use Illuminate\Support\Facades\Schema;
 
 class DataBaseCreateAccount implements IDataBaseCreateAccount

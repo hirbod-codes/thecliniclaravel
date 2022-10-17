@@ -7,7 +7,7 @@ use App\Models\Order\RegularOrder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\DataStructures\Order\Regular\DSRegularOrder;
-use App\UseCases\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
+use Database\Interactions\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 
 class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegularOrder
 {

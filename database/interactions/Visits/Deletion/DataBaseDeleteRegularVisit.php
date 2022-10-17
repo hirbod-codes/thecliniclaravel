@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Interactions\Visits;
+namespace Database\Interactions\Visits\Deletion;
 
 use App\Models\Visit\RegularVisit;
-use App\UseCases\Visits\Interfaces\IDataBaseDeleteRegularVisit;
+use Database\Interactions\Visits\Interfaces\IDataBaseDeleteRegularVisit;
 
 class DataBaseDeleteRegularVisit implements IDataBaseDeleteRegularVisit
 {

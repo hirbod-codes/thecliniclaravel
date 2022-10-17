@@ -4,7 +4,7 @@ namespace Database\Interactions\Orders\Retrieval;
 
 use App\Models\Order\RegularOrder;
 use App\Models\User;
-use App\UseCases\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
+use Database\Interactions\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
 use Illuminate\Database\Eloquent\Builder;
 
 class DatabaseRetrieveRegularOrders implements IDataBaseRetrieveRegularOrders

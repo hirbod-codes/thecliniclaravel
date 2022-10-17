@@ -1,21 +1,27 @@
 <?php
 
-namespace Database\Interactions\Visits;
+namespace Database\Interactions\Visits\Retrieval;
 
 use App\Auth\CheckAuthentication;
-use App\Models\Order\LaserOrder;
-use App\Models\Order\Order;
+use App\DataStructures\Visit\Regular\DSRegularVisits;
+use App\Models\Order\RegularOrder;
+use App\Models\Traits\TraitDSDateTimePeriod;
+use App\Models\Traits\TraitDSWeekDaysPeriods;
 use App\Models\User;
-use App\Models\Visit\LaserVisit;
-use App\UseCases\Visits\Interfaces\IDataBaseRetrieveLaserVisits;
+use App\Models\Visit\RegularVisit;
+use Database\Interactions\Visits\Interfaces\IDataBaseRetrieveRegularVisits;
 use Illuminate\Database\Eloquent\Builder;
 
-class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
+class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
 {
+    use
+        TraitDSWeekDaysPeriods,
+        TraitDSDateTimePeriod;
+
     public function getVisitsByUser(User $targetUser, string $sortByTimestamp): array
     {
-        $laserVisits = LaserVisit::query()
-            ->whereHas('laserOrder', function (Builder $query) use ($targetUser) {
+        $regularVisits = RegularVisit::query()
+            ->whereHas('regularOrder', function (Builder $query) use ($targetUser) {
                 $query->whereHas('order', function (Builder $query) use ($targetUser) {
                     $query->whereHas('user', function (Builder $query) use ($targetUser) {
                         $query->whereKey($targetUser->getKey());
@@ -27,21 +33,21 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
             //
         ;
 
-        return $laserVisits;
+        return $regularVisits;
     }
 
-    public function getVisitsByOrder(LaserOrder $laserOrder, string $sortByTimestamp): array
+    public function getVisitsByOrder(RegularOrder $regularOrder, string $sortByTimestamp): array
     {
-        $laserVisits = LaserVisit::query()
-            ->whereHas('laserOrder', function (Builder $query) use ($laserOrder) {
-                $query->whereKey($laserOrder->getKey());
+        $regularVisits = RegularVisit::query()
+            ->whereHas('regularOrder', function (Builder $query) use ($regularOrder) {
+                $query->whereKey($regularOrder->getKey());
             })
             ->get()
             ->toArray()
             //
         ;
 
-        return $laserVisits;
+        return $regularVisits;
     }
 
     public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, int $lastVisitTimestamp = null): array
@@ -58,8 +64,7 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
         }
         $isSelf = $userRoleName === $roleName;
 
-        /** @var Builder $query */
-        $query = LaserVisit::query()
+        $query = RegularVisit::query()
             ->orderBy('visit_timestamp', strtolower($sortByTimestamp))
             ->where('visit_timestamp', $operator, $timestamp)
             //
@@ -70,7 +75,7 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
         }
 
         $query
-            ->whereHas('laserOrder', function (Builder $query) use ($roleName, $isSelf, $canReadSelf, $user) {
+            ->whereHas('regularOrder', function (Builder $query) use ($roleName, $isSelf, $canReadSelf, $user) {
                 $query->whereHas('order', function (Builder $query) use ($roleName, $isSelf, $canReadSelf, $user) {
                     $query->whereHas('user', function (Builder $query) use ($roleName, $isSelf, $canReadSelf, $user) {
                         if ($isSelf && !$canReadSelf) {
@@ -103,13 +108,40 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
             //
         ;
 
-        $laserVisits = $query
+        $regularVisits = $query
             ->take($count)
             ->get()
             ->toArray()
             //
         ;
 
-        return $laserVisits;
+        return $regularVisits;
+    }
+
+    /**
+     * @param string $sort 'asc' or 'desc'
+     * @param string $operator >=, <>, <, <=, ...
+     * @param \DateTime $now
+     * @return RegularVisit[]
+     */
+    public function getFutureVisits(string $sort = 'asc', string $operator = '>=', \DateTime $now = new \DateTime()): array
+    {
+        return RegularVisit::query()
+            ->orderBy('visit_timestamp', $sort)
+            ->where('visit_timestamp', $operator, $now)
+            ->get()
+            ->all()
+            //
+        ;
+    }
+
+    public function getDSFutureVisits(string $sort = 'asc', string $operator = '>=', \DateTime $now = new \DateTime()): DSRegularVisits
+    {
+        return RegularVisit::getDSLaserVisits($this->getFutureVisits($sort, $operator, $now), 'ASC');
+    }
+
+    public function getRegularVisitById(int $visitId): RegularVisit
+    {
+        return RegularVisit::query()->whereKey($visitId)->firstOrFail();
     }
 }

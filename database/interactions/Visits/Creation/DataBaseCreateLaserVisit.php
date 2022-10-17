@@ -1,13 +1,13 @@
 <?php
 
-namespace Database\Interactions\Visits;
+namespace Database\Interactions\Visits\Creation;
 
 use App\Models\Order\LaserOrder;
 use App\Models\Visit\LaserVisit;
 use App\Models\Visit\Visit;
 use App\PoliciesLogic\Visit\IFindVisit;
 use App\PoliciesLogic\Visit\WeeklyVisit;
-use App\UseCases\Visits\Interfaces\IDataBaseCreateLaserVisit;
+use Database\Interactions\Visits\Interfaces\IDataBaseCreateLaserVisit;
 use Illuminate\Support\Facades\DB;
 
 class DataBaseCreateLaserVisit implements IDataBaseCreateLaserVisit

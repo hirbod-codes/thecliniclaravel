@@ -14,7 +14,7 @@ use App\DataStructures\Order\DSPackages;
 use App\DataStructures\Order\DSPart;
 use App\DataStructures\Order\DSParts;
 use App\DataStructures\Order\Laser\DSLaserOrder;
-use App\UseCases\Orders\Interfaces\IDataBaseCreateLaserOrder;
+use Database\Interactions\Orders\Interfaces\IDataBaseCreateLaserOrder;
 
 class DatabaseCreateLaserOrder implements IDataBaseCreateLaserOrder
 {

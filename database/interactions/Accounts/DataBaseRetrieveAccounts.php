@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Helpers\TraitRoleResolver;
 use App\Models\RoleName;
-use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 
 class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
 {

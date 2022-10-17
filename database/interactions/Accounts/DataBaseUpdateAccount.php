@@ -4,7 +4,7 @@ namespace Database\Interactions\Accounts;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\Facades\Schema;
 

@@ -4,7 +4,7 @@ namespace Database\Interactions\Orders\Deletion;
 
 use App\Models\Order\RegularOrder;
 use App\Models\User;
-use App\UseCases\Orders\Interfaces\IDataBaseDeleteRegularOrder;
+use Database\Interactions\Orders\Interfaces\IDataBaseDeleteRegularOrder;
 
 class DataBaseDeleteRegularOrder implements IDataBaseDeleteRegularOrder
 {

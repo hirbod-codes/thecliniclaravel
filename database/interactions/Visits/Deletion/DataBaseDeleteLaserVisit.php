@@ -1,9 +1,9 @@
 <?php
 
-namespace Database\Interactions\Visits;
+namespace Database\Interactions\Visits\Deletion;
 
 use App\Models\Visit\LaserVisit;
-use App\UseCases\Visits\Interfaces\IDataBaseDeleteLaserVisit;
+use Database\Interactions\Visits\Interfaces\IDataBaseDeleteLaserVisit;
 
 class DataBaseDeleteLaserVisit implements IDataBaseDeleteLaserVisit
 {

@@ -8,7 +8,7 @@ use App\Models\Order\LaserOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
 use App\Models\User;
-use App\UseCases\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
+use Database\Interactions\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
 use Illuminate\Database\Eloquent\Builder;
 
 class DatabaseRetrieveLaserOrders implements IDataBaseRetrieveLaserOrders

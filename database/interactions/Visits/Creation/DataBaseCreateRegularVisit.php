@@ -1,13 +1,13 @@
 <?php
 
-namespace Database\Interactions\Visits;
+namespace Database\Interactions\Visits\Creation;
 
 use App\Models\Order\RegularOrder;
 use App\Models\Visit\RegularVisit;
 use App\Models\Visit\Visit;
 use App\PoliciesLogic\Visit\IFindVisit;
 use App\PoliciesLogic\Visit\WeeklyVisit;
-use App\UseCases\Visits\Interfaces\IDataBaseCreateRegularVisit;
+use Database\Interactions\Visits\Interfaces\IDataBaseCreateRegularVisit;
 use Illuminate\Support\Facades\DB;
 
 class DataBaseCreateRegularVisit implements IDataBaseCreateRegularVisit

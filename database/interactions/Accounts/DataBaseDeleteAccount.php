@@ -6,7 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use App\Helpers\TraitRoleResolver;
-use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount;
 
 class DataBaseDeleteAccount implements IDataBaseDeleteAccount
 {
