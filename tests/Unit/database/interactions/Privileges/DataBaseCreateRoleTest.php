@@ -12,7 +12,7 @@ use Faker\Generator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\PoliciesLogicDataStructures\DataStructures\User\DSUser;
 
 class DataBaseCreateRoleTest extends TestCase
 {

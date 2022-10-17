@@ -10,7 +10,7 @@ use Faker\Generator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
+use App\PoliciesLogicDataStructures\DataStructures\Visit\Regular\DSRegularVisits;
 
 class DataBaseRetrieveRegularVisitsTest extends TestCase
 {

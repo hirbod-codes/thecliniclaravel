@@ -10,7 +10,7 @@ use App\Http\Requests\Accounts\UpdateAccountRequest;
 use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Models\Auth\User as AuthUser;
 use App\Models\User;
-use App\UseCases\Accounts\AccountsManagement;
+use Database\Interactions\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
@@ -21,10 +21,10 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Mockery;
 use Mockery\MockInterface;
-use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
-use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use Database\Interactions\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
@@ -69,19 +69,19 @@ class AccountsControllerTest extends TestCase
         /** @var \App\Auth\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
         $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
 
-        /** @var \TheClinicUseCases\Accounts\Interfaces\IDataBaseCreateAccount|\Mockery\MockInterface $dataBaseRetrieveAccounts */
+        /** @var \App\PoliciesLogicUseCases\Accounts\Interfaces\IDataBaseCreateAccount|\Mockery\MockInterface $dataBaseRetrieveAccounts */
         $this->dataBaseRetrieveAccounts = Mockery::mock(IDataBaseRetrieveAccounts::class);
 
-        /** @var \TheClinicUseCases\Accounts\Interfaces\IDataBaseDeleteAccount|\Mockery\MockInterface $dataBaseCreateAccount */
+        /** @var \App\PoliciesLogicUseCases\Accounts\Interfaces\IDataBaseDeleteAccount|\Mockery\MockInterface $dataBaseCreateAccount */
         $this->dataBaseCreateAccount = Mockery::mock(IDataBaseCreateAccount::class);
 
-        /** @var \TheClinicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts|\Mockery\MockInterface $dataBaseUpdateAccount */
+        /** @var \App\PoliciesLogicUseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts|\Mockery\MockInterface $dataBaseUpdateAccount */
         $this->dataBaseUpdateAccount = Mockery::mock(IDataBaseUpdateAccount::class);
 
-        /** @var \TheClinicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount|\Mockery\MockInterface $dataBaseDeleteAccount */
+        /** @var \App\PoliciesLogicUseCases\Accounts\Interfaces\IDataBaseUpdateAccount|\Mockery\MockInterface $dataBaseDeleteAccount */
         $this->dataBaseDeleteAccount = Mockery::mock(IDataBaseDeleteAccount::class);
 
-        /** @var \App\UseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
+        /** @var \Database\Interactions\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
         $this->accountsManagement = Mockery::mock(AccountsManagement::class);
 
         $this->ruleName = $this->faker->randomElement(['admin', 'secretary', 'doctor', 'operator', 'patient']);

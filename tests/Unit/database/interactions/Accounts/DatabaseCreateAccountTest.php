@@ -11,7 +11,7 @@ use Faker\Generator;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\User\DSUser;
+use App\PoliciesLogicDataStructures\DataStructures\User\DSUser;
 use Illuminate\Support\Str;
 
 class DatabaseCreateAccountTest extends TestCase

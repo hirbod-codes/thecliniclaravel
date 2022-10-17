@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinic\Visit\FastestVisit;
-use TheClinicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
+use App\PoliciesLogic\Visit\FastestVisit;
+use App\PoliciesLogicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
 
 class DataBaseCreateRegularVisitTest extends TestCase
 {

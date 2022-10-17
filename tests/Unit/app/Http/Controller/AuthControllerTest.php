@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\app\Http\Controller;
 
-use App\UseCases\Privileges\PrivilegesManagement;
+use Database\Interactions\Privileges\PrivilegesManagement;
 use App\Auth\CheckAuthentication;
 use App\Http\Controllers\AuthController;
 use App\Http\Requests\Accounts\SendCodeToEmailRequest;
@@ -18,7 +18,7 @@ use App\Models\User;
 use App\Notifications\SendEmailPasswordResetCode;
 use App\Notifications\SendPhonenumberPasswordResetCode;
 use App\Notifications\SendPhonenumberVerificationCode;
-use App\UseCases\Accounts\AccountsManagement;
+use Database\Interactions\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Faker\Factory;
 use Faker\Generator;
@@ -30,8 +30,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
 use Mockery;
 use Mockery\MockInterface;
-use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Illuminate\Http\RedirectResponse;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
@@ -61,13 +61,13 @@ class AuthControllerTest extends TestCase
         /** @var \App\Auth\CheckAuthentication|\Mockery\MockInterface $checkAuthentication */
         $this->checkAuthentication = Mockery::mock(CheckAuthentication::class);
 
-        /** @var \App\UseCases\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
+        /** @var \Database\Interactions\Accounts\AccountsManagement|\Mockery\MockInterface $accountsManagement */
         $this->accountsManagement = Mockery::mock(AccountsManagement::class);
 
-        /** @var \App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount|\Mockery\MockInterface $dataBaseCreateAccount */
+        /** @var \Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount|\Mockery\MockInterface $dataBaseCreateAccount */
         $this->dataBaseCreateAccount = Mockery::mock(IDataBaseCreateAccount::class);
 
-        /** @var \App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts|\Mockery\MockInterface $databaseRetrieveAccounts */
+        /** @var \Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts|\Mockery\MockInterface $databaseRetrieveAccounts */
         $this->databaseRetrieveAccounts = Mockery::mock(IDatabaseRetrieveAccounts::class);
     }
 

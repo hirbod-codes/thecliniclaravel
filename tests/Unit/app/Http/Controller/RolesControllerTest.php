@@ -17,12 +17,12 @@ use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\User\DSPatient;
-use TheClinicDataStructures\DataStructures\User\DSUser;
-use TheClinicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
-use TheClinicUseCases\Privileges\Interfaces\IDataBaseDeleteRole;
-use TheClinicUseCases\Privileges\Interfaces\IPrivilegeSetter;
-use TheClinicUseCases\Privileges\PrivilegesManagement;
+use App\PoliciesLogicDataStructures\DataStructures\User\DSPatient;
+use App\PoliciesLogicDataStructures\DataStructures\User\DSUser;
+use App\PoliciesLogicUseCases\Privileges\Interfaces\IDataBaseCreateRole;
+use App\PoliciesLogicUseCases\Privileges\Interfaces\IDataBaseDeleteRole;
+use App\PoliciesLogicUseCases\Privileges\Interfaces\IPrivilegeSetter;
+use App\PoliciesLogicUseCases\Privileges\PrivilegesManagement;
 
 class RolesControllerTest extends TestCase
 {
@@ -57,7 +57,7 @@ class RolesControllerTest extends TestCase
 
         $this->faker = Factory::create();
 
-        /** @var \TheClinicUseCases\Privileges\PrivilegesManagement|\Mockery\MockInterface $privilegesManagement */
+        /** @var \App\PoliciesLogicUseCases\Privileges\PrivilegesManagement|\Mockery\MockInterface $privilegesManagement */
         $this->privilegesManagement = Mockery::mock(PrivilegesManagement::class);
 
         /** @var IDataBaseCreateRole|\Mockery\MockInterface $iDataBaseCreateRole */

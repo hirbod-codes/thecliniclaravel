@@ -14,11 +14,11 @@ use Faker\Generator;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\Order\DSPackage;
-use TheClinicDataStructures\DataStructures\Order\DSPackages;
-use TheClinicDataStructures\DataStructures\Order\DSPart;
-use TheClinicDataStructures\DataStructures\Order\DSParts;
-use TheClinicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
+use App\PoliciesLogicDataStructures\DataStructures\Order\DSPackage;
+use App\PoliciesLogicDataStructures\DataStructures\Order\DSPackages;
+use App\PoliciesLogicDataStructures\DataStructures\Order\DSPart;
+use App\PoliciesLogicDataStructures\DataStructures\Order\DSParts;
+use App\PoliciesLogicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
 
 class DataBaseCreateLaserOrderTest extends TestCase
 {

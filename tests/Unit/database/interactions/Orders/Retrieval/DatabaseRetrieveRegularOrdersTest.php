@@ -7,10 +7,10 @@ use Faker\Factory;
 use Faker\Generator;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\Order\DSOrder;
-use TheClinicDataStructures\DataStructures\Order\DSOrders;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrders;
+use App\PoliciesLogicDataStructures\DataStructures\Order\DSOrder;
+use App\PoliciesLogicDataStructures\DataStructures\Order\DSOrders;
+use App\PoliciesLogicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
+use App\PoliciesLogicDataStructures\DataStructures\Order\Regular\DSRegularOrders;
 
 class DatabaseRetrieveRegularOrdersTest extends TestCase
 {

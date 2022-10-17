@@ -8,7 +8,7 @@ use Faker\Generator;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
+use App\PoliciesLogicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
 
 class DataBaseCreateRegularOrderTest extends TestCase
 {

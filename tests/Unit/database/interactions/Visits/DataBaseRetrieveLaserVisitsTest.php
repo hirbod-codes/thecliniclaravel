@@ -10,7 +10,7 @@ use Faker\Generator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Tests\TestCase;
 use Tests\Unit\Traits\GetAuthenticatables;
-use TheClinicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
+use App\PoliciesLogicDataStructures\DataStructures\Visit\Laser\DSLaserVisits;
 
 class DataBaseRetrieveLaserVisitsTest extends TestCase
 {
