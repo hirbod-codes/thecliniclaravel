@@ -23,14 +23,14 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
-use App\UseCases\Accounts\AccountsManagement;
-use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseDeleteAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
-use App\UseCases\Accounts\Interfaces\IDataBaseUpdateAccount;
-use App\UseCases\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
-use App\UseCases\Exceptions\AdminModificationByUserException;
-use App\UseCases\Exceptions\AdminsCollisionException;
+use Database\Interactions\Accounts\AccountsManagement;
+use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use Database\Interactions\Accounts\Interfaces\IDataBaseUpdateAccount;
+use Database\Interactions\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
+use Database\Interactions\Exceptions\AdminModificationByUserException;
+use Database\Interactions\Exceptions\AdminsCollisionException;
 
 class AccountsController extends Controller
 {

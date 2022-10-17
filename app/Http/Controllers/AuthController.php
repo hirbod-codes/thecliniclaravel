@@ -26,9 +26,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Passport\RefreshTokenRepository;
 use Laravel\Passport\TokenRepository;
-use App\UseCases\Accounts\AccountsManagement;
-use App\UseCases\Accounts\Interfaces\IDataBaseCreateAccount;
-use App\UseCases\Accounts\Interfaces\IDataBaseRetrieveAccounts;
+use Database\Interactions\Accounts\AccountsManagement;
+use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
+use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
 use Illuminate\Http\Request;
 
