@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UseCases\Accounts;
+namespace Database\Interactions\Accounts;
 
 use App\Models\Auth\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;

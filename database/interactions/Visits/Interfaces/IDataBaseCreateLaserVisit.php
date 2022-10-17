@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UseCases\Visits\Interfaces;
+namespace Database\Interactions\Visits\Interfaces;
 
 use App\PoliciesLogic\Visit\IFindVisit;
 use App\Models\Order\LaserOrder;

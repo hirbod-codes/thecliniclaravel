@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UseCases\Accounts\Interfaces;
+namespace Database\Interactions\Accounts\Interfaces;
 
 use App\Models\User;
 

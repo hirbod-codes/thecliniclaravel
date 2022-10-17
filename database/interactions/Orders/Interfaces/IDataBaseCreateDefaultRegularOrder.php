@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UseCases\Orders\Interfaces;
+namespace Database\Interactions\Orders\Interfaces;
 
 use App\DataStructures\Order\Regular\DSRegularOrder;
 use App\Models\Order\RegularOrder;

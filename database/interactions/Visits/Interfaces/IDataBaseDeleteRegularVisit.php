@@ -1,6 +1,6 @@
 <?php
 
-namespace App\UseCases\Visits\Interfaces;
+namespace Database\Interactions\Visits\Interfaces;
 
 use App\Models\Visit\RegularVisit;
 
