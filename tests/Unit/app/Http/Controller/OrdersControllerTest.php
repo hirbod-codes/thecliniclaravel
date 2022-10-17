@@ -18,7 +18,6 @@ use Illuminate\Http\Response;
 use Mockery;
 use Mockery\MockInterface;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 use App\Http\Requests\Orders\CalculatePartsAndPackagesRquest;
 use App\Http\Requests\Orders\DestroyRequest;
 use App\PoliciesLogic\Order\ICalculateLaserOrder;
@@ -37,8 +36,6 @@ use \Database\Interactions\Orders\Interfaces\IDataBaseRetrieveRegularOrders;
  */
 class OrdersControllerTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -377,6 +374,11 @@ class OrdersControllerTest extends TestCase
     }
 
     // --------------------------------------------------------------------------------------------------------------------------------------------
+
+    public function testOrdersCount(): void
+    {
+        $this->markTestIncomplete();
+    }
 
     public function testLaserStore(): void
     {
