@@ -18,7 +18,7 @@
         "laravel/sail": "=1.15",
         "mockery/mockery": "=1.5",
         "nunomaduro/collision": "=6.3",
-        "phpunit/phpunit": "=9.5",
+        "phpunit/phpunit": "=9.5.5",
         "spatie/laravel-ignition": "=1.4"
     },
     "autoload": {
