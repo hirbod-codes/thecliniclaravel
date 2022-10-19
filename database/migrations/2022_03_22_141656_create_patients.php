@@ -1,6 +1,6 @@
 <?php
 
-use App\Helpers\TraitRoleResolver;
+use App\Helpers\TraitAuthResolver;
 use App\Models\Auth\Operator;
 use App\Models\Auth\Patient;
 use App\Models\Roles\PatientRole;
@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    use TraitBaseUserRoleColumns, TraitRoleResolver;
+    use TraitBaseUserRoleColumns, TraitAuthResolver;
 
     private string $table;
 
