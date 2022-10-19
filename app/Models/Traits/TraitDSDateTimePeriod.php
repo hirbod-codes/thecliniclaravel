@@ -2,19 +2,16 @@
 
 namespace App\Models\Traits;
 
-use App\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSDateTimePeriods;
 
 trait TraitDSDateTimePeriod
 {
-    public function getDSDateTimePeriod(array|DSDateTimePeriod $dateTimePeriod): DSDateTimePeriod
+    public function getDSDateTimePeriod(array|DSDateTimePeriods $dateTimePeriods): DSDateTimePeriods
     {
-        if ($dateTimePeriod instanceof DSDateTimePeriod) {
-            return $dateTimePeriod;
+        if ($dateTimePeriods instanceof DSDateTimePeriods) {
+            return $dateTimePeriods;
         }
 
-        return new DSDateTimePeriod(
-            new \DateTime($dateTimePeriod['start']),
-            new \DateTime($dateTimePeriod['end'])
-        );
+        return DSDateTimePeriods::toObject($dateTimePeriods);
     }
 }
