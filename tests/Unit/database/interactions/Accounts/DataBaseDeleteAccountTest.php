@@ -4,17 +4,16 @@ namespace Tests\Unit\database\interactions\Accounts;
 
 use App\Models\User;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
-use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
+/**
+ * @covers \Database\Interactions\Accounts\DataBaseDeleteAccount
+ */
 class DataBaseDeleteAccountTest extends TestCase
 {
-    use ResolveUserModel, GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -26,29 +25,19 @@ class DataBaseDeleteAccountTest extends TestCase
 
     public function testDeleteAccount()
     {
-        foreach ($this->getAuthenticatables() as $ruleName => $authenticatable) {
-            try {
-                DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-                $dsAuthenticatable = $authenticatable->getDatastructure();
+            (new DataBaseDeleteAccount)->deleteAccount($user = User::query()->firstOrFail());
 
-                (new DataBaseDeleteAccount)->deleteAccount($dsAuthenticatable);
+            $this->assertDatabaseMissing($user->getTable(), [$user->getKeyName() => $user->getKey()]);
 
-                $theModelClassFullName = $this->resolveRuleModelFullName($ruleName);
+            DB::rollback();
 
-                $this->assertDatabaseMissing((new $theModelClassFullName)->getTable(), [
-                    (new $theModelClassFullName)->getKeyName() => $dsAuthenticatable->getId()
-                ]);
-
-                $this->assertDatabaseMissing((new User)->getTable(), [
-                    'username' => $dsAuthenticatable->getUsername()
-                ]);
-
-                DB::rollback();
-            } catch (\Throwable $th) {
-                DB::rollback();
-                throw $th;
-            }
+            $this->assertDatabaseHas($user->getTable(), [$user->getKeyName() => $user->getKey()]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            throw $th;
         }
     }
 }

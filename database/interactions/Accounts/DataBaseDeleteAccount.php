@@ -5,12 +5,12 @@ namespace Database\Interactions\Accounts;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Helpers\TraitRoleResolver;
+use App\Helpers\TraitAuthResolver;
 use Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount;
 
 class DataBaseDeleteAccount implements IDataBaseDeleteAccount
 {
-    use TraitRoleResolver;
+    use TraitAuthResolver;
 
     public function deleteAccount(User $user): void
     {
