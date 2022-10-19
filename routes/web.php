@@ -265,7 +265,7 @@ Route::middleware(['auth:web', 'phonenumber_verified'])->group(function () {
             Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
             Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
-            Route::delete('/visit/laser/{laserVisitId}', 'laserDestroy')->name('visits.laserDestroy');
-            Route::delete('/visit/regular/{regularVisitId}', 'regularDestroy')->name('visits.regularDestroy');
+            Route::delete('/visit/laser/{visitId}', 'laserDestroy')->name('visits.laserDestroy');
+            Route::delete('/visit/regular/{visitId}', 'regularDestroy')->name('visits.regularDestroy');
         });
 });
