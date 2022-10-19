@@ -10,4 +10,8 @@ interface IDataBaseRetrieveBusinessSettings
     public function getWorkSchdule(): DSWeeklyTimePatterns;
 
     public function getDownTimes(): DSDownTimes;
+
+    public function getDefaultRegularOrderPrice(): int;
+
+    public function getDefaultRegularOrderTimeConsumption(): int;
 }

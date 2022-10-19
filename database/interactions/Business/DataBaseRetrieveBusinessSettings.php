@@ -18,4 +18,14 @@ class DataBaseRetrieveBusinessSettings implements IDataBaseRetrieveBusinessSetti
     {
         return BusinessDefault::query()->firstOrFail()->down_times;
     }
+
+    public function getDefaultRegularOrderPrice(): int
+    {
+        return BusinessDefault::query()->firstOrFail()->default_regular_order_price;
+    }
+
+    public function getDefaultRegularOrderTimeConsumption(): int
+    {
+        return BusinessDefault::query()->firstOrFail()->default_regular_order_time_consumption;
+    }
 }
