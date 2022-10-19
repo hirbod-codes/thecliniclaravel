@@ -34,15 +34,12 @@ use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
 use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Illuminate\Http\RedirectResponse;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
 /**
  * @covers \App\Http\Controllers\AuthController
  */
 class AuthControllerTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     private CheckAuthentication|MockInterface $checkAuthentication;
@@ -83,11 +80,15 @@ class AuthControllerTest extends TestCase
 
     public function testRegister(): void
     {
+        $timestamp = (new \DateTime)->getTimestamp();
+
         $validatedInput = [];
         $validatedInput['role'] = 'patient';
-        $validatedInput['phonenumber'] = '09000000000';
-        $validatedInput['password'] = 'password';
-        $validatedInput['username'] = 'username';
+        $validatedInput['userAccountAttributes'] = ['attribute' => 'value'];
+        $validatedInput['userAttributes']['phonenumber'] = '09000000000';
+        $validatedInput['userAttributes']['password'] = 'password';
+        $validatedInput['userAttributes']['username'] = 'username';
+        $validatedInput['userAttributes']['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
         /** @var Session|MockInterface $session */
         $session = Mockery::mock(Session::class);
@@ -95,20 +96,18 @@ class AuthControllerTest extends TestCase
         $session->shouldReceive('get')->with('phonenumber_verification_timestamp', Mockery::on(function ($value) {
             return is_int($value);
         }))
-            ->andReturn(strval($timestamp = (new \DateTime)->getTimestamp()));
+            ->andReturn(strval($timestamp));
         $session->shouldReceive('get')->with('redirecturl');
         $session->shouldReceive('forget')->with('redirecturl');
-
-        $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
         /** @var RegisterUserRequest|MockInterface $request */
         $request = Mockery::mock(RegisterUserRequest::class);
         $request->shouldReceive('safe->all')->andReturn($validatedInput);
         $request->shouldReceive('session')->andReturn($session);
 
-        $this->dataBaseCreateAccount->shouldReceive('createAccount')->once()->with($validatedInput);
+        $this->dataBaseCreateAccount->shouldReceive('createAccount')->once()->with('patient', 'patient', $validatedInput['userAttributes'], $validatedInput['userAccountAttributes']);
 
-        Auth::partialMock()->shouldReceive('guard->attempt')->with(['password' => 'password', 'username' => 'username'], false);
+        Auth::shouldReceive('guard->attempt')->with(['password' => 'password', 'username' => 'username'], false);
 
         $response = $this->instantiate()->register($request);
 

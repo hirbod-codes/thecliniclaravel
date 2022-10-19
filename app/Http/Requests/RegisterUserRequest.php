@@ -24,14 +24,22 @@ class RegisterUserRequest extends FormRequest
      */
     public function rules()
     {
-        $array = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php'));
+        $array['userAttributes'] = ['required_without:userAccountAttributes', 'array', 'min:1'];
+        $array['userAccountAttributes'] = ['required_without:userAttributes', 'array', 'min:1'];
+        $array['avatar'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'];
 
-        unset($array['role']);
+        foreach ((include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php')) as $key => $value) {
+            if (in_array($key, ['phonenumber', 'password'])) {
+                continue;
+            }
 
-        $specialRules = (include(base_path() . '/app/Rules/BuiltInRules/Models/Patient/rules.php'));
-        unset($specialRules['laser_grade']);
+            $array['userAttributes.' . $key] = $value;
+        }
 
-        $array = array_merge($array, $specialRules);
+        foreach (include(base_path() . '/app/Rules/BuiltInRules/Models/Patient/rules.php') as $key => $value) {
+            $array['userAccountAttributes.' . $key] = $value;
+        }
+
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 

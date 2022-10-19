@@ -157,9 +157,7 @@ class AuthController extends Controller
         $validatedInput = $request->safe()->all();
         $session = $request->session();
 
-        $validatedInput['role'] = 'patient';
-
-        if ($validatedInput['phonenumber'] !== $session->get('phonenumber')) {
+        if ($validatedInput['userAttributes']['phonenumber'] !== $session->get('phonenumber')) {
             if ($request->header('content-type') === 'application/json') {
                 return response()->json(['message' => trans_choice('auth.phonenumber_verification_mismatch', 0)], 422);
             } else {
@@ -168,11 +166,11 @@ class AuthController extends Controller
         }
 
         $timestamp = intval($session->get('phonenumber_verification_timestamp', (new \DateTime)->getTimestamp()));
-        $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
+        $validatedInput['userAttributes']['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
-        $this->dataBaseCreateAccount->createAccount($validatedInput);
+        $this->dataBaseCreateAccount->createAccount('patient', 'patient', $validatedInput['userAttributes'], $validatedInput['userAccountAttributes']);
 
-        Auth::guard('web')->attempt(['password' => $validatedInput['password'], 'username' => $validatedInput['username']], false);
+        Auth::guard('web')->attempt(['password' => $validatedInput['userAttributes']['password'], 'username' => $validatedInput['userAttributes']['username']], false);
 
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
