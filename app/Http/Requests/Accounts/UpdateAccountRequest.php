@@ -61,16 +61,19 @@ class UpdateAccountRequest extends BaseFormRequest
         /** @var User $user */
         $user = User::query()->whereKey($accountId)->firstOrFail();
 
-        $array = include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php');
+        $array['userAttributes'] = ['required_without:userAccountAttributes', 'array', 'min:1'];
+        $array['userAccountAttributes'] = ['required_without:userAttributes', 'array', 'min:1'];
 
-        $array = array_merge($array, include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($user->authenticatableRole) . '/updateRules.php'));
+        foreach ((include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php')) as $key => $value) {
+            if (in_array($key, ['phonenumber', 'password'])) {
+                continue;
+            }
 
-        if (isset($array['phonenumber'])) {
-            unset($array['phonenumber']);
+            $array['userAttributes' . $key] = $value;
         }
 
-        if (isset($array['password'])) {
-            unset($array['password']);
+        foreach (include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($user->authenticatableRole) . '/updateRules.php') as $key => $value) {
+            $array['userAccountAttributes' . $key] = $value;
         }
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));

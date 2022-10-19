@@ -9,5 +9,4 @@ return [
     'password' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/password.php'))['password'],
     'password_confirmation' => ['required', 'string', 'same:password'],
     'gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender'],
-    'avatar' => (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'],
 ];

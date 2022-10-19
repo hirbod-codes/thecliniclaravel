@@ -162,7 +162,11 @@ Route::middleware(['auth:web', 'phonenumber_verified'])->group(function () {
 
             Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
 
-            Route::post('/account/{roleName}', 'store')->name('account.store');
+            Route::post('/account/admin/{roleName}', 'storeAdmin')->name('account.storeAdmin');
+            Route::post('/account/doctor/{roleName}', 'storeDoctor')->name('account.storeDoctor');
+            Route::post('/account/secretary/{roleName}', 'storeSecretary')->name('account.storeSecretary');
+            Route::post('/account/operator/{roleName}', 'storeOperator')->name('account.storeOperator');
+            Route::post('/account/patient/{roleName}', 'storePatient')->name('account.storePatient');
 
             Route::get('/account/{placeholder}', 'show')->name('account.show');
             Route::get('/account', 'showSelf')->name('account.showSelf');

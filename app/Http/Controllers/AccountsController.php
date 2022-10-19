@@ -5,32 +5,27 @@ namespace App\Http\Controllers;
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\AccountsCountRequest;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
-use App\Http\Requests\Accounts\isPhonenumberVerificationCodeVerified;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\Accounts\SendPhonenumberVerificationCodeRequest;
-use App\Http\Requests\Accounts\StoreAccountRequest;
-use App\Models\RoleName;
-use App\Models\User;
-use App\Notifications\SendPhonenumberVerificationCode;
+use App\Http\Requests\Accounts\StoreAdminRequest;
+use App\Http\Requests\Accounts\StoreDoctorRequest;
+use App\Http\Requests\Accounts\StoreSecretaryRequest;
+use App\Http\Requests\Accounts\StoreOperatorRequest;
+use App\Http\Requests\Accounts\StorePatientRequest;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
 use Database\Interactions\Accounts\DataBaseDeleteAccount;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\DataBaseUpdateAccount;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Database\Interactions\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
 use Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount;
 use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\Interfaces\IDataBaseUpdateAccount;
-use Database\Interactions\Exceptions\Accounts\AdminTemptsToDeleteAdminException;
-use Database\Interactions\Exceptions\AdminModificationByUserException;
-use Database\Interactions\Exceptions\AdminsCollisionException;
+use Illuminate\Contracts\Session\Session;
+use Illuminate\Http\File;
+use Illuminate\Http\UploadedFile;
 
 class AccountsController extends Controller
 {
@@ -83,28 +78,59 @@ class AccountsController extends Controller
         return response($this->dataBaseRetrieveAccounts->getAccountsCount($input['roleName']));
     }
 
-    public function store(StoreAccountRequest $request, string $roleName): Response|JsonResponse
+    public function store(Session $session, string $userType, string $roleName, array $userAttributes, array $userAccountAttributes, string|File|UploadedFile|null $avatar = null): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
-        $session = $request->session();
-
-        if ($session->get('isPhonenumberVerified') === null || $session->get('phonenumber') !== $validatedInput['phonenumber']) {
+        if ($session->get('isPhonenumberVerified') === null || $session->get('phonenumber') !== $userAttributes['phonenumber']) {
             return response(trans_choice('auth.phonenumber_not_verification', 0), 422);
         }
-
-        $validatedInput['role'] = $roleName;
 
         $timestamp = intval($session->get('phonenumberVerifiedAt', 0));
         if ($timestamp === 0) {
             throw new \LogicException('!!!', 500);
         }
 
-        $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
+        $userAttributes['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
-        $user = $this->dataBaseCreateAccount->createAccount($validatedInput);
+        $user = $this->dataBaseCreateAccount->createAccount($userType, $roleName, $userAttributes, $userAccountAttributes, isset($avatar) ? $avatar : null);
 
         return response()->json($user->toArray());
     }
+
+    public function storeAdmin(StoreAdminRequest $request, string $roleName): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+
+        return $this->store($request->session(), 'admin', $roleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+    }
+
+    public function storeDoctor(StoreDoctorRequest $request, string $roleName): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+
+        return $this->store($request->session(), 'doctor', $roleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+    }
+
+    public function storeSecretary(StoreSecretaryRequest $request, string $roleName): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+
+        return $this->store($request->session(), 'secretary', $roleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+    }
+
+    public function storeOperator(StoreOperatorRequest $request, string $roleName): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+
+        return $this->store($request->session(), 'operator', $roleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+    }
+
+    public function storePatient(StorePatientRequest $request, string $roleName): Response|JsonResponse
+    {
+        $validatedInput = $request->safe()->all();
+
+        return $this->store($request->session(), 'patient', $roleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+    }
+
 
     public function show(string $placeholder): JsonResponse
     {
@@ -142,19 +168,11 @@ class AccountsController extends Controller
             ], 422);
         }
 
-        if (count($input = $request->safe()->all()) === 0) {
-            return response()->json([
-                'errors' => [],
-                'message' => trans_choice('general.no-data', 0)
-            ], 422);
-        }
+        $input = $request->safe()->all();
 
-        $targetUser = $this->dataBaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($accountId));
+        $targetUser = $this->dataBaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername((int)$accountId));
 
-        $updatedUser = $this->dataBaseUpdateAccount->massUpdateAccount(
-            $input,
-            $targetUser
-        );
+        $updatedUser = $this->dataBaseUpdateAccount->massUpdateAccount($input['userAttributes'], $input['userAccountAttributes'], $targetUser);
 
         return response()->json($updatedUser->toArray());
     }

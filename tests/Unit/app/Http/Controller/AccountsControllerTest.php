@@ -7,7 +7,6 @@ use App\Auth\CheckAuthentication;
 use App\Http\Requests\Accounts\AccountsCountRequest;
 use App\Http\Requests\Accounts\IndexAccountsRequest;
 use App\Http\Requests\Accounts\UpdateAccountRequest;
-use App\Http\Requests\Accounts\StoreAccountRequest;
 use App\Models\Auth\User as AuthUser;
 use App\Models\User;
 use Database\Interactions\Accounts\AccountsManagement;
@@ -28,25 +27,16 @@ use Database\Interactions\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
 /**
  * @covers \App\Http\Controllers\AccountsController
  */
 class AccountsControllerTest extends TestCase
 {
-    use GetAuthenticatables;
 
     private Generator $faker;
 
     private string $ruleName;
-
-    private AuthUser $user;
-
-    /**
-     * @var array<string, \App\Models\Auth\User> ['ruleName' => \App\Models\Auth\User, ...]
-     */
-    private array $users;
 
     private CheckAuthentication|MockInterface $checkAuthentication;
 
@@ -162,37 +152,17 @@ class AccountsControllerTest extends TestCase
 
     public function testStore()
     {
-        $validatedInput = ['phonenumber' => '09000000000'];
+        $validatedInput = [
+            'userAttributes' => ['phonenumber' => '09000000000'],
+            'userAccountAttributes' => []
+        ];
 
         /** @var Session|MockInterface $session */
         $session = Mockery::mock(Session::class);
-        $session
-            ->shouldReceive("get")
-            ->with('isPhonenumberVerified')
-            ->andReturn('132132132')
-            //
-        ;
-        $session
-            ->shouldReceive("get")
-            ->with('phonenumber')
-            ->andReturn(123)
-            //
-        ;
+        $session->shouldReceive("get")->with('isPhonenumberVerified')->andReturn('132132132');
+        $session->shouldReceive("get")->with('phonenumber')->andReturn(123);
 
-        /** @var StoreAccountRequest|MockInterface $request */
-        $request = Mockery::mock(StoreAccountRequest::class);
-        $request
-            ->shouldReceive('safe->all')
-            ->andReturn($validatedInput)
-            //
-        ;
-        $request
-            ->shouldReceive('session')
-            ->andReturn($session)
-            //
-        ;
-
-        $response = $this->instantiate()->store($request, $this->ruleName);
+        $response = $this->instantiate()->store($session, $this->faker->lexify(), $this->ruleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], null);
 
         $this->assertInstanceOf(Response::class, $response);
         $this->assertIsString($response->original);
@@ -203,58 +173,19 @@ class AccountsControllerTest extends TestCase
 
         /** @var Session|MockInterface $session */
         $session = Mockery::mock(Session::class);
-        $session
-            ->shouldReceive("get")
-            ->with('isPhonenumberVerified')
-            ->andReturn('true')
-            //
-        ;
-        $session
-            ->shouldReceive("get")
-            ->with('phonenumber')
-            ->andReturn("09000000000")
-            //
-        ;
-        $session
-            ->shouldReceive("get")
-            ->with('phonenumberVerifiedAt', 0)
-            ->andReturn(strval($timestamp = (new \DateTime)->getTimestamp()))
-            //
-        ;
+        $session->shouldReceive("get")->with('isPhonenumberVerified')->andReturn('true');
+        $session->shouldReceive("get")->with('phonenumber')->andReturn("09000000000");
+        $session->shouldReceive("get")->with('phonenumberVerifiedAt', 0)->andReturn(strval($timestamp = (new \DateTime)->getTimestamp()));
 
-        $validatedInput['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
-
-        /** @var StoreAccountRequest|MockInterface $request */
-        $request = Mockery::mock(StoreAccountRequest::class);
-        $request
-            ->shouldReceive('safe->all')
-            ->andReturn($validatedInput)
-            //
-        ;
-        $request
-            ->shouldReceive('session')
-            ->andReturn($session)
-            //
-        ;
+        $validatedInput['userAttributes']['phonenumber_verified_at'] = (new \DateTime('now', new \DateTimeZone('UTC')))->setTimestamp($timestamp);
 
         /** @var User|MockInterface $user */
         $user = Mockery::mock(User::class);
-        $user
-            ->shouldReceive('toArray')
-            ->once()
-            ->andReturn(['user'])
-            //
-        ;
+        $user->shouldReceive('toArray')->once()->andReturn(['user']);
 
-        $this->dataBaseCreateAccount
-            ->shouldReceive('createAccount')
-            ->once()
-            ->with($validatedInput)
-            ->andReturn($user)
-            //
-        ;
+        $this->dataBaseCreateAccount->shouldReceive('createAccount')->once()->with($userType = $this->faker->lexify(), $this->ruleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], null)->andReturn($user);
 
-        $response = $this->instantiate()->store($request, $this->ruleName);
+        $response = $this->instantiate()->store($session, $userType, $this->ruleName, $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], null);
 
         $this->assertInstanceOf(JsonResponse::class, $response);
         $this->assertIsArray($response->original);
@@ -352,13 +283,14 @@ class AccountsControllerTest extends TestCase
 
     public function testUpdate(): void
     {
+        $validatedInput = [
+            'userAttributes' => ['phonenumber' => '09000000000'],
+            'userAccountAttributes' => []
+        ];
+
         /** @var UpdateAccountRequest|MockInterface $request */
         $request = Mockery::mock(UpdateAccountRequest::class);
-        $request
-            ->shouldReceive('safe->all')
-            ->andReturn(['input'])
-            //
-        ;
+        $request->shouldReceive('safe->all')->andReturn($validatedInput);
 
         $accountsController = $this->instantiate();
 
@@ -371,64 +303,20 @@ class AccountsControllerTest extends TestCase
 
         /** @var UpdateAccountRequest|MockInterface $request */
         $request = Mockery::mock(UpdateAccountRequest::class);
-        $request
-            ->shouldReceive('safe->all')
-            ->andReturn([])
-            //
-        ;
+        $request->shouldReceive('safe->all')->andReturn($validatedInput);
 
-        $accountsController = $this->instantiate();
-
-        $response = $accountsController->update($request, 10);
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertEquals(422, $response->getStatusCode());
-        $this->assertIsArray($response->original);
-        $this->assertIsString($response->original['message']);
-        unset($response);
-
-        /** @var UpdateAccountRequest|MockInterface $request */
-        $request = Mockery::mock(UpdateAccountRequest::class);
-        $request
-            ->shouldReceive('safe->all')
-            ->andReturn(['input'])
-            //
-        ;
-
-        $this->accountsManagement
-            ->shouldReceive('resolveUsername')
-            ->once()
-            ->with(10)
-            ->andReturn('username')
-            //
-        ;
+        $this->accountsManagement->shouldReceive('resolveUsername')->once()->with(10)->andReturn('username');
 
         /** @var User|MockInterface $targetUser */
         $targetUser = Mockery::mock(User::class);
 
-        $this->dataBaseRetrieveAccounts
-            ->shouldReceive('getAccount')
-            ->once()
-            ->with('username')
-            ->andReturn($targetUser)
-            //
-        ;
+        $this->dataBaseRetrieveAccounts->shouldReceive('getAccount')->once()->with('username')->andReturn($targetUser);
 
         /** @var User|MockInterface $updatedUser */
         $updatedUser = Mockery::mock(User::class);
-        $updatedUser
-            ->shouldReceive('toArray')
-            ->once()
-            ->andReturn(['user'])
-            //
-        ;
+        $updatedUser->shouldReceive('toArray')->once()->andReturn(['user']);
 
-        $this->dataBaseUpdateAccount
-            ->shouldReceive('massUpdateAccount')
-            ->once()
-            ->with(['input'], $targetUser)
-            ->andReturn($updatedUser)
-            //
-        ;
+        $this->dataBaseUpdateAccount->shouldReceive('massUpdateAccount')->once()->with($validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], $targetUser)->andReturn($updatedUser);
 
         $accountsController = $this->instantiate();
 
