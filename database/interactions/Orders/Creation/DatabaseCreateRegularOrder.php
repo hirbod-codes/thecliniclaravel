@@ -2,33 +2,40 @@
 
 namespace Database\Interactions\Orders\Creation;
 
-use App\Models\BusinessDefault;
 use App\Models\Order\RegularOrder;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
-use App\DataStructures\Order\Regular\DSRegularOrder;
+use Database\Interactions\Business\DataBaseRetrieveBusinessSettings;
+use Database\Interactions\Business\Interfaces\IDataBaseRetrieveBusinessSettings;
 use Database\Interactions\Orders\Interfaces\IDataBaseCreateRegularOrder;
 
 class DatabaseCreateRegularOrder implements IDataBaseCreateRegularOrder
 {
+    private IDataBaseRetrieveBusinessSettings $iDataBaseRetrieveBusinessSettings;
+
+    public function __construct(null|IDataBaseRetrieveBusinessSettings $iDataBaseRetrieveBusinessSettings = null)
+    {
+        $this->iDataBaseRetrieveBusinessSettings = $iDataBaseRetrieveBusinessSettings ?: new DataBaseRetrieveBusinessSettings;
+    }
+
     public function createRegularOrder(User $targetUser, int|null $price, int|null $timeConsumption): RegularOrder
     {
-        DB::beginTransaction();
-
         try {
+            DB::beginTransaction();
+
             $order = $targetUser->orders()->create();
 
             $regularOrder = new RegularOrder;
+
             $regularOrder->{$order->getForeignKey()} = $order->{$order->getKeyName()};
-            $regularOrder->price = $price ?: BusinessDefault::firstOrFail()->default_regular_order_price;
-            $regularOrder->needed_time = $timeConsumption ?: BusinessDefault::firstOrFail()->default_regular_order_time_consumption;
-            if (!$regularOrder->save()) {
-                throw new \RuntimeException('Failed to create the order', 500);
-            }
+            $regularOrder->price = $price ?: $this->iDataBaseRetrieveBusinessSettings->getDefaultRegularOrderPrice();
+            $regularOrder->needed_time = $timeConsumption ?: $this->iDataBaseRetrieveBusinessSettings->getDefaultRegularOrderTimeConsumption();
+
+            $regularOrder->saveOrFail();
 
             DB::commit();
 
-            return $regularOrder->fresh();
+            return $regularOrder->refresh();
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;

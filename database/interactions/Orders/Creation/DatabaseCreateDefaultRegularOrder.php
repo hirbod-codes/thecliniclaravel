@@ -2,33 +2,40 @@
 
 namespace Database\Interactions\Orders\Creation;
 
-use App\Models\BusinessDefault;
 use App\Models\Order\RegularOrder;
 use App\Models\User;
+use Database\Interactions\Business\DataBaseRetrieveBusinessSettings;
+use Database\Interactions\Business\Interfaces\IDataBaseRetrieveBusinessSettings;
 use Illuminate\Support\Facades\DB;
-use App\DataStructures\Order\Regular\DSRegularOrder;
 use Database\Interactions\Orders\Interfaces\IDataBaseCreateDefaultRegularOrder;
 
 class DatabaseCreateDefaultRegularOrder implements IDataBaseCreateDefaultRegularOrder
 {
+    private IDataBaseRetrieveBusinessSettings $iDataBaseRetrieveBusinessSettings;
+
+    public function __construct(null|IDataBaseRetrieveBusinessSettings $iDataBaseRetrieveBusinessSettings = null)
+    {
+        $this->iDataBaseRetrieveBusinessSettings = $iDataBaseRetrieveBusinessSettings ?: new DataBaseRetrieveBusinessSettings;
+    }
+
     public function createDefaultRegularOrder(User $targetUser): RegularOrder
     {
-        DB::beginTransaction();
-
         try {
+            DB::beginTransaction();
+
             $order = $targetUser->orders()->create();
 
             $regularOrder = new RegularOrder;
+
             $regularOrder->{$order->getForeignKey()} = $order->getKey();
-            $regularOrder->price = BusinessDefault::firstOrFail()->default_regular_order_price;
-            $regularOrder->needed_time = BusinessDefault::firstOrFail()->default_regular_order_time_consumption;
-            if (!$regularOrder->save()) {
-                throw new \RuntimeException('Failed to create the order', 500);
-            }
+            $regularOrder->price = $this->iDataBaseRetrieveBusinessSettings->getDefaultRegularOrderPrice();
+            $regularOrder->needed_time = $this->iDataBaseRetrieveBusinessSettings->getDefaultRegularOrderTimeConsumption();
+
+            $regularOrder->saveOrFail();
 
             DB::commit();
 
-            return $regularOrder->fresh();
+            return $regularOrder->refresh();
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;
