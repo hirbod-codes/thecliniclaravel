@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\PoliciesLogic\Visit\Utilities;
+namespace Tests\Unit\app\PoliciesLogic\Visit\Utilities;
 
 use App\PoliciesLogic\Visit\Utilities\TimePatternsManager;
 use DateTimeZone;
