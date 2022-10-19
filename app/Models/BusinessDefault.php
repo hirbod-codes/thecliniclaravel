@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\DataStructures\Time\DSDownTimes;
-use App\DataStructures\Time\DSWorkSchedule;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BusinessDefault extends Model
@@ -28,10 +28,10 @@ class BusinessDefault extends Model
     protected function workSchedule(): Attribute
     {
         return Attribute::make(
-            get: function (string $workSchedule): DSWorkSchedule {
-                return DSWorkSchedule::toObject(json_decode($workSchedule, true));
+            get: function (string $workSchedule): DSWeeklyTimePatterns {
+                return DSWeeklyTimePatterns::toObject(json_decode($workSchedule, true));
             },
-            set: function (DSWorkSchedule|array|string $value) {
+            set: function (DSWeeklyTimePatterns|array|string $value) {
                 if (is_array($value)) {
                     return json_encode($value);
                 } elseif (is_string($value)) {
