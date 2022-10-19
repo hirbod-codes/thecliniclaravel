@@ -2,22 +2,22 @@
 
 namespace Tests\Unit\database\interactions\Accounts;
 
+use App\Models\Auth\Patient;
 use App\Models\Role;
 use App\Models\User;
 use Database\Interactions\Accounts\DataBaseCreateAccount;
-use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
-use App\PoliciesLogicDataStructures\DataStructures\User\DSUser;
-use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Registered;
+use Illuminate\Support\Facades\Event;
 
+/**
+ * @covers \Database\Interactions\Accounts\DataBaseCreateAccount
+ */
 class DatabaseCreateAccountTest extends TestCase
 {
-    use GetAuthenticatables, ResolveUserModel;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -29,67 +29,30 @@ class DatabaseCreateAccountTest extends TestCase
 
     public function testCreateAccount()
     {
-        foreach ($this->getAuthenticatables() as $roleName => $authenticatable) {
-            try {
-                DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-                $roleModelFullname = $this->resolveRuleModelFullName($roleName);
+            $input = User::factory()->definition();
 
-                User::factory()->definition();
-                /** @var \App\Models\Model $userModel */
-                $userModel = User::factory()
-                    ->usersRolesForeignKey($roleName)
-                    ->make();
+            $specialInput = Patient::factory()->definition();
+            unset($specialInput['laser_grade']);
 
-                /** @var \App\Models\Model $roleModel */
-                $roleModel = new $roleModelFullname;
-                $roleModel->{(new User)->getForeignKey()} = $userModel->{(new User)->getKeyName()};
-                $roleModel->{$roleModel->getUserRoleNameFKColumnName()} = $userModel->{(new Role)->getForeignKey()};
+            Event::fake();
 
-                $input = array_merge(
-                    User::factory()->definition(),
-                    $roleModelFullname::factory()->definition(),
-                    ['role' => $roleName],
-                );
+            $user = (new DataBaseCreateAccount)->createAccount('patient', 'patient', $input, $specialInput, null);
 
-                $dsUser = (new DataBaseCreateAccount)->createAccount($input);
-                $dsUserArray = $dsUser->toArray();
+            Event::assertDispatched(Registered::class, 1);
 
-                $DSFullname = $this->resolveRuleDataStructureFullName($roleName);
+            $this->assertInstanceOf(User::class, $user);
+            $this->assertEquals($input['username'], $user->username);
+            $this->assertDatabaseHas((new User)->getTable(), ['username' => $input['username']]);
 
-                $this->assertInstanceOf(DSUser::class, $dsUser);
-                $this->assertInstanceOf($DSFullname, $dsUser);
+            DB::rollback();
 
-                foreach ($authenticatable->getDataStructure()->toArray() as $key => $value) {
-                    $this->assertNotFalse(array_search($key, array_keys($dsUserArray)));
-                    if (array_search(Str::snake($key), $userModelArray = $userModel->toArray()) !== false) {
-                        $this->assertEquals($userModelArray[Str::snake($key)], $dsUserArray[$key]);
-                    }
-                    // $this->assertEquals($value, $dsUserArray[$key]);
-                }
-
-                $this->assertDatabaseHas((new $roleModelFullname)->getTable(), [(new $roleModelFullname)->getKeyName() => $dsUser->getId()]);
-                $this->assertDatabaseHas((new User)->getTable(), ['username' => $dsUser->getUsername()]);
-
-                // -------------
-                $randomUser = User::first();
-                $input['firstname'] = $randomUser->firstname;
-                $input['lastname'] = $randomUser->lastname;
-
-                try {
-                    $dsUser = (new DataBaseCreateAccount)->createAccount($input);
-
-                    throw new \RuntimeException('Failure!!!');
-                } catch (\Throwable $th) {
-                    $this->assertEquals(trans_choice('auth.duplicate_fullname', 0), $th->getMessage());
-                    $this->assertEquals(422, $th->getCode());
-                }
-
-                DB::rollback();
-            } catch (\Throwable $th) {
-                DB::rollback();
-                throw $th;
-            }
+            $this->assertDatabaseMissing((new User)->getTable(), ['username' => $input['username']]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            throw $th;
         }
     }
 }
