@@ -65,7 +65,7 @@ class RegularVisit extends Model
             } else {
                 $args[$parameterName] = $this->getDSWeekDaysPeriods($weekDaysPeriods);
             }
-        } elseif ($parameterName === 'dateTimePeriod') {
+        } elseif ($parameterName === 'dateTimePeriods') {
             if (($dateTimePeriod = $this->date_time_period) === null) {
                 $args[$parameterName] = null;
             } else {
