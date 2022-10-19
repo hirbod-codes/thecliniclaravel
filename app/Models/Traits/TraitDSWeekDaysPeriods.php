@@ -5,26 +5,16 @@ namespace App\Models\Traits;
 use App\DataStructures\Time\DSDateTimePeriod;
 use App\DataStructures\Time\DSDateTimePeriods;
 use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 
 trait TraitDSWeekDaysPeriods
 {
-    public function getDSWeekDaysPeriods(array|DSWeekDaysPeriods $weekDaysPeriods): DSWeekDaysPeriods
+    public function getDSWeekDaysPeriods(array|DSWeekDaysPeriods $dsWeeklyTimePatterns): DSWeekDaysPeriods
     {
-        if ($weekDaysPeriods instanceof DSWeekDaysPeriods) {
-            return $weekDaysPeriods;
+        if ($dsWeeklyTimePatterns instanceof DSWeekDaysPeriods) {
+            return $dsWeeklyTimePatterns;
         }
 
-        $dsWeekDaysPeriods = new DSWeekDaysPeriods('Monday');
-
-        foreach ($weekDaysPeriods as $weekDay => $periods) {
-            $dsPeriods = new DSDateTimePeriods;
-            foreach ($periods as $period) {
-                $dsPeriods[] = new DSDateTimePeriod($period['start'], $period['end']);
-            }
-
-            $dsWeekDaysPeriods[$weekDay] = $dsPeriods;
-        }
-
-        return $dsWeekDaysPeriods;
+        return DSWeeklyTimePatterns::toObject($dsWeeklyTimePatterns);
     }
 }
