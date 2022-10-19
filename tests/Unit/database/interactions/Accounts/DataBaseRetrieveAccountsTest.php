@@ -2,17 +2,18 @@
 
 namespace Tests\Unit\database\interactions\Accounts;
 
+use App\Models\Auth\User;
+use App\Models\User as ModelsUser;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
-use Database\Traits\ResolveUserModel;
 use Faker\Factory;
 use Faker\Generator;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
+/**
+ * @covers \Database\Interactions\Accounts\DataBaseRetrieveAccounts
+ */
 class DataBaseRetrieveAccountsTest extends TestCase
 {
-    use ResolveUserModel, GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -25,43 +26,34 @@ class DataBaseRetrieveAccountsTest extends TestCase
     public function testGetAccounts()
     {
         $count = 5;
-
         $ruleName = 'patient';
 
-        $theModelClassFullName = $this->resolveRuleModelFullName($ruleName);
-        $theModelClassPrimeryKey = (new $theModelClassFullName)->getKeyName();
+        $accounts = (new DataBaseRetrieveAccounts)->getAccounts($count, $ruleName, null);
 
-        $theDataStructureClassFullName = $this->resolveRuleDataStructureFullName($ruleName);
-
-        $ids = $this->getRandomId('patient');
-        for ($i = 0; $i < $count; $i++) {
-            array_pop($ids);
+        $this->assertCount(5, $accounts);
+        $this->assertContainsOnlyInstancesOf(User::class, $accounts);
+        foreach ($accounts as $account) {
+            $this->assertEquals('patient', $account->role->roleName->name);
         }
 
-        $lastAccountId = $this->faker->randomElement([
-            null,
-            $this->faker->randomElement($ids)
-        ]);
+        $count = 3;
+        $ruleName = 'admin';
 
-        $accounts = (new DataBaseRetrieveAccounts)->getAccounts($count, $ruleName, $lastAccountId);
+        $accounts = (new DataBaseRetrieveAccounts)->getAccounts($count, $ruleName, 5);
 
-        $this->assertIsArray($accounts);
-        $this->assertCount($count, $accounts);
-
-        for ($i = 0; $i < $count; $i++) {
-            $this->assertInstanceOf($theDataStructureClassFullName, $accounts[$i]);
+        $this->assertCount(3, $accounts);
+        $this->assertContainsOnlyInstancesOf(User::class, $accounts);
+        $this->assertEquals(4, $accounts[0]->getKey());
+        foreach ($accounts as $account) {
+            $this->assertEquals('admin', $account->role->roleName->name);
         }
     }
 
     public function testGetAccount()
     {
-        $ruleName = 'patient';
+        $account = (new DataBaseRetrieveAccounts)->getAccount($username = ModelsUser::query()->firstOrFail()->username);
 
-        $authenticatable = $this->getAuthenticatable($ruleName);
-
-        $account = (new DataBaseRetrieveAccounts)->getAccount($authenticatable->getDataStructure()->getUsername());
-
-        $this->assertInstanceOf(get_class($authenticatable->getDataStructure()), $account);
-        $this->assertEquals($authenticatable->getDataStructure()->getUsername(), $account->getUsername());
+        $this->assertInstanceOf(ModelsUser::class, $account);
+        $this->assertEquals($username, $account->username);
     }
 }
