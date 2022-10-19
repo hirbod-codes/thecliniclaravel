@@ -3,7 +3,7 @@
 namespace App\Models\Visit;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 
 trait TraitMutatorWeekDaysPeriods
 {
@@ -14,10 +14,10 @@ trait TraitMutatorWeekDaysPeriods
                 if (is_null($weekDaysPeriods)) {
                     return null;
                 }
-                return DSWeekDaysPeriods::toObject(json_decode($weekDaysPeriods, true));
+                return DSWeeklyTimePatterns::toObject(json_decode($weekDaysPeriods, true));
             },
-            set: function (DSWeekDaysPeriods|array|string|null $value) {
-                if ($value instanceof DSWeekDaysPeriods) {
+            set: function (DSWeeklyTimePatterns|array|string|null $value) {
+                if ($value instanceof DSWeeklyTimePatterns) {
                     return json_encode($value->toArray());
                 } elseif (gettype($value) === 'array') {
                     return json_encode($value);

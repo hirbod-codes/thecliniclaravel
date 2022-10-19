@@ -3,21 +3,21 @@
 namespace App\Models\Visit;
 
 use Illuminate\Database\Eloquent\Casts\Attribute;
-use App\DataStructures\Time\DSDateTimePeriod;
+use App\DataStructures\Time\DSDateTimePeriods;
 
 trait TraitMutatorDateTimePeriod
 {
     protected function dateTimePeriod(): Attribute
     {
         return Attribute::make(
-            get: function (string|null $dateTiemPeriod) {
-                if (is_null($dateTiemPeriod)) {
+            get: function (string|null $dateTiemPeriods) {
+                if (is_null($dateTiemPeriods)) {
                     return null;
                 }
-                return DSDateTimePeriod::toObject(json_decode($dateTiemPeriod, true));
+                return DSDateTimePeriods::toObject(json_decode($dateTiemPeriods, true));
             },
-            set: function (DSDateTimePeriod|array|string|null $value) {
-                if ($value instanceof DSDateTimePeriod) {
+            set: function (DSDateTimePeriods|array|string|null $value) {
+                if ($value instanceof DSDateTimePeriods) {
                     return json_encode($value->toArray());
                 } elseif (gettype($value) === 'array') {
                     return json_encode($value);
