@@ -16,13 +16,15 @@ class DataBaseRetrieveAccounts implements IDataBaseRetrieveAccounts
 
     public function getAccountsCount(string $roleName): int
     {
-        $childRoleModel = RoleName::query()->where('name', '=', $roleName)->firstOrFail()->childRoleModel;
-
         $count = 0;
         /** @var AuthUser $userTypeModelFullname */
         foreach ($this->authModelsFullName() as $userTypeModelFullname) {
             $count += $userTypeModelFullname::query()
-                ->where((new $childRoleModel)->getForeignKey(), '=', $childRoleModel->getKey())
+                ->whereHas('role', function ($query) use ($roleName) {
+                    $query->whereHas('roleName', function ($query) use ($roleName) {
+                        $query->where('name', '=', $roleName);
+                    });
+                })
                 ->count()
                 //
             ;

@@ -23,6 +23,14 @@ class DataBaseRetrieveAccountsTest extends TestCase
         $this->faker = Factory::create();
     }
 
+    public function testGetAccountsCount()
+    {
+        $count = (new DataBaseRetrieveAccounts)->getAccountsCount('patient');
+
+        $this->assertIsInt($count);
+        $this->assertNotEquals(0, $count);
+    }
+
     public function testGetAccounts()
     {
         $count = 5;
