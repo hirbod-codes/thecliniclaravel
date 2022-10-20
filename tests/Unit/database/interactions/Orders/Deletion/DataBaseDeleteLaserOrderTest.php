@@ -2,19 +2,22 @@
 
 namespace Tests\Unit\database\interactions\Orders\Deletion;
 
+use App\Models\Auth\Patient;
 use App\Models\Order\LaserOrder;
+use App\Models\Order\LaserOrderPackage;
+use App\Models\Order\LaserOrderPart;
 use Database\Interactions\Orders\Deletion\DataBaseDeleteLaserOrder;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
+/**
+ * @covers \Database\Interactions\Orders\Deletion\DataBaseDeleteLaserOrder
+ */
 class DataBaseDeleteLaserOrderTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -26,13 +29,13 @@ class DataBaseDeleteLaserOrderTest extends TestCase
 
     public function test()
     {
-        DB::beginTransaction();
-
         try {
-            $authenticatable = $this->getAuthenticatable('patient');
-            $dsAuthenticatable = $authenticatable->getDataStructure();
+            DB::beginTransaction();
 
-            foreach ($authenticatable->user->orders as $order) {
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
+
+            foreach ($user->orders as $order) {
                 /** @var LaserOrder $laserOrder */
                 if (($laserOrder = $order->laserOrder) !== null) {
                     $found = true;
@@ -43,10 +46,23 @@ class DataBaseDeleteLaserOrderTest extends TestCase
                 throw new ModelNotFoundException();
             }
 
-            $result = (new DataBaseDeleteLaserOrder)->deleteLaserOrder($laserOrder->getDSLaserOrder(), $dsAuthenticatable);
+            $order = $laserOrder->order;
+
+            $result = (new DataBaseDeleteLaserOrder)->deleteLaserOrder($laserOrder);
+
             $this->assertNull($result);
-        } finally {
+            $this->assertDatabaseMissing($laserOrder->getTable(), [$laserOrder->getKeyName() => $laserOrder->getKey()]);
+            $this->assertDatabaseMissing($order->getTable(), [$order->getKeyName() => $order->getKey()]);
+            $this->assertDatabaseMissing((new LaserOrderPart)->getTable(), [$laserOrder->getForeignKey() => $laserOrder->getKey()]);
+            $this->assertDatabaseMissing((new LaserOrderPackage)->getTable(), [$laserOrder->getForeignKey() => $laserOrder->getKey()]);
+
             DB::rollBack();
+
+            $this->assertDatabaseHas($laserOrder->getTable(), [$laserOrder->getKeyName() => $laserOrder->getKey()]);
+            $this->assertDatabaseHas($order->getTable(), [$order->getKeyName() => $order->getKey()]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
     }
 }
