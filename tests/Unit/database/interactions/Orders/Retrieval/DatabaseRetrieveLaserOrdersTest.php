@@ -2,20 +2,24 @@
 
 namespace Tests\Unit\database\interactions\Orders\Retrieval;
 
+use App\DataStructures\Order\DSPackages;
+use App\DataStructures\Order\DSPart;
+use App\DataStructures\Order\DSParts;
+use App\Models\Auth\Patient;
+use App\Models\Order\LaserOrder;
+use App\Models\Package\Package;
+use App\Models\Part\Part;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveLaserOrders;
 use Faker\Factory;
 use Faker\Generator;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
-use App\PoliciesLogicDataStructures\DataStructures\Order\DSOrder;
-use App\PoliciesLogicDataStructures\DataStructures\Order\DSOrders;
-use App\PoliciesLogicDataStructures\DataStructures\Order\Laser\DSLaserOrder;
-use App\PoliciesLogicDataStructures\DataStructures\Order\Laser\DSLaserOrders;
+use Illuminate\Support\Arr;
 
+/**
+ * @covers \Database\Interactions\Orders\Retrieval\DatabaseRetrieveLaserOrders
+ */
 class DatabaseRetrieveLaserOrdersTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -27,10 +31,10 @@ class DatabaseRetrieveLaserOrdersTest extends TestCase
 
     public function testGetLaserOrdersByPriceByUser(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
-        $dsAuthenticatable = $authenticatable->getDataStructure();
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        foreach ($authenticatable->user->orders as $order) {
+        foreach ($user->orders as $order) {
             if (($laserOrder = $order->laserOrder) !== null) {
                 $found = true;
                 break;
@@ -43,35 +47,34 @@ class DatabaseRetrieveLaserOrdersTest extends TestCase
         $operator = '=';
         $price = $laserOrder->price;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPriceByUser($operator, $price, $dsAuthenticatable);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPriceByUser($operator, $price, $user);
 
-        $this->assertInstanceOf(DSLaserOrders::class, $dsLaserOrders);
-        $this->assertNotCount(0, $dsLaserOrders);
-        foreach ($dsLaserOrders as $dsLaserOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsLaserOrder);
-            $this->assertEquals($price, $dsLaserOrder->getPrice());
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertNotCount(0, $laserOrders);
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertEquals($price, $laserOrder->price);
         }
 
         $operator = '>';
         $price = 1;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPriceByUser($operator, $price, $dsAuthenticatable);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPriceByUser($operator, $price, $user);
 
-        $this->assertInstanceOf(DSOrders::class, $dsLaserOrders);
-        $this->assertNotCount(0, $dsLaserOrders);
-
-        /** @var DSLaserOrder $dsOrder */
-        foreach ($dsLaserOrders as $dsOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsOrder);
-            $this->assertGreaterThan($price, $dsOrder->getPrice());
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertNotCount(0, $laserOrders);
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertGreaterThan($price, $laserOrder->price);
         }
     }
 
     public function testGetLaserOrdersByPrice(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        foreach ($authenticatable->user->orders as $order) {
+        foreach ($user->orders as $order) {
             if (($laserOrder = $order->laserOrder) !== null) {
                 $found = true;
                 break;
@@ -81,42 +84,55 @@ class DatabaseRetrieveLaserOrdersTest extends TestCase
             throw new \RuntimeException('Failure!!!', 500);
         }
 
-        $lastOrderId = 5;
+        $lastOrderId = null;
         $count = 10;
         $operator = '=';
         $price = $laserOrder->price;
+        $roleName = 'patient';
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPrice($lastOrderId, $count, $operator, $price);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPrice($roleName, $lastOrderId, $count, $operator, $price);
 
-        $this->assertInstanceOf(DSLaserOrders::class, $dsLaserOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsLaserOrders));
-        foreach ($dsLaserOrders as $dsLaserOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsLaserOrder);
-            $this->assertEquals($price, $dsLaserOrder->getPrice());
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertLessThanOrEqual($count, count($laserOrders));
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertEquals($price, $laserOrder->price);
         }
 
-        $lastOrderId = 5;
+        $lastOrderId = null;
         $count = 10;
         $operator = '>';
         $price = 1;
+        $roleName = 'patient';
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPrice($lastOrderId, $count, $operator, $price);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPrice($roleName, $lastOrderId, $count, $operator, $price);
 
-        $this->assertInstanceOf(DSOrders::class, $dsLaserOrders);
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertCount($count, $laserOrders);
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertGreaterThan($price, $laserOrder->price);
+        }
 
-        /** @var DSLaserOrder $dsOrder */
-        foreach ($dsLaserOrders as $dsOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsOrder);
-            $this->assertGreaterThan($price, $dsOrder->getPrice());
+        $lastOrderId = array_pop($laserOrders)->getKey();
+
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByPrice($roleName, $lastOrderId, $count, $operator, $price);
+
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertCount($count, $laserOrders);
+        $this->assertLessThan($lastOrderId, $laserOrders[0]->getKey());
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertGreaterThan($price, $laserOrder->price);
         }
     }
 
     public function testGetLaserOrdersByTimeConsumptionByUser(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
-        $dsAuthenticatable = $authenticatable->getDataStructure();
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        foreach ($authenticatable->user->orders as $order) {
+        foreach ($user->orders as $order) {
             if (($laserOrder = $order->laserOrder) !== null) {
                 $found = true;
                 break;
@@ -129,34 +145,33 @@ class DatabaseRetrieveLaserOrdersTest extends TestCase
         $operator = '=';
         $timeConsumption = $laserOrder->needed_time;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumptionByUser($operator, $timeConsumption, $dsAuthenticatable);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumptionByUser($operator, $timeConsumption, $user);
 
-        $this->assertInstanceOf(DSLaserOrders::class, $dsLaserOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsLaserOrders));
-        foreach ($dsLaserOrders as $dsLaserOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsLaserOrder);
-            $this->assertEquals($timeConsumption, $dsLaserOrder->getNeededTime());
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertGreaterThanOrEqual(1, count($laserOrders));
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertEquals($timeConsumption, $laserOrder->needed_time);
         }
 
         $operator = '>';
         $timeConsumption = 1;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumptionByUser($operator, $timeConsumption, $dsAuthenticatable);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumptionByUser($operator, $timeConsumption, $user);
 
-        $this->assertInstanceOf(DSLaserOrders::class, $dsLaserOrders);
-
-        /** @var DSLaserOrder $dsOrder */
-        foreach ($dsLaserOrders as $dsOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsOrder);
-            $this->assertGreaterThan($timeConsumption, $dsOrder->getNeededTime());
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertGreaterThan($timeConsumption, $laserOrder->needed_time);
         }
     }
 
     public function testGetLaserOrdersByTimeConsumption(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        foreach ($authenticatable->user->orders as $order) {
+        foreach ($user->orders as $order) {
             if (($laserOrder = $order->laserOrder) !== null) {
                 $found = true;
                 break;
@@ -166,49 +181,136 @@ class DatabaseRetrieveLaserOrdersTest extends TestCase
             throw new \RuntimeException('Failure!!!', 500);
         }
 
-        $lastOrderId = 5;
+        $roleName = 'patient';
+
+        $lastOrderId = null;
         $count = 10;
         $operator = '=';
         $timeConsumption = $laserOrder->needed_time;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumption($count, $operator, $timeConsumption, $lastOrderId);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumption($roleName, $count, $operator, $timeConsumption, $lastOrderId);
 
-        $this->assertInstanceOf(DSLaserOrders::class, $dsLaserOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsLaserOrders));
-        foreach ($dsLaserOrders as $dsLaserOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsLaserOrder);
-            $this->assertEquals($timeConsumption, $dsLaserOrder->getNeededTime());
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertLessThanOrEqual($count, count($laserOrders));
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertEquals($timeConsumption, $laserOrder->needed_time);
         }
 
-        $lastOrderId = 5;
+        $lastOrderId = null;
         $count = 10;
         $operator = '>';
         $timeConsumption = 1;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumption($count, $operator, $timeConsumption, $lastOrderId);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumption($roleName, $count, $operator, $timeConsumption, $lastOrderId);
 
-        $this->assertInstanceOf(DSOrders::class, $dsLaserOrders);
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertCount($count, $laserOrders);
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertGreaterThan($timeConsumption, $laserOrder->needed_time);
+        }
 
-        /** @var DSLaserOrder $dsOrder */
-        foreach ($dsLaserOrders as $dsOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsOrder);
-            $this->assertGreaterThan($timeConsumption, $dsOrder->getNeededTime());
+        $lastOrderId = array_pop($laserOrders)->getKey();
+
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByTimeConsumption($roleName, $count, $operator, $timeConsumption, $lastOrderId);
+
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertCount($count, $laserOrders);
+        $this->assertLessThan($lastOrderId, $laserOrders[0]->getKey());
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertGreaterThan($timeConsumption, $laserOrder->needed_time);
         }
     }
 
     public function testGetLaserOrdersByUser(): void
     {
-        $user = $this->getAuthenticatable('patient');
-        $dsUser = $user->getDataStructure();
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        $dsLaserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByUser($dsUser);
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrdersByUser($user);
 
-        $this->assertInstanceOf(DSOrders::class, $dsLaserOrders);
-        $this->assertNotCount(0, $dsLaserOrders);
+        $this->assertIsArray($laserOrders);
+        $this->assertNotCount(0, $laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        /** @var LaserOrder $laserOrder */
+        foreach ($laserOrders as $laserOrder) {
+            $this->assertEquals($user->getKey(), $laserOrder->order->user->getKey());
+        }
+    }
 
-        /** @var DSLaserOrder $dsOrder */
-        foreach ($dsLaserOrders as $dsOrder) {
-            $this->assertInstanceOf(DSLaserOrder::class, $dsOrder);
+    public function testCollectDSPartsFromNames(): void
+    {
+        $gender = $this->faker->randomElement(['Male', 'Female']);
+        $maxId = Part::query()->orderBy((new Part)->getKeyName(), 'desc')->firstOrFail()->{(new Part)->getKeyName()};
+        $partsName = Arr::flatten(Part::query()->where('gender', '=', $gender)->take($this->faker->numberBetween(1, $maxId))->get(['name'])->toArray());
+
+        $dsParts = (new DatabaseRetrieveLaserOrders)->collectDSPartsFromNames($partsName, $gender);
+
+        $this->assertInstanceOf(DSParts::class, $dsParts);
+        $this->assertEquals(count($partsName), count($dsParts));
+        /** @var DSPart $dsPart */
+        foreach ($dsParts as $dsPart) {
+            $this->assertContains($dsPart->getName(), $partsName);
+        }
+    }
+
+    public function testCollectDSPacakgesFromNames(): void
+    {
+        $gender = $this->faker->randomElement(['Male', 'Female']);
+        $maxId = Package::query()->orderBy((new Package)->getKeyName(), 'desc')->firstOrFail()->{(new Package)->getKeyName()};
+        $packagesName = Arr::flatten(Package::query()->where('gender', '=', $gender)->take($this->faker->numberBetween(1, $maxId))->get(['name'])->toArray());
+
+        $dsPackages = (new DatabaseRetrieveLaserOrders)->collectDSPackagesFromNames($packagesName, $gender);
+
+        $this->assertInstanceOf(DSPackages::class, $dsPackages);
+        $this->assertEquals(count($packagesName), count($dsPackages));
+        /** @var DSPackage $dsPackage */
+        foreach ($dsPackages as $dsPackage) {
+            $this->assertContains($dsPackage->getName(), $packagesName);
+        }
+    }
+
+    public function testGetLaserOrderById(): void
+    {
+        $laserOrder = LaserOrder::query()->firstOrFail();
+
+        $foundedLaserOrder = (new DatabaseRetrieveLaserOrders)->getLaserOrderById($laserOrder->getKey());
+
+        $this->assertInstanceOf(LaserOrder::class, $foundedLaserOrder);
+        $this->assertEquals($laserOrder->getKey(), $foundedLaserOrder->getKey());
+    }
+
+    public function testGetLaserOrders(): void
+    {
+        $lastOrderId = null;
+        $count = 10;
+        $roleName = 'patient';
+
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrders($roleName, $count, $lastOrderId);
+
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertCount($count, $laserOrders);
+
+        foreach ($laserOrders as $laserOrder) {
+            $t = $laserOrder->order->user->authenticatableRole->role->roleName->name;
+            $this->assertEquals($roleName, $t);
+        }
+
+        $lastOrderId = array_pop($laserOrders)->getKey();
+
+        $laserOrders = (new DatabaseRetrieveLaserOrders)->getLaserOrders($roleName, $count, $lastOrderId);
+
+        $this->assertIsArray($laserOrders);
+        $this->assertContainsOnlyInstancesOf(LaserOrder::class, $laserOrders);
+        $this->assertCount($count, $laserOrders);
+        $this->assertLessThan($lastOrderId, $laserOrders[0]->getKey());
+
+        foreach ($laserOrders as $laserOrder) {
+            $t = $laserOrder->order->user->authenticatableRole->role->roleName->name;
+            $this->assertEquals($roleName, $t);
         }
     }
 }
