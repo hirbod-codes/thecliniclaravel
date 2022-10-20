@@ -2,20 +2,18 @@
 
 namespace Tests\Unit\database\interactions\Orders\Retrieval;
 
+use App\Models\Auth\Patient;
+use App\Models\Order\RegularOrder;
 use Database\Interactions\Orders\Retrieval\DatabaseRetrieveRegularOrders;
 use Faker\Factory;
 use Faker\Generator;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
-use App\PoliciesLogicDataStructures\DataStructures\Order\DSOrder;
-use App\PoliciesLogicDataStructures\DataStructures\Order\DSOrders;
-use App\PoliciesLogicDataStructures\DataStructures\Order\Regular\DSRegularOrder;
-use App\PoliciesLogicDataStructures\DataStructures\Order\Regular\DSRegularOrders;
 
+/**
+ * @covers \Database\Interactions\Orders\Retrieval\DatabaseRetrieveRegularOrders
+ */
 class DatabaseRetrieveRegularOrdersTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -27,10 +25,10 @@ class DatabaseRetrieveRegularOrdersTest extends TestCase
 
     public function testGetRegularOrdersByPriceByUser(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
-        $dsAuthenticatable = $authenticatable->getDataStructure();
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        foreach ($authenticatable->user->orders as $order) {
+        foreach ($user->orders as $order) {
             if (($regularOrder = $order->regularOrder) !== null) {
                 $found = true;
                 break;
@@ -43,40 +41,34 @@ class DatabaseRetrieveRegularOrdersTest extends TestCase
         $operator = '=';
         $price = $regularOrder->price;
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPriceByUser($operator, $price, $dsAuthenticatable);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPriceByUser($operator, $price, $user);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsRegularOrders));
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertEquals($price, $dsRegularOrder->getPrice());
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertNotCount(0, $regularOrders);
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertEquals($price, $regularOrder->price);
         }
-
-        $this->assertInstanceOf(DSOrders::class, $dsRegularOrders);
-        $this->assertCount(1, $dsRegularOrders);
-        $this->assertInstanceOf(DSOrder::class, $dsRegularOrders[0]);
-        $this->assertEquals($price, $dsRegularOrders[0]->getPrice());
 
         $operator = '>';
         $price = 1;
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPriceByUser($operator, $price, $dsAuthenticatable);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPriceByUser($operator, $price, $user);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertGreaterThan($price, $dsRegularOrder->getPrice());
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertNotCount(0, $regularOrders);
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertGreaterThan($price, $regularOrder->price);
         }
     }
 
     public function testGetRegularOrdersByPrice(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        foreach ($authenticatable->user->orders as $order) {
+        foreach ($user->orders as $order) {
             if (($regularOrder = $order->regularOrder) !== null) {
                 $found = true;
                 break;
@@ -86,42 +78,55 @@ class DatabaseRetrieveRegularOrdersTest extends TestCase
             throw new \RuntimeException('Failure!!!', 500);
         }
 
-        $lastOrderId = 5;
+        $lastOrderId = null;
         $count = 10;
         $operator = '=';
         $price = $regularOrder->price;
+        $roleName = 'patient';
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPrice($lastOrderId, $count, $operator, $price);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPrice($roleName, $lastOrderId, $count, $operator, $price);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsRegularOrders));
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertEquals($price, $dsRegularOrder->getPrice());
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertLessThanOrEqual($count, count($regularOrders));
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertEquals($price, $regularOrder->price);
         }
 
-        $lastOrderId = 5;
+        $lastOrderId = null;
         $count = 10;
         $operator = '>';
         $price = 1;
+        $roleName = 'patient';
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPrice($lastOrderId, $count, $operator, $price);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPrice($roleName, $lastOrderId, $count, $operator, $price);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertCount($count, $regularOrders);
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertGreaterThan($price, $regularOrder->price);
+        }
 
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertGreaterThan($price, $dsRegularOrder->getPrice());
+        $lastOrderId = array_pop($regularOrders)->getKey();
+
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByPrice($roleName, $lastOrderId, $count, $operator, $price);
+
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertCount($count, $regularOrders);
+        $this->assertLessThan($lastOrderId, $regularOrders[0]->getKey());
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertGreaterThan($price, $regularOrder->price);
         }
     }
 
     public function testGetRegularOrdersByTimeConsumptionByUser(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
-        $dsAuthenticatable = $authenticatable->getDataStructure();
-        foreach ($authenticatable->user->orders as $order) {
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
+
+        foreach ($user->orders as $order) {
             if (($regularOrder = $order->regularOrder) !== null) {
                 $found = true;
                 break;
@@ -134,35 +139,33 @@ class DatabaseRetrieveRegularOrdersTest extends TestCase
         $operator = '=';
         $timeConsumption = $regularOrder->needed_time;
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumptionByUser($operator, $timeConsumption, $dsAuthenticatable);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumptionByUser($operator, $timeConsumption, $user);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsRegularOrders));
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertEquals($timeConsumption, $dsRegularOrder->getNeededTime());
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertGreaterThanOrEqual(1, count($regularOrders));
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertEquals($timeConsumption, $regularOrder->needed_time);
         }
 
         $operator = '>';
         $timeConsumption = 1;
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumptionByUser($operator, $timeConsumption, $dsAuthenticatable);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumptionByUser($operator, $timeConsumption, $user);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-        $this->assertNotCount(0, $dsRegularOrders);
-
-        /** @var DSRegularOrder $dsOrder */
-        foreach ($dsRegularOrders as $dsOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsOrder);
-            $this->assertGreaterThan($timeConsumption, $dsOrder->getNeededTime());
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertGreaterThan($timeConsumption, $regularOrder->needed_time);
         }
     }
 
     public function testGetRegularOrdersByTimeConsumption(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
-        foreach ($authenticatable->user->orders as $order) {
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
+
+        foreach ($user->orders as $order) {
             if (($regularOrder = $order->regularOrder) !== null) {
                 $found = true;
                 break;
@@ -172,51 +175,104 @@ class DatabaseRetrieveRegularOrdersTest extends TestCase
             throw new \RuntimeException('Failure!!!', 500);
         }
 
-        $lastOrderId = 5;
+        $roleName = 'patient';
+
+        $lastOrderId = null;
         $count = 10;
         $operator = '=';
         $timeConsumption = $regularOrder->needed_time;
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumption($count, $operator, $timeConsumption, $lastOrderId);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumption($roleName, $count, $operator, $timeConsumption, $lastOrderId);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-        $this->assertGreaterThanOrEqual(1, count($dsRegularOrders));
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertEquals($timeConsumption, $dsRegularOrder->getNeededTime());
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertLessThanOrEqual($count, count($regularOrders));
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertEquals($timeConsumption, $regularOrder->needed_time);
         }
 
-        $lastOrderId = 5;
+        $lastOrderId = null;
         $count = 10;
         $operator = '>';
         $timeConsumption = 1;
 
-        $dsRegularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumption($count, $operator, $timeConsumption, $lastOrderId);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumption($roleName, $count, $operator, $timeConsumption, $lastOrderId);
 
-        $this->assertInstanceOf(DSRegularOrders::class, $dsRegularOrders);
-        $this->assertCount($count, $dsRegularOrders);
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertCount($count, $regularOrders);
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertGreaterThan($timeConsumption, $regularOrder->needed_time);
+        }
 
-        /** @var DSRegularOrder $dsRegularOrder */
-        foreach ($dsRegularOrders as $dsRegularOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsRegularOrder);
-            $this->assertGreaterThan($timeConsumption, $dsRegularOrder->getNeededTime());
+        $lastOrderId = array_pop($regularOrders)->getKey();
+
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByTimeConsumption($roleName, $count, $operator, $timeConsumption, $lastOrderId);
+
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertCount($count, $regularOrders);
+        $this->assertLessThan($lastOrderId, $regularOrders[0]->getKey());
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertGreaterThan($timeConsumption, $regularOrder->needed_time);
         }
     }
 
     public function testGetRegularOrdersByUser(): void
     {
-        $authenticatable = $this->getAuthenticatable('patient');
-        $dsUser = $authenticatable->getDataStructure();
+        $patient = Patient::query()->firstOrFail();
+        $user = $patient->user;
 
-        $dsOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByUser($dsUser);
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrdersByUser($user);
 
-        $this->assertInstanceOf(DSOrders::class, $dsOrders);
-        $this->assertNotCount(0, $dsOrders);
+        $this->assertIsArray($regularOrders);
+        $this->assertNotCount(0, $regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        /** @var RegularOrder $regularOrder */
+        foreach ($regularOrders as $regularOrder) {
+            $this->assertEquals($user->getKey(), $regularOrder->order->user->getKey());
+        }
+    }
 
-        /** @var DSRegularOrder $dsOrder */
-        foreach ($dsOrders as $dsOrder) {
-            $this->assertInstanceOf(DSRegularOrder::class, $dsOrder);
+    public function testGetRegularOrderById(): void
+    {
+        $regularOrder = RegularOrder::query()->firstOrFail();
+
+        $foundedRegularOrder = (new DatabaseRetrieveRegularOrders)->getRegularOrderById($regularOrder->getKey());
+
+        $this->assertInstanceOf(RegularOrder::class, $foundedRegularOrder);
+        $this->assertEquals($regularOrder->getKey(), $foundedRegularOrder->getKey());
+    }
+
+    public function testGetRegularOrders(): void
+    {
+        $lastOrderId = null;
+        $count = 10;
+        $roleName = 'patient';
+
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrders($roleName, $count, $lastOrderId);
+
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertCount($count, $regularOrders);
+
+        foreach ($regularOrders as $regularOrder) {
+            $t = $regularOrder->order->user->authenticatableRole->role->roleName->name;
+            $this->assertEquals($roleName, $t);
+        }
+
+        $lastOrderId = array_pop($regularOrders)->getKey();
+
+        $regularOrders = (new DatabaseRetrieveRegularOrders)->getRegularOrders($roleName, $count, $lastOrderId);
+
+        $this->assertIsArray($regularOrders);
+        $this->assertContainsOnlyInstancesOf(RegularOrder::class, $regularOrders);
+        $this->assertCount($count, $regularOrders);
+        $this->assertLessThan($lastOrderId, $regularOrders[0]->getKey());
+
+        foreach ($regularOrders as $regularOrder) {
+            $t = $regularOrder->order->user->authenticatableRole->role->roleName->name;
+            $this->assertEquals($roleName, $t);
         }
     }
 }
