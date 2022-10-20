@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\database\interactions\Orders\Deletion;
 
+use App\Models\Auth\Patient;
 use App\Models\Order\RegularOrder;
 use Database\Interactions\Orders\Deletion\DataBaseDeleteRegularOrder;
 use Faker\Factory;
@@ -9,12 +10,12 @@ use Faker\Generator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
+/**
+ * @covers \Database\Interactions\Orders\Deletion\DataBaseDeleteRegularOrder
+ */
 class DataBaseDeleteRegularOrderTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -26,13 +27,13 @@ class DataBaseDeleteRegularOrderTest extends TestCase
 
     public function testDeleteRegularOrder(): void
     {
-        DB::beginTransaction();
-
         try {
-            $authenticatable = $this->getAuthenticatable('patient');
-            $dsAuthenticatable = $authenticatable->getDataStructure();
+            DB::beginTransaction();
 
-            foreach ($authenticatable->user->orders as $order) {
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
+
+            foreach ($user->orders as $order) {
                 /** @var RegularOrder $regularOrder */
                 if (($regularOrder = $order->regularOrder) !== null) {
                     $found = true;
@@ -43,10 +44,21 @@ class DataBaseDeleteRegularOrderTest extends TestCase
                 throw new ModelNotFoundException();
             }
 
-            $result = (new DataBaseDeleteRegularOrder)->deleteRegularOrder($regularOrder->getDSRegularOrder(), $dsAuthenticatable);
+            $order = $regularOrder->order;
+
+            $result = (new DataBaseDeleteRegularOrder)->deleteRegularOrder($regularOrder);
+
             $this->assertNull($result);
-        } finally {
+            $this->assertDatabaseMissing($regularOrder->getTable(), [$regularOrder->getKeyName() => $regularOrder->getKey()]);
+            $this->assertDatabaseMissing($order->getTable(), [$order->getKeyName() => $order->getKey()]);
+
             DB::rollBack();
+
+            $this->assertDatabaseHas($regularOrder->getTable(), [$regularOrder->getKeyName() => $regularOrder->getKey()]);
+            $this->assertDatabaseHas($order->getTable(), [$order->getKeyName() => $order->getKey()]);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            throw $th;
         }
     }
 }
