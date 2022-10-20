@@ -415,7 +415,7 @@ class OrdersControllerTest extends TestCase
         /** @var IDataBaseRetrieveLaserOrders|MockInterface $iDataBaseRetrieveLaserOrders */
         $iDataBaseRetrieveLaserOrders = Mockery::mock(IDataBaseRetrieveLaserOrders::class);
         $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPartsFromNames')->with($partNames, $gender)->andReturn($dsParts);
-        $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPacakgesFromNames')->with($packageNames, $gender)->andReturn($dsPackages);
+        $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPackagesFromNames')->with($packageNames, $gender)->andReturn($dsPackages);
 
         /** @var ILaserPriceCalculator|MockInterface $iLaserPriceCalculator */
         $iLaserPriceCalculator = Mockery::mock(ILaserPriceCalculator::class);
@@ -603,7 +603,7 @@ class OrdersControllerTest extends TestCase
         /** @var IDataBaseRetrieveLaserOrders|MockInterface $iDataBaseRetrieveLaserOrders */
         $iDataBaseRetrieveLaserOrders = Mockery::mock(IDataBaseRetrieveLaserOrders::class);
         $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPartsFromNames')->with($partNames, $gender)->andReturn($dsParts);
-        $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPacakgesFromNames')->with($packageNames, $gender)->andReturn($dsPackages);
+        $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPackagesFromNames')->with($packageNames, $gender)->andReturn($dsPackages);
 
         /** @var ILaserTimeConsumptionCalculator|MockInterface $iLaserTimeConsumptionCalculator */
         $iLaserTimeConsumptionCalculator = Mockery::mock(ILaserTimeConsumptionCalculator::class);
@@ -650,7 +650,7 @@ class OrdersControllerTest extends TestCase
         /** @var IDataBaseRetrieveLaserOrders|MockInterface $iDataBaseRetrieveLaserOrders */
         $iDataBaseRetrieveLaserOrders = Mockery::mock(IDataBaseRetrieveLaserOrders::class);
         $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPartsFromNames')->with($partNames, $gender)->andReturn($dsParts);
-        $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPacakgesFromNames')->with($packageNames, $gender)->andReturn($dsPackages);
+        $iDataBaseRetrieveLaserOrders->shouldReceive('collectDSPackagesFromNames')->with($packageNames, $gender)->andReturn($dsPackages);
 
         /** @var ILaserPriceCalculator|MockInterface $iLaserPriceCalculator */
         $iLaserPriceCalculator = Mockery::mock(ILaserPriceCalculator::class);

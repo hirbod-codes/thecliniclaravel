@@ -217,7 +217,7 @@ class OrdersController extends Controller
         switch ($businessName) {
             case 'laser':
                 $parts = $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(!isset($validatedInput['parts']) ? [] : $validatedInput['parts'], $gender);
-                $packages = $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(!isset($validatedInput['packages']) ? [] : $validatedInput['packages'], $gender);
+                $packages = $this->iDataBaseRetrieveLaserOrders->collectDSPackagesFromNames(!isset($validatedInput['packages']) ? [] : $validatedInput['packages'], $gender);
 
                 if (($parts !== null && $user->gender !== $parts->getGender()) || ($packages !== null && $user->gender !== $packages->getGender())) {
                     return response('User, parts and packages must have the same gender.', 422);
@@ -372,7 +372,7 @@ class OrdersController extends Controller
 
         return response($this->iCalculateLaserOrder->calculateTimeConsumption(
             $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
-            $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
+            $this->iDataBaseRetrieveLaserOrders->collectDSPackagesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
             $this->iLaserTimeConsumptionCalculator
         ));
     }
@@ -386,12 +386,12 @@ class OrdersController extends Controller
         return response()->json([
             'price' => $this->iCalculateLaserOrder->calculatePrice(
                 $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
-                $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
+                $this->iDataBaseRetrieveLaserOrders->collectDSPackagesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
                 $this->iLaserPriceCalculator
             ),
             'priceWithoutDiscount' => $this->iCalculateLaserOrder->calculatePriceWithoutDiscount(
                 $this->iDataBaseRetrieveLaserOrders->collectDSPartsFromNames(isset($validatedInput['parts']) ? $validatedInput['parts'] : [], $gender),
-                $this->iDataBaseRetrieveLaserOrders->collectDSPacakgesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
+                $this->iDataBaseRetrieveLaserOrders->collectDSPackagesFromNames(isset($validatedInput['packages']) ? $validatedInput['packages'] : [], $gender),
                 $this->iLaserPriceCalculator
             )
         ]);
