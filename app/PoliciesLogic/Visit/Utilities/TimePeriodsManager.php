@@ -93,7 +93,7 @@ class TimePeriodsManager
             $timePeriodStartTS = call_user_func($getTimePeriodStartTS, $timePeriods[$i]);
             $timePeriodEndTS = call_user_func($getTimePeriodEndTS, $timePeriods[$i]);
 
-            if ($timePeriodStartTS < $startTS && $timePeriodEndTS > $endTS) {
+            if ($timePeriodStartTS <= $startTS && $timePeriodEndTS >= $endTS) {
                 return yield [];
             }
 
@@ -129,11 +129,11 @@ class TimePeriodsManager
                 yield [$possibleStart, $possibleEnd];
             }
 
-            $previousItemEndTS = $timePeriodEndTS;
-
-            if ($timePeriodEndTS > $endTS) {
+            if ($timePeriodEndTS >= $endTS) {
                 break;
             }
+
+            $previousItemEndTS = $timePeriodEndTS;
         }
 
         if ($timePeriodEndTS < $endTS) {
