@@ -64,7 +64,7 @@ Artisan::command('initialize', function () {
 
         DB::beginTransaction();
 
-        // $this->call('installPassport');
+        $this->call('installPassport');
 
         $this->call('dbSeed');
 
@@ -85,6 +85,10 @@ Artisan::command('initialize', function () {
     $ms1 = $t[0];
     $s1 = $t[1];
     $this->info("Total duration: " . strval(($s1 - $s) - ($ms1 - $ms)));
+
+    if (isset($th)) {
+        throw $th;
+    }
 });
 
 Artisan::command('emptyDatabaseThenMigrate', function () {
