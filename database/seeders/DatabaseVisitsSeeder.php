@@ -8,8 +8,6 @@ use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Models\Visit\LaserVisit;
-use App\Models\Visit\RegularVisit;
 use App\Models\Visit\Visit;
 use Faker\Factory;
 use Faker\Generator;
@@ -17,11 +15,16 @@ use Illuminate\Database\Seeder;
 use App\PoliciesLogic\Order\Laser\Calculations\TimeConsumptionCalculator;
 use App\PoliciesLogic\Visit\FastestVisit;
 use App\PoliciesLogic\Visit\WeeklyVisit;
-use App\DataStructures\Time\DSDateTimePeriod;
-use App\DataStructures\Time\DSDateTimePeriods;
-use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSTimePattern;
+use App\DataStructures\Time\DSTimePatterns;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\DataStructures\Visit\Laser\DSLaserVisits;
 use App\DataStructures\Visit\Regular\DSRegularVisits;
+use Database\Interactions\Business\DataBaseRetrieveBusinessSettings;
+use Database\Interactions\Visits\Creation\DataBaseCreateLaserVisit;
+use Database\Interactions\Visits\Creation\DataBaseCreateRegularVisit;
+use Database\Interactions\Visits\Retrieval\DataBaseRetrieveLaserVisits;
+use Database\Interactions\Visits\Retrieval\DataBaseRetrieveRegularVisits;
 
 class DatabaseVisitsSeeder extends Seeder
 {
@@ -54,164 +57,96 @@ class DatabaseVisitsSeeder extends Seeder
                 continue;
             }
         }
-        $this->dsLaserVisits->setSort("ASC");
+        $this->dsLaserVisits->setSort('ASC');
         $this->dsRegularVisits->setSort("ASC");
     }
 
     public function makeVisitsForLaserOrder(LaserOrder $laserOrder, Generator $faker): void
     {
-        for (
-            $i = 0;
-            $i <
-                // $faker->numberBetween(2, 3)
-                2
-                //
-            ;
-            $i++
-        ) {
-            if (!($visit = new Visit)->save()) {
-                throw new \RuntimeException('Failed to create a Visit model.', 500);
-            }
+        for ($i = 0; $i < 2; $i++) {
+            ($visit = new Visit)->saveOrFail();
 
-            $now = new \DateTime();
-            $futureVisits = LaserVisit::query()
-                ->orderBy('visit_timestamp', 'asc')
-                ->where('visit_timestamp', '>=', $now)
-                ->get()
-                ->all()
-                //
-            ;
-            $futureVisits = LaserVisit::getDSLaserVisits($futureVisits, 'ASC');
+            $futureVisits = (new DataBaseRetrieveLaserVisits)->getDSFutureVisits();
 
             $gender = $laserOrder->order->user->gender;
             $parts = $laserOrder->parts;
             $packages = $laserOrder->packages;
             $time = (new TimeConsumptionCalculator)->calculate(Part::getDSParts($parts, $gender), Package::getDSPackages($packages, $gender));
-            $time = 3600;
+
+            $dataBaseRetrieveBusinessSettings = (new DataBaseRetrieveBusinessSettings);
 
             if ($i === 0) {
-                $visitTimestamp = (new WeeklyVisit(
+                $iFindVisit = new WeeklyVisit(
                     $dsWekkDaysPeriods = $this->makeDSWekkDaysPeriods($faker),
                     $time,
                     $futureVisits,
-                    BusinessDefault::first()->work_schedule,
-                    BusinessDefault::first()->down_times
-                ))->findVisit();
+                    $dataBaseRetrieveBusinessSettings->getWorkSchdule(),
+                    $dataBaseRetrieveBusinessSettings->getDownTimes()
+                );
             } else {
-                $visitTimestamp = (new FastestVisit(
+                $iFindVisit = new FastestVisit(
                     new \DateTime(),
                     $time,
                     $futureVisits,
-                    BusinessDefault::first()->work_schedule,
-                    BusinessDefault::first()->down_times
-                ))->findVisit();
+                    $dataBaseRetrieveBusinessSettings->getWorkSchdule(),
+                    $dataBaseRetrieveBusinessSettings->getDownTimes()
+                );
             }
 
-            $laserVisit = new LaserVisit;
-            $laserVisit->{$laserOrder->getForeignKey()} = $laserOrder->{$laserOrder->getKeyName()};
-            $laserVisit->{$visit->getForeignKey()} = $visit->{$visit->getKeyName()};
-            $laserVisit->visit_timestamp = $visitTimestamp;
-            $laserVisit->consuming_time = $time;
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
 
-            if ($i === 0) {
-                $laserVisit->week_days_periods = $dsWekkDaysPeriods;
-            } else {
-                $laserVisit->week_days_periods = null;
-            }
-
-            $laserVisit->date_time_period = null;
-
-            if (!$laserVisit->save()) {
-                throw new \RuntimeException('Failed to create a LaserVisit model.', 500);
-            }
-
-            $this->dsLaserVisits[] = $laserVisit->getDSLaserVisit();
+            $this->dsLaserVisits[] = $dsLaserVisit = $laserVisit->getDSLaserVisit();
         }
     }
 
     public function makeVisitsForRegularOrder(RegularOrder $regularOrder, Generator $faker): void
     {
-        for (
-            $i = 0;
-            $i <
-                // $faker->numberBetween(2, 3)
-                2
-                //
-            ;
-            $i++
-        ) {
-            if (!($visit = new Visit)->save()) {
-                throw new \RuntimeException('Failed to create a Visit model.', 500);
-            }
+        for ($i = 0; $i < 2; $i++) {
+            ($visit = new Visit)->saveOrFail();
 
-            $now = new \DateTime();
-            $futureVisits = RegularVisit::query()
-                ->orderBy('visit_timestamp', 'asc')
-                ->where('visit_timestamp', '>=', $now)
-                ->get()
-                ->all()
-                //
-            ;
-            $futureVisits = RegularVisit::getDSRegularVisits($futureVisits, 'ASC');
+            $futureVisits = (new DataBaseRetrieveRegularVisits)->getDSFutureVisits();
 
-            $businessDefault = BusinessDefault::first();
-            $time = $businessDefault->default_regular_order_time_consumption;
-            $time = 3600;
+            $time = $regularOrder->needed_time;
+
+            $dataBaseRetrieveBusinessSettings = (new DataBaseRetrieveBusinessSettings);
 
             if ($i === 0) {
-                $visitTimestamp = (new WeeklyVisit(
+                $iFindVisit = new WeeklyVisit(
                     $dsWekkDaysPeriods = $this->makeDSWekkDaysPeriods($faker),
                     $time,
                     $futureVisits,
-                    BusinessDefault::first()->work_schedule,
-                    BusinessDefault::first()->down_times
-                ))->findVisit();
+                    $dataBaseRetrieveBusinessSettings->getWorkSchdule(),
+                    $dataBaseRetrieveBusinessSettings->getDownTimes()
+                );
             } else {
-                $visitTimestamp = (new FastestVisit(
+                $iFindVisit = new FastestVisit(
                     new \DateTime(),
                     $time,
                     $futureVisits,
-                    BusinessDefault::first()->work_schedule,
-                    BusinessDefault::first()->down_times
-                ))->findVisit();
+                    $dataBaseRetrieveBusinessSettings->getWorkSchdule(),
+                    $dataBaseRetrieveBusinessSettings->getDownTimes()
+                );
             }
 
-            $regularVisit = new RegularVisit;
-            $regularVisit->{$regularOrder->getForeignKey()} = $regularOrder->{$regularOrder->getKeyName()};
-            $regularVisit->{$visit->getForeignKey()} = $visit->{$visit->getKeyName()};
-            $regularVisit->visit_timestamp = $visitTimestamp;
-            $regularVisit->consuming_time = $time;
-
-            if ($i === 0) {
-                $regularVisit->week_days_periods = $dsWekkDaysPeriods;
-            } else {
-                $regularVisit->week_days_periods = null;
-            }
-
-            $regularVisit->date_time_period = null;
-
-            if (!$regularVisit->save()) {
-                throw new \RuntimeException('Failed to create a regularVisit model.', 500);
-            }
+            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
 
             $this->dsRegularVisits[] = $regularVisit->getDSRegularVisit();
         }
     }
 
-    private function makeDSWekkDaysPeriods(Generator $faker): DSWeekDaysPeriods
+    private function makeDSWekkDaysPeriods(Generator $faker): DSWeeklyTimePatterns
     {
-        $weekDays = $faker->randomElements(DSWeekDaysPeriods::$weekDays, 3);
-        $dsWeekDaysPeriods = new DSWeekDaysPeriods($weekDays[0]);
+        $weekDays = $faker->randomElements(DSWeeklyTimePatterns::$weekDays, 3);
+        $dsWeekDaysPeriods = new DSWeeklyTimePatterns($weekDays[0]);
 
         foreach ($weekDays as $weekDay) {
             $time = (new \DateTime)->setTime(6, 0);
-            $dsDateTimePeriods = new DSDateTimePeriods;
-            $this->moveToWeekDay($time, $weekDay);
+            $dsDateTimePeriods = new DSTimePatterns;
 
             for ($i = 0; $i < $faker->numberBetween(1, 3); $i++) {
-                $dsDateTimePeriods[] = new DSDateTimePeriod(
-                    $t = (new \DateTime)->setTimestamp($time->modify('+1 hour')->getTimestamp()),
-                    $t1 = (new \DateTime)->setTimestamp($time->modify('+4 hours')->getTimestamp())
+                $dsDateTimePeriods[] = new DSTimePattern(
+                    $t = (new \DateTime)->setTimestamp($time->modify('+1 hour')->getTimestamp())->format("H:i:s"),
+                    $t1 = (new \DateTime)->setTimestamp($time->modify('+4 hours')->getTimestamp())->format("H:i:s")
                 );
             }
 
@@ -223,7 +158,7 @@ class DatabaseVisitsSeeder extends Seeder
 
     private function moveToWeekDay(\DateTime &$time, string $weekDay): void
     {
-        if (!in_array($weekDay, DSWeekDaysPeriods::$weekDays)) {
+        if (!in_array($weekDay, DSWeeklyTimePatterns::$weekDays)) {
             throw new \InvalidArgumentException('The variable $weekDay must be one weeks days name.The given name: ' . $weekDay);
         }
 
