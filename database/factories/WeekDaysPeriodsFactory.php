@@ -5,7 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\DataStructures\Time\DSDateTimePeriods;
 use App\DataStructures\Time\DSDateTimePeriod;
-use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
@@ -22,13 +22,13 @@ class WeekDaysPeriodsFactory extends Factory
         return [];
     }
 
-    public function generateDSWeekDaysPeriods(): DSWeekDaysPeriods
+    public function generateDSWeeklyTimePatterns(): DSWeeklyTimePatterns
     {
         $time = new \DateTime;
-        $dsWorkSchedule = new DSWeekDaysPeriods('Monday');
+        $dsWorkSchedule = new DSWeeklyTimePatterns('Monday');
 
         /** @var string $weekDay */
-        foreach (DSWeekDaysPeriods::$weekDays as $weekDay) {
+        foreach (DSWeeklyTimePatterns::$weekDays as $weekDay) {
             $this->moveToWeekDay($time, $weekDay);
             $dsDateTimePeriods = new DSDateTimePeriods;
 
@@ -49,7 +49,7 @@ class WeekDaysPeriodsFactory extends Factory
 
     public function moveToWeekDay(\DateTime &$time, string $weekDay): void
     {
-        if (!in_array($weekDay, DSWeekDaysPeriods::$weekDays)) {
+        if (!in_array($weekDay, DSWeeklyTimePatterns::$weekDays)) {
             throw new \InvalidArgumentException('Incorrect value for weekDay variable.');
         }
 

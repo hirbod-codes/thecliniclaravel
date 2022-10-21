@@ -3,10 +3,10 @@
 namespace App\Http\Requests\BusinessDefault;
 
 use App\Auth\CheckAuthentication;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
-use App\DataStructures\Time\DSWorkSchedule;
-use App\DataStructures\User\DSAdmin;
+use App\Models\Auth\Admin;
 
 class UpdateRequest extends FormRequest
 {
@@ -17,7 +17,7 @@ class UpdateRequest extends FormRequest
      */
     public function authorize()
     {
-        return (new CheckAuthentication)->getAuthenticatedDSUser() instanceof DSAdmin;
+        return (new CheckAuthentication)->getAuthenticated() instanceof Admin;
     }
 
     /**
@@ -34,7 +34,7 @@ class UpdateRequest extends FormRequest
             'default_regular_order_time_consumption' => ['integer', 'numeric', 'min:1'],
             'work_schedule' => ['array', 'min:1', 'max:7', function (string $attribute, array $value, $fail) {
                 foreach (array_keys($value) as $key) {
-                    if (!in_array($key, DSWorkSchedule::$weekDays)) {
+                    if (!in_array($key, DSWeeklyTimePatterns::$weekDays)) {
                         $fail(trans_choice('validation.in', 0, ['attribute' => $attribute]));
                     }
                 }

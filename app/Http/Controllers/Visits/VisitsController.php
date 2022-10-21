@@ -269,10 +269,10 @@ class VisitsController extends Controller
     {
         $validatedInput = $request->safe()->all();
 
-        if (isset($validatedInput['weekDaysPeriods'])) {
-            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weekDaysPeriods']);
-        } elseif (isset($validatedInput['dateTimePeriod'])) {
-            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriod']);
+        if (isset($validatedInput['weeklyTimePatterns'])) {
+            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
+        } elseif (isset($validatedInput['dateTimePeriods'])) {
+            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriods']);
         }
 
         $laserOrder = $this->iDataBaseRetrieveLaserOrders->getLaserOrderById($validatedInput['laserOrderId']);
@@ -288,10 +288,10 @@ class VisitsController extends Controller
     {
         $validatedInput = $request->safe()->all();
 
-        if (isset($validatedInput['weekDaysPeriods'])) {
-            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weekDaysPeriods']);
-        } elseif (isset($validatedInput['dateTimePeriod'])) {
-            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriod']);
+        if (isset($validatedInput['weeklyTimePatterns'])) {
+            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
+        } elseif (isset($validatedInput['dateTimePeriods'])) {
+            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriods']);
         }
 
         $regularOrder = $this->iDataBaseRetrieveRegularOrders->getRegularOrderById($validatedInput['regularOrderId']);
@@ -307,10 +307,10 @@ class VisitsController extends Controller
     {
         $validatedInput = $request->safe()->all();
 
-        if (isset($validatedInput['weekDaysPeriods'])) {
-            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weekDaysPeriods']);
-        } elseif (isset($validatedInput['dateTimePeriod'])) {
-            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriod']);
+        if (isset($validatedInput['weeklyTimePatterns'])) {
+            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
+        } elseif (isset($validatedInput['dateTimePeriods'])) {
+            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriods']);
         }
 
         $timestamp = $this->visitsManagement->getLaserVisitFinder($validatedInput['laserOrderId'], isset($userInput) ? $userInput : null)->findVisit();
@@ -322,10 +322,10 @@ class VisitsController extends Controller
     {
         $validatedInput = $request->safe()->all();
 
-        if (isset($validatedInput['weekDaysPeriods'])) {
-            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weekDaysPeriods']);
-        } elseif (isset($validatedInput['dateTimePeriod'])) {
-            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriod']);
+        if (isset($validatedInput['weeklyTimePatterns'])) {
+            $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
+        } elseif (isset($validatedInput['dateTimePeriods'])) {
+            $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriods']);
         }
 
         $timestamp = $this->visitsManagement->getRegularVisitFinder($validatedInput['regularOrderId'], isset($userInput) ? $userInput : null)->findVisit();

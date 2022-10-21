@@ -201,7 +201,7 @@ return [
         'avatar_label' => 'عکس پروفایل: ',
         'avatar_optional' => 'عکس (اختیاری)',
         'avatar_label_optional' => 'عکس (اختیاری): ',
-        'weekDaysPeriods' => 'دوره های زمانی در روز های هفته',
+        'weeklyTimePatterns' => 'الگو های زمانی در روز های هفته',
     ],
 
 ];

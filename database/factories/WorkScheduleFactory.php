@@ -3,10 +3,9 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\DataStructures\Time\DSDateTimePeriods;
-use App\DataStructures\Time\DSDateTimePeriod;
-use App\DataStructures\Time\DSWeekDaysPeriods;
-use App\DataStructures\Time\DSWorkSchedule;
+use App\DataStructures\Time\DSTimePattern;
+use App\DataStructures\Time\DSTimePatterns;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Model>
@@ -23,25 +22,19 @@ class WorkScheduleFactory extends Factory
         return [];
     }
 
-    public function generateWorkSchedule(): DSWorkSchedule
+    public function generateWorkSchedule(): DSWeeklyTimePatterns
     {
         $time = new \DateTime;
-        $dsWorkSchedule = new DSWorkSchedule('Monday');
+        $dsWorkSchedule = new DSWeeklyTimePatterns('Monday');
 
         /** @var string $weekDay */
-        foreach (DSWorkSchedule::$weekDays as $weekDay) {
+        foreach (DSWeeklyTimePatterns::$weekDays as $weekDay) {
             $this->moveToWeekDay($time, $weekDay);
-            $dsDateTimePeriods = new DSDateTimePeriods;
+            $dsDateTimePeriods = new DSTimePatterns;
 
-            $dsDateTimePeriods[] = new DSDateTimePeriod(
-                (new \DateTime($time->format('Y-m-d')))->setTime(8, 0),
-                (new \DateTime($time->format('Y-m-d')))->setTime(15, 0)
-            );
+            $dsDateTimePeriods[] = new DSTimePattern('08:00:00', '15:00:00');
 
-            $dsDateTimePeriods[] = new DSDateTimePeriod(
-                (new \DateTime($time->format('Y-m-d')))->setTime(16, 0),
-                (new \DateTime($time->format('Y-m-d')))->setTime(23, 0)
-            );
+            $dsDateTimePeriods[] = new DSTimePattern('16:00:00', '23:00:00');
 
             $dsWorkSchedule[$weekDay] = $dsDateTimePeriods;
         }
@@ -50,7 +43,7 @@ class WorkScheduleFactory extends Factory
 
     public function moveToWeekDay(\DateTime &$time, string $weekDay): void
     {
-        if (!in_array($weekDay, DSWeekDaysPeriods::$weekDays)) {
+        if (!in_array($weekDay, DSWeeklyTimePatterns::$weekDays)) {
             throw new \InvalidArgumentException('Incorrect value for weekDay variable.');
         }
 

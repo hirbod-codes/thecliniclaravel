@@ -30,7 +30,7 @@ trait TraitBaseVisitColumns
 
             $table->unsignedBigInteger('visit_timestamp')->unique();
             $table->integer('consuming_time');
-            $table->json('week_days_periods')->nullable();
+            $table->json('weekly_time_patterns')->nullable();
             $table->json('date_time_periods')->nullable();
 
             $table->boolean('visitor_reminded')->default(false);

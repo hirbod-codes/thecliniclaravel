@@ -4,7 +4,7 @@ namespace App\Http\Requests\Visits;
 
 use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
-use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Order\LaserOrder;
 use App\Models\Privileges\CreateVisit;
@@ -50,21 +50,21 @@ class LaserStoreRequest extends BaseFormRequest
     {
         $array = [
             'laserOrderId' => ['required', 'integer', 'numeric', 'min:1'],
-            'weekDaysPeriods' => ['array', 'min:1', 'max:7', function ($attribute, $value, $fail) {
+            'weeklyTimePatterns' => ['array', 'min:1', 'max:7', function ($attribute, $value, $fail) {
                 foreach ($value as $k => $v) {
-                    if (!in_array($k, DSWeekDaysPeriods::$weekDays)) {
-                        $fail(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.weekDaysPeriods', 0)]));
+                    if (!in_array($k, DSWeeklyTimePatterns::$weekDays)) {
+                        $fail(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.weeklyTimePatterns', 0)]));
                     }
                 }
             }],
         ];
 
-        foreach (DSWeekDaysPeriods::$weekDays as $weekDay) {
+        foreach (DSWeeklyTimePatterns::$weekDays as $weekDay) {
             $array = array_merge($array, [
-                'weekDaysPeriods.' . $weekDay . '' => ['array', 'min:1'],
-                'weekDaysPeriods.' . $weekDay . '.*' => ['required_array_keys:start,end', 'array', 'size:2'],
-                'weekDaysPeriods.' . $weekDay . '.*.start' => ['string', 'date_format:Y-m-d H:i:s'],
-                'weekDaysPeriods.' . $weekDay . '.*.end' => ['string', 'date_format:Y-m-d H:i:s'],
+                'weeklyTimePatterns.' . $weekDay . '' => ['array', 'min:1'],
+                'weeklyTimePatterns.' . $weekDay . '.*' => ['required_array_keys:start,end', 'array', 'size:2'],
+                'weeklyTimePatterns.' . $weekDay . '.*.start' => ['string', 'date_format:Y-m-d H:i:s'],
+                'weeklyTimePatterns.' . $weekDay . '.*.end' => ['string', 'date_format:Y-m-d H:i:s'],
             ]);
         }
 
@@ -81,23 +81,23 @@ class LaserStoreRequest extends BaseFormRequest
     public function messages()
     {
         return [
-            'weekDaysPeriods' => [
+            'weeklyTimePatterns' => [
                 'array' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'min' => trans_choice('/Visits/visits.minimum-week-days', 0),
                 'max' => trans_choice('/Visits/visits.maximum-week-days', 0),
             ],
-            'weekDaysPeriods.*' => [
+            'weeklyTimePatterns.*' => [
                 'requried_with' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'array' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'min' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
             ],
-            'weekDaysPeriods.*.*' => [
+            'weeklyTimePatterns.*.*' => [
                 'requried_with' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'array' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'min' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'size' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
             ],
-            'weekDaysPeriods.*.*.*' => [
+            'weeklyTimePatterns.*.*.*' => [
                 'requried_with' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'string' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
                 'regex' => trans_choice('/Visits/visits.invalid-week-days-periods-format', 0),
@@ -113,10 +113,10 @@ class LaserStoreRequest extends BaseFormRequest
     public function attributes()
     {
         return [
-            'weekDaysPeriods' => trans_choice('validation.attributes.weekDaysPeriods', 0),
-            'weekDaysPeriods.*' => trans_choice('validation.attributes.weekDaysPeriods', 0),
-            'weekDaysPeriods.*.*' => trans_choice('validation.attributes.weekDaysPeriods', 0),
-            'weekDaysPeriods.*.*.*' => trans_choice('validation.attributes.weekDaysPeriods', 0),
+            'weeklyTimePatterns' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
+            'weeklyTimePatterns.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
+            'weeklyTimePatterns.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
+            'weeklyTimePatterns.*.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
         ];
     }
 }

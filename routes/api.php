@@ -213,8 +213,8 @@ Route::prefix('{locale}')->group(function () {
                 Route::get('/visits/laser/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}', 'laserIndex')->name('api.visits.laserIndex');
                 Route::get('/visits/regular/{accountId?}/{sortByTimestamp?}/{regularOrderId?}/{timestamp?}/{operator?}', 'regularIndex')->name('api.visits.regularIndex');
 
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('api.visits.laserStore');
-                Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('api.visits.regularStore');
+                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/laser', 'laserStore')->name('api.visits.laserStore');
+                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/regular', 'regularStore')->name('api.visits.regularStore');
 
                 Route::get('/visit/laser/{timestamp}', 'laserShow')->name('api.visits.laserShow');
                 Route::get('/visit/regular/{timestamp}', 'regularShow')->name('api.visits.regularShow');

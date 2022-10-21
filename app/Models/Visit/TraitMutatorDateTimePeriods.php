@@ -5,9 +5,9 @@ namespace App\Models\Visit;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\DataStructures\Time\DSDateTimePeriods;
 
-trait TraitMutatorDateTimePeriod
+trait TraitMutatorDateTimePeriods
 {
-    protected function dateTimePeriod(): Attribute
+    protected function dateTimePeriods(): Attribute
     {
         return Attribute::make(
             get: function (string|null $dateTiemPeriods) {

@@ -202,7 +202,7 @@ return [
         'avatar_label' => 'Avatar: ',
         'avatar_optional' => 'Image (Optional)',
         'avatar_label_optional' => 'Image: (Optional)',
-        'weekDaysPeriods' => 'Week Days Time Periods',
+        'weeklyTimePatterns' => 'Week Days Time Patterns',
     ],
 
 ];

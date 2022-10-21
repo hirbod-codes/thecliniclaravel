@@ -3,8 +3,7 @@
 namespace App\Models\Visit;
 
 use App\Models\Order\LaserOrder;
-use App\Models\Traits\TraitDSDateTimePeriod;
-use App\Models\Traits\TraitDSWeekDaysPeriods;
+use App\Models\Traits\TraitDSDateTimePeriods;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,14 +11,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use App\DataStructures\Visit\Laser\DSLaserVisit;
 use App\DataStructures\Visit\Laser\DSLaserVisits;
+use App\Models\Traits\TraitDSWeeklyTimePatterns;
 
 class LaserVisit extends Model
 {
     use HasFactory,
-        TraitDSWeekDaysPeriods,
-        TraitDSDateTimePeriod,
-        TraitMutatorDateTimePeriod,
-        TraitMutatorWeekDaysPeriods;
+        TraitDSWeeklyTimePatterns,
+        TraitDSDateTimePeriods,
+        TraitMutatorDateTimePeriods,
+        TraitMutatorWeeklyTimePatterns;
 
     protected $table = 'laser_visits';
 
@@ -59,17 +59,17 @@ class LaserVisit extends Model
     {
         if ($parameterName === 'id') {
             $args[$parameterName] = $this->{$this->getKeyName()};
-        } elseif ($parameterName === 'weekDaysPeriods') {
-            if (($weekDaysPeriods = $this->week_days_periods) === null) {
+        } elseif ($parameterName === 'weeklyTimePatterns') {
+            if (($weeklyTimePatterns = $this->weekly_time_patterns) === null) {
                 $args[$parameterName] = null;
             } else {
-                $args[$parameterName] = $this->getDSWeekDaysPeriods($weekDaysPeriods);
+                $args[$parameterName] = $this->getDSWeeklyTimePatterns($weeklyTimePatterns);
             }
         } elseif ($parameterName === 'dateTimePeriods') {
             if (($dateTimePeriod = $this->date_time_period) === null) {
                 $args[$parameterName] = null;
             } else {
-                $args[$parameterName] = $this->getDSDateTimePeriod($dateTimePeriod);
+                $args[$parameterName] = $this->getDSDateTimePeriods($dateTimePeriod);
             }
         } else {
             $args[$parameterName] = $this->{Str::snake($parameterName)};

@@ -15,7 +15,7 @@
         "consuming_time": {
             "type":"integer"
         },
-        "week_days_periods": {
+        "weekly_time_patterns": {
             "type":"array"
         },
         "date_time_period": {

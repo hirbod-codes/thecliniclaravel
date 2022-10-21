@@ -5,16 +5,16 @@ namespace App\Models\Visit;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 
-trait TraitMutatorWeekDaysPeriods
+trait TraitMutatorWeeklyTimePatterns
 {
-    protected function weekDaysPeriods(): Attribute
+    protected function weeklyTimePatterns(): Attribute
     {
         return Attribute::make(
-            get: function (string|null $weekDaysPeriods) {
-                if (is_null($weekDaysPeriods)) {
+            get: function (string|null $weeklyTimePatterns) {
+                if (is_null($weeklyTimePatterns)) {
                     return null;
                 }
-                return DSWeeklyTimePatterns::toObject(json_decode($weekDaysPeriods, true));
+                return DSWeeklyTimePatterns::toObject(json_decode($weeklyTimePatterns, true));
             },
             set: function (DSWeeklyTimePatterns|array|string|null $value) {
                 if ($value instanceof DSWeeklyTimePatterns) {

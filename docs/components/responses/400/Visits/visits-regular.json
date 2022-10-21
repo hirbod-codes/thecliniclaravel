@@ -18,7 +18,7 @@
                             "laserOrderId": {
                                 "$ref": "../../400.json#/errors"
                             },
-                            "weekDaysPeriods": {
+                            "weeklyTimePatterns": {
                                 "$ref": "../../400.json#/errors"
                             }
                         },

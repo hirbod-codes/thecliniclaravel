@@ -308,7 +308,7 @@ class VisitsControllerTest extends TestCase
     {
         $validatedInput = [
             'laserOrderId' => 10,
-            'weekDaysPeriods' => ['Monday' => [['start' => '10:00:00', 'end' => '20:00:00']]],
+            'weeklyTimePatterns' => ['Monday' => [['start' => '10:00:00', 'end' => '20:00:00']]],
         ];
 
         /** @var LaserStoreRequest|\Mockery\MockInterface $request */
@@ -461,7 +461,7 @@ class VisitsControllerTest extends TestCase
     {
         $validatedInput = [
             'regularOrderId' => 10,
-            'weekDaysPeriods' => ['Monday' => [['start' => '10:00:00', 'end' => '20:00:00']]],
+            'weeklyTimePatterns' => ['Monday' => [['start' => '10:00:00', 'end' => '20:00:00']]],
         ];
 
         /** @var RegularStoreRequest|\Mockery\MockInterface $request */

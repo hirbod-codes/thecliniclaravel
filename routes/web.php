@@ -259,8 +259,8 @@ Route::middleware(['auth:web', 'phonenumber_verified'])->group(function () {
             Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name('visits.index');
             Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name('visits.visitsCount');
 
-            Route::middleware('adjustWeekDaysPeriods')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
-            Route::middleware('adjustWeekDaysPeriods')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
+            Route::middleware('adjustWeeklyTimePatterns')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
+            Route::middleware('adjustWeeklyTimePatterns')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
 
             Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
             Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');

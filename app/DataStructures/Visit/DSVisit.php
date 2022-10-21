@@ -2,8 +2,8 @@
 
 namespace App\DataStructures\Visit;
 
-use App\DataStructures\Time\DSDateTimePeriod;
-use App\DataStructures\Time\DSWeekDaysPeriods;
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 
 abstract class DSVisit
 {
@@ -13,9 +13,9 @@ abstract class DSVisit
 
     private int $consumingTime;
 
-    public null|DSWeekDaysPeriods $weekDaysPeriods;
+    public null|DSWeeklyTimePatterns $weeklyTimePatterns;
 
-    public null|DSDateTimePeriod $dateTimePeriod;
+    public null|DSDateTimePeriods $dateTimePeriods;
 
     private \DateTime $createdAt;
 
@@ -27,8 +27,8 @@ abstract class DSVisit
      * @param integer $consumingTime
      * @param \DateTime $createdAt
      * @param \DateTime $updatedAt
-     * @param DSWeekDaysPeriods|null|null $weekDaysPeriods must not have a value other than null at present of $dateTimePeriod.
-     * @param DSDateTimePeriod|null|null $dateTimePeriod must not have a value other than null at present of $weekDaysPeriods.
+     * @param DSWeeklyTimePatterns|null $weeklyTimePatterns must not have a value other than null at present of $dateTimePeriods.
+     * @param DSDateTimePeriods|null $dateTimePeriods must not have a value other than null at present of $weeklyTimePatterns.
      */
     public function __construct(
         int $id,
@@ -36,18 +36,18 @@ abstract class DSVisit
         int $consumingTime,
         \DateTime $createdAt,
         \DateTime $updatedAt,
-        DSWeekDaysPeriods|null $weekDaysPeriods = null,
-        DSDateTimePeriod|null $dateTimePeriod = null,
+        DSWeeklyTimePatterns|null $weeklyTimePatterns = null,
+        DSDateTimePeriods|null $dateTimePeriods = null,
     ) {
-        if (!is_null($weekDaysPeriods) && !is_null($dateTimePeriod)) {
-            throw new \LogicException("\$weekDaysPeriods and \$dateTimePeriod can't have a value beside null at the same time.", 500);
+        if (!is_null($weeklyTimePatterns) && !is_null($dateTimePeriods)) {
+            throw new \LogicException("\$weeklyTimePatterns and \$dateTimePeriods can't have a value beside null at the same time.", 500);
         }
 
         $this->id = $id;
         $this->visitTimestamp = $visitTimestamp;
         $this->consumingTime = $consumingTime;
-        $this->weekDaysPeriods = $weekDaysPeriods;
-        $this->dateTimePeriod = $dateTimePeriod;
+        $this->weeklyTimePatterns = $weeklyTimePatterns;
+        $this->dateTimePeriods = $dateTimePeriods;
         $this->createdAt = $createdAt;
         $this->updatedAt = $updatedAt;
     }
@@ -58,8 +58,8 @@ abstract class DSVisit
             'id' => $this->id,
             'visitTimestamp' => $this->visitTimestamp,
             'consumingTime' => $this->consumingTime,
-            'weekDaysPeriods' => $this->weekDaysPeriods === null ? null : $this->weekDaysPeriods->toArray(),
-            'dateTimePeriod' => $this->dateTimePeriod === null ? null : $this->dateTimePeriod->toArray(),
+            'weeklyTimePatterns' => $this->weeklyTimePatterns === null ? null : $this->weeklyTimePatterns->toArray(),
+            'dateTimePeriods' => $this->dateTimePeriods === null ? null : $this->dateTimePeriods->toArray(),
             'createdAt' => $this->createdAt->format("Y-m-d H:i:s"),
             'updatedAt' => $this->updatedAt->format("Y-m-d H:i:s")
         ];

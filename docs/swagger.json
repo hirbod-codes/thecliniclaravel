@@ -2128,7 +2128,7 @@
                                     "laserOrderId": {
                                         "type": "integer"
                                     },
-                                    "weekDaysPeriods": {
+                                    "weeklyTimePatterns": {
                                         "type": "object",
                                         "properties": {
                                             "Monday": {
@@ -2257,7 +2257,7 @@
                                     "laserOrderId": {
                                         "type": "integer"
                                     },
-                                    "weekDaysPeriods": {
+                                    "weeklyTimePatterns": {
                                         "type": "object",
                                         "properties": {
                                             "Monday": {
