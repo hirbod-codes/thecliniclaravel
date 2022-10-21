@@ -2,24 +2,26 @@
 
 namespace Tests\Unit\database\interactions\Visits;
 
-use App\Models\BusinessDefault;
-use App\Models\Order\RegularOrder;
-use App\Models\Order\Order;
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
+use App\Models\Auth\Patient;
 use App\Models\Visit\RegularVisit;
-use Database\Interactions\Visits\DataBaseCreateRegularVisit;
+use App\PoliciesLogic\Visit\CustomVisit;
+use App\PoliciesLogic\Visit\IFindVisit;
+use App\PoliciesLogic\Visit\WeeklyVisit;
+use Database\Interactions\Visits\Creation\DataBaseCreateRegularVisit;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Mockery;
+use Mockery\MockInterface;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
-use App\PoliciesLogic\Visit\FastestVisit;
-use App\PoliciesLogicDataStructures\DataStructures\Visit\Regular\DSRegularVisit;
 
+/**
+ * @covers \Database\Interactions\Visits\Creation\DataBaseCreateRegularVisit
+ */
 class DataBaseCreateRegularVisitTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -34,49 +36,96 @@ class DataBaseCreateRegularVisitTest extends TestCase
         try {
             DB::beginTransaction();
 
-            $safety = 0;
-            while ($safety < 500) {
-                $userRole = $this->getAuthenticatable('patient');
-                $user = $userRole->user;
-                $dsUser = $userRole->getDataStructure();
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
 
-                /** @var Order $order */
-                foreach ($user->orders as $order) {
-                    /** @var RegularOrder $regularOrder */
-                    if (($regularOrder = $order->regularOrder) !== null) {
-                        $dsRegularOrder = $regularOrder->getDSRegularOrder();
-                        break 2;
-                    }
+            foreach ($user->orders as $order) {
+                if (($regularOrder = $order->regularOrder) !== null) {
+                    $found = true;
+                    break;
                 }
-
-                $safety++;
             }
-            if (!isset($dsRegularOrder)) {
-                throw new ModelNotFoundException('', 404);
+            if (!isset($found)) {
+                throw new \RuntimeException('Failure!!!', 500);
             }
 
-            $now = new \DateTime();
-            $futureVisits = RegularVisit::query()
-                ->orderBy('visit_timestamp', 'asc')
-                ->where('visit_timestamp', '>=', $now)
-                ->get()
-                ->all()
-                //
-            ;
-            $futureVisits = RegularVisit::getDSRegularVisits($futureVisits, 'ASC');
+            /** @var IFindVisit|MockInterface $iFindVisit */
+            $iFindVisit = Mockery::mock(IFindVisit::class);
+            $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
 
-            $iFindVisit = new FastestVisit(
-                new \DateTime,
-                $dsRegularOrder->getNeededTime(),
-                $futureVisits,
-                $dsWoekSchedule = BusinessDefault::first()->work_schedule,
-                $dsDownTimes = BusinessDefault::first()->down_times,
-            );
+            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
 
-            $dsRegularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($dsRegularOrder, $dsUser, $iFindVisit);
-            $this->assertInstanceOf(DSRegularVisit::class, $dsRegularVisit);
-        } finally {
+            $this->assertInstanceOf(RegularVisit::class, $regularVisit);
+            $this->assertDatabaseHas($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
             DB::rollback();
+
+            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            // ------------------------------------------------------------------------------------------------------------------------------------------------
+
+            DB::beginTransaction();
+
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
+
+            foreach ($user->orders as $order) {
+                if (($regularOrder = $order->regularOrder) !== null) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!isset($found)) {
+                throw new \RuntimeException('Failure!!!', 500);
+            }
+
+            /** @var WeeklyVisit|MockInterface $iFindVisit */
+            $iFindVisit = Mockery::mock(WeeklyVisit::class);
+            $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
+            $iFindVisit->shouldReceive('getDSTimePatterns')->once()->andReturn(new DSWeeklyTimePatterns('Monday'));
+
+            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
+
+            $this->assertInstanceOf(RegularVisit::class, $regularVisit);
+            $this->assertDatabaseHas($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            DB::rollback();
+
+            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            // ------------------------------------------------------------------------------------------------------------------------------------------------
+
+            DB::beginTransaction();
+
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
+
+            foreach ($user->orders as $order) {
+                if (($regularOrder = $order->regularOrder) !== null) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!isset($found)) {
+                throw new \RuntimeException('Failure!!!', 500);
+            }
+
+            /** @var CustomVisit|MockInterface $iFindVisit */
+            $iFindVisit = Mockery::mock(CustomVisit::class);
+            $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
+            $iFindVisit->shouldReceive('getDSDateTimePeriods')->once()->andReturn(new DSDateTimePeriods);
+
+            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
+
+            $this->assertInstanceOf(RegularVisit::class, $regularVisit);
+            $this->assertDatabaseHas($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            DB::rollback();
+
+            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            throw $th;
         }
     }
 }
