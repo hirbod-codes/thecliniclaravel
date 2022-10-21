@@ -102,7 +102,11 @@ class FastestVisit implements IFindVisit
                                     }
 
                                     if ($v1[0] < $this->pointer->getTimestamp()) {
-                                        continue;
+                                        if ($this->pointer->getTimestamp() < $v1[1] && (($v1[1] - $this->pointer->getTimestamp()) >= $this->consumingTime)) {
+                                            $v1[0] = $this->pointer->getTimestamp();
+                                        } else {
+                                            continue;
+                                        }
                                     }
 
                                     return $v1[0];
