@@ -12,6 +12,18 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
 {
+    private CheckAuthentication $checkAuthentication;
+
+    public function __construct(CheckAuthentication $checkAuthentication = null)
+    {
+        $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
+    }
+
+    /**
+     * @param User $targetUser
+     * @param string $sortByTimestamp
+     * @return LaserVisit[]
+     */
     public function getVisitsByUser(User $targetUser, string $sortByTimestamp): array
     {
         $laserVisits = LaserVisit::query()
@@ -23,13 +35,18 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
                 });
             })
             ->get()
-            ->toArray()
+            ->all()
             //
         ;
 
         return $laserVisits;
     }
 
+    /**
+     * @param LaserOrder $laserOrder
+     * @param string $sortByTimestamp
+     * @return LaserVisit[]
+     */
     public function getVisitsByOrder(LaserOrder $laserOrder, string $sortByTimestamp): array
     {
         $laserVisits = LaserVisit::query()
@@ -37,16 +54,25 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
                 $query->whereKey($laserOrder->getKey());
             })
             ->get()
-            ->toArray()
+            ->all()
             //
         ;
 
         return $laserVisits;
     }
 
+    /**
+     * @param string $roleName
+     * @param string $operator
+     * @param integer $timestamp
+     * @param string $sortByTimestamp
+     * @param integer $count
+     * @param integer|null $lastVisitTimestamp
+     * @return LaserVisit[]
+     */
     public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, int $lastVisitTimestamp = null): array
     {
-        $user = (new CheckAuthentication)->getAuthenticated();
+        $user = $this->checkAuthentication->getAuthenticated();
         $userRoleName = $user->authenticatableRole->role->roleName->name;
         $canReadSelf = false;
         foreach ($user->authenticatableRole->role->role->retrieveVisitSubjects as $retrieveVisit) {
@@ -106,7 +132,7 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
         $laserVisits = $query
             ->take($count)
             ->get()
-            ->toArray()
+            ->all()
             //
         ;
 
@@ -132,7 +158,13 @@ class DataBaseRetrieveLaserVisits implements IDataBaseRetrieveLaserVisits
 
     public function getDSFutureVisits(string $sort = 'asc', string $operator = '>=', \DateTime $now = new \DateTime()): DSLaserVisits
     {
-        return LaserVisit::getDSLaserVisits($this->getFutureVisits($sort, $operator, $now), 'ASC');
+        $dsLaserVisits = new DSLaserVisits();
+
+        foreach ($this->getFutureVisits() as $visit) {
+            $dsLaserVisits[] = $visit->getDSLaserVisit();
+        }
+
+        return $dsLaserVisits;
     }
 
     public function getLaserVisitById(int $visitId): LaserVisit
