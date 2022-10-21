@@ -65,6 +65,11 @@ class WeeklyVisit implements IFindVisit
         $this->validateTimeRanges = $validateTimeRanges ?: new ValidateTimeRanges();
     }
 
+    public function getDSTimePatterns(): DSWeeklyTimePatterns|DSTimePatterns
+    {
+        return $this->dsTimePatterns;
+    }
+
     public function patternStartGetter(object $value): string
     {
         return $value->getStart();
