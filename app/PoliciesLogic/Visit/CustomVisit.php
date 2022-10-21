@@ -60,6 +60,11 @@ class CustomVisit implements IFindVisit
         $this->validateTimeRanges = $validateTimeRanges ?: new ValidateTimeRanges();
     }
 
+    public function getDSDateTimePeriods(): DSDateTimePeriods
+    {
+        return $this->dsDateTimePeriods;
+    }
+
     public function startGetter(object $value): int
     {
         return $value->getStartTimestamp();
