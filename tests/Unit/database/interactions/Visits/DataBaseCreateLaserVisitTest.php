@@ -2,24 +2,26 @@
 
 namespace Tests\Unit\database\interactions\Visits;
 
-use App\Models\BusinessDefault;
-use App\Models\Order\LaserOrder;
-use App\Models\Order\Order;
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
+use App\Models\Auth\Patient;
 use App\Models\Visit\LaserVisit;
-use Database\Interactions\Visits\DataBaseCreateLaserVisit;
+use App\PoliciesLogic\Visit\CustomVisit;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
-use App\PoliciesLogic\Visit\FastestVisit;
-use App\PoliciesLogicDataStructures\DataStructures\Visit\Laser\DSLaserVisit;
+use App\PoliciesLogic\Visit\IFindVisit;
+use App\PoliciesLogic\Visit\WeeklyVisit;
+use Database\Interactions\Visits\Creation\DataBaseCreateLaserVisit;
+use Mockery;
+use Mockery\MockInterface;
 
+/**
+ * @covers \Database\Interactions\Visits\Creation\DataBaseCreateLaserVisit
+ */
 class DataBaseCreateLaserVisitTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -34,50 +36,96 @@ class DataBaseCreateLaserVisitTest extends TestCase
         try {
             DB::beginTransaction();
 
-            $safety = 0;
-            while ($safety < 500) {
-                $userRole = $this->getAuthenticatable('patient');
-                $user = $userRole->user;
-                $dsUser = $userRole->getDataStructure();
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
 
-                /** @var Order $order */
-                foreach ($user->orders as $order) {
-                    /** @var LaserOrder $laserOrder */
-                    if (($laserOrder = $order->laserOrder) !== null) {
-                        $dsLaserOrder = $laserOrder->getDSLaserOrder();
-                        break 2;
-                    }
+            foreach ($user->orders as $order) {
+                if (($laserOrder = $order->laserOrder) !== null) {
+                    $found = true;
+                    break;
                 }
-
-                $safety++;
             }
-            if (!isset($dsLaserOrder)) {
-                throw new ModelNotFoundException('', 404);
+            if (!isset($found)) {
+                throw new \RuntimeException('Failure!!!', 500);
             }
 
-            $now = new \DateTime();
-            $futureVisits = LaserVisit::query()
-                ->orderBy('visit_timestamp', 'asc')
-                ->where('visit_timestamp', '>=', $now)
-                ->get()
-                ->all()
-                //
-            ;
-            $futureVisits = LaserVisit::getDSLaserVisits($futureVisits, 'ASC');
+            /** @var IFindVisit|MockInterface $iFindVisit */
+            $iFindVisit = Mockery::mock(IFindVisit::class);
+            $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
 
-            $iFindVisit = new FastestVisit(
-                new \DateTime,
-                $dsLaserOrder->getNeededTime(),
-                $futureVisits,
-                $dsWoekSchedule = BusinessDefault::first()->work_schedule,
-                $dsDownTimes = BusinessDefault::first()->down_times,
-            );
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
 
-            $dsLaserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($dsLaserOrder, $dsUser, $iFindVisit);
-            $this->assertInstanceOf(DSLaserVisit::class, $dsLaserVisit);
-            $this->assertDatabaseHas((new LaserVisit)->getTable(), ['visit_timestamp' => $iFindVisit->findVisit()]);
-        } finally {
+            $this->assertInstanceOf(LaserVisit::class, $laserVisit);
+            $this->assertDatabaseHas($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
             DB::rollback();
+
+            $this->assertDatabaseMissing($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            // ------------------------------------------------------------------------------------------------------------------------------------------------
+
+            DB::beginTransaction();
+
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
+
+            foreach ($user->orders as $order) {
+                if (($laserOrder = $order->laserOrder) !== null) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!isset($found)) {
+                throw new \RuntimeException('Failure!!!', 500);
+            }
+
+            /** @var WeeklyVisit|MockInterface $iFindVisit */
+            $iFindVisit = Mockery::mock(WeeklyVisit::class);
+            $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
+            $iFindVisit->shouldReceive('getDSTimePatterns')->once()->andReturn(new DSWeeklyTimePatterns('Monday'));
+
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
+
+            $this->assertInstanceOf(LaserVisit::class, $laserVisit);
+            $this->assertDatabaseHas($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            DB::rollback();
+
+            $this->assertDatabaseMissing($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            // ------------------------------------------------------------------------------------------------------------------------------------------------
+
+            DB::beginTransaction();
+
+            $patient = Patient::query()->firstOrFail();
+            $user = $patient->user;
+
+            foreach ($user->orders as $order) {
+                if (($laserOrder = $order->laserOrder) !== null) {
+                    $found = true;
+                    break;
+                }
+            }
+            if (!isset($found)) {
+                throw new \RuntimeException('Failure!!!', 500);
+            }
+
+            /** @var CustomVisit|MockInterface $iFindVisit */
+            $iFindVisit = Mockery::mock(CustomVisit::class);
+            $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
+            $iFindVisit->shouldReceive('getDSDateTimePeriods')->once()->andReturn(new DSDateTimePeriods);
+
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
+
+            $this->assertInstanceOf(LaserVisit::class, $laserVisit);
+            $this->assertDatabaseHas($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
+
+            DB::rollback();
+
+            $this->assertDatabaseMissing($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
+        } catch (\Throwable $th) {
+            DB::rollback();
+            throw $th;
         }
     }
 }
