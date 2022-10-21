@@ -406,22 +406,20 @@ class DSVisits implements \ArrayAccess, \Iterator, \Countable
 
     private function handleNatural(array $visits, int|null $offset, DSVisit $visit): void
     {
-        $error = false;
         foreach ($visits as $key => $oldVisit) {
             if (!is_null($offset) && $key === $offset) {
                 continue;
             }
 
-            if (
-                $visit->getVisitTimestamp() < ($oldVisit->getVisitTimestamp() + $oldVisit->getConsumingTime()) &&
-                ($visit->getVisitTimestamp() + $visit->getConsumingTime()) > $oldVisit->getVisitTimestamp()
-            ) {
-                $error = true;
+            if (!(
+                ($visit->getVisitTimestamp() >= ($oldVisit->getVisitTimestamp() + $oldVisit->getConsumingTime()) &&
+                    ($visit->getVisitTimestamp() + $visit->getConsumingTime()) > ($oldVisit->getVisitTimestamp() + $oldVisit->getConsumingTime())
+                ) ||
+                (($visit->getVisitTimestamp() + $visit->getConsumingTime()) <= $oldVisit->getVisitTimestamp() &&
+                    $visit->getVisitTimestamp() < $oldVisit->getVisitTimestamp()
+                ))) {
+                throw new TimeSequenceViolationException("The new member doesn't respect the order of array members.", 500);
             }
-        }
-
-        if ($error) {
-            throw new TimeSequenceViolationException("The new member doesn't respect the order of array members.", 500);
         }
     }
 
