@@ -9,6 +9,6 @@ class DataBaseDeleteLaserVisit implements IDataBaseDeleteLaserVisit
 {
     public function deleteLaserVisit(LaserVisit $laserVisit): void
     {
-        $laserVisit->delete();
+        $laserVisit->deleteOrFail();
     }
 }
