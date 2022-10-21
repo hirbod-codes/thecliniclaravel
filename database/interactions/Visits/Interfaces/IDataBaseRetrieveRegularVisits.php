@@ -9,10 +9,29 @@ use App\Models\Visit\RegularVisit;
 
 interface IDataBaseRetrieveRegularVisits extends IDataBaseRetrieveVisits
 {
+    /**
+     * @param User $targetUser
+     * @param string $sortByTimestamp
+     * @return RegularVisit[]
+     */
     public function getVisitsByUser(User $targetUser, string $sortByTimestamp): array;
 
+    /**
+     * @param RegularOrder $regularOrder
+     * @param string $sortByTimestamp
+     * @return RegularVisit[]
+     */
     public function getVisitsByOrder(RegularOrder $regularOrder, string $sortByTimestamp): array;
 
+    /**
+     * @param string $roleName
+     * @param string $operator
+     * @param integer $timestamp
+     * @param string $sortByTimestamp
+     * @param integer $count
+     * @param integer|null $lastVisitTimestamp
+     * @return RegularVisit[]
+     */
     public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, int $lastVisitTimestamp = null): array;
 
     /**

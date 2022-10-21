@@ -5,8 +5,6 @@ namespace Database\Interactions\Visits\Retrieval;
 use App\Auth\CheckAuthentication;
 use App\DataStructures\Visit\Regular\DSRegularVisits;
 use App\Models\Order\RegularOrder;
-use App\Models\Traits\TraitDSDateTimePeriod;
-use App\Models\Traits\TraitDSWeekDaysPeriods;
 use App\Models\User;
 use App\Models\Visit\RegularVisit;
 use Database\Interactions\Visits\Interfaces\IDataBaseRetrieveRegularVisits;
@@ -14,10 +12,19 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
 {
-    use
-        TraitDSWeekDaysPeriods,
-        TraitDSDateTimePeriod;
+    private CheckAuthentication $checkAuthentication;
 
+    public function __construct(CheckAuthentication $checkAuthentication = null)
+    {
+        $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
+    }
+
+
+    /**
+     * @param User $targetUser
+     * @param string $sortByTimestamp
+     * @return RegularVisit[]
+     */
     public function getVisitsByUser(User $targetUser, string $sortByTimestamp): array
     {
         $regularVisits = RegularVisit::query()
@@ -29,13 +36,18 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
                 });
             })
             ->get()
-            ->toArray()
+            ->all()
             //
         ;
 
         return $regularVisits;
     }
 
+    /**
+     * @param RegularOrder $regularOrder
+     * @param string $sortByTimestamp
+     * @return RegularVisit[]
+     */
     public function getVisitsByOrder(RegularOrder $regularOrder, string $sortByTimestamp): array
     {
         $regularVisits = RegularVisit::query()
@@ -43,16 +55,25 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
                 $query->whereKey($regularOrder->getKey());
             })
             ->get()
-            ->toArray()
+            ->all()
             //
         ;
 
         return $regularVisits;
     }
 
+    /**
+     * @param string $roleName
+     * @param string $operator
+     * @param integer $timestamp
+     * @param string $sortByTimestamp
+     * @param integer $count
+     * @param integer|null $lastVisitTimestamp
+     * @return RegularVisit[]
+     */
     public function getVisitsByTimestamp(string $roleName, string $operator, int $timestamp, string $sortByTimestamp, int $count, int $lastVisitTimestamp = null): array
     {
-        $user = (new CheckAuthentication)->getAuthenticated();
+        $user = $this->checkAuthentication->getAuthenticated();
         $userRoleName = $user->authenticatableRole->role->roleName->name;
         $canReadSelf = false;
         foreach ($user->authenticatableRole->role->role->retrieveVisitSubjects as $retrieveVisit) {
@@ -111,7 +132,7 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
         $regularVisits = $query
             ->take($count)
             ->get()
-            ->toArray()
+            ->all()
             //
         ;
 
@@ -137,7 +158,7 @@ class DataBaseRetrieveRegularVisits implements IDataBaseRetrieveRegularVisits
 
     public function getDSFutureVisits(string $sort = 'asc', string $operator = '>=', \DateTime $now = new \DateTime()): DSRegularVisits
     {
-        return RegularVisit::getDSLaserVisits($this->getFutureVisits($sort, $operator, $now), 'ASC');
+        return RegularVisit::getDSRegularVisits($this->getFutureVisits($sort, $operator, $now), 'ASC');
     }
 
     public function getRegularVisitById(int $visitId): RegularVisit
