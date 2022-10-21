@@ -9,6 +9,6 @@ class DataBaseDeleteRegularVisit implements IDataBaseDeleteRegularVisit
 {
     public function deleteRegularVisit(RegularVisit $regularVisit): void
     {
-        $regularVisit->delete();
+        $regularVisit->deleteOrFail();
     }
 }

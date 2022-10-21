@@ -2,20 +2,18 @@
 
 namespace Tests\Unit\database\interactions\Visits;
 
-use App\Models\Order\RegularOrder;
 use App\Models\Visit\RegularVisit;
-use Database\Interactions\Visits\DataBaseDeleteRegularVisit;
+use Database\Interactions\Visits\Deletion\DataBaseDeleteRegularVisit;
 use Faker\Factory;
 use Faker\Generator;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
-use Tests\Unit\Traits\GetAuthenticatables;
 
+/**
+ * @covers \Database\Interactions\Visits\Deletion\DataBaseDeleteRegularVisit
+ */
 class DataBaseDeleteRegularVisitTest extends TestCase
 {
-    use GetAuthenticatables;
-
     private Generator $faker;
 
     protected function setUp(): void
@@ -30,39 +28,19 @@ class DataBaseDeleteRegularVisitTest extends TestCase
         try {
             DB::beginTransaction();
 
-            $safety = 0;
-            while ($safety < 500) {
-                $userRole = $this->getAuthenticatable('patient');
-                $user = $userRole->user;
-                $dsUser = $userRole->getDataStructure();
+            $regularVisit = RegularVisit::query()->firstOrFail();
 
-                /** @var Order $order */
-                foreach ($user->orders as $order) {
-                    /**
-                     *  @var RegularOrder $regularOrder
-                     *  @var RegularVisit $regularVisit
-                     *  @var RegularVisit[] $regularVisits
-                     */
-                    if (($regularOrder = $order->regularOrder) !== null && count($regularVisits = $regularOrder->regularVisits) !== 0) {
-                        $dsRegularOrder = $regularOrder->getDSRegularOrder();
-                        $regularVisit = $regularVisits[0];
-                        $dsRegularVisit = $regularVisits[0]->getDSRegularVisit();
-                        break 2;
-                    }
-                }
+            $result = (new DataBaseDeleteRegularVisit)->deleteRegularVisit($regularVisit);
 
-                $safety++;
-            }
-            if (!isset($dsRegularVisit)) {
-                throw new ModelNotFoundException('', 404);
-            }
-
-            $result = (new DataBaseDeleteRegularVisit)->deleteRegularVisit($dsRegularVisit, $dsUser);
             $this->assertNull($result);
             $this->assertDatabaseMissing($regularVisit->getTable(), [$regularVisit->getKeyName() => $regularVisit->getKey()]);
-            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $regularVisit->visit_timestamp]);
-        } finally {
+
+            DB::rollBack();
+
+            $this->assertDatabaseHas($regularVisit->getTable(), [$regularVisit->getKeyName() => $regularVisit->getKey()]);
+        } catch (\Throwable $th) {
             DB::rollback();
+            throw $th;
         }
     }
 }
