@@ -68,7 +68,9 @@ RUN \
 
 # Application source codes are provided by mounted volumes from docker-compose-development.yml file
 
-CMD sleep 30 && php artisan initialize-if-needed && docker-php-entrypoint php-fpm
+CMD sleep 30 && \
+    php artisan initialize-if-needed && \
+    docker-php-entrypoint php-fpm
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
