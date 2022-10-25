@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Roles;
 
+use App\Auth\CheckAuthentication;
+use App\Models\Privilege;
+use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -14,7 +17,14 @@ class ShowAllRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $id = $this->safe()->all()['accountId'];
+        /** @var User $targetUser */
+        $targetUser = User::query()->whereKey($id)->firstOrFail();
+        return ($user = (new CheckAuthentication)->getAuthenticated()) === null
+            ? false
+            : ($user->authenticatableRole->role->role->privilegesSubjects->search(function (Privilege $v, $k) use ($targetUser) {
+                return $v->privilegeName->name === 'readRoles' && $targetUser->authenticatableRole->role->role->getKey() === $v->relatedObject->getKey();
+            }, true) !== false);
     }
 
     /**

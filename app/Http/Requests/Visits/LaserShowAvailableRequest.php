@@ -7,7 +7,6 @@ use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Order\LaserOrder;
-use App\Models\Privileges\RetrieveVisit;
 
 class LaserShowAvailableRequest extends BaseFormRequest
 {
@@ -26,16 +25,14 @@ class LaserShowAvailableRequest extends BaseFormRequest
         $order = LaserOrder::query()->whereKey((int)$input['laserOrderId'])->firstOrFail();
 
         $targetUser = $order->order->user;
-        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
         $isSelf = $user->getKey() === $targetUser->getKey();
 
-        /** @var RetrieveVisit $retrieveVisit */
         foreach ($retrieveVisits as $retrieveVisit) {
             if ($retrieveVisit->relatedBusiness->name !== 'laser') {
                 continue;
             }
 
-            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey()))))) {
                 continue;
             }
 

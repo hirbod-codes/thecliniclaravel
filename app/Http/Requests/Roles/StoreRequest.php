@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests\Roles;
 
+use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use App\DataStructures\User\DSUser;
+use App\Models\Privilege;
+use App\Models\User;
 
 class StoreRequest extends FormRequest
 {
@@ -18,7 +21,13 @@ class StoreRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $roleName = $this->safe()->all()['role'];
+
+        return ($user = (new CheckAuthentication)->getAuthenticated()) === null
+            ? false
+            : ($user->authenticatableRole->role->role->privilegesSubjects->search(function (Privilege $v, $k) use ($roleName) {
+                return $v->privilegeName->name === 'writeRoles' && $roleName === $v->relatedObject->childRoleModel->roleName->name;
+            }, true) !== false);
     }
 
     /**

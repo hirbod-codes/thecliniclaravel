@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use App\Auth\CheckAuthentication;
 use App\Models\Privileges\UpdateUser;
-use App\Rules\PresenceProhibitedWith;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 

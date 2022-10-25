@@ -21,16 +21,19 @@ class RegularStoreRequest extends BaseFormRequest
         $user = (new CheckAuthentication)->getAuthenticated();
         $createVisits = $user->authenticatableRole->role->role->createVisitSubjects;
 
-        $targetUserRoleName = ($targetUser = ($regularOrder = RegularOrder::query()->whereKey($input['regularOrderId'])->firstOrFail())->order->user)->authenticatableRole->role->roleName->name;
+        /** @var RegularOrder $regularOrder */
+        $regularOrder = RegularOrder::query()->whereKey((int)$input['regularOrderId'])->firstOrFail();
+
+        $targetUser = $regularOrder->order->user;
+
         $isSelf = $targetUser->getKey() === $user->getKey();
 
-        /** @var CreateVisit $createVisit */
         foreach ($createVisits as $createVisit) {
             if ($createVisit->relatedBusiness->name !== 'regular') {
                 continue;
             }
 
-            if (($isSelf && $createVisit->object !== null) || (!$isSelf && (($createVisit->object === null || ($createVisit->object !== null && $createVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+            if (($isSelf && $createVisit->object !== null) || (!$isSelf && (($createVisit->object === null || ($createVisit->object !== null && $createVisit->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey()))))) {
                 continue;
             }
 

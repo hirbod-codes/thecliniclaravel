@@ -7,7 +7,6 @@ use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Order\RegularOrder;
-use App\Models\Privileges\RetrieveVisit;
 
 class RegularShowAvailableRequest extends BaseFormRequest
 {
@@ -26,16 +25,14 @@ class RegularShowAvailableRequest extends BaseFormRequest
         $order = RegularOrder::query()->whereKey((int)$input['regularOrderId'])->firstOrFail();
 
         $targetUser = $order->order->user;
-        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
         $isSelf = $user->getKey() === $targetUser->getKey();
 
-        /** @var RetrieveVisit $retrieveVisit */
         foreach ($retrieveVisits as $retrieveVisit) {
             if ($retrieveVisit->relatedBusiness->name !== 'regular') {
                 continue;
             }
 
-            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey()))))) {
                 continue;
             }
 

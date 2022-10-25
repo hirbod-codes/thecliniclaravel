@@ -18,16 +18,18 @@ class SetAvatarRequest extends BaseFormRequest
     {
         $user = (new CheckAuthentication)->getAuthenticated();
         $input = $this->safe()->all();
-        $targetUserRoleName = ($targetUser = User::query()->whereKey($input['accountId'])->firstOrFail())->authenticatableRole->role->roleName->name;
+        /** @var User $targetUser */
+        $targetUser = User::query()->whereKey($input['accountId'])->firstOrFail();
+
         $isSelf = $user->getKey() === $targetUser->getKey();
 
         $privilegesSubjects = $user->authenticatableRole->role->role->privilegesSubjects;
         foreach ($privilegesSubjects as $privilegesSubject) {
-            if ($privilegesSubject->privilegeName->name !== 'editAvatar' || boolval($privilegesSubject->boolean_value !== true)) {
+            if ($privilegesSubject->privilegeName->name !== 'editAvatar' || boolval($privilegesSubject->boolean_value) !== true) {
                 continue;
             }
 
-            if (($isSelf && $privilegesSubject->object !== null) || (!$isSelf && ($privilegesSubject->object === null || ($privilegesSubject !== null && $privilegesSubject->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+            if (($isSelf && $privilegesSubject->object !== null) || (!$isSelf && ($privilegesSubject->object === null || ($privilegesSubject !== null && $privilegesSubject->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                 continue;
             }
 

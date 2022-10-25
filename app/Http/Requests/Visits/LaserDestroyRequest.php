@@ -5,8 +5,7 @@ namespace App\Http\Requests\Visits;
 use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Order\LaserOrder;
-use App\Models\Privileges\deleteVisit;
+use App\Models\Visit\LaserVisit;
 
 class LaserDestroyRequest extends BaseFormRequest
 {
@@ -21,20 +20,17 @@ class LaserDestroyRequest extends BaseFormRequest
         $user = (new CheckAuthentication)->getAuthenticated();
         $deleteVisits = $user->authenticatableRole->role->role->deleteVisitSubjects;
 
-        /** @var LaserOrder $order */
-        $order = LaserOrder::query()->whereKey((int)$input['laserOrderId'])->firstOrFail();
-
-        $targetUser = $order->order->user;
-        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+        /** @var LaserVisit $laserVisit */
+        $laserVisit = LaserVisit::query()->whereKey((int)$input['visitId'])->firstOrFail();
+        $targetUser = $laserVisit->laserOrder->order->user;
         $isSelf = $user->getKey() === $targetUser->getKey();
 
-        /** @var deleteVisit $deleteVisit */
         foreach ($deleteVisits as $deleteVisit) {
             if ($deleteVisit->relatedBusiness->name !== 'laser') {
                 continue;
             }
 
-            if (($isSelf && $deleteVisit->object !== null) || (!$isSelf && (($deleteVisit->object === null || ($deleteVisit->object !== null && $deleteVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+            if (($isSelf && $deleteVisit->object !== null) || (!$isSelf && (($deleteVisit->object === null || ($deleteVisit->object !== null && $deleteVisit->relatedObject->getKey() !== $targetUser))))) {
                 continue;
             }
 
@@ -52,11 +48,16 @@ class LaserDestroyRequest extends BaseFormRequest
     public function rules()
     {
         $array = [
-            'laserOrderId' => ['required', 'integer', 'numeric', 'min:1'],
+            'visitId' => ['required', 'integer', 'numeric', 'min:1'],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
+    }
+
+    protected function prepareForValidation()
+    {
+        $this->replace(array_merge($this->all(), ['visitId' => class_basename($this->path())]));
     }
 }

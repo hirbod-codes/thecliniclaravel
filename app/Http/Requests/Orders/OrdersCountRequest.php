@@ -4,7 +4,6 @@ namespace App\Http\Requests\Orders;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Privileges\RetrieveOrder;
 use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
 
@@ -22,7 +21,6 @@ class OrdersCountRequest extends BaseFormRequest
         $input = $this->safe()->all();
 
         $retrieveOrderModels = $user->authenticatableRole->role->role->retrieveOrderSubjects;
-        /** @var RetrieveOrder $retrieveOrderModel */
         foreach ($retrieveOrderModels as $retrieveOrderModel) {
             if ($retrieveOrderModel->relatedBusiness->name !== $input['businessName']) {
                 continue;

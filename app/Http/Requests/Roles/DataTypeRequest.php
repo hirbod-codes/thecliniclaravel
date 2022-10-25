@@ -4,6 +4,7 @@ namespace App\Http\Requests\Roles;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
 
 class DataTypeRequest extends BaseFormRequest

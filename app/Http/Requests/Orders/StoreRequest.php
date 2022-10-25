@@ -9,7 +9,6 @@ use App\Rules\Orders\PartsPackagesRequirement;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Validation\Rule;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Privileges\CreateOrder;
 use App\Models\User;
 
 class StoreRequest extends BaseFormRequest
@@ -23,17 +22,16 @@ class StoreRequest extends BaseFormRequest
     {
         $user = (new CheckAuthentication)->getAuthenticated();
         $input = $this->safe()->all();
+        /** @var User $targetUser */
         $targetUser = User::query()->whereKey(intval($input['accountId']))->firstOrFail();
         $isSelf = $targetUser->getKey() === $user->getKey();
-        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
 
-        /** @var CreateOrder $createOrder */
         foreach ($user->authenticatableRole->role->role->createOrderSubjects as $createOrder) {
             if ($createOrder->relatedBusiness->name !== $input['businessName']) {
                 continue;
             }
 
-            if (($isSelf && $createOrder->object !== null) || (!$isSelf && ($createOrder->object === null || ($createOrder->object !== null && $createOrder->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+            if (($isSelf && $createOrder->object !== null) || (!$isSelf && ($createOrder->object === null || ($createOrder->object !== null && $createOrder->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                 continue;
             }
 

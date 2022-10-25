@@ -19,32 +19,32 @@ class IndexRequest extends BaseFormRequest
     public function authorize()
     {
         $user = (new CheckAuthentication)->getAuthenticated();
-        $userRoleName = $user->authenticatableRole->role->roleName->name;
         $input = $this->safe()->all();
 
         if (isset($input['username'])) {
+            /** @var User $targetUser */
             $targetUser = User::query()->where('username', '=', $input['username'])->firstOrFail();
-            $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+
             $isSelf = $user->getKey() === $targetUser->getKey();
 
-            foreach ($user->authenticatablerole->role->role->retrieveOrderSubjects as $retrieveOrder) {
+            foreach ($user->authenticatableRole->role->role->retrieveOrderSubjects as $retrieveOrder) {
                 if ($retrieveOrder->relatedBusiness->name !== ($path = explode('/', Request::path()))[1]) {
                     continue;
                 }
 
-                if (($isSelf && $retrieveOrder->object !== null) || (!$isSelf && ($retrieveOrder->object === null || ($retrieveOrder->object !== null && $retrieveOrder->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+                if (($isSelf && $retrieveOrder->object !== null) || (!$isSelf && ($retrieveOrder->object === null || ($retrieveOrder->object !== null && $retrieveOrder->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                     continue;
                 }
 
                 return true;
             }
         } else {
-            foreach ($user->authenticatablerole->role->role->retrieveOrderSubjects as $retrieveOrder) {
+            foreach ($user->authenticatableRole->role->role->retrieveOrderSubjects as $retrieveOrder) {
                 if ($retrieveOrder->relatedBusiness->name !== ($path = explode('/', Request::path()))[1]) {
                     continue;
                 }
 
-                if (($retrieveOrder->object === null && $input['roleName'] !== $userRoleName) || ($retrieveOrder->object !== null && $retrieveOrder->relatedObject->childRoleModel->roleName->name !== $input['roleName'])) {
+                if (($retrieveOrder->object === null && $input['roleName'] !== $user->authenticatableRole->role->roleName->name) || ($retrieveOrder->object !== null && $retrieveOrder->relatedObject->childRoleModel->roleName->name !== $input['roleName'])) {
                     continue;
                 }
 

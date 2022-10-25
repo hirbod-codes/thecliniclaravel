@@ -2,11 +2,11 @@
 
 namespace App\Http\Requests\Roles;
 
+use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\Rules\ValidatePrivilegeValue;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\DataStructures\User\DSUser;
+use App\Models\Privilege;
 
 class UpdateRequest extends FormRequest
 {
@@ -17,7 +17,13 @@ class UpdateRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $roleName = $this->safe()->all()['roleName'];
+
+        return ($user = (new CheckAuthentication)->getAuthenticated()) === null
+            ? false
+            : ($user->authenticatableRole->role->role->privilegesSubjects->search(function (Privilege $v, $k) use ($roleName) {
+                return $v->privilegeName->name === 'writeRoles' && $roleName === $v->relatedObject->childRoleModel->roleName->name;
+            }, true) !== false);
     }
 
     /**
@@ -27,8 +33,6 @@ class UpdateRequest extends FormRequest
      */
     public function rules()
     {
-        $privileges = DSUser::getPrivileges();
-
         $array = [
             'roleName' => (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'],
             'privilegeValues' => ['required', 'array', new ValidatePrivilegeValue],

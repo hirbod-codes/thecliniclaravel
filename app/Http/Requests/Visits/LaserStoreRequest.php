@@ -7,7 +7,6 @@ use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Order\LaserOrder;
-use App\Models\Privileges\CreateVisit;
 
 class LaserStoreRequest extends BaseFormRequest
 {
@@ -22,16 +21,18 @@ class LaserStoreRequest extends BaseFormRequest
         $user = (new CheckAuthentication)->getAuthenticated();
         $createVisits = $user->authenticatableRole->role->role->createVisitSubjects;
 
-        $targetUserRoleName = ($targetUser = ($laserOrder = LaserOrder::query()->whereKey($input['laserOrderId'])->firstOrFail())->order->user)->authenticatableRole->role->roleName->name;
+        /** @var LaserOrder $laserOrder */
+        $laserOrder = LaserOrder::query()->whereKey((int)$input['laserOrderId'])->firstOrFail();
+
+        $targetUser = $laserOrder->order->user;
         $isSelf = $targetUser->getKey() === $user->getKey();
 
-        /** @var CreateVisit $createVisit */
         foreach ($createVisits as $createVisit) {
             if ($createVisit->relatedBusiness->name !== 'laser') {
                 continue;
             }
 
-            if (($isSelf && $createVisit->object !== null) || (!$isSelf && (($createVisit->object === null || ($createVisit->object !== null && $createVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+            if (($isSelf && $createVisit->object !== null) || (!$isSelf && (($createVisit->object === null || ($createVisit->object !== null && $createVisit->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey()))))) {
                 continue;
             }
 

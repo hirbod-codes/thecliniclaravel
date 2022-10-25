@@ -4,7 +4,6 @@ namespace App\Http\Requests\Visits;
 
 use App\Auth\CheckAuthentication;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Privileges\RetrieveVisit;
 use App\Models\RoleName;
 use App\Rules\ProhibitExtraFeilds;
 
@@ -24,7 +23,6 @@ class VisitsCountRequest extends BaseFormRequest
         $roleNameModel = RoleName::query()->where('name', '=', $input['roleName'])->firstOrFail();
         $targetUserRoleName = $roleNameModel->name;
 
-        /** @var RetrieveVisit $retrieveVisit */
         foreach ($retrieveVisits as $retrieveVisit) {
             if ($retrieveVisit->relatedBusiness->name !== $input['businessName']) {
                 continue;

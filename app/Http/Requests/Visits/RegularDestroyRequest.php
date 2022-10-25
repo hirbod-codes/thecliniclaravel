@@ -5,8 +5,7 @@ namespace App\Http\Requests\Visits;
 use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\Http\Requests\BaseFormRequest;
-use App\Models\Order\RegularOrder;
-use App\Models\Privileges\deleteVisit;
+use App\Models\Visit\RegularVisit;
 
 class RegularDestroyRequest extends BaseFormRequest
 {
@@ -21,20 +20,17 @@ class RegularDestroyRequest extends BaseFormRequest
         $user = (new CheckAuthentication)->getAuthenticated();
         $deleteVisits = $user->authenticatableRole->role->role->deleteVisitSubjects;
 
-        /** @var RegularOrder $order */
-        $order = RegularOrder::query()->whereKey((int)$input['regularOrderId'])->firstOrFail();
-
-        $targetUser = $order->order->user;
-        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
+        /** @var RegularVisit $regularVisit */
+        $regularVisit = RegularVisit::query()->whereKey((int)$input['visitId'])->firstOrFail();
+        $targetUser = $regularVisit->regularOrder->order->user;
         $isSelf = $user->getKey() === $targetUser->getKey();
 
-        /** @var deleteVisit $deleteVisit */
         foreach ($deleteVisits as $deleteVisit) {
             if ($deleteVisit->relatedBusiness->name !== 'regular') {
                 continue;
             }
 
-            if (($isSelf && $deleteVisit->object !== null) || (!$isSelf && (($deleteVisit->object === null || ($deleteVisit->object !== null && $deleteVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
+            if (($isSelf && $deleteVisit->object !== null) || (!$isSelf && (($deleteVisit->object === null || ($deleteVisit->object !== null && $deleteVisit->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey()))))) {
                 continue;
             }
 
@@ -52,7 +48,7 @@ class RegularDestroyRequest extends BaseFormRequest
     public function rules()
     {
         $array = [
-            'regularOrderId' => ['required', 'integer', 'numeric', 'min:1'],
+            'visitId' => ['required', 'integer', 'numeric', 'min:1'],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));

@@ -2,11 +2,10 @@
 
 namespace App\Http\Requests\Roles;
 
-use App\Models\Role;
+use App\Auth\CheckAuthentication;
+use App\Models\Privilege;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-use App\DataStructures\User\DSUser;
 
 class DestroyRequest extends FormRequest
 {
@@ -17,7 +16,12 @@ class DestroyRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $input = $this->safe()->all();
+        return ($user = (new CheckAuthentication)->getAuthenticated()) === null
+            ? false
+            : ($user->authenticatableRole->role->role->privilegesSubjects->search(function (Privilege $v, $k) use ($input) {
+                return $v->privilegeName->name === 'writeRoles' && $v->relatedObject->childRoleModel->roleName->name === $input['customRoleName'];
+            }, true) !== false);
     }
 
     /**

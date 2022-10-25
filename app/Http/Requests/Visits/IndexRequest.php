@@ -26,9 +26,13 @@ class IndexRequest extends BaseFormRequest
         $retrieveVisits = $user->authenticatableRole->role->role->retrieveVisitSubjects;
 
         if (isset($input['accountId'])) {
+            /** @var User $targetUser */
             $targetUser = User::query()->whereKey($input['accountId'])->firstOrFail();
-            $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
             $isSelf = $user->getKey() === $targetUser->getKey();
+
+            return $retrieveVisits->search(function (RetrieveVisit $v, $k) use ($targetUser, $isSelf) {
+                return ($isSelf && $v->object === null) || (!$isSelf && $v->object !== null && $v->relatedObject->getKey() === $targetUser->authenticatableRole->role->role->getKey());
+            }, true) !== false;
         } elseif (isset($input['orderId'])) {
             switch ($input['businessName']) {
                 case 'laser':
@@ -45,26 +49,21 @@ class IndexRequest extends BaseFormRequest
                     throw new \LogicException('!!!!', 500);
                     break;
             }
+            /** @var User $targetUser */
             $targetUser = $order->order->user;
-            $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
             $isSelf = $user->getKey() === $targetUser->getKey();
+
+            return $retrieveVisits->search(function (RetrieveVisit $v, $k) use ($targetUser, $isSelf) {
+                return ($isSelf && $v->object === null) || (!$isSelf && $v->object !== null && $v->relatedObject->getKey() === $targetUser->authenticatableRole->role->role->getKey());
+            }, true) !== false;
         } else {
             $roleNameModel = RoleName::query()->where('name', '=', $input['roleName'])->firstOrFail();
             $isSelf = $roleNameModel->name === $user->authenticatableRole->role->roleName->name;
-            $targetUserRoleName = $roleNameModel->name;
-        }
+            $roleName = $roleNameModel->name;
 
-        /** @var RetrieveVisit $retrieveVisit */
-        foreach ($retrieveVisits as $retrieveVisit) {
-            if ($retrieveVisit->relatedBusiness->name !== $input['businessName']) {
-                continue;
-            }
-
-            if (($isSelf && $retrieveVisit->object !== null) || (!$isSelf && (($retrieveVisit->object === null || ($retrieveVisit->object !== null && $retrieveVisit->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName))))) {
-                continue;
-            }
-
-            return true;
+            return $retrieveVisits->search(function (RetrieveVisit $v, $k) use ($roleName, $isSelf) {
+                return ($isSelf && $v->object === null) || (!$isSelf && $v->object !== null && $v->relatedObject->childRoleModel->roleName->name === $roleName);
+            }, true) !== false;
         }
 
         return false;

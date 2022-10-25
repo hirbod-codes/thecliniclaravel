@@ -18,7 +18,9 @@ class GetAvatarRequest extends BaseFormRequest
     {
         $user = (new CheckAuthentication)->getAuthenticated();
         $input = $this->safe()->all();
-        $targetUserRoleName = ($targetUser = User::query()->whereKey($input['accountId'])->firstOrFail())->authenticatableRole->role->roleName->name;
+        /** @var User $targetUser */
+        $targetUser = User::query()->whereKey($input['accountId'])->firstOrFail();
+
         $isSelf = $user->getKey() === $targetUser->getKey();
 
         $privilegesSubjects = $user->authenticatableRole->role->role->privilegesSubjects;
@@ -27,7 +29,7 @@ class GetAvatarRequest extends BaseFormRequest
                 continue;
             }
 
-            if (($isSelf && $privilegesSubject->object !== null) || (!$isSelf && ($privilegesSubject->object === null || ($privilegesSubject !== null && $privilegesSubject->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+            if (($isSelf && $privilegesSubject->object !== null) || (!$isSelf && ($privilegesSubject->object === null || ($privilegesSubject !== null && $privilegesSubject->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                 continue;
             }
 

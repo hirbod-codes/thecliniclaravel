@@ -6,7 +6,7 @@ use App\Auth\CheckAuthentication;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Models\Auth\Admin;
+use App\Models\Privilege;
 
 class UpdateRequest extends FormRequest
 {
@@ -17,7 +17,9 @@ class UpdateRequest extends FormRequest
      */
     public function authorize()
     {
-        return (new CheckAuthentication)->getAuthenticated() instanceof Admin;
+        return (new CheckAuthentication)->getAuthenticated()->authenticatableRole->role->role->privilegesSubjects->search(function (Privilege $v, $k) {
+            return $v->privilegeName->name === 'editBusinessDefaults';
+        }, true) !== false;
     }
 
     /**

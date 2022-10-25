@@ -6,10 +6,8 @@ use App\Auth\CheckAuthentication;
 use App\Http\Requests\BaseFormRequest;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\RegularOrder;
-use App\Models\Privileges\DeleteOrder;
 use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Support\Facades\Request;
 
 class DestroyRequest extends BaseFormRequest
 {
@@ -37,17 +35,18 @@ class DestroyRequest extends BaseFormRequest
                 break;
         }
 
-        $targetUserRoleName = ($targetUser = $childOrder->order->user)->authenticatableRole->role->roleName->name;
-        $deleteOrders = $targetUser->authenticatableRole->role->role->deleteOrderSubjects;
+        /** @var User $targetUser */
+        $targetUser = $childOrder->order->user;
+
         $isSelf = $targetUser->getKey() === $user->getKey();
 
-        /** @var DeleteOrder $deleteOrder */
+        $deleteOrders = $targetUser->authenticatableRole->role->role->deleteOrderSubjects;
         foreach ($deleteOrders as $deleteOrder) {
             if ($deleteOrder->relatedBusiness->name !== $input['businessName']) {
                 continue;
             }
 
-            if (($isSelf && $deleteOrder->object !== null) || (!$isSelf && ($deleteOrder->object === null || ($deleteOrder->object !== null && $deleteOrder->relatedObject->roleName->name !== $targetUserRoleName))) ) {
+            if (($isSelf && $deleteOrder->object !== null) || (!$isSelf && ($deleteOrder->object === null || ($deleteOrder->object !== null && $deleteOrder->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                 continue;
             }
 
@@ -65,12 +64,19 @@ class DestroyRequest extends BaseFormRequest
     public function rules()
     {
         $array = [
-            'childOrderId' =>       ['string', 'numeric', 'integer'],
+            'childOrderId' => ['string', 'numeric', 'integer'],
             'businessName' => (include(base_path() . '/app/Rules/BuiltInRules/business.php'))['businessNames'],
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
+    }
+
+    protected function prepareForValidation()
+    {
+        $pathParams = array_reverse(explode('/', $this->path()));
+
+        $this->replace(array_merge($this->all(), ['childOrderId' => $pathParams[0], 'businessName' => $pathParams[1]]));
     }
 }

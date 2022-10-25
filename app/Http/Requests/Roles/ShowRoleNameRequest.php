@@ -20,13 +20,13 @@ class ShowRoleNameRequest extends BaseFormRequest
         $user = (new CheckAuthentication)->getAuthenticated();
         $input = $this->safe()->all();
 
+        /** @var User $targetUser */
         $targetUser = User::query()->whereKey($input['accountId'])->firstOrFail();
-        $targetRoleName = $targetUser->authenticatableRole->role->roleName->name;
 
         $isSelf = $targetUser->getKey() === $user->getKey();
 
         foreach ($user->authenticatableRole->role->role->retrieveUserSubjects as $retrieveUser) {
-            if (($isSelf && $retrieveUser->object !== null) || (!$isSelf && ($retrieveUser->object === null || ($retrieveUser->object !== null && $retrieveUser->relatedObject->childRoleModel->roleName->name !== $targetRoleName)))) {
+            if (($isSelf && $retrieveUser->object !== null) || (!$isSelf && ($retrieveUser->object === null || ($retrieveUser->object !== null && $retrieveUser->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                 continue;
             }
             return true;

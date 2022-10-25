@@ -107,6 +107,9 @@ class DatabaseRoleSeeder extends Seeder
                 (new DeleteVisit(['subject' => $adminRole->getKey(), 'object' => $role->getKey(), $business->getForeignKey() => $business->getKey()]))->saveOrFail();
             }
 
+            (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => $role->getKey(), (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'readRoles')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
+            (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => $role->getKey(), (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'writeRoles')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
+            (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => $role->getKey(), (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editBusinessDefaults')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
             (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => $role->getKey(), (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editAvatar')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
             (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => $role->getKey(), (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editRegularOrderPrice')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
             (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => $role->getKey(), (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editRegularOrderNeededTime')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
@@ -141,6 +144,9 @@ class DatabaseRoleSeeder extends Seeder
             (new DeleteVisit(['subject' => $adminRole->getKey(), 'object' => null, $business->getForeignKey() => $business->getKey()]))->saveOrFail();
         }
 
+        (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => null, (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'readRoles')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
+        (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => null, (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'writeRoles')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
+        (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => null, (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editBusinessDefaults')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
         (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => null, (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editAvatar')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
         (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => null, (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editRegularOrderPrice')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();
         (new Privilege([(new Role)->getForeignKey() => $adminRole->getKey(), 'object' => null, (new PrivilegeName)->getForeignKey() => PrivilegeName::query()->where('name', '=', 'editRegularOrderNeededTime')->firstOrFail()->getKey(), 'boolean_value' => true]))->saveOrFail();

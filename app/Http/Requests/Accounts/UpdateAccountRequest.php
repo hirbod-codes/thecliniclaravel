@@ -16,19 +16,15 @@ class UpdateAccountRequest extends BaseFormRequest
      */
     public function authorize()
     {
+        $input = $this->safe()->all();
         /** @var User $user */
         $user = (new CheckAuthentication)->getAuthenticated();
 
         $accountId = intval(array_reverse(explode('/', $this->path()))[0]);
-        if ($accountId === $user->getKey()) {
-            $isSelf = true;
-        } else {
-            $isSelf = false;
-        }
-        /** @var User $user */
+        /** @var User $targetUser */
         $targetUser = User::query()->whereKey($accountId)->firstOrFail();
-        $targetUserRoleName = $targetUser->authenticatableRole->role->roleName->name;
-        $input = $this->safe()->all();
+
+        $isSelf = $user->getKey() === $targetUser->getKey();
 
         $updateUserModels = $user->authenticatableRole->role->role->updateUserSubjects;
         foreach ($input as $key => $value) {
@@ -37,7 +33,7 @@ class UpdateAccountRequest extends BaseFormRequest
                     continue;
                 }
 
-                if (($isSelf && $updateUserModel->object !== null) || (!$isSelf && ($updateUserModel->object === null || ($updateUserModel->object !== null && $updateUserModel->relatedObject->childRoleModel->roleName->name !== $targetUserRoleName)))) {
+                if (($isSelf && $updateUserModel->object !== null) || (!$isSelf && ($updateUserModel->object === null || ($updateUserModel->object !== null && $updateUserModel->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
                     continue;
                 }
 
