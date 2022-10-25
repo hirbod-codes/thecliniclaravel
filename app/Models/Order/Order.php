@@ -3,14 +3,23 @@
 namespace App\Models\Order;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Model;
+use App\Models\Order\LaserOrder;
+use App\Models\Order\RegularOrder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 use App\DataStructures\Order\DSOrders;
 
+/**
+ * @property User $user belongsTo
+ * @property orderable $orderable belongsTo
+ * @property LaserOrder $laserOrder hasOne
+ * @property RegularOrder $regularOrder hasOne
+ * @property int $user_id FK -> User
+ */
 class Order extends Model
 {
     use HasFactory;
@@ -41,23 +50,6 @@ class Order extends Model
         }
     }
 
-    /**
-     * @return string[]
-     */
-    public function getHasOneRelationsNames(): array
-    {
-        $names = [];
-        /** @var \ReflectionMethod $method */
-        foreach ((new \ReflectionClass(static::class))->getMethods() as $method) {
-            if ($method->getReturnType()->getName() !== HasOne::class || !Str::contains($method->getName(), 'Order')) {
-                continue;
-            }
-
-            $names[] = $method->getName();
-        }
-
-        return $names;
-    }
 
     public function laserOrder(): HasOne
     {
@@ -75,6 +67,23 @@ class Order extends Model
             $this->getForeignKey(),
             $this->getKeyName()
         );
+    }
+    /**
+     * @return string[]
+     */
+    public function getHasOneRelationsNames(): array
+    {
+        $names = [];
+        /** @var \ReflectionMethod $method */
+        foreach ((new \ReflectionClass(static::class))->getMethods() as $method) {
+            if ($method->getReturnType()->getName() !== HasOne::class || !Str::contains($method->getName(), 'Order')) {
+                continue;
+            }
+
+            $names[] = $method->getName();
+        }
+
+        return $names;
     }
 
     /**

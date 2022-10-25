@@ -9,6 +9,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property User $user belongsTo
+ * @property AdminRole $role belongsTo
+ * @property int $user_id FK -> User
+ * @property int $admin_role_id FK -> AdminRole
+ * @property int $user_guard_id FK -> user_guard
+ */
 class Admin extends Authenticatable
 {
     use HasFactory,

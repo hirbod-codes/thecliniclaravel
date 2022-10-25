@@ -10,6 +10,13 @@ use App\Models\Roles\PatientRole;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property AdminRole $adminRole hasOne
+ * @property DoctorRole $doctorRole hasOne
+ * @property OperatorRole $operatorRole hasOne
+ * @property PatientRole $patientRole hasOne
+ * @property SecretaryRole $secretaryRole hasOne
+ */
 class RoleNameGuard extends Model
 {
     use HasFactory;

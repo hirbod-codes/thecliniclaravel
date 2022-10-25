@@ -8,6 +8,14 @@ use App\Models\Business;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property Role $relatedSubject belongsTo
+ * @property Role $relatedObject belongsTo
+ * @property Business $relatedBusiness belongsTo
+ * @property int $subject FK -> Role
+ * @property int $object FK -> Role
+ * @property int $retrieve_visit_businesses_business_id FK -> Business
+ */
 class RetrieveVisit extends Model
 {
     use HasFactory;

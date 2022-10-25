@@ -2,18 +2,26 @@
 
 namespace App\Models\Part;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Model;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\LaserOrderPart;
 use App\Models\Package\Package;
 use App\Models\Package\PartPackage;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\DataStructures\Order\DSPart;
 use App\DataStructures\Order\DSParts;
 
+/**
+ * @property Collection<int, LaserOrder> $laserOrders belongsToMany
+ * @property Collection<int, Package> $packages belongsToMany
+ * @property string $name
+ * @property string $gender
+ * @property integer $price
+ * @property integer $needed_time
+ */
 class Part extends Model
 {
     use HasFactory;

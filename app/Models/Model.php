@@ -6,10 +6,14 @@ use App\Models\Auth\User;
 use Doctrine\DBAL\Schema\ForeignKeyConstraint;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * @property int $id
+ * @property \DateTime $created_at
+ * @property \DateTime $updated_at
+ */
 class Model extends EloquentModel
 {
     /**

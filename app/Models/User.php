@@ -9,6 +9,7 @@ use App\Models\Auth\Doctor;
 use App\Models\Auth\Operator;
 use App\Models\Auth\Patient;
 use App\Models\Auth\Secretary;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -16,6 +17,24 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Passport\HasApiTokens;
 
+/**
+ * @property Admin|Doctor|Operator|Patient|Secretary $authenticatableRole hasOne
+ * @property Admin $childModelAdmin hasOne
+ * @property Doctor $childModelDoctor hasOne
+ * @property Operator $childModelOperator hasOne
+ * @property Patient $childModelPatient hasOne
+ * @property Secretary $childModelSecretary hasOne
+ * @property Collection<int, Order> $orders hasMany
+ * @property string $firstname
+ * @property string $lastname
+ * @property string $username
+ * @property string $password
+ * @property string $email
+ * @property \DateTime $email_verified_at
+ * @property string $phonenumber
+ * @property \DateTime $phonenumber_verified_at
+ * @property string $gender
+ */
 class User extends Authenticatable
 {
     use HasFactory,

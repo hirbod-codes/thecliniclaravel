@@ -2,16 +2,25 @@
 
 namespace App\Models\Order;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Order\Order;
 use App\Models\Model;
 use App\Models\Visit\RegularVisit;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 use App\DataStructures\Order\Regular\DSRegularOrder;
 use App\DataStructures\Order\Regular\DSRegularOrders;
-use Illuminate\Support\Str;
 
+/**
+ * @property Order $order belongsTo
+ * @property Collection<int, RegularVisits> $regularVisits belongsToMany
+ * @property int $laser_orders_orders_order_id FK -> Order
+ * @property int $orders_orders_guard_order_id FK -> Order
+ * @property integer $price
+ * @property integer $needed_time
+ */
 class RegularOrder extends Model
 {
     use HasFactory;
@@ -24,6 +33,16 @@ class RegularOrder extends Model
             Order::class,
             (new Order)->getForeignKey(),
             (new Order)->getKeyName(),
+            __FUNCTION__
+        );
+    }
+
+    public function regularVisits(): HasMany
+    {
+        return $this->hasMany(
+            RegularVisit::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
             __FUNCTION__
         );
     }
@@ -115,15 +134,5 @@ class RegularOrder extends Model
         }
 
         return $dsRegularOrders;
-    }
-
-    public function regularVisits(): HasMany
-    {
-        return $this->hasMany(
-            RegularVisit::class,
-            $this->getForeignKey(),
-            $this->getKeyName(),
-            __FUNCTION__
-        );
     }
 }

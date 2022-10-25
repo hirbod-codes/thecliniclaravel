@@ -2,7 +2,7 @@
 
 namespace App\Auth;
 
-use App\Models\Auth\User as Authenticatable;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class CheckAuthentication
@@ -12,7 +12,7 @@ class CheckAuthentication
         return $this->getAuthenticated() === null;
     }
 
-    public function getAuthenticated(): Authenticatable|null
+    public function getAuthenticated(): User|null
     {
         foreach ($guards = app()['config']["auth.guards"] as $name => $guard) {
             if (($user = Auth::guard($name)->user()) !== null) {

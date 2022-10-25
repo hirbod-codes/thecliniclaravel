@@ -11,6 +11,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property Role $role belongsTo
+ * @property RoleName $roleName belongsTo
+ * @property RoleGuard $roleGuard belongsTo
+ * @property Collection<int, Operator> $userType relation
+ */
 class OperatorRole extends Model
 {
     use HasFactory;

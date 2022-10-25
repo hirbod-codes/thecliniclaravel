@@ -11,6 +11,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
+/**
+ * @property AdminRole $adminRole hasOne
+ * @property DoctorRole $doctorRole hasOne
+ * @property OperatorRole $operatorRole hasOne
+ * @property PatientRole $patientRole hasOne
+ * @property SecretaryRole $secretaryRole hasOne
+ * @property string $name
+ */
 class RoleName extends Model
 {
     use HasFactory;

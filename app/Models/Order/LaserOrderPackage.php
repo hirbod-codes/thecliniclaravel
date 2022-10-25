@@ -6,14 +6,19 @@ use App\Models\Package\Package;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Order\LaserOrder;
 
+/**
+ * @property Package $package belongsTo
+ * @property LaserOrder $laserOrder belongsTo
+ */
 class LaserOrderPackage extends Model
 {
     use HasFactory;
 
     protected $table = "laser_orders_packages";
 
-    public function part(): BelongsTo
+    public function package(): BelongsTo
     {
         return $this->belongsTo(
             Package::class,

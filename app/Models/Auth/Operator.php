@@ -5,11 +5,21 @@ namespace App\Models\Auth;
 use App\Models\Auth\User as Authenticatable;
 use App\Models\User;
 use App\Models\Roles\OperatorRole;
+use App\Models\Auth\Patient;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property User $user belongsTo
+ * @property OperatorRole $role belongsTo
+ * @property Collection<int, Patient> $patients hasMany
+ * @property int $user_id FK -> User
+ * @property int $operator_role_id FK -> OperatorRole
+ * @property int $user_guard_id FK -> user_guard
+ */
 class Operator extends Authenticatable
 {
     use HasFactory,

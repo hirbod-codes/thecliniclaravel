@@ -2,8 +2,11 @@
 
 namespace App\Models\Visit;
 
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Models\Order\LaserOrder;
 use App\Models\Traits\TraitDSDateTimePeriods;
+use App\Models\Traits\TraitDSWeeklyTimePatterns;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,8 +14,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 use App\DataStructures\Visit\Laser\DSLaserVisit;
 use App\DataStructures\Visit\Laser\DSLaserVisits;
-use App\Models\Traits\TraitDSWeeklyTimePatterns;
 
+/**
+ * @property LaserOrder $laserOrder belongsTo
+ * @property Visit $visit belongsTo
+ * @property int $laser_visits_laser_orders_laser_order_id FK -> LaserOrder
+ * @property int $laser_visits_visits_visit_id FK -> Visit
+ * @property int $laser_visits_visits_guards_visits_guard_id FK -> visits_guard
+ * @property int $visit_timestamp
+ * @property integer $consuming_time
+ * @property DSWeeklyTimePatterns $weekly_time_patterns json
+ * @property DSDateTimePeriods $date_time_periods json
+ * @property boolean $visitor_reminded
+ */
 class LaserVisit extends Model
 {
     use HasFactory,
@@ -55,7 +69,7 @@ class LaserVisit extends Model
         return new DSLaserVisit(...$args);
     }
 
-    private function collectDSArgs(array &$args, string $parameterName)
+    private function collectDSArgs(array &$args, string $parameterName): void
     {
         if ($parameterName === 'id') {
             $args[$parameterName] = $this->{$this->getKeyName()};
@@ -82,7 +96,6 @@ class LaserVisit extends Model
      */
     public static function getDSLaserVisits(array|Collection $laserVisits, string $sort): DSLaserVisits
     {
-
         return self::getDSLaserVisitsConditionally($laserVisits, $sort, true);
     }
 

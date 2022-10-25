@@ -7,6 +7,12 @@ use App\Models\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property Role $relatedSubject belongsTo
+ * @property Role $relatedObject belongsTo
+ * @property int $subject FK -> Role
+ * @property int $object FK -> Role
+ */
 class DeleteUser extends Model
 {
     use HasFactory;

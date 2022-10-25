@@ -4,7 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Role;
+use App\Models\PrivilegeName;
 
+/**
+ * @property Role $role belongsTo
+ * @property Role $relatedObject belongsTo
+ * @property PrivilegeName $privilegeName belongsTo
+ * @property int $role_id FK -> Role
+ * @property int $privilege_names_id FK -> PrivilegeName
+ * @property int $object FK -> Role
+ * @property string $string_value
+ * @property integer $integer_value
+ * @property boolean $boolean_value
+ * @property \DateTime $timestamp_value
+ * @property json $jsonvalue
+ */
 class Privilege extends Model
 {
     use HasFactory;

@@ -17,11 +17,37 @@ use App\Models\Roles\DoctorRole;
 use App\Models\Roles\OperatorRole;
 use App\Models\Roles\PatientRole;
 use App\Models\Roles\SecretaryRole;
+use App\Models\Privilege;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Str;
 
+/**
+ * @property AdminRole|DoctorRole|OperatorRole|PatientRole|SecretaryRole $childRoleModel hasOne
+ * @property AdminRole $adminRole hasOne
+ * @property DoctorRole $doctorRole hasOne
+ * @property OperatorRole $operatorRole hasOne
+ * @property PatientRole $patientRole hasOne
+ * @property SecretaryRole $secretaryRole hasOne
+ * @property Collection<int, CreateUser> $createUserSubjects hasMany
+ * @property Collection<int, CreateUser> $createUserObjects hasMany
+ * @property Collection<int, RetrieveUser> $retrieveUserSubjects hasMany
+ * @property Collection<int, RetrieveUser> $retrieveUserObjects hasMany
+ * @property Collection<int, UpdateUser> $updateUserSubjects hasMany
+ * @property Collection<int, UpdateUser> $updateUserObjects hasMany
+ * @property Collection<int, DeleteUser> $deleteUserSubjects hasMany
+ * @property Collection<int, DeleteUser> $deleteUserObjects hasMany
+ * @property Collection<int, Privilege> $privilegesSubjects hasMany
+ * @property Collection<int, Privilege> $privilegesObjects hasMany
+ * @property Collection<int, CreateOrder> $createOrderSubjects hasMany
+ * @property Collection<int, CreateVisit> $createVisitSubjects hasMany
+ * @property Collection<int, RetrieveOrder> $retrieveOrderSubjects hasMany
+ * @property Collection<int, RetrieveVisit> $retrieveVisitSubjects hasMany
+ * @property Collection<int, DeleteOrder> $deleteOrderSubjects hasMany
+ * @property Collection<int, DeleteVisit> $deleteVisitSubjects hasMany
+ */
 class Role extends Model
 {
     use HasFactory;
@@ -34,7 +60,7 @@ class Role extends Model
     {
         /** @var \ReflectionMethod $method */
         foreach (($class = new \ReflectionClass($this))->getMethods() as $method) {
-            if (Str::endsWith($method->getName(), 'Role') && $method->getReturnType()->getName() === HasOne::class && ($result = $this->{ $method->getName()}())->getResults() !== null) {
+            if (Str::endsWith($method->getName(), 'Role') && $method->getReturnType()->getName() === HasOne::class && ($result = $this->{$method->getName()}())->getResults() !== null) {
                 return $result;
             }
         }

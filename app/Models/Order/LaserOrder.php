@@ -4,17 +4,29 @@ namespace App\Models\Order;
 
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Order\Order;
 use App\Models\Model;
 use App\Models\Visit\LaserVisit;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\DataStructures\Order\Laser\DSLaserOrder;
 use Illuminate\Support\Str;
+use App\DataStructures\Order\Laser\DSLaserOrder;
 use App\DataStructures\Order\Laser\DSLaserOrders;
 
+/**
+ * @property Order $order belongsTo
+ * @property Collection<int, Part> $parts belongsToMany
+ * @property Collection<int, Package> $packages belongsToMany
+ * @property Collection<int, LaserVisit> $laserVisits belongsToMany
+ * @property int $laser_orders_orders_order_id FK -> Order
+ * @property int $orders_orders_guard_order_id FK -> Order
+ * @property integer $price
+ * @property integer $price_with_discount
+ * @property integer $needed_time
+ */
 class LaserOrder extends Model
 {
     use HasFactory;
@@ -53,6 +65,16 @@ class LaserOrder extends Model
             (new Package)->getForeignKey(),
             $this->getKeyName(),
             (new Package)->getKeyName(),
+            __FUNCTION__
+        );
+    }
+
+    public function laserVisits(): HasMany
+    {
+        return $this->hasMany(
+            LaserVisit::class,
+            $this->getForeignKey(),
+            $this->getKeyName(),
             __FUNCTION__
         );
     }
@@ -152,15 +174,5 @@ class LaserOrder extends Model
         }
 
         return $dsLaserOrders;
-    }
-
-    public function laserVisits(): HasMany
-    {
-        return $this->hasMany(
-            LaserVisit::class,
-            $this->getForeignKey(),
-            $this->getKeyName(),
-            __FUNCTION__
-        );
     }
 }

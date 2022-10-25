@@ -2,17 +2,24 @@
 
 namespace App\Models\Package;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Model;
 use App\Models\Order\LaserOrder;
 use App\Models\Order\LaserOrderPackage;
 use App\Models\Part\Part;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use App\DataStructures\Order\DSPackage;
 use App\DataStructures\Order\DSPackages;
 
+/**
+ * @property Collection<int, LaserOrder> $laserOrders belongsToMany
+ * @property Collection<int, Part> $parts belongsToMany
+ * @property string $name
+ * @property string $gender
+ * @property integer $price
+ */
 class Package extends Model
 {
     use HasFactory;

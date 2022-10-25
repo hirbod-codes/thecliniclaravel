@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use App\DataStructures\Visit\DSVisit;
 use App\DataStructures\Visit\DSVisits;
 
+/**
+ * @property LaserVisit $laserVisit hasOne
+ * @property RegularVisit $regularVisit hasOne
+ */
 class Visit extends Model
 {
     use HasFactory;

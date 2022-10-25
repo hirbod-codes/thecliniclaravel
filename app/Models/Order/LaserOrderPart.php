@@ -6,7 +6,12 @@ use App\Models\Part\Part;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Order\LaserOrder;
 
+/**
+ * @property Part $part belongsTo
+ * @property LaserOrder $laserOrder belongsTo
+ */
 class LaserOrderPart extends Model
 {
     use HasFactory;

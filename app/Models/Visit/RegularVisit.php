@@ -2,6 +2,8 @@
 
 namespace App\Models\Visit;
 
+use App\DataStructures\Time\DSDateTimePeriods;
+use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Models\Order\RegularOrder;
 use App\Models\Traits\TraitDSDateTimePeriods;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,6 +15,18 @@ use App\DataStructures\Visit\Regular\DSRegularVisits;
 use App\Models\Traits\TraitDSWeeklyTimePatterns;
 use Illuminate\Support\Str;
 
+/**
+ * @property RegularOrder $regularOrder belongsTo
+ * @property Visit $visit belongsTo
+ * @property int $regular_visits_regular_orders_regular_order_id FK -> regularOrder
+ * @property int $regular_visits_visits_visit_id FK -> Visit
+ * @property int $regular_visits_visits_guards_visits_guard_id FK -> visits_guard
+ * @property int $visit_timestamp
+ * @property integer $consuming_time
+ * @property DSWeeklyTimePatterns $weekly_time_patterns json
+ * @property DSDateTimePeriods $date_time_periods json
+ * @property boolean $visitor_reminded
+ */
 class RegularVisit extends Model
 {
     use HasFactory,
@@ -55,7 +69,7 @@ class RegularVisit extends Model
         return new DSRegularVisit(...$args);
     }
 
-    private function collectDSArgs(array &$args, string $parameterName)
+    private function collectDSArgs(array &$args, string $parameterName): void
     {
         if ($parameterName === 'id') {
             $args[$parameterName] = $this->{$this->getKeyName()};
@@ -82,7 +96,6 @@ class RegularVisit extends Model
      */
     public static function getDSRegularVisits(array|Collection $regularVisits, string $sort): DSRegularVisits
     {
-
         return self::getDSRegularVisitsConditionally($regularVisits, $sort, true);
     }
 

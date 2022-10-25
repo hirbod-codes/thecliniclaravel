@@ -8,6 +8,14 @@ use App\Models\Business;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property Role $relatedSubject belongsTo
+ * @property Role $relatedObject belongsTo
+ * @property Business $relatedBusiness belongsTo
+ * @property int $subject FK -> Role
+ * @property int $object FK -> Role
+ * @property int $delete_order_businesses_business_id FK -> Business
+ */
 class DeleteOrder extends Model
 {
     use HasFactory;
