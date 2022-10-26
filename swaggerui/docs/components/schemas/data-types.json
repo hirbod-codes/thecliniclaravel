@@ -62,5 +62,24 @@
     "avatar": {
         "type": "string",
         "format": "binary"
+    },
+    "age": {
+        "type": "integer"
+    },
+    "state": {
+        "$ref": "state.json"
+    },
+    "city": {
+        "$ref": "city.json"
+    },
+    "address": {
+        "type": "string"
+    },
+    "businessName": {
+        "type": "string",
+        "enum": [
+            "laser",
+            "regular"
+        ]
     }
 }

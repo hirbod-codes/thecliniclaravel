@@ -6,7 +6,7 @@
     },
     "servers": [
         {
-            "url": "https://localhost",
+            "url": "https://localhost/api/en",
             "description": "Optional server description, e.g. Main (production) server"
         }
     ],
@@ -258,70 +258,25 @@
                 }
             }
         },
-        "/login": {
-            "post": {
-                "description": "",
+        "/genders": {
+            "get": {
+                "description": "Gets all the available genders.",
                 "tags": [
-                    "Accounts"
+                    "General"
                 ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "oneOf": [
-                                    {
-                                        "type": "object",
-                                        "required": [
-                                            "password",
-                                            "username"
-                                        ],
-                                        "properties": {
-                                            "username": {
-                                                "type": "string",
-                                                "example": "fooname",
-                                                "format": "username"
-                                            },
-                                            "password": {
-                                                "type": "string",
-                                                "format": "password"
-                                            },
-                                            "remember": {
-                                                "type": "boolean"
-                                            }
-                                        }
-                                    },
-                                    {
-                                        "type": "object",
-                                        "required": [
-                                            "password",
-                                            "email"
-                                        ],
-                                        "properties": {
-                                            "email": {
-                                                "type": "string",
-                                                "example": "example@example.example",
-                                                "format": "email"
-                                            },
-                                            "password": {
-                                                "type": "string",
-                                                "format": "password"
-                                            },
-                                            "remember": {
-                                                "type": "boolean"
-                                            }
-                                        }
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
                                     }
-                                ]
+                                }
                             }
                         }
-                    }
-                },
-                "responses": {
-                    "302": {
-                        "description": "Successful, redirects the user to the home page."
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/login.json"
                     },
                     "500": {
                         "$ref": "components/responses/500.json#/not-empty"
@@ -329,378 +284,61 @@
                 }
             }
         },
-        "/auth/phonenumber-availability": {
+        "/states": {
             "get": {
-                "description": "Checks whether a phonenumber doesn't already exist in database.",
+                "description": "Gets all the available genders.",
                 "tags": [
-                    "Accounts"
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/state.json"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/cities": {
+            "get": {
+                "description": "Gets all the available genders.",
+                "tags": [
+                    "General"
                 ],
                 "parameters": [
                     {
                         "in": "query",
-                        "name": "phonenumber",
-                        "schema": {
-                            "type": "string",
-                            "pattern": "^09[0-9]{9}$",
-                            "example": "09000000000",
-                            "format": "phonenumber"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "description": "The sent phonenumber.",
-                                    "pattern": "^09[0-9]{9}$",
-                                    "format": "phonenumber"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/auth-phonenumber-availability.json"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/auth/verify-phonenumber": {
-            "post": {
-                "description": "Recieves phonenumber and the code that has been already sent to the user and verifies them.",
-                "tags": [
-                    "Accounts"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "code": {
-                                        "type": "string",
-                                        "pattern": "^[0-9]{6}$"
-                                    },
-                                    "phonenumber": {
-                                        "type": "string",
-                                        "pattern": "^09[0-9]{9}$",
-                                        "format": "phonenumber"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/auth-verify-phonenumber.json"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/auth/send-code-to-phonenumber": {
-            "post": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "phonenumber": {
-                                        "type": "string",
-                                        "pattern": "^09[0-9]{9}$",
-                                        "format": "phonenumber"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/auth-send-code-to-phonenumber.json"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/auth/send-code-to-email": {
-            "post": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/auth-send-code-to-email.json"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/auth/reset-password": {
-            "put": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "requestBody": {
-                    "content": {
-                        "applcation/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "code": {
-                                        "type": "string",
-                                        "pattern": "^[0-9]{6}$"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password"
-                                    },
-                                    "password_confirmation": {
-                                        "type": "string",
-                                        "format": "password"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "code expiration or mismatch",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/auth-reset-password.json"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/auth/update-phonenumber": {
-            "put": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "phonenumber": {
-                                        "type": "string",
-                                        "pattern": "^09[0-9]{9}$",
-                                        "format": "phonenumber"
-                                    },
-                                    "newPhonenumber": {
-                                        "type": "string",
-                                        "pattern": "^09[0-9]{9}$",
-                                        "format": "phonenumber"
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "text/plain": {
-                                "schema": {
-                                    "type": "string",
-                                    "example": "message"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "$ref": "components/responses/400/Accounts/auth-update-phonenumber.json"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/isEmailVerified": {
-            "get": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "content": {
-                            "applicaiton/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "verified": {
-                                            "type": "boolean"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/email/verification-notification": {
-            "post": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "responses": {
-                    "301": {
-                        "description": "redirects user to '/' or to previous url"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/email/verify/{id}/{hash}": {
-            "get": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
+                        "name": "stateName",
                         "required": true,
-                        "description": "The user's ID",
                         "schema": {
-                            "type": "string",
-                            "pattern": "^1[0-9]*$"
-                        }
-                    },
-                    {
-                        "name": "hash",
-                        "in": "path",
-                        "required": true,
-                        "description": "The hashed string from email verification message",
-                        "schema": {
-                            "type": "string"
+                            "$ref": "components/schemas/state.json"
                         }
                     }
                 ],
                 "responses": {
-                    "301": {
-                        "description": "redirects user to '/' or to previous url"
-                    },
-                    "500": {
-                        "$ref": "components/responses/500.json#/not-empty"
-                    }
-                }
-            }
-        },
-        "/logout": {
-            "get": {
-                "description": "",
-                "tags": [
-                    "Accounts"
-                ],
-                "responses": {
-                    "301": {
-                        "description": "redirects user to '/' or to previous url"
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/city.json"
+                                    }
+                                }
+                            }
+                        }
                     },
                     "500": {
                         "$ref": "components/responses/500.json#/not-empty"
@@ -852,7 +490,7 @@
                 }
             }
         },
-        "/account/{roleName}": {
+        "/account/admin/{roleName}": {
             "post": {
                 "description": "Creats a new user based on the provided roleName path variable.",
                 "tags": [
@@ -874,38 +512,488 @@
                             "schema": {
                                 "type": "object",
                                 "required": [
-                                    "phonenumber",
-                                    "firstname",
-                                    "lastname",
-                                    "username",
-                                    "password",
-                                    "password_confirmation",
-                                    "gender"
+                                    "userAttributes",
+                                    "userAccountAttributes"
                                 ],
                                 "properties": {
-                                    "phonenumber": {
-                                        "$ref": "components/schemas/data-types.json#/phonenumber"
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
                                     },
-                                    "firstname": {
-                                        "$ref": "components/schemas/data-types.json#/firstname"
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
                                     },
-                                    "lastname": {
-                                        "$ref": "components/schemas/data-types.json#/lastname"
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
                                     },
-                                    "username": {
-                                        "$ref": "components/schemas/data-types.json#/username"
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/doctor/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
                                     },
-                                    "email": {
-                                        "$ref": "components/schemas/data-types.json#/email"
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
                                     },
-                                    "password": {
-                                        "$ref": "components/schemas/data-types.json#/password"
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
                                     },
-                                    "password_confirmation": {
-                                        "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/secretary/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
                                     },
-                                    "gender": {
-                                        "$ref": "components/schemas/data-types.json#/gender"
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/operator/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/patient/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {
+                                            "age": {
+                                                "$ref": "components/schemas/data-types.json#/age"
+                                            },
+                                            "state": {
+                                                "$ref": "components/schemas/data-types.json#/state"
+                                            },
+                                            "city": {
+                                                "$ref": "components/schemas/data-types.json#/city"
+                                            },
+                                            "address": {
+                                                "$ref": "components/schemas/data-types.json#/address"
+                                            }
+                                        }
                                     },
                                     "avatar": {
                                         "$ref": "components/schemas/data-types.json#/avatar"
@@ -1057,17 +1145,38 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "firstname": {
-                                        "$ref": "components/schemas/data-types.json#/firstname"
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
                                     },
-                                    "lastname": {
-                                        "$ref": "components/schemas/data-types.json#/lastname"
-                                    },
-                                    "username": {
-                                        "$ref": "components/schemas/data-types.json#/username"
-                                    },
-                                    "gender": {
-                                        "$ref": "components/schemas/data-types.json#/gender"
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
                                     },
                                     "avatar": {
                                         "$ref": "components/schemas/data-types.json#/avatar"
@@ -1714,33 +1823,32 @@
                         "$ref": "components/responses/500.json#/not-empty"
                     }
                 }
-            },
+            }
+        },
+        "/order/{businessName}/{childOrderId}": {
             "delete": {
                 "description": "",
                 "tags": [
                     "Orders"
                 ],
-                "requestBody": {
-                    "content": {
-                        "applcation/json": {
-                            "schema": {
-                                "type": "object",
-                                "required": [
-                                    "childOrderId",
-                                    "businessName"
-                                ],
-                                "properties": {
-                                    "childOrderId": {
-                                        "type": "integer"
-                                    },
-                                    "businessName": {
-                                        "type": "string"
-                                    }
-                                }
-                            }
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "components/schemas/data-types.json#/businessName"
+                        }
+                    },
+                    {
+                        "name": "childOrderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
                         }
                     }
-                },
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
