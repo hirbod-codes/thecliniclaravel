@@ -2,45 +2,62 @@ version: "3.8"
 
 services:
     nginx:
-        container_name: theclinicnginx
+        container_name: nginx
+        ports:
+            - "4433:4433"
+        networks:
+            - frontend
+        depends_on:
+            - laravel
+    laravel:
+        container_name: laravel
+        networks:
+            - frontend
+            - backend
+        depends_on:
+            - mysql
+    mysql:
+        container_name: mysql
+        build:
+            context: ./mysql
+            target: back
+        command: mysqld --default-authentication-plugin=mysql_native_password
+        tty: true
+        volumes:
+            - data:/var/lib/mysql
+        networks:
+            - backend
+    nginx_wordpress:
+        container_name: nginx_wordpress
         ports:
             - "80:80"
             - "443:443"
         networks:
-            - theclinicbridge
+            - frontend
         depends_on:
-            - laravel
-            - mysql
-    laravel:
-        container_name: thecliniclaravel
+            - wordpress
+    wordpress:
+        container_name: wordpress
         networks:
-            - theclinicbridge
+            - frontend
         depends_on:
-            - mysql
-    mysql:
-        container_name: theclinicmysql
-        image: mysql:5
+            - mysql_wordpress
+    mysql_wordpress:
+        container_name: mysql_wordpress
+        build:
+            context: ./mysql
+            target: front
         command: mysqld --default-authentication-plugin=mysql_native_password
         tty: true
         volumes:
-            - theclinicdata:/var/lib/mysql
-        environment:
-            MYSQL_SERVICE_NAME: mysql
+            - data_frontend:/var/lib/mysql
         networks:
-            - theclinicbridge
-    swaggerUI:
-        container_name: theclinicswaggerui
-        build:
-            context: ./
-            dockerfile: Dockerfile.swaggerui
-        image: swagger-ui:latest
-        ports:
-            - "678:8080"
-        environment:
-            BASE_URL: /api
-            SWAGGER_JSON: /docs/swagger.json
+            - frontend
 volumes:
-    theclinicdata: {}
+    data: {}
+    data_frontend: {}
 networks:
-    theclinicbridge:
+    backend:
+        driver: bridge
+    frontend:
         driver: bridge
