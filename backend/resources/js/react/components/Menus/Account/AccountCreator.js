@@ -9,6 +9,8 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { LocaleContext } from '../../localeContext';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
+import { post_account_admin, post_account_doctor, post_account_operator, post_account_patient, post_account_secretary } from '../../Http/Api/accounts';
+import { get_cities, get_genders, get_states } from '../../Http/Api/general';
 
 /**
  * AccountCreator
@@ -427,7 +429,35 @@ export class AccountCreator extends Component {
             }
         }
 
-        let r = await fetchData('post', '/account/' + this.state.rule, data, { 'X-CSRF-TOKEN': this.state.token });
+        data.roleName = this.state.rule;
+        data.token = this.state.token;
+
+        let r = null;
+        switch (this.state.rule) {
+            case 'admin':
+                r = await post_account_admin(...data);
+                break;
+
+            case 'doctor':
+                r = await post_account_doctor(...data);
+                break;
+
+            case 'secretary':
+                r = await post_account_secretary(...data);
+                break;
+
+            case 'operator':
+                r = await post_account_operator(...data);
+                break;
+
+            case 'patient':
+                r = await post_account_patient(...data);
+                break;
+
+            default:
+                break;
+        }
+
         this.setState({ isSubmitting: false });
 
         if (r.response.status === 200) {
@@ -451,7 +481,7 @@ export class AccountCreator extends Component {
         this.setState({ isSubmittingPhonenumber: true });
 
         let data = { phonenumber: this.state.inputs.phonenumber };
-        let r = await fetchData('post', '/auth/send-code-to-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/send-code-to-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         this.setState({ isSubmittingPhonenumber: false });
 
         let value = null;
@@ -472,7 +502,7 @@ export class AccountCreator extends Component {
             phonenumber: this.state.inputs.phonenumber,
         };
 
-        let r = await fetchData('post', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         this.setState({ isSubmittingCode: false });
 
         let value = null;
@@ -486,8 +516,7 @@ export class AccountCreator extends Component {
     }
 
     async getGenders() {
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-        let r = await fetchData('get', '/api/' + locale + '/genders', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await get_genders(this.state.token);
 
         if (r.response.status === 200) {
             let genders = [];
@@ -506,8 +535,7 @@ export class AccountCreator extends Component {
     }
 
     async getStates() {
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-        let r = await fetchData('get', '/api/' + locale + '/states', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await get_states(this.state.token);
 
         if (r.response.status === 200) {
             let states = [];
@@ -527,8 +555,8 @@ export class AccountCreator extends Component {
 
     async getCities(state) {
         this.setState({ loadingCities: true });
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-        let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state, {}, { 'X-CSRF-TOKEN': this.state.token });
+
+        let r = await get_cities(state, this.state.token);
 
         if (r.response.status === 200) {
             let cities = [];

@@ -7,8 +7,9 @@ import { Alert, Button, Divider, FormControl, IconButton, Snackbar, Stack, TextF
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import { translate } from '../../../traslation/translate'
-import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
+import { get_account_by } from '../../Http/Api/accounts';
+import { get_role_name } from '../../Http/Api/roles';
 
 /**
  * FindAccount
@@ -73,11 +74,9 @@ export class FindAccount extends Component {
             }
         }
 
-        let r = await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': this.state.token });
-
+        let r = await get_account_by(placeholder, this.state.token);
         if (r.response.status === 200) {
-            let role = await fetchData('get', '/role-name?accountId=' + r.value.id, {}, { 'X-CSRF-TOKEN': this.state.token });
-
+            let role = await get_role_name(r.value.id, this.state.token);
             if (r.response.status === 200) {
                 if (role.response.status === 200) {
                     this.props.handleAccount(r.value, role.value);

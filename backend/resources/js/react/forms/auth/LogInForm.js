@@ -99,7 +99,7 @@ export class LogInForm extends Component {
         }
         input.password = this.state.password;
 
-        let r = await fetchData('post', '/login', input, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/login', input, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
         if (r.response.status === 200) {
             if (r.response.redirected) {
@@ -209,7 +209,7 @@ export class LogInForm extends Component {
             return;
         }
 
-        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.fpPhonenumber ? 'phonenumber' : 'email'), this.state.fpPhonenumber ? { phonenumber: this.state.fpPhonenumber } : { email: this.state.fpEmail }, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.fpPhonenumber ? 'phonenumber' : 'email'), this.state.fpPhonenumber ? { phonenumber: this.state.fpPhonenumber } : { email: this.state.fpEmail }, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         this.setState({ isFPLoading: false });
 
         let value = null;
@@ -248,7 +248,7 @@ export class LogInForm extends Component {
         input.password = this.state.rpPassword;
         input.password_confirmation = this.state.rpPasswordConfirmation;
 
-        let r = await fetchData('put', '/auth/reset-password', input, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('put', '/auth/reset-password', input, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         this.setState({ isFPLoading: false });
 
         let value = null;

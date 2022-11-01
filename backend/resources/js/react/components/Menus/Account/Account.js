@@ -11,9 +11,10 @@ import SelfRegularOrdersDataGrid from '../../Grids/Orders/SelfRegularOrdersDataG
 import SelfVisitsDataGrid from '../../Grids/Visits/SelfVisitsDataGrid';
 import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
-import { LocaleContext } from '../../localeContext';
 import { updateState } from '../../helpers';
 import { PrivilegesContext } from '../../privilegesContext';
+import { get_cities, get_genders, get_states } from '../../Http/Api/general';
+import { delete_account, put_account } from '../../Http/Api/accounts';
 
 /**
  * Account
@@ -485,8 +486,7 @@ export class Account extends Component {
     }
 
     async getGenders() {
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-        let r = await fetchData('get', '/api/' + locale + '/genders', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await get_genders(this.state.token);
 
         if (r.response.status === 200) {
             this.genders = [];
@@ -505,8 +505,7 @@ export class Account extends Component {
     }
 
     async getStates() {
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-        let r = await fetchData('get', '/api/' + locale + '/states', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await get_states(this.state.token);
 
         if (r.response.status === 200) {
             this.states = [];
@@ -526,8 +525,7 @@ export class Account extends Component {
 
     async getCities(state) {
         this.setState({ loadingCities: true });
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-        let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state, {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await get_cities(state, this.state.token);
 
         if (r.response.status === 200) {
             this.cities = [];
@@ -552,9 +550,10 @@ export class Account extends Component {
 
         this.setState({ isUpdating: true });
 
-        let data = {};
+        let data, specialData = {};
+        let avatar = null;
         for (const k in this.state.inputs) {
-            if (k === 'avatar' || k === 'phonenumber' || k === 'password' || k === 'password_confirmation' || k === 'code') {
+            if (k === 'phonenumber' || k === 'password' || k === 'password_confirmation' || k === 'code') {
                 continue;
             }
 
@@ -565,11 +564,29 @@ export class Account extends Component {
                     continue;
                 }
 
-                data[k] = v;
+                if (k === 'avatar') {
+                    avatar = v;
+                }
+
+                let isSpecial = true;
+
+                [
+                    'firstname',
+                    'lastname',
+                    'username',
+                    'email',
+                    'gender',
+                ].forEach((val, i) => { if (val === k) { isSpecial = false; } });
+
+                if (isSpecial) {
+                    specialData[k] = v;
+                } else {
+                    data[k] = v;
+                }
             }
         }
 
-        let r = await fetchData('put', '/account/' + this.props.account.id, data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await put_account(this.props.account.id, data, specialData, avatar, this.state.token);
 
         if (r.response.status === 200) {
             this.setState({ feedbackMessages: [{ color: 'success', open: true, message: translate('general/successful/single/ucFirstLetterFirstWord') }] });
@@ -593,11 +610,10 @@ export class Account extends Component {
 
         this.setState({ isDeleting: true });
 
-        let r = await fetchData('delete', '/account/' + this.props.account.id, {}, { 'X-CSRF-TOKEN': this.state.token });
-
+        let r = await delete_account(this.props.account.idthis.state.token);
         if (r.response.status === 200) {
             setTimeout(() => {
-                fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { window.location.href = r.response.url; });
+                fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { window.location.href = r.response.url; }, [], false);
             }, 1000);
         } else {
             let value = null;
@@ -619,7 +635,7 @@ export class Account extends Component {
             data.email = this.props.account.email;
         }
 
-        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.sendMethod === 'phonenumber' ? 'phonenumber' : 'email'), data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.sendMethod === 'phonenumber' ? 'phonenumber' : 'email'), data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
         if (r.response.status === 200) {
             this.setState({ openCodeModal: true });
@@ -656,13 +672,13 @@ export class Account extends Component {
 
         let r = null;
         if (this.state.isUpdatingPhonenumber) {
-            r = await fetchData('put', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+            r = await fetchData('put', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
             if (r.response.status === 200) {
                 let data = {};
                 data.phonenumber = this.props.account.phonenumber;
                 data.newPhonenumber = this.state.inputs.phonenumber;
-                r = await fetchData('put', '/auth/update-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+                r = await fetchData('put', '/auth/update-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
                 if (r.response.status === 200) {
                     this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
@@ -683,7 +699,7 @@ export class Account extends Component {
                 this.setState({ feedbackMessages: value });
             }
         } else {
-            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token });
+            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
             if (r.response.status === 200) {
                 this.closeCodeModal(null, 'code');

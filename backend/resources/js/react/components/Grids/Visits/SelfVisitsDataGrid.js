@@ -11,11 +11,11 @@ import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, Gr
 
 import VisitsDataGrid from './VisitsDataGrid';
 import { translate } from '../../../traslation/translate';
-import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
 import { PrivilegesContext } from '../../privilegesContext';
 import { LocaleContext } from '../../localeContext';
+import { delete_visit_laser, delete_visit_regular } from '../../Http/Api/visits';
 
 /**
  * SelfVisitsDataGrid
@@ -187,10 +187,19 @@ export class SelfVisitsDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let data = {};
-        data[this.props.businessName + 'OrderId'] = params.row.id;
+        let r = null;
+        switch (this.props.businessName) {
+            case 'laser':
+                r = await delete_visit_laser(params.row.id, {}, this.state.token);
+                break;
 
-        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token });
+            case 'regular':
+                r = await delete_visit_regular(params.row.id, {}, this.state.token);
+                break;
+
+            default:
+                break;
+        }
         let value = null;
         if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
         value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });

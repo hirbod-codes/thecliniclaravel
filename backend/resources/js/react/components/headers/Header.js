@@ -28,7 +28,7 @@ export class Header extends Component {
     }
 
     async onLogout(e) {
-        let r = await fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         if (r.response.status !== 200) {
             return;
         }

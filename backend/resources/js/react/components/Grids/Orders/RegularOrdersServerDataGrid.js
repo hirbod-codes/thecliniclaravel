@@ -12,10 +12,10 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import OrdersDataGrid from './OrdersDataGrid';
 import { translate } from '../../../traslation/translate';
 import FindAccount from '../../Menus/Account/FindAccount';
-import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { PrivilegesContext } from '../../privilegesContext';
 import { LocaleContext } from '../../localeContext';
+import { delete_order, get_ordersCount, post_order } from '../../Http/Api/order';
 
 /**
  * RegularOrdersServerDataGrid
@@ -76,7 +76,7 @@ export class RegularOrdersServerDataGrid extends Component {
 
     getRowCount() {
         return new Promise(async (resolve, reject) => {
-            let rowCount = await fetchData('get', '/ordersCount?businessName=regular&roleName=' + this.state.role, { 'X-CSRF-TOKEN': this.state.token });
+            let rowCount = await get_ordersCount('regular', this.state.role, this.state.token);
             if (rowCount.response.status !== 200) {
                 let value = null;
                 if (Array.isArray(rowCount.value)) { value = rowCount.value; } else { value = [rowCount.value]; }
@@ -263,20 +263,14 @@ export class RegularOrdersServerDataGrid extends Component {
 
         this.setState({ isCreating: true });
 
-        let data = {
-            accountId: account.id,
-            businessName: 'regular',
-        };
-
-        if (this.state.price) {
-            data.price = Number(this.state.price);
-        }
-
-        if (this.state.timeConsumption) {
-            data.timeConsumption = Number(this.state.timeConsumption);
-        }
-
-        let result = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
+        let result = await post_order(
+            account.id,
+            'regular',
+            null,
+            null,
+            this.state.price !== undefined ? this.state.price : null,
+            this.state.timeConsumption !== undefined ? this.state.timeConsumption : null,
+            this.state.token);
         if (result.response.status === 200) {
             this.setState({ reload: true });
         }
@@ -296,12 +290,7 @@ export class RegularOrdersServerDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let data = {
-            businessName: 'regular',
-            childOrderId: params.row.id,
-        };
-
-        let r = await fetchData('delete', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await delete_order('regular', params.row.id, this.state.token);
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

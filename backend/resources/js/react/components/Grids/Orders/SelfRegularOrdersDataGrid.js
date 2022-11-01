@@ -11,10 +11,10 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import OrdersDataGrid from './OrdersDataGrid';
 import { translate } from '../../../traslation/translate';
-import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { PrivilegesContext } from '../../privilegesContext';
 import { LocaleContext } from '../../localeContext';
+import { delete_order, post_order } from '../../Http/Api/order';
 
 /**
  * SelfRegularOrdersDataGrid
@@ -168,20 +168,14 @@ export class SelfRegularOrdersDataGrid extends Component {
 
         this.setState({ isCreating: true });
 
-        let data = {
-            accountId: account.id,
-            businessName: 'regular',
-        };
-
-        if (this.state.price) {
-            data.price = Number(this.state.price);
-        }
-
-        if (this.state.timeConsumption) {
-            data.timeConsumption = Number(this.state.timeConsumption);
-        }
-
-        let r = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await post_order(
+            account.id,
+            'regular',
+            null,
+            null,
+            this.state.price !== undefined ? this.state.price : null,
+            this.state.timeConsumption !== undefined ? this.state.timeConsumption : null,
+            this.state.token);
         let value = null;
         if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
         value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
@@ -203,12 +197,7 @@ export class SelfRegularOrdersDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let data = {
-            businessName: 'regular',
-            childOrderId: params.row.id,
-        };
-
-        let r = await fetchData('delete', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await delete_order('regular', params.row.id, this.state.token);
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

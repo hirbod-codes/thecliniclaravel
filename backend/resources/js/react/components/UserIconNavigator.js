@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Link } from 'react-router-dom';
 
-import { Avatar, FormHelperText, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
+import { Avatar, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
 
 import { translate } from '../traslation/translate';
 import { fetchData } from './Http/fetch';
@@ -13,17 +13,12 @@ export class UserIconNavigator extends Component {
         super(props);
 
         this.handleResponseDialogClose = this.handleResponseDialogClose.bind(this);
-        this.handleRegularOrderSubmition = this.handleRegularOrderSubmition.bind(this);
 
         this.handleIconMenuOpen = this.handleIconMenuOpen.bind(this);
         this.handleModalOpen = this.handleModalOpen.bind(this);
-        this.handleOrderMenuOpen = this.handleOrderMenuOpen.bind(this);
-        this.handleRegularOrderMenuOpen = this.handleRegularOrderMenuOpen.bind(this);
 
         this.handleIconMenuClose = this.handleIconMenuClose.bind(this);
         this.handleModalClose = this.handleModalClose.bind(this);
-        this.handleOrderMenuClose = this.handleOrderMenuClose.bind(this);
-        this.handleRegularOrderMenuClose = this.handleRegularOrderMenuClose.bind(this);
 
         this.sendEmailVerificationCode = this.sendEmailVerificationCode.bind(this);
 
@@ -37,11 +32,6 @@ export class UserIconNavigator extends Component {
             modalOpen: false,
             emailVerificationSlideTimeout: 300,
 
-            orderMenuAnchorEl: null,
-            orderMenuOpen: false,
-
-            regularOrderMenuOpen: false,
-
             responseDialogOpen: false,
             responseErrors: [],
         };
@@ -52,35 +42,14 @@ export class UserIconNavigator extends Component {
     }
 
     async initialize() {
-        let isEmailVerified = await fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let isEmailVerified = await fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         isEmailVerified = isEmailVerified.value;
 
         await updateState(this, { isEmailVerified: isEmailVerified.verified });
     }
 
     sendEmailVerificationCode() {
-        fetchData('post', '/email/verification-notification', {}, { 'X-CSRF-TOKEN': this.state.token });
-    }
-
-    async handleRegularOrderSubmition(e) {
-        let r = await fetchData('post', '/order', { businessName: 'regular' }, { 'X-CSRF-TOKEN': this.state.token });
-        if (r.response.redirected === 200) {
-            window.location.replace(r.response.url);
-        }
-
-        if (r.value.errors !== undefined) {
-            let messages = [];
-            for (const k in r.value.errors) {
-                if (Object.hasOwnProperty.call(r.value.errors, k)) {
-                    const error = r.value.errors[k];
-
-                    error.forEach((v, i) => {
-                        messages.push(<FormHelperText key={i} error>{v}</FormHelperText>);
-                    });
-                }
-            }
-            this.setState({ responseErrors: messages, responseDialogOpen: true });
-        }
+        fetchData('post', '/email/verification-notification', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false);
     }
 
     render() {
@@ -171,22 +140,6 @@ export class UserIconNavigator extends Component {
 
     handleIconMenuOpen(e) {
         this.setState({ anchorEl: e.target, open: true });
-    }
-
-    handleOrderMenuClose(e) {
-        this.setState({ orderMenuAnchorEl: null, orderMenuOpen: false });
-    }
-
-    handleOrderMenuOpen(e) {
-        this.setState({ orderMenuAnchorEl: e.target, orderMenuOpen: true });
-    }
-
-    handleRegularOrderMenuClose(e) {
-        this.setState({ regularOrderMenuOpen: false });
-    }
-
-    handleRegularOrderMenuOpen(e) {
-        this.setState({ regularOrderMenuOpen: true });
     }
 }
 

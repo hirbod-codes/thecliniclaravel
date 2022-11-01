@@ -1,7 +1,12 @@
 import { translate } from "../../traslation/translate";
+import { LocaleContext } from "../localeContext";
 
-function fetchData(method, url, data = {}, headers = {}, excludeHeaders = []) {
-    // url = backendURL() + ':4433' + url;
+function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], isApiRequest = true) {
+    if (isApiRequest) {
+        url = backendURL() + ':4433/api/' + LocaleContext._currentValue.currentLocale.shortName + '/' + url;
+    } else {
+        url = backendURL() + ':4433/' + url;
+    }
 
     switch (method.toLowerCase()) {
         case 'get':

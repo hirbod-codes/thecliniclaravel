@@ -19,6 +19,8 @@ import Slide from '@mui/material/Slide';
 import { LocaleContext } from '../../components/localeContext.js';
 import { Alert, IconButton, Snackbar } from '@mui/material';
 import { Navigate } from 'react-router-dom';
+import { get_cities, get_genders, get_states } from '../../components/Http/Api/general.js';
+import { post_account_admin, post_account_patient } from '../../components/Http/Api/accounts.js';
 
 export class SignUpForm extends Component {
     constructor(props) {
@@ -317,9 +319,7 @@ export class SignUpForm extends Component {
     }
 
     async getGenders() {
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
-
-        let r = await fetchData('get', '/api/' + locale + '/genders');
+        let r = await get_genders(this.state.token);
 
         if (r.response.status === 200) {
             this.genders = [];
@@ -338,9 +338,8 @@ export class SignUpForm extends Component {
     }
 
     async getStates() {
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
 
-        let r = await fetchData('get', '/api/' + locale + '/states');
+        let r = await get_states(this.state.token);
 
         if (r.response.status === 200) {
             this.states = [];
@@ -360,9 +359,8 @@ export class SignUpForm extends Component {
 
     async getCities(state) {
         this.setState({ loadingCities: true });
-        const locale = LocaleContext._currentValue.currentLocale.shortName;
 
-        let r = await fetchData('get', '/api/' + locale + '/cities?stateName=' + state);
+        let r = await get_cities(state, this.state.token);
 
         if (r.response.status === 200) {
             this.cities = [];
@@ -386,7 +384,7 @@ export class SignUpForm extends Component {
         this.setState({ isSubmittingPhonenumber: true });
 
         let r = null;
-        r = await fetchData('get', '/auth/phonenumber-availability?phonenumber=' + this.state.phonenumber, {}, { 'X-CSRF-TOKEN': this.state.token });
+        r = await fetchData('get', '/auth/phonenumber-availability?phonenumber=' + this.state.phonenumber, {}, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         if (r.response.status !== 200) {
             let value = null;
             if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
@@ -398,7 +396,7 @@ export class SignUpForm extends Component {
         }
 
         r = null;
-        r = await fetchData('post', '/auth/send-code-to-phonenumber', { phonenumber: this.state.phonenumber }, { 'X-CSRF-TOKEN': this.state.token });
+        r = await fetchData('post', '/auth/send-code-to-phonenumber', { phonenumber: this.state.phonenumber }, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         if (r.response.status === 200) {
             this.nextStep();
         } else {
@@ -420,7 +418,7 @@ export class SignUpForm extends Component {
         input.phonenumber = this.state.phonenumber;
         input.code = this.state.phonenumberCode;
 
-        let r = await fetchData('post', '/auth/verify-phonenumber', input, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/auth/verify-phonenumber', input, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
         if (r.response.status === 200) {
             this.nextStep();
@@ -458,7 +456,7 @@ export class SignUpForm extends Component {
         input.append('city', this.state.city);
         input.append('address', this.state.address);
 
-        let r = await fetchData('post', '/register', input, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await fetchData('post', '/register', input, { 'X-CSRF-TOKEN': this.state.token }, [], false);
 
         if (r.response.status === 200) {
             if (r.response.redirected) {

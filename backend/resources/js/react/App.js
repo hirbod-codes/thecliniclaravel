@@ -162,7 +162,7 @@ class App extends Component {
                 });
             });
 
-            fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token }).then((localeResponse) => {
+            fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((localeResponse) => {
                 console.log('localeResponse', localeResponse);
                 let locale = localeResponse.value;
                 console.log('locale', locale);
@@ -179,7 +179,7 @@ class App extends Component {
                 document.dir = locale.direction;
                 document.body.setAttribute('dir', locale.direction);
 
-                fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token }).then((themeResponse) => {
+                fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((themeResponse) => {
                     console.log('themeResponse', themeResponse);
                     let themeData = themeResponse.value;
                     if (themeResponse.response.status === 200) {

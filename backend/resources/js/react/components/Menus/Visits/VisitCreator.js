@@ -12,10 +12,11 @@ import TabPanel from '../TabPanel';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponents from './WeekDayInputComponents';
 import { localizeDate, updateState } from '../../helpers';
-import { fetchData } from '../../Http/fetch';
 import { LocaleContext } from '../../localeContext';
 import { PrivilegesContext } from '../../privilegesContext';
 import { DateTime } from 'luxon';
+import { post_visit_laser_check, post_visit_regular_check } from '../../Http/Api/visits';
+import { get_work_schedule } from '../../Http/Api/general';
 
 /**
  * VisitCreator
@@ -104,7 +105,7 @@ export class VisitCreator extends Component {
     }
 
     async getWorkSchdule() {
-        let r = await fetchData('get', '/work-schedule', {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await get_work_schedule(this.state.token);
         if (r.response.status === 200) {
             this.setState({ workSchdule: r.value });
         }
@@ -285,10 +286,21 @@ export class VisitCreator extends Component {
 
     async closestVisitRefresh(e) {
         this.setState({ isRefreshingClosestVisit: true });
-        let data = {};
-        data[this.props.businessName + 'OrderId'] = this.state.orderId;
 
-        let closestVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }));
+        let closestVisitRefresh = null;
+        switch (this.props.businessName) {
+            case 'laser':
+                closestVisitRefresh = (await post_visit_laser_check(this.state.orderId, null, this.state.token));
+                break;
+
+            case 'regular':
+                closestVisitRefresh = (await post_visit_regular_check(this.state.orderId, null, this.state.token));
+                break;
+
+            default:
+                break;
+        }
+
         if (closestVisitRefresh.response.status === 200) {
             this.setState({ closestVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(closestVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.state.locale, true) });
         } else {
@@ -303,10 +315,9 @@ export class VisitCreator extends Component {
 
     async weeklyVisitRefresh(e) {
         this.setState({ isRefreshingWeeklyVisit: true });
-        let data = {};
-        data[this.props.businessName + 'OrderId'] = this.state.orderId;
 
         let weeklyTImePatterns = this.state.weeklyTImePatterns;
+
         let computedWeeklyTImePatterns = {};
         for (let i = 0; i < weeklyTImePatterns.length; i++) {
             const weeklyTImePattern = weeklyTImePatterns[i];
@@ -314,9 +325,22 @@ export class VisitCreator extends Component {
             computedWeeklyTImePatterns[weeklyTImePattern.weekDay] = weeklyTImePattern.timePeriods;
         }
 
-        data.weeklyTImePatterns = computedWeeklyTImePatterns;
+        weeklyTImePatterns = computedWeeklyTImePatterns;
 
-        let weeklyVisitRefresh = (await fetchData('post', '/visit/' + this.props.businessName + '/check', data, { 'X-CSRF-TOKEN': this.state.token }));
+        let weeklyVisitRefresh = null;
+        switch (this.props.businessName) {
+            case 'laser':
+                weeklyVisitRefresh = (await post_visit_laser_check(this.state.orderId, weeklyTImePatterns, this.state.token));
+                break;
+
+            case 'regular':
+                weeklyVisitRefresh = (await post_visit_regular_check(this.state.orderId, weeklyTImePatterns, this.state.token));
+                break;
+
+            default:
+                break;
+        }
+
         if (weeklyVisitRefresh.response.status === 200) {
             this.setState({ weeklyVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(weeklyVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.state.locale, true) });
         } else {
@@ -344,10 +368,25 @@ export class VisitCreator extends Component {
                 computedWeeklyTImePatterns[weeklyTImePattern.weekDay] = weeklyTImePattern.timePeriods;
             }
 
-            data.weeklyTImePatterns = computedWeeklyTImePatterns;
+            weeklyTImePatterns = computedWeeklyTImePatterns;
+        } else {
+            weeklyTImePatterns = null;
         }
 
-        let r = await fetchData('post', '/visit/' + this.props.businessName, data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = null;
+        switch (this.props.businessName) {
+            case 'laser':
+                r = (await post_visit_laser_check(this.state.orderId, weeklyTImePatterns, this.state.token));
+                break;
+
+            case 'regular':
+                r = (await post_visit_regular_check(this.state.orderId, weeklyTImePatterns, this.state.token));
+                break;
+
+            default:
+                break;
+        }
+
         if (r.response.status === 200) {
             if (this.props.onSuccess !== undefined) {
                 this.props.onSuccess();

@@ -11,11 +11,11 @@ import LoadingButton from '@mui/lab/LoadingButton';
 
 import VisitsDataGrid from './VisitsDataGrid';
 import { translate } from '../../../traslation/translate';
-import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
 import { PrivilegesContext } from '../../privilegesContext';
 import { LocaleContext } from '../../localeContext';
+import { delete_visit_laser, delete_visit_regular, get_visitsCount } from '../../Http/Api/visits';
 
 /**
  * VisitsServerDataGrid
@@ -78,7 +78,7 @@ export class VisitsServerDataGrid extends Component {
 
     getRowCount() {
         return new Promise(async (resolve, reject) => {
-            let rowCount = await fetchData('get', '/visitsCount?businessName=' + this.props.businessName + '&roleName=' + (this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role), {}, { 'X-CSRF-TOKEN': this.state.token });
+            let rowCount = await get_visitsCount(this.props.businessName, (this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role), this.state.token);
             if (rowCount.response.status !== 200) {
                 let value = null;
                 if (Array.isArray(rowCount.value)) { value = rowCount.value; } else { value = [rowCount.value]; }
@@ -263,10 +263,19 @@ export class VisitsServerDataGrid extends Component {
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let data = {};
-        data[this.props.businessName + 'OrderId'] = params.row.id;
+        let r = null;
+        switch (this.props.businessName) {
+            case 'laser':
+                r = await delete_visit_laser(params.row.id, this.state.token);
+                break;
 
-        let r = await fetchData('delete', '/visit/' + this.props.businessName + '/', data, { 'X-CSRF-TOKEN': this.state.token });
+            case 'regular':
+                r = await delete_visit_regular(params.row.id, this.state.token);
+                break;
+
+            default:
+                break;
+        }
         let value = null;
         if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
         value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });

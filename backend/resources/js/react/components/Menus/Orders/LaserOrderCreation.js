@@ -9,10 +9,10 @@ import { translate } from '../../../traslation/translate'
 import PartsDataGrid from '../../Grids/Orders/PartsDataGrid'
 import PackagesDataGrid from '../../Grids/Orders/PackagesDataGrid'
 import { updateState } from '../../helpers'
-import { fetchData } from '../../Http/fetch'
 import LoadingButton from '@mui/lab/LoadingButton';
 import FindAccount from '../Account/FindAccount';
 import { PrivilegesContext } from '../../privilegesContext';
+import { get_laser_price_calculation, get_laser_time_calculation, post_order } from '../../Http/Api/order';
 
 /**
  * LaserOrderCreation
@@ -319,13 +319,12 @@ export class LaserOrderCreation extends Component {
 
         await updateState(this, { isCalculating: true });
 
-        let data = {
-            parts: this.state.selectedParts.map((v, i) => v.name),
-            packages: this.state.selectedPackages.map((v, i) => v.name),
-        };
-        data.gender = this.state.account.gender;
-
-        let prices = (await fetchData('post', '/laser/price-calculation', data, { 'X-CSRF-TOKEN': this.state.token }));
+        let prices = await get_laser_price_calculation(
+            'laser',
+            this.state.selectedParts.map((v, i) => v.name),
+            this.state.selectedPackages.map((v, i) => v.name),
+            this.state.account.gender,
+            this.state.token);
         if (prices.response.status !== 200) {
             let value = null;
             if (Array.isArray(prices.value)) { value = prices.value; } else { value = [prices.value]; }
@@ -333,7 +332,12 @@ export class LaserOrderCreation extends Component {
             this.setState({ feedbackMessages: value });
         }
 
-        let totalNeddedTime = (await fetchData('post', '/laser/time-calculation', data, { 'X-CSRF-TOKEN': this.state.token }));
+        let totalNeddedTime = await get_laser_time_calculation(
+            'laser',
+            this.state.selectedParts.map((v, i) => v.name),
+            this.state.selectedPackages.map((v, i) => v.name),
+            this.state.account.gender,
+            this.state.token);
         if (totalNeddedTime.response.status !== 200) {
             let value = null;
             if (Array.isArray(totalNeddedTime.value)) { value = totalNeddedTime.value; } else { value = [totalNeddedTime.value]; }
@@ -353,14 +357,15 @@ export class LaserOrderCreation extends Component {
         if (!(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf(this.state.accountRole) !== -1)) { return; }
 
         this.setState({ isCalculating: true });
-        let data = {
-            accountId: this.state.account.id,
-            businessName: 'laser',
-            parts: this.state.selectedParts.map((v, i) => v.name),
-            packages: this.state.selectedPackages.map((v, i) => v.name),
-        };
 
-        let r = await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await post_order(
+            this.state.account.id,
+            'laser',
+            this.state.selectedParts.map((v, i) => v.name),
+            this.state.selectedPackages.map((v, i) => v.name),
+            null,
+            null,
+            this.state.token);
         if (r.response.status === 200) {
             this.props.onCreated();
         } else {

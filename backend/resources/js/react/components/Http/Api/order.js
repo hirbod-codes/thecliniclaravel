@@ -97,7 +97,7 @@ async function post_order(
         timeConsumption: timeConsumption,
     };
 
-    return await fetchData('get', '/order', data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': token });
 }
 
 async function delete_order(businessName, id, token) {

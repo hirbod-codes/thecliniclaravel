@@ -168,6 +168,10 @@ async function get_account(token) {
     return await fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': token });
 }
 
+async function get_account_by(placeholder, token) {
+    return await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': token });
+}
+
 async function delete_account(accountId, token) {
     return await fetchData('delete', '/account/' + accountId, {}, { 'X-CSRF-TOKEN': token });
 }
@@ -195,6 +199,7 @@ export {
     post_account_operator,
     post_account_patient,
     get_account,
+    get_account_by,
     get_accounts,
     get_accountsCount,
     delete_account,

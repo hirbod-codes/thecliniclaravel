@@ -6,7 +6,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Alert, Button, IconButton, Modal, Paper, Snackbar } from '@mui/material';
 
 import DataGridComponent from '../DataGridComponent';
-import { fetchData } from '../../Http/fetch';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import { convertWeeklyTimePatterns, localizeDate, resolveTimeZone } from '../../helpers';
@@ -14,6 +13,7 @@ import { LocaleContext } from '../../localeContext';
 import { PrivilegesContext } from '../../privilegesContext';
 import { DateTime } from 'luxon';
 import WeeklyTimePatterns from '../../Menus/Time/WeeklyTimePatterns';
+import { get_visits_by_order, get_visits_by_timestamp, get_visits_by_user } from '../../Http/Api/visits';
 
 /**
  * VisitsDataGrid
@@ -86,13 +86,32 @@ export class VisitsDataGrid extends Component {
                 return;
             } else {
                 if (this.props.timestamp !== undefined && this.props.operator !== undefined) {
-                    data = await fetchData('get', '/visits?businessName=' + this.props.businessName + '&roleName=' + this.props.roleName + '&timestamp=' + this.props.timestamp + '&sortByTimestamp=' + this.props.sort + '&operator=' + this.props.operator + '&count=' + this.state.pageSize + ((this.props.lastVisitTimestamp && this.props.lastVisitTimestamp !== 0) ? ('&lastVisitTimestamp=' + this.props.lastVisitTimestamp) : ''), {}, { 'X-CSRF-TOKEN': this.state.token });
+                    data = await get_visits_by_timestamp(
+                        this.props.businessName,
+                        this.props.roleName,
+                        this.props.sort,
+                        this.props.timestamp,
+                        this.props.operator,
+                        this.state.pageSize,
+                        this.props.lastVisitTimestamp,
+                        this.state.token,
+                    );
                 } else {
                     if (this.props.orderId !== undefined) {
-                        data = await fetchData('get', '/visits?businessName=' + this.props.businessName + '&sortByTimestamp=' + this.props.sort + '&' + this.props.businessName + 'OrderId=' + this.props['orderId'], {}, { 'X-CSRF-TOKEN': this.state.token });
+                        data = await get_visits_by_order(
+                            this.props.businessName,
+                            this.props.sort,
+                            this.props.orderId,
+                            this.state.token,
+                        );
                     } else {
                         if (this.props.accountId !== undefined) {
-                            data = await fetchData('get', '/visits?businessName=' + this.props.businessName + '&accountId=' + this.props.accountId + '&sortByTimestamp=' + this.props.sort, {}, { 'X-CSRF-TOKEN': this.state.token });
+                            data = await get_visits_by_user(
+                                this.props.businessName,
+                                this.props.sort,
+                                this.props.accountId,
+                                this.state.token,
+                            );
                         } else {
                             reject();
                         }
