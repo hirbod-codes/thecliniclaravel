@@ -1,25 +1,13 @@
 <?php
 
 use App\Auth\CheckAuthentication;
-use App\Http\Controllers\AccountDocumentsController;
-use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\BusinessDefault;
-use App\Http\Controllers\Orders\OrdersController;
-use App\Http\Controllers\RolesController;
-use App\Http\Controllers\Visits\VisitsController;
 use App\Http\Requests\UpdateLocaleRequest;
-use App\Models\Package\Package;
-use App\Models\Part\Part;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
-use App\DataStructures\Order\DSPackages;
-use App\DataStructures\Order\DSParts;
-use App\Models\BusinessDefault as ModelsBusinessDefault;
-use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -106,6 +94,7 @@ Route::middleware('guest:web')->group(function () {
         }
         return view('app');
     })->name('auth.register.page');
+
     Route::post('/register', [AuthController::class, 'register'])->name('auth.register');
 
     Route::get('/login', fn () => view('app'))->name('auth.login.page');

@@ -8,27 +8,15 @@ use App\Http\Controllers\BusinessDefault;
 use App\Http\Controllers\Orders\OrdersController;
 use App\Http\Controllers\RolesController;
 use App\Http\Controllers\Visits\VisitsController;
-use App\Http\Requests\Privileges\ShowRequest;
 use App\Models\BusinessDefault as ModelsBusinessDefault;
-use App\Models\Order\LaserOrder;
-use App\Models\Order\RegularOrder;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Models\Privilege;
-use App\Models\PrivilegeValue;
-use App\Models\Role;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\DataStructures\Order\DSPackages;
 use App\DataStructures\Order\DSParts;
-use App\DataStructures\User\DSPatient;
-use App\Http\Requests\UpdateLocaleRequest;
-use App\Models\Auth\Patient;
-use App\UseCases\Privileges\PrivilegesManagement;
-use Illuminate\Support\Facades\App;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,30 +34,6 @@ Route::prefix('{locale}')->group(function () {
         return response()->json(['authenticated' => !(new CheckAuthentication)->checkIfThereIsNoAuthenticated()]);
     });
 
-    Route::get('/theme', function () {
-        return response()->json(['theme' => session()->get('theme', 'light')]);
-    });
-
-    Route::post('/theme', function (Request $request) {
-        $validator = Validator::make($request->all(), ['theme' => ['required', 'string', 'max:125']]);
-        if ($validator->fails()) {
-            return response()->json();
-        }
-
-        $request->session()->put('theme', $request->theme);
-
-        return response()->json(['message' => trans_choice('general.theme-store-success', 0)]);
-    });
-
-    Route::get('/locale', function () {
-        $locale = session()->get('locale', App::getLocale());
-
-        $direction = include(base_path() . '/lang/' . $locale . '/direction.php');
-        $longName = include(base_path() . '/lang/' . $locale . '/language_name.php');
-
-        return response()->json(['longName' => $longName, 'shortName' => $locale, 'direction' => $direction]);
-    });
-
     Route::get('/locales', function () {
         $locales = [];
         foreach ($dirs = scandir(base_path() . '/lang') as $value) {
@@ -83,26 +47,6 @@ Route::prefix('{locale}')->group(function () {
         }
 
         return response()->json($locales);
-    });
-
-    Route::put('/locale', function (UpdateLocaleRequest $request) {
-        $validatedInput = $request->safe()->only('locale');
-
-        foreach (scandir(base_path() . '/lang') as $dir) {
-            if (in_array($dir, ['..', '.']) || !is_dir(base_path() . '/lang/' . $dir)) {
-                continue;
-            }
-
-            $longName = include(base_path() . '/lang/' . $dir . '/language_name.php');
-
-            if ($validatedInput['locale'] === $dir || $validatedInput['locale'] === $longName) {
-                session()->put('locale', $dir);
-                App::setLocale($dir);
-                return response(trans_choice('general.set-locale-success', 0));
-            }
-        }
-
-        return response(trans_choice('general.set-locale-failure', 0), 422);
     });
 
     Route::get('/genders', function () {
@@ -148,11 +92,11 @@ Route::prefix('{locale}')->group(function () {
         return response()->json((ModelsBusinessDefault::query()->firstOrFail()->work_schedule)->toArray());
     })->name('workSchedule');
 
-    Route::middleware('guest:api')->group(function () {
+    Route::middleware('guest')->group(function () {
         Route::post('/login', [AuthController::class, 'apiLogin'])->name('auth.apiLogin');
     });
 
-    Route::middleware(['auth:api', 'phonenumber_verified'])->group(function () {
+    Route::middleware(['auth', 'phonenumber_verified'])->group(function () {
         Route::get('/logout', [AuthController::class, 'apiLogout'])->name('auth.apiLogout');
 
         Route::controller(AccountsController::class)
@@ -258,8 +202,8 @@ Route::prefix('{locale}')->group(function () {
                 Route::middleware('adjustWeeklyTimePatterns')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
                 Route::middleware('adjustWeeklyTimePatterns')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
 
-                Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
-                Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
+                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
+                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
                 Route::delete('/visit/laser/{visitId}', 'laserDestroy')->name('visits.laserDestroy');
                 Route::delete('/visit/regular/{visitId}', 'regularDestroy')->name('visits.regularDestroy');
