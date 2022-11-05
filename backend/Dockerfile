@@ -20,6 +20,8 @@ WORKDIR /var/www/html
 
 EXPOSE 9000
 
+# ------------------------------------------------------------------------------------------------------------------------------
+
 FROM 5.182.44.231:5000/php:8.1.9-fpm-buster AS production_base
 
 USER root
@@ -50,6 +52,8 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/
 
+# ------------------------------------------------------------------------------------------------------------------------------
+
 FROM production_base AS production_base_with_composer
 
 COPY --from=5.182.44.231:5000/composer:latest /usr/bin/composer /usr/bin/
@@ -57,6 +61,7 @@ COPY --from=5.182.44.231:5000/composer:latest /usr/bin/composer /usr/bin/
 # ------------------------------------------------------------------------------------------------------------------------------
 
 FROM base AS development
+
 
 RUN apt-get install -y \
     procps \
@@ -68,7 +73,10 @@ RUN \
 
 # Application source codes are provided by mounted volumes from docker-compose-development.yml file
 
+COPY ./.env.example ./.env
+
 CMD sleep 30 && \
+    php artisan key:generate && \
     php artisan cache:clear && \
     php artisan config:clear && \
     php artisan initialize-if-needed && \
