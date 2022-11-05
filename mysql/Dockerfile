@@ -6,9 +6,7 @@ ENV MYSQL_SERVICE_NAME=mysql
 ENV MYSQL_ROOT_PASSWORD=password
 ENV MYSQL_USER=hirbod
 ENV MYSQL_PASSWORD=password
-ENV MYSQL_DATABASE=database
-
-CMD mysqld --default-authentication-plugin=mysql_native_password
+ENV MYSQL_DATABASE=thecliniclaravel
 
 FROM mysql:5 AS front
 
@@ -19,5 +17,3 @@ ENV MYSQL_ROOT_PASSWORD=password
 ENV MYSQL_USER=hirbod
 ENV MYSQL_PASSWORD=password
 ENV MYSQL_DATABASE=database
-
-CMD mysqld --default-authentication-plugin=mysql_native_password
