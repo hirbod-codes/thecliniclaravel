@@ -7,5 +7,3 @@ ENV WORDPRESS_DB_USER=hirbod
 ENV WORDPRESS_DB_PASSWORD=password
 ENV WORDPRESS_DB_ROOT_PASSWORD=password
 ENV WORDPRESS_DB_NAME=database
-
-COPY ./myplugins/test-plugin ./wp-content/plugins
