@@ -1,1 +1,3 @@
-wp-site
+*
+!.gitignore
+!Dockerfile
