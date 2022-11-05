@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
+use Routes\CommonRoutes;
 
 /*
 |--------------------------------------------------------------------------
@@ -46,21 +47,6 @@ Route::get('/locale', function () {
     $longName = include(base_path() . '/lang/' . $locale . '/language_name.php');
 
     return response()->json(['longName' => $longName, 'shortName' => $locale, 'direction' => $direction]);
-});
-
-Route::get('/locales', function () {
-    $locales = [];
-    foreach ($dirs = scandir(base_path() . '/lang') as $value) {
-        if (in_array($value, ['.', '..']) || !is_dir(base_path() . '/lang/' . $value)) {
-            continue;
-        }
-
-        $longName = include(base_path() . '/lang/' . $value . '/language_name.php');
-
-        $locales[] = ['longName' => $longName, 'shortName' => $value, 'direction' => (include(base_path() . '/lang/' . $value . '/direction.php'))];
-    }
-
-    return response()->json($locales);
 });
 
 Route::put('/locale', function (UpdateLocaleRequest $request) {
@@ -135,4 +121,6 @@ Route::middleware(['auth:web', 'phonenumber_verified'])->group(function () {
     Route::get('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
     Route::put('/auth/update-phonenumber', [AuthController::class, 'updatePhonenumber'])->name('auth.updatePhonenumber');
+
+    (new CommonRoutes)->callCommonRoutes('web');
 });
