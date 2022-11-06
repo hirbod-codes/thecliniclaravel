@@ -4,6 +4,7 @@ USER root
 
 RUN usermod -G root www-data
 
+
 RUN apt-get update
 RUN apt-get install -y \
     git \
@@ -62,7 +63,6 @@ COPY --from=5.182.44.231:5000/composer:latest /usr/bin/composer /usr/bin/
 
 FROM base AS development
 
-
 RUN apt-get install -y \
     procps \
     nano
@@ -73,7 +73,7 @@ RUN \
 
 # Application source codes are provided by mounted volumes from docker-compose-development.yml file
 
-COPY ./.env.example ./.env
+RUN touch .env
 
 CMD sleep 30 && \
     php artisan key:generate && \
