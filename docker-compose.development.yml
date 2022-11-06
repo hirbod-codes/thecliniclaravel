@@ -19,6 +19,7 @@ services:
             - "host.docker.internal:host-gateway"
         volumes:
             - ./backend:/var/www/html:rw
+            - ./backend/.env.example:/var/www/html/.env:rw
             - ./backend/addon.ini:/usr/local/etc/php/conf.d/addon.ini:rw
             - ./backend/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:rw
     phpmyadmin:
