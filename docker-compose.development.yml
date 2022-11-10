@@ -4,11 +4,11 @@ services:
     nginx:
         build:
             context: ./nginx
-            target: back-dev
+            target: development
         volumes:
             - ./backend:/var/www/html:rw
             - ./nginx/local_ssl/open_ssl.conf:/nginx/local_ssl/open_ssl.conf:rw
-            - ./nginx/nginx-back.conf:/etc/nginx/conf.d/default.conf:rw
+            - ./nginx/nginx-default.conf:/etc/nginx/conf.d/default.conf:rw
             - ./nginx/nginx.conf:/etc/nginx/nginx.conf:rw
             - ./nginx/logs:/var/log/nginx:rw
     laravel:
@@ -19,7 +19,6 @@ services:
             - "host.docker.internal:host-gateway"
         volumes:
             - ./backend:/var/www/html:rw
-            - ./backend/.env.example:/var/www/html/.env:rw
             - ./backend/addon.ini:/usr/local/etc/php/conf.d/addon.ini:rw
             - ./backend/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini:rw
     phpmyadmin:
@@ -44,32 +43,5 @@ services:
             SWAGGER_JSON: /docs/swagger.json
         volumes:
             - ./swaggerui/docs:/docs
-        networks:
-            - backend
-    nginx_wordpress:
-        build:
-            context: ./nginx
-            target: front-dev
-        volumes:
-            - ./wordpress/wp-site:/var/www/html:rw
-            - ./nginx/local_ssl/open_ssl.conf:/nginx/local_ssl/open_ssl.conf:rw
-            - ./nginx/nginx-front.conf:/etc/nginx/conf.d/default.conf:rw
-            - ./nginx/nginx.conf:/etc/nginx/nginx.conf:rw
-            - ./nginx/logs:/var/log/nginx:rw
-    wordpress:
-        build:
-            context: ./wordpress
-        volumes:
-            - ./wordpress/wp-site:/var/www/html:rw
-            - ./wordpress/myplugins:/var/www/html/wp-content/plugins:rw
-    phpmyadmin_wordpress:
-        container_name: phpmyadmin_wordpress
-        image: phpmyadmin:5.2.0
-        ports:
-            - "1001:80"
-        environment:
-            - PMA_HOST=mysql_wordpress
-        depends_on:
-            - mysql_wordpress
         networks:
             - frontend

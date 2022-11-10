@@ -4,7 +4,8 @@ services:
     nginx:
         container_name: nginx
         ports:
-            - "4433:4433"
+            - "80:80"
+            - "443:443"
         networks:
             - frontend
         depends_on:
@@ -27,35 +28,8 @@ services:
             - data:/var/lib/mysql
         networks:
             - backend
-    nginx_wordpress:
-        container_name: nginx_wordpress
-        ports:
-            - "80:80"
-            - "443:443"
-        networks:
-            - frontend
-        depends_on:
-            - wordpress
-    wordpress:
-        container_name: wordpress
-        networks:
-            - frontend
-        depends_on:
-            - mysql_wordpress
-    mysql_wordpress:
-        container_name: mysql_wordpress
-        build:
-            context: ./mysql
-            target: front
-        command: mysqld --default-authentication-plugin=mysql_native_password
-        tty: true
-        volumes:
-            - data_frontend:/var/lib/mysql
-        networks:
-            - frontend
 volumes:
     data: {}
-    data_frontend: {}
 networks:
     backend:
         driver: bridge
