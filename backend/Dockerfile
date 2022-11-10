@@ -80,6 +80,7 @@ CMD sleep 30 && \
     php artisan key:generate && \
     php artisan cache:clear && \
     php artisan config:clear && \
+    php artisan config:cache && \
     php artisan initialize-if-needed && \
     docker-php-entrypoint php-fpm
 
@@ -95,7 +96,7 @@ RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | b
 COPY . .
 COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
 
-RUN chmod -R g=rwxs ./ && setfacl -d -m g::rwx ./
+RUN chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
 
 RUN composer install
 
@@ -128,7 +129,7 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 COPY . .
 COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
 
-RUN chmod -R g=rwxs ./ && setfacl -d -m g:root:rwx ./
+RUN chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
 
 RUN composer install --optimize-autoloader --no-dev
 
