@@ -4,7 +4,6 @@ USER root
 
 RUN usermod -G root www-data
 
-
 RUN apt-get update
 RUN apt-get install -y \
     git \
@@ -67,6 +66,8 @@ RUN apt-get install -y \
     procps \
     nano
 
+RUN touch /tmp/xdebug-log.log
+
 RUN \
     pecl install xdebug && \
     docker-php-ext-enable xdebug
@@ -76,6 +77,7 @@ RUN \
 RUN touch .env
 
 CMD sleep 30 && \
+    cp .env.example .env &&\
     php artisan key:generate && \
     php artisan cache:clear && \
     php artisan config:clear && \
