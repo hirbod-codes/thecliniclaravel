@@ -3,9 +3,17 @@ import { LocaleContext } from "../localeContext";
 
 function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], isApiRequest = true) {
     if (isApiRequest) {
-        url = backendURL() + ':4433/api/' + LocaleContext._currentValue.currentLocale.shortName + '/' + url;
+        if(headers['Accept']===undefined){
+            headers['Accept'] = 'application/json';
+        }
+
+        if(headers['Content-Type']===undefined){
+            headers['Content-Type'] = 'application/json';
+        }
+
+        url = backendURL() + '/api/' + LocaleContext._currentValue.currentLocale.shortName + url;
     } else {
-        url = backendURL() + ':4433/' + url;
+        url = backendURL() + url;
     }
 
     switch (method.toLowerCase()) {
@@ -29,9 +37,6 @@ function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], is
 function getData(url, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('Accept', 'application/json');
-        hs.append('Connection', 'keep-alive');
-        hs.append('Content-Type', 'application/json');
 
         for (const key in headers) {
             if (Object.hasOwnProperty.call(headers, key)) {
@@ -53,10 +58,7 @@ function getData(url, headers = {}, excludeHeaders = []) {
 
         let init = {
             method: 'GET',
-            headers: hs,
-            mode: 'cors',
-            redirect: 'follow',
-            credentials: 'same-origin',
+            headers: hs
         };
 
         const response = await fetch(url, init);
@@ -68,8 +70,6 @@ function getData(url, headers = {}, excludeHeaders = []) {
 function postData(url, data = {}, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('Accept', 'application/json');
-        hs.append('Connection', 'keep-alive');
 
         for (const key in headers) {
             if (Object.hasOwnProperty.call(headers, key)) {
@@ -91,10 +91,7 @@ function postData(url, data = {}, headers = {}, excludeHeaders = []) {
 
         let init = {
             method: 'POST',
-            headers: hs,
-            mode: 'cors',
-            redirect: 'follow',
-            credentials: 'same-origin',
+            headers: hs
         };
 
         if (data.constructor.name === 'FormData') {
@@ -117,8 +114,6 @@ function postData(url, data = {}, headers = {}, excludeHeaders = []) {
 function putData(url, data = {}, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('Accept', 'application/json');
-        hs.append('Connection', 'keep-alive');
 
         for (const key in headers) {
             if (Object.hasOwnProperty.call(headers, key)) {
@@ -140,10 +135,7 @@ function putData(url, data = {}, headers = {}, excludeHeaders = []) {
 
         let init = {
             method: 'PUT',
-            headers: hs,
-            mode: 'cors',
-            redirect: 'follow',
-            credentials: 'same-origin',
+            headers: hs
         };
 
         if (data.constructor.name === 'FormData') {
@@ -166,8 +158,6 @@ function putData(url, data = {}, headers = {}, excludeHeaders = []) {
 function deleteData(url, data = {}, headers = {}, excludeHeaders = []) {
     return new Promise(async (resolve) => {
         let hs = new Headers();
-        hs.append('Accept', 'application/json');
-        hs.append('Connection', 'keep-alive');
 
         for (const key in headers) {
             if (Object.hasOwnProperty.call(headers, key)) {
@@ -189,10 +179,7 @@ function deleteData(url, data = {}, headers = {}, excludeHeaders = []) {
 
         let init = {
             method: 'DELETE',
-            headers: hs,
-            mode: 'cors',
-            redirect: 'follow',
-            credentials: 'same-origin',
+            headers: hs
         };
 
         if (data.constructor.name === 'FormData') {
