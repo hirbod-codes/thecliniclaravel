@@ -2,7 +2,7 @@ FROM nginx:1.23.1 AS production
 
 USER root
 
-RUN usermod -G root nginx
+RUN usermod -aG root nginx
 
 RUN mkdir /nginx
 WORKDIR /nginx
@@ -30,7 +30,7 @@ FROM nginx:1.23.1 AS development
 
 USER root
 
-RUN usermod -G root nginx
+RUN usermod -aG root nginx
 
 RUN mkdir /nginx
 WORKDIR /nginx

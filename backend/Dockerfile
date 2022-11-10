@@ -2,7 +2,7 @@ FROM php:8.1.9-fpm-buster AS base
 
 USER root
 
-RUN usermod -G root www-data
+RUN usermod -aG root www-data
 
 RUN apt-get update
 RUN apt-get install -y \
@@ -26,7 +26,7 @@ FROM 5.182.44.231:5000/php:8.1.9-fpm-buster AS production_base
 
 USER root
 
-RUN usermod -G root www-data
+RUN usermod -aG root www-data
 
 RUN apt-get update
 RUN apt-get install -y \
