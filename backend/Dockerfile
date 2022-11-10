@@ -66,8 +66,6 @@ RUN apt-get install -y \
     procps \
     nano
 
-RUN touch /tmp/xdebug-log.log
-
 RUN \
     pecl install xdebug && \
     docker-php-ext-enable xdebug
@@ -77,6 +75,7 @@ RUN \
 RUN touch .env
 
 CMD sleep 30 && \
+    touch /tmp/xdebug-log.log && \
     cp .env.example .env &&\
     php artisan key:generate && \
     php artisan cache:clear && \
@@ -129,7 +128,7 @@ ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 COPY . .
 COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
 
-RUN chmod -R g=rwxs ./ && setfacl -d -m g::rwx ./
+RUN chmod -R g=rwxs ./ && setfacl -d -m g:root:rwx ./
 
 RUN composer install --optimize-autoloader --no-dev
 

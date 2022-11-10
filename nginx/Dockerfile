@@ -37,10 +37,8 @@ WORKDIR /nginx
 
 COPY . .
 
-RUN touch /tmp/xdebug-log.log
-
 RUN apt-get update
-RUN apt-get install -y openssl
+RUN apt-get install -y openssl procps nano
 
 RUN openssl req -x509 -nodes -days 1024 -newkey rsa:2048 -keyout ./local_ssl/localhost.key -out ./local_ssl/localhost.crt -config ./local_ssl/open_ssl.conf -extensions 'v3_req'
 
