@@ -1,7 +1,7 @@
 import { translate } from "../../traslation/translate";
 import { LocaleContext } from "../localeContext";
 
-function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], isApiRequest = true) {
+function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], isApiRequest = false) {
     if (isApiRequest) {
         if(headers['Accept']===undefined){
             headers['Accept'] = 'application/json';

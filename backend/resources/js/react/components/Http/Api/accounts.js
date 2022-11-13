@@ -26,7 +26,7 @@ async function post_account_admin(
 
     if (avatar !== null) { data.avatar = avatar; }
 
-    return await fetchData('post', '/account/admin/' + roleName, data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/account/admin/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_account_doctor(
@@ -55,7 +55,7 @@ async function post_account_doctor(
 
     if (avatar !== null) { data.avatar = avatar; }
 
-    return await fetchData('post', '/account/doctor/' + roleName, data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/account/doctor/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_account_secretary(
@@ -84,7 +84,7 @@ async function post_account_secretary(
 
     if (avatar !== null) { data.avatar = avatar; }
 
-    return await fetchData('post', '/account/secretary/' + roleName, data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/account/secretary/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_account_operator(
@@ -113,7 +113,7 @@ async function post_account_operator(
 
     if (avatar !== null) { data.avatar = avatar; }
 
-    return await fetchData('post', '/account/operator/' + roleName, data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/account/operator/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_account_patient(
@@ -142,11 +142,11 @@ async function post_account_patient(
 
     if (avatar !== null) { data.avatar = avatar; }
 
-    return await fetchData('post', '/account/patient/' + roleName, data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/account/patient/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_accounts(roleName, count, lastAccountId = null, token) {
-    let r = await fetchData('get', '/accounts?roleName=' + roleName + '&count=' + count + (lastAccountId === null ? '' : '&lastAccountId=' + lastAccountId), {}, { 'X-CSRF-TOKEN': token });
+    let r = await fetchData('get', '/accounts?roleName=' + roleName + '&count=' + count + (lastAccountId === null ? '' : '&lastAccountId=' + lastAccountId), {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
     let accounts = r.value;
 
     let results = [];
@@ -165,15 +165,15 @@ async function get_accounts(roleName, count, lastAccountId = null, token) {
 }
 
 async function get_account(token) {
-    return await fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_account_by(placeholder, token) {
-    return await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/account/' + placeholder, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function delete_account(accountId, token) {
-    return await fetchData('delete', '/account/' + accountId, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('delete', '/account/' + accountId, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function put_account(accountId, userAttributes = null, userAccountAttributes = null, avatar = null, token) {
@@ -185,11 +185,11 @@ async function put_account(accountId, userAttributes = null, userAccountAttribut
 
     if (avatar !== null) { data.avatar = avatar; }
 
-    return await fetchData('put', '/account/' + accountId, data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('put', '/account/' + accountId, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_accountsCount(roleName, token) {
-    return await fetchData('get', '/accountsCount?roleName=' + roleName, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/accountsCount?roleName=' + roleName, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 export {
