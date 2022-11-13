@@ -46,6 +46,8 @@ class App extends Component {
         this.onRegister = this.onRegister.bind(this);
         this.resetAuthInfo = this.resetAuthInfo.bind(this);
 
+        this.updateAccount = this.updateAccount.bind(this);
+
         this.changeLocale = async (name) => {
             let r = await fetchData('put', '/locale', { 'locale': name }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': '*/*' });
             if (r.response.status === 200) {
@@ -133,20 +135,7 @@ class App extends Component {
 
                 updateState(this, { isAuthenticationLoading: false, isAuthenticated: isAuthenticatedResponse.value.authenticated });
 
-                fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': this.state.token }).then((accountResponse) => {
-                    updateState(this, { isAccountLoading: false });
-
-                    if (accountResponse.response.status !== 200) {
-                        return;
-                    }
-                    updateState(this, { account: accountResponse.value });
-
-                    fetchData('get', '/avatar?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((avatarResponse) => {
-                        if (avatarResponse.response.status === 200) {
-                            updateState(this, { isAvatarLoading: false, image: 'data:image/png;base64,' + avatarResponse.value });
-                        }
-                    });
-                });
+                this.updateAccount();
 
                 fetchData('get', '/role', {}, { 'X-CSRF-TOKEN': this.state.token }).then((privilegesResponse) => {
                     if (privilegesResponse.response.status === 200) {
@@ -163,9 +152,7 @@ class App extends Component {
             });
 
             fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((localeResponse) => {
-                console.log('localeResponse', localeResponse);
                 let locale = localeResponse.value;
-                console.log('locale', locale);
                 if (localeResponse.response.status !== 200) {
                     return;
                 }
@@ -180,7 +167,6 @@ class App extends Component {
                 document.body.setAttribute('dir', locale.direction);
 
                 fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((themeResponse) => {
-                    console.log('themeResponse', themeResponse);
                     let themeData = themeResponse.value;
                     if (themeResponse.response.status === 200) {
                         updateState(this, (state) => {
@@ -194,7 +180,7 @@ class App extends Component {
                 });
             });
 
-            fetchData('get', '/locales', {}, { 'X-CSRF-TOKEN': this.state.token }).then((localesResponse) => {
+            fetchData('get', '/locales', {}, { 'X-CSRF-TOKEN': this.state.token }, [], true).then((localesResponse) => {
                 let locales = localesResponse.value;
                 if (localesResponse.response.status === 200) {
                     updateState(this, (state) => {
@@ -231,6 +217,24 @@ class App extends Component {
     async onRegister() {
         this.resetAuthInfo();
         await this.getDataSynchronously();
+    }
+
+    updateAccount() {
+        updateState(this, { isAccountLoading: true, isAvatarLoading: true });
+        fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': this.state.token }).then((accountResponse) => {
+            updateState(this, { isAccountLoading: false });
+
+            if (accountResponse.response.status !== 200) {
+                return;
+            }
+            updateState(this, { account: accountResponse.value });
+
+            fetchData('get', '/avatar?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((avatarResponse) => {
+                if (avatarResponse.response.status === 200) {
+                    updateState(this, { isAvatarLoading: false, image: 'data:image/png;base64,' + avatarResponse.value });
+                }
+            });
+        });
     }
 
     render() {
@@ -285,7 +289,7 @@ class App extends Component {
                                             <Route path='/login' element={<LogInPage navigator={navigator} {...authProps} onLogin={this.onLogin} />} />
                                             <Route path='/register' element={<SignUpPage navigator={navigator} {...authProps} onRegister={this.onRegister} />} />
 
-                                            <Route path='/dashboard/account' element={<DashboardAccountPage navigator={navigator} {...authProps} />} />
+                                            <Route path='/dashboard/account' element={<DashboardAccountPage navigator={navigator} {...authProps} updateAccount={this.updateAccount} />} />
                                             <Route path='/dashboard/order' element={<DashboardOrderPage navigator={navigator} {...authProps} />} />
                                             <Route path='/dashboard/visit' element={<DashboardVisitPage navigator={navigator} {...authProps} />} />
                                         </Routes>
