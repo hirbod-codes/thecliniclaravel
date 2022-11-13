@@ -550,46 +550,55 @@ export class Account extends Component {
 
         this.setState({ isUpdating: true });
 
-        let data, specialData = {};
+        let data = {};
+        let specialData = {};
         let avatar = null;
         for (const k in this.state.inputs) {
             if (k === 'phonenumber' || k === 'password' || k === 'password_confirmation' || k === 'code') {
                 continue;
             }
 
-            if (Object.hasOwnProperty.call(this.state.inputs, k)) {
-                const v = this.state.inputs[k];
+            if (!Object.hasOwnProperty.call(this.state.inputs, k)) {
+                continue;
+            }
 
-                if (v === '') {
-                    continue;
-                }
+            const v = this.state.inputs[k];
 
-                if (k === 'avatar') {
-                    avatar = v;
-                }
+            if (v === '') {
+                continue;
+            }
 
-                let isSpecial = true;
+            if (k === 'avatar') {
+                avatar = v;
+                continue;
+            }
 
-                [
-                    'firstname',
-                    'lastname',
-                    'username',
-                    'email',
-                    'gender',
-                ].forEach((val, i) => { if (val === k) { isSpecial = false; } });
+            let isSpecial = true;
 
-                if (isSpecial) {
-                    specialData[k] = v;
-                } else {
-                    data[k] = v;
-                }
+            [
+                'firstname',
+                'lastname',
+                'username',
+                'email',
+                'gender',
+            ].forEach((val, i) => { if (val === k) { isSpecial = false; } });
+
+            if (isSpecial) {
+                specialData[k] = v;
+            } else {
+                data[k] = v;
             }
         }
 
-        let r = await put_account(this.props.account.id, data, specialData, avatar, this.state.token);
+        let r = await put_account(this.props.account.id, Object.keys(data).length !== 0 ? data : null, Object.keys(specialData).length !== 0 ? specialData : null, avatar, this.state.token);
 
         if (r.response.status === 200) {
+            if (this.props.updateAccount !== undefined) {
+                this.props.updateAccount();
+            }
+
             this.setState({ feedbackMessages: [{ color: 'success', open: true, message: translate('general/successful/single/ucFirstLetterFirstWord') }] });
+
             if (this.props.onUpdateSuccess !== undefined) {
                 this.props.onUpdateSuccess();
             }
@@ -657,28 +666,19 @@ export class Account extends Component {
     async sendCode(e) {
         this.setState({ isSendingCode: true });
 
-        let data = {};
-        data.code = this.state.inputs.code;
-
-        if (this.state.sendMethod === 'email') {
-            data.email = this.props.account.email;
-        } else {
-            data.phonenumber = this.props.account.phonenumber;
-        }
-        if (!this.state.isUpdatingPhonenumber) {
-            data.password = this.state.inputs.password;
-            data.password_confirmation = this.state.inputs.password_confirmation;
-        }
-
         let r = null;
         if (this.state.isUpdatingPhonenumber) {
-            r = await fetchData('put', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+            let data = {};
+            data.code = this.state.inputs.code;
+            data.phonenumber = this.props.account.phonenumber;
+
+            r = await fetchData('post', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
 
             if (r.response.status === 200) {
                 let data = {};
                 data.phonenumber = this.props.account.phonenumber;
                 data.newPhonenumber = this.state.inputs.phonenumber;
-                r = await fetchData('put', '/auth/update-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+                r = await fetchData('put', '/auth/update-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
 
                 if (r.response.status === 200) {
                     this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
@@ -686,6 +686,9 @@ export class Account extends Component {
                     setTimeout(() => {
                         document.window.href = document.window.location.pathname;
                     }, 200);
+                    if (this.props.updateAccount !== undefined) {
+                        this.props.updateAccount();
+                    }
                 } else {
                     let value = null;
                     if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
@@ -699,13 +702,20 @@ export class Account extends Component {
                 this.setState({ feedbackMessages: value });
             }
         } else {
-            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+            let data = {};
+            data.code = this.state.inputs.code;
+            data.password = this.state.inputs.password;
+            data.password_confirmation = this.state.inputs.password_confirmation;
+            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token });
 
             if (r.response.status === 200) {
                 this.closeCodeModal(null, 'code');
                 setTimeout(() => {
                     document.window.href = document.window.location.pathname;
                 }, 200);
+                if (this.props.updateAccount !== undefined) {
+                    this.props.updateAccount();
+                }
             } else {
                 let value = null;
                 if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
