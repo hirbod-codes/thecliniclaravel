@@ -63,7 +63,7 @@ export class DashboardAccountPage extends Component {
                             </Tabs>
                             {p.retrieveUser.indexOf('self') !== -1 &&
                                 <TabPanel value={this.state.accountPageTabsValue} index={0} style={{ height: '100%' }} >
-                                    <Account isSelf={true} account={this.props.account} accountRole={p.role} />
+                                    <Account isSelf={true} account={this.props.account} accountRole={p.role} updateAccount={this.props.updateAccount}/>
                                 </TabPanel>
                             }
                             {((p.retrieveUser.length > 1) || (p.retrieveUser.length === 1 && p.retrieveUser[0] !== 'self')) &&
