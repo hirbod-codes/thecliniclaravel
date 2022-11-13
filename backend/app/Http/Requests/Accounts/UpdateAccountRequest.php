@@ -27,6 +27,26 @@ class UpdateAccountRequest extends BaseFormRequest
         $isSelf = $user->getKey() === $targetUser->getKey();
 
         $updateUserModels = $user->authenticatableRole->role->role->updateUserSubjects;
+        if (isset($input['avatar'])) {
+            foreach ($user->authenticatableRole->role->role->privilegesSubjects as $privilegeSuject) {
+                if ($privilegeSuject->privilegeName->name === 'editAvatar') {
+                    break;
+                }
+
+                return false;
+            }
+
+            unset($input['avatar']);
+        }
+
+        if (isset($input['userAttributes']) && isset($input['userAccountAttributes'])) {
+            $input = array_merge($input['userAttributes'], $input['userAccountAttributes']);
+        } elseif (isset($input['userAttributes'])) {
+            $input = $input['userAttributes'];
+        } else {
+            $input = $input['userAccountAttributes'];
+        }
+
         foreach ($input as $key => $value) {
             foreach ($updateUserModels as $updateUserModel) {
                 if ($updateUserModel->relatedColumn->name !== $key) {
@@ -57,19 +77,33 @@ class UpdateAccountRequest extends BaseFormRequest
         /** @var User $user */
         $user = User::query()->whereKey($accountId)->firstOrFail();
 
-        $array['userAttributes'] = ['required_without:userAccountAttributes', 'array', 'min:1'];
-        $array['userAccountAttributes'] = ['required_without:userAttributes', 'array', 'min:1'];
+        $userUpdateRuels = include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php');
+        $userAccountUpdateRuels = include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($user->authenticatableRole) . '/updateRules.php');
 
-        foreach ((include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php')) as $key => $value) {
-            if (in_array($key, ['phonenumber', 'password'])) {
-                continue;
+        $array['avatar'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'];
+
+        $array['userAttributes'] = ['required_without:userAccountAttributes', 'array', 'min:1', 'max:' . count($userUpdateRuels), function ($a, $v, $fail) use ($userUpdateRuels) {
+            foreach ($v as $key => $value) {
+                if (array_search($key, array_keys($userUpdateRuels)) === false) {
+                    $fail('Invalid data key!');
+                }
             }
+        }];
 
-            $array['userAttributes' . $key] = $value;
+        $array['userAccountAttributes'] = ['required_without:userAttributes', 'array', 'min:1', 'max:' . count($userAccountUpdateRuels), function ($a, $v, $fail) use ($userAccountUpdateRuels) {
+            foreach ($v as $key => $value) {
+                if (array_search($key, array_keys($userAccountUpdateRuels)) === false) {
+                    $fail('Invalid data key!');
+                }
+            }
+        }];
+
+        foreach ($userUpdateRuels as $key => $value) {
+            $array['userAttributes.' . $key] = $value;
         }
 
-        foreach (include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($user->authenticatableRole) . '/updateRules.php') as $key => $value) {
-            $array['userAccountAttributes' . $key] = $value;
+        foreach ($userAccountUpdateRuels as $key => $value) {
+            $array['userAccountAttributes.' . $key] = $value;
         }
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));

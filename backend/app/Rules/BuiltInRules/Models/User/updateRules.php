@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'phonenumber' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/phonenumber.php'))['phonenumber_optional'],
     'firstname' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/firstname.php'))['firstname_optional'],
     'lastname' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/lastname.php'))['lastname_optional'],
     'username' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/username.php'))['username_optional'],

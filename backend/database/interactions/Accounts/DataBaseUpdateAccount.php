@@ -15,8 +15,12 @@ class DataBaseUpdateAccount implements IDataBaseUpdateAccount
         try {
             DB::beginTransaction();
 
-            if (!(isset($userAattributes) && $user->update($userAattributes)) || !(isset($userRoleAattributes) && $authenticatable->update($userRoleAattributes))) {
-                throw new \RuntimeException('', 500);
+            if(!empty($userAattributes)){
+                $user->updateOrFail($userAattributes);
+            }
+
+            if(!empty($userRoleAattributes)){
+                $authenticatable->updateOrFail($userRoleAattributes);
             }
 
             DB::commit();

@@ -131,7 +131,6 @@ class AccountsController extends Controller
         return $this->store($request->session(), 'patient', $validatedInput['roleName'], $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
     }
 
-
     public function show(string $placeholder): JsonResponse
     {
         $validator = Validator::make(['placeholder' => $placeholder], [
@@ -172,7 +171,7 @@ class AccountsController extends Controller
 
         $targetUser = $this->dataBaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername((int)$accountId));
 
-        $updatedUser = $this->dataBaseUpdateAccount->massUpdateAccount($input['userAttributes'], $input['userAccountAttributes'], $targetUser);
+        $updatedUser = $this->dataBaseUpdateAccount->massUpdateAccount(isset($input['userAttributes']) ? $input['userAttributes'] : [], isset($input['userAccountAttributes']) ? $input['userAccountAttributes'] : [], $targetUser);
 
         return response()->json($updatedUser->toArray());
     }
