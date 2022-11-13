@@ -199,7 +199,7 @@ class AuthController extends Controller
             $session->get('code_expiration_timestamp') !== null &&
             (new \DateTime)->getTimestamp() < intval($session->get('code_expiration_timestamp', 0))
         ) {
-            return response(trans_choice('auth.verification_code_not_expired', 0), 500);
+            return response(trans_choice('auth.verification_code_not_expired', 0), 422);
         }
         $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
@@ -221,7 +221,7 @@ class AuthController extends Controller
 
         $session = $request->session();
         if ($session->get('code_destination') && $session->get('code_destination') === 'email' && $session->get('code_expiration_timestamp') && ((new \DateTime)->getTimestamp() < intval($session->get('code_expiration_timestamp', 0)))) {
-            return response(trans_choice('auth.verification_code_not_expired', 0), 500);
+            return response(trans_choice('auth.verification_code_not_expired', 0), 422);
         }
         $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
