@@ -238,10 +238,6 @@ async function getResponseValue(res) {
         }
     }
 
-    if (res.status === 500) {
-        return translate('generalSentences/server-error');
-    }
-
     if (r.message !== undefined) {
         return r.message;
     } else {

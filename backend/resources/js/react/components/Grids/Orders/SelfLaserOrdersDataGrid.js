@@ -181,23 +181,21 @@ export class SelfLaserOrdersDataGrid extends Component {
                     onClose={this.closeCreationModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <LaserOrderCreation accountRole={this.props.accountRole} account={this.props.account} onCreated={this.handleOnCreate} />
+                        <LaserOrderCreation accountRole={this.props.accountRole} account={this.props.account} onCreated={this.handleOnCreate} isSelf/>
                     </Paper>
                 </Modal>
             </>
         )
     }
 
-    async handleDeletedRow(params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1)) {
-            return;
-        }
+    async handleDeletedRow(e, params) {
+        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1)) { throw new Error('user not authorized!'); }
 
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
 
-        let r = await delete_order('delete', '/order/laser/' + params.row.id, {}, { 'X-CSRF-TOKEN': this.state.token });
+        let r = await delete_order('laser', params.row.id, this.state.token);
 
         deletingRowIds = this.state.deletingRowIds;
         delete deletingRowIds[deletingRowIds.indexOf(params.row.id)];

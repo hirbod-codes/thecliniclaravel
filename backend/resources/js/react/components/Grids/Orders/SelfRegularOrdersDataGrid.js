@@ -66,7 +66,7 @@ export class SelfRegularOrdersDataGrid extends Component {
                 headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
                 width: 100,
                 getActions: (params) => [
-                    <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(params); }} label="Delete" />,
+                    <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
                 ],
             });
         }
@@ -162,9 +162,7 @@ export class SelfRegularOrdersDataGrid extends Component {
     }
 
     async handleOnCreate(account) {
-        if (!(this.context.createOrder !== undefined && this.context.createOrder.regular !== undefined && this.context.createOrder.regular.indexOf('self') !== -1)) {
-            return;
-        }
+        if (!(this.context.createOrder !== undefined && this.context.createOrder.regular !== undefined && this.context.createOrder.regular.indexOf('self') !== -1)) { throw new Error('user not authorized!'); }
 
         this.setState({ isCreating: true });
 
@@ -173,8 +171,8 @@ export class SelfRegularOrdersDataGrid extends Component {
             'regular',
             null,
             null,
-            this.state.price !== undefined ? this.state.price : null,
-            this.state.timeConsumption !== undefined ? this.state.timeConsumption : null,
+            this.state.price !== '' ? this.state.price : null,
+            this.state.timeConsumption !== '' ? this.state.timeConsumption : null,
             this.state.token);
         let value = null;
         if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
@@ -188,10 +186,8 @@ export class SelfRegularOrdersDataGrid extends Component {
         this.setState({ isCreating: false });
     }
 
-    async handleDeletedRow(params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf('self') !== -1)) {
-            return;
-        }
+    async handleDeletedRow(e, params) {
+        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf('self') !== -1)) { throw new Error('user not authorized!'); }
 
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);

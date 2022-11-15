@@ -35,7 +35,7 @@ async function get_orders_laser(
         }
     }
 
-    return await fetchData('get', url, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', url, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_orders_regular(
@@ -73,7 +73,7 @@ async function get_orders_regular(
         }
     }
 
-    return await fetchData('get', url, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', url, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_ordersCount(businessName, roleName, token) {
@@ -91,35 +91,66 @@ async function post_order(
     let data = {
         accountId: accountId,
         businessName: businessName,
-        packages: packages,
-        parts: parts,
-        price: price,
-        timeConsumption: timeConsumption,
     };
 
-    return await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': token });
+    if (parts !== null) {
+        data.parts = parts;
+    }
+
+    if (packages !== null) {
+        data.packages = packages;
+    }
+
+    if (price !== null) {
+        data.price = price;
+    }
+
+    if (timeConsumption !== null) {
+        data.timeConsumption = timeConsumption;
+    }
+    console.log(data);
+
+    return await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function delete_order(businessName, id, token) {
-    return await fetchData('delete', '/order/' + businessName + '/' + id, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('delete', '/order/' + businessName + '/' + id, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_parts(businessName, gender, token) {
-    return await fetchData('get', '/' + businessName + '/parts?gender=' + gender, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/' + businessName + '/parts?gender=' + gender, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_packages(businessName, gender, token) {
-    return await fetchData('get', '/' + businessName + '/packages?gender=' + gender, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/' + businessName + '/packages?gender=' + gender, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_laser_time_calculation(businessName, parts, packages, gender, token) {
-    let data = { parts: parts, packages: packages, gender: gender };
-    return await fetchData('post', '/' + businessName + '/time-calculation', data, { 'X-CSRF-TOKEN': token });
+    let data = { gender: gender };
+
+    if (packages !== null) {
+        data.packages = packages;
+    }
+
+    if (parts !== null) {
+        data.parts = parts;
+    }
+
+    return await fetchData('post', '/' + businessName + '/time-calculation', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_laser_price_calculation(businessName, parts, packages, gender, token) {
-    let data = { parts: parts, packages: packages, gender: gender };
-    return await fetchData('post', '/' + businessName + '/time-calculation', data, { 'X-CSRF-TOKEN': token });
+    let data = { gender: gender };
+
+    if (packages !== null) {
+        data.packages = packages;
+    }
+
+    if (parts !== null) {
+        data.parts = parts;
+    }
+
+    return await fetchData('post', '/' + businessName + '/price-calculation', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 export {

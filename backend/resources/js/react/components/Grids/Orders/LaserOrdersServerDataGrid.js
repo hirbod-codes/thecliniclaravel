@@ -74,7 +74,7 @@ export class LaserOrdersServerDataGrid extends Component {
 
     getRowCount() {
         return new Promise(async (resolve, reject) => {
-            let rowCount = await get_ordersCount('get', '/ordersCount?businessName=regular&roleName=' + this.state.role, {}, { 'X-CSRF-TOKEN': this.state.token });
+            let rowCount = await get_ordersCount('laser', this.state.role, this.state.token);
 
             if (rowCount.response.status !== 200) {
                 let value = null;
@@ -92,14 +92,14 @@ export class LaserOrdersServerDataGrid extends Component {
             field: 'parts',
             headerName: translate('pages/orders/order/columns/parts', this.state.locale),
             description: translate('pages/orders/order/columns/parts', this.state.locale),
-            renderCell: (params) => <PartsDataGridModal rows={params.row.parts} />,
+            renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.row.parts }} />,
         });
 
         columns.push({
             field: 'packages',
             headerName: translate('pages/orders/order/columns/packages', this.state.locale),
             description: translate('pages/orders/order/columns/packages', this.state.locale),
-            renderCell: (params) => <PackagesDataGridModal rows={params.row.packages} />,
+            renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.row.packages }} />,
         });
 
         columns.push({
@@ -261,9 +261,7 @@ export class LaserOrdersServerDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf(params.row.role_name) !== -1)) {
-            return;
-        }
+        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf(this.state.role) !== -1)) { throw new Error('user not authorized!'); }
 
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);

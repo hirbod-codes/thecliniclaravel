@@ -268,8 +268,8 @@ export class RegularOrdersServerDataGrid extends Component {
             'regular',
             null,
             null,
-            this.state.price !== undefined ? this.state.price : null,
-            this.state.timeConsumption !== undefined ? this.state.timeConsumption : null,
+            this.state.price !== '' ? this.state.price : null,
+            this.state.timeConsumption !== '' ? this.state.timeConsumption : null,
             this.state.token);
         if (result.response.status === 200) {
             this.setState({ reload: true });
@@ -283,8 +283,8 @@ export class RegularOrdersServerDataGrid extends Component {
         this.setState({ isCreating: false });
     }
 
-    async handleDeletedRow(params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf(params.row.role_name) !== -1)) { return []; }
+    async handleDeletedRow(e, params) {
+        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf(this.state.role) !== -1)) { throw new Error('user not authorized!'); }
 
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);

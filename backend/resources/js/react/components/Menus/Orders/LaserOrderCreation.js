@@ -20,6 +20,7 @@ import { get_laser_price_calculation, get_laser_time_calculation, post_order } f
  */
 export class LaserOrderCreation extends Component {
     static propTypes = {
+        isSelf: PropTypes.bool,
         account: PropTypes.object,
         accountRole: PropTypes.string,
         onCreated: PropTypes.func,
@@ -44,6 +45,7 @@ export class LaserOrderCreation extends Component {
         this.onPackageSelect = this.onPackageSelect.bind(this);
 
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
+        this.submit = this.submit.bind(this);
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -81,7 +83,7 @@ export class LaserOrderCreation extends Component {
             totalPrice: 0,
             totalPriceWithoutDiscount: 0,
             totalNeddedTime: 0,
-            isCalculating: false,
+            isCalculating: true,
 
             feedbackMessages: [],
 
@@ -93,6 +95,8 @@ export class LaserOrderCreation extends Component {
         if (this.props.account !== undefined && this.props.accountRole !== undefined) {
             this.setState({ account: this.props.account, accountRole: this.props.accountRole });
         } else {
+            if (this.props.isSelf !== undefined && this.props.isSelf === true) { throw new Error('account information is not provided for order self creation!'); }
+            
             this.setState({ accountModalOpen: true });
         }
     }
@@ -347,22 +351,24 @@ export class LaserOrderCreation extends Component {
 
         await updateState(this, {
             isCalculating: false,
-            totalPrice: prices.price,
-            totalPriceWithoutDiscount: prices.priceWithoutDiscount,
-            totalNeddedTime: totalNeddedTime,
+            totalPrice: prices.value.price,
+            totalPriceWithoutDiscount: prices.value.priceWithoutDiscount,
+            totalNeddedTime: totalNeddedTime.value,
         });
     }
 
     async submit(e) {
-        if (!(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf(this.state.accountRole) !== -1)) { return; }
+        console.log('this.state', this.state);
+        console.log('this.props', this.props);
+        if (!(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf(this.props.isSelf !== undefined ? 'self' : this.state.accountRole) !== -1)) { throw new Error('user not authorized!'); }
 
         this.setState({ isCalculating: true });
 
         let r = await post_order(
             this.state.account.id,
             'laser',
-            this.state.selectedParts.map((v, i) => v.name),
-            this.state.selectedPackages.map((v, i) => v.name),
+            this.state.selectedPackages.length === 0 ? null : this.state.selectedPackages.map((v, i) => v.name),
+            this.state.selectedParts.length === 0 ? null : this.state.selectedParts.map((v, i) => v.name),
             null,
             null,
             this.state.token);
