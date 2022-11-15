@@ -15,7 +15,7 @@ import { localizeDate, updateState } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
 import { PrivilegesContext } from '../../privilegesContext';
 import { DateTime } from 'luxon';
-import { post_visit_laser_check, post_visit_regular_check } from '../../Http/Api/visits';
+import { post_visit_laser, post_visit_laser_check, post_visit_regular, post_visit_regular_check } from '../../Http/Api/visits';
 import { get_work_schedule } from '../../Http/Api/general';
 
 /**
@@ -62,7 +62,7 @@ export class VisitCreator extends Component {
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
-            feedbackMessages: [],
+            feedbackMessages: [{ open: true, message: 'hiii', color: 'success' }],
 
             workSchdule: {},
 
@@ -173,35 +173,63 @@ export class VisitCreator extends Component {
         this.setState({ visitFinderTabsValue: newValue });
     }
 
+    buildFeedbacks(m, i) {
+        return <Snackbar
+            key={i}
+            open={m.open}
+            autoHideDuration={6000}
+            onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+            action={
+                <IconButton
+                    size="small"
+                    onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                >
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            }
+        >
+            <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                {m.message}
+            </Alert>
+        </Snackbar>;
+    }
+
     render() {
         return (
             <>
+                {this.state.feedbackMessages.map((m, i) => this.buildFeedbacks(m, i))}
+
                 {(this.context.retrieveUser !== undefined && this.context.retrieveUser.indexOf(this.props.targetRoleName) !== -1) &&
                     <Modal
                         open={this.state.openAccountSearchModal}
                         onClose={this.closeAccountSearchModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                            {this.state.feedbackMessages.map((m, i) => this.buildFeedbacks(m, i))}
                             <FindAccount handleAccount={async (account) => { await updateState(this, { account: account }); this.closeAccountSearchModal(null, null); this.openOrderSearchModal(); }} />
                         </Paper>
                     </Modal>
                 }
+
                 {(this.context.retrieveOrder !== undefined && this.context.retrieveOrder[this.props.businessName] !== undefined && this.context.retrieveOrder[this.props.businessName].indexOf(this.props.targetRoleName) !== -1) &&
                     <Modal
                         open={this.state.openOrderSearchModal}
                         onClose={this.closeOrderSearchModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                            {this.state.feedbackMessages.map((m, i) => this.buildFeedbacks(m, i))}
                             <FindOrder account={this.state.account === null ? {} : this.state.account} onSelectionModelChange={async (orderId) => { await updateState(this, { orderId: orderId }); this.closeOrderSearchModal(); this.openVisitInfoModal(null, null); }} businessName={this.props.businessName} />
                         </Paper>
                     </Modal>
                 }
+
                 {(this.context.createOrder !== undefined && this.context.createOrder[this.props.businessName] !== undefined && this.context.createOrder[this.props.businessName].indexOf(this.props.targetRoleName) !== -1) &&
                     <Modal
                         open={this.state.openVisitInfoModal}
                         onClose={this.closeVisitInfoModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                            {this.state.feedbackMessages.map((m, i) => this.buildFeedbacks(m, i))}
                             <Stack direction='column' spacing={2} style={{ height: '100%' }} >
                                 <Tabs value={this.state.visitFinderTabsValue} onChange={this.handleVisitFinderTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
                                     <Tab label={translate('pages/visits/visit/closest-visit-available')} />
@@ -254,27 +282,6 @@ export class VisitCreator extends Component {
                         </Paper>
                     </Modal>
                 }
-
-                {this.state.feedbackMessages.map((m, i) =>
-                    <Snackbar
-                        key={i}
-                        open={m.open}
-                        autoHideDuration={6000}
-                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
-                        action={
-                            <IconButton
-                                size="small"
-                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        }
-                    >
-                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
-                            {m.message}
-                        </Alert>
-                    </Snackbar>
-                )}
             </>
         )
     }
@@ -347,10 +354,10 @@ export class VisitCreator extends Component {
             let value = null;
             if (Array.isArray(weeklyVisitRefresh.value)) { value = weeklyVisitRefresh.value; } else { value = [weeklyVisitRefresh.value]; }
             value = value.map((v, i) => { return { open: true, message: v, color: weeklyVisitRefresh.response.status === 200 ? 'success' : 'error' } });
-            this.setState({ feedbackMessages: value });
+            await updateState(this, { feedbackMessages: value });
         }
 
-        this.setState({ isRefreshingWeeklyVisit: false });
+        await updateState(this, { isRefreshingWeeklyVisit: false });
     }
 
     async handleOnCreate() {
@@ -376,15 +383,15 @@ export class VisitCreator extends Component {
         let r = null;
         switch (this.props.businessName) {
             case 'laser':
-                r = (await post_visit_laser_check(this.state.orderId, weeklyTImePatterns, this.state.token));
+                r = (await post_visit_laser(this.state.orderId, weeklyTImePatterns, this.state.token));
                 break;
 
             case 'regular':
-                r = (await post_visit_regular_check(this.state.orderId, weeklyTImePatterns, this.state.token));
+                r = (await post_visit_regular(this.state.orderId, weeklyTImePatterns, this.state.token));
                 break;
 
             default:
-                break;
+                throw new Error('Insufficient information for sending visit creation request');
         }
 
         if (r.response.status === 200) {
@@ -395,13 +402,13 @@ export class VisitCreator extends Component {
             let value = null;
             if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
             value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
-            this.setState({ feedbackMessages: value });
+            await updateState(this, { feedbackMessages: value });
             if (this.props.onFailure !== undefined) {
                 this.props.onFailure();
             }
         }
 
-        this.setState({ isSubmittingVisit: false });
+        await updateState(this, { isSubmittingVisit: false });
     }
 }
 

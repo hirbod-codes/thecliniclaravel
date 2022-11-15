@@ -10,7 +10,7 @@ async function get_visits_by_timestamp(
     lastVisitTimestamp,
     token,
 ) {
-    return await fetchData('get', '/visits?businessName=' + businessName + '&roleName=' + roleName + '&timestamp=' + timestamp + '&sortByTimestamp=' + sortByTimestamp + '&operator=' + operator + '&count=' + count + ((lastVisitTimestamp && lastVisitTimestamp !== 0) ? ('&lastVisitTimestamp=' + lastVisitTimestamp) : ''), {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/visits?businessName=' + businessName + '&roleName=' + roleName + '&timestamp=' + timestamp + '&sortByTimestamp=' + sortByTimestamp + '&operator=' + operator + '&count=' + count + ((lastVisitTimestamp && lastVisitTimestamp !== 0) ? ('&lastVisitTimestamp=' + lastVisitTimestamp) : ''), {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_visits_by_order(
@@ -19,7 +19,7 @@ async function get_visits_by_order(
     orderId,
     token,
 ) {
-    return await fetchData('get', '/visits?businessName=' + businessName + '&sortByTimestamp=' + sortByTimestamp + '&' + businessName + 'OrderId=' + orderId, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/visits?businessName=' + businessName + '&sortByTimestamp=' + sortByTimestamp + '&' + businessName + 'OrderId=' + orderId, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_visits_by_user(
@@ -28,7 +28,7 @@ async function get_visits_by_user(
     accountId,
     token,
 ) {
-    return await fetchData('get', '/visits?businessName=' + businessName + '&sortByTimestamp=' + sortByTimestamp + '&accountId=' + accountId, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('get', '/visits?businessName=' + businessName + '&sortByTimestamp=' + sortByTimestamp + '&accountId=' + accountId, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function get_visitsCount(businessName, roleName, token) {
@@ -36,40 +36,52 @@ async function get_visitsCount(businessName, roleName, token) {
 }
 
 async function post_visit_laser(laserOrderId, weeklyTimePatterns, token) {
-    return await fetchData('post', '/visit/laser', { laserOrderId: laserOrderId, weeklyTimePatterns: weeklyTimePatterns }, { 'X-CSRF-TOKEN': token });
+    let data = { laserOrderId: laserOrderId };
+
+    if (weeklyTimePatterns !== null) {
+        data.weeklyTimePatterns = weeklyTimePatterns;
+    }
+
+    return await fetchData('post', '/visit/laser', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_visit_regular(regularOrderId, weeklyTimePatterns, token) {
-    return await fetchData('post', '/visit/regular', { regularOrderId: regularOrderId, weeklyTimePatterns: weeklyTimePatterns }, { 'X-CSRF-TOKEN': token });
+    let data = { regularOrderId: regularOrderId };
+
+    if (weeklyTimePatterns !== null) {
+        data.weeklyTimePatterns = weeklyTimePatterns;
+    }
+
+    return await fetchData('post', '/visit/regular', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_visit_laser_check(laserOrderId, weeklyTimePatterns = null, token) {
-    let data = {};
-    data.laserOrderId = laserOrderId;
+    let data = { laserOrderId: laserOrderId };
+
     if (weeklyTimePatterns !== null) {
         data.weeklyTimePatterns = weeklyTimePatterns;
     }
 
-    return await fetchData('post', '/visit/laser/check', data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/visit/laser/check', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function post_visit_regular_check(regularOrderId, weeklyTimePatterns = null, token) {
-    let data = {};
-    data.regularOrderId = regularOrderId;
+    let data = { regularOrderId: regularOrderId };
+
     if (weeklyTimePatterns !== null) {
         data.weeklyTimePatterns = weeklyTimePatterns;
     }
 
-    return await fetchData('post', '/visit/regular/check', data, { 'X-CSRF-TOKEN': token });
+    return await fetchData('post', '/visit/regular/check', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 
 async function delete_visit_laser(visitId, token) {
-    return await fetchData('delete', '/visit/laser/' + visitId, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('delete', '/visit/laser/' + visitId, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function delete_visit_regular(visitId, token) {
-    return await fetchData('delete', '/visit/regular/' + visitId, {}, { 'X-CSRF-TOKEN': token });
+    return await fetchData('delete', '/visit/regular/' + visitId, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 export {

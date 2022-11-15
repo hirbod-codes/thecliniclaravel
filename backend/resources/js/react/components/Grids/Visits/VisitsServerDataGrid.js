@@ -255,9 +255,7 @@ export class VisitsServerDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf(this.state.role) !== -1)) {
-            return;
-        }
+        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf(this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0]) !== -1)) { throw new Error('user not authorized!'); }
 
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);

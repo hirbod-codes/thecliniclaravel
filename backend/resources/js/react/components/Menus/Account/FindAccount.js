@@ -59,21 +59,24 @@ export class FindAccount extends Component {
     async handleSubmit(e) {
         await updateState(this, { isSubmiting: true, errors: [] });
 
-        let placeholder = '';
+        let placeholder = undefined;
         for (const k in this.state) {
             if (Object.hasOwnProperty.call(this.state, k)) {
                 const val = this.state[k];
-                if (val !== '' && k !== 'errors') {
-                    if (k === 'firstname' || k === 'lastname') {
-                        placeholder = this.state.firstname + '-' + this.state.lastname;
-                    } else {
-                        placeholder = val;
-                    }
-                    break;
+                if (val === '' || ['firstname', 'lastname', 'username', 'phonenumber', 'email'].indexOf(k) === -1) {
+                    continue;
                 }
+
+                if (k === 'firstname' || k === 'lastname') {
+                    placeholder = this.state.firstname + '-' + this.state.lastname;
+                } else {
+                    placeholder = val;
+                }
+                break;
             }
         }
 
+        console.log(placeholder);
         let r = await get_account_by(placeholder, this.state.token);
         if (r.response.status === 200) {
             let role = await get_role_name(r.value.id, this.state.token);

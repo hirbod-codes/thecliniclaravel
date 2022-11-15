@@ -190,11 +190,11 @@ export class SelfVisitsDataGrid extends Component {
         let r = null;
         switch (this.props.businessName) {
             case 'laser':
-                r = await delete_visit_laser(params.row.id, {}, this.state.token);
+                r = await delete_visit_laser(params.row.id, this.state.token);
                 break;
 
             case 'regular':
-                r = await delete_visit_regular(params.row.id, {}, this.state.token);
+                r = await delete_visit_regular(params.row.id, this.state.token);
                 break;
 
             default:
