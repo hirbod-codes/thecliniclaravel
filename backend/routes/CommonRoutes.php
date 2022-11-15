@@ -122,15 +122,21 @@ class CommonRoutes
             });
 
         Route::controller(VisitsController::class)
-            ->group(function () {
+            ->group(function () use ($from) {
+                if ($from === 'web') {
+                    Route::get('/dashboard/visit', function () {
+                        return view('app');
+                    })->name('visit.page');
+                }
+
                 Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name('visits.index');
                 Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name('visits.visitsCount');
 
-                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/laser', 'laserStore')->name('visits.laserStore');
-                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/regular', 'regularStore')->name('visits.regularStore');
+                Route::post('/visit/laser', 'laserStore')->name('visits.laserStore');
+                Route::post('/visit/regular', 'regularStore')->name('visits.regularStore');
 
-                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
-                Route::middleware('adjustWeeklyTimePatterns')->post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
+                Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
+                Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
 
                 Route::delete('/visit/laser/{visitId}', 'laserDestroy')->name('visits.laserDestroy');
                 Route::delete('/visit/regular/{visitId}', 'regularDestroy')->name('visits.regularDestroy');

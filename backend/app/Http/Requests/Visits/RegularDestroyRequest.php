@@ -55,4 +55,9 @@ class RegularDestroyRequest extends BaseFormRequest
 
         return $array;
     }
+
+    protected function prepareForValidation()
+    {
+        $this->replace(array_merge($this->all(), ['visitId' => class_basename($this->path())]));
+    }
 }

@@ -6,10 +6,14 @@ use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\TimeZoneConversionTrait;
 use App\Models\Order\LaserOrder;
+use Illuminate\Support\Facades\App;
 
 class LaserStoreRequest extends BaseFormRequest
 {
+    use TimeZoneConversionTrait;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -119,5 +123,28 @@ class LaserStoreRequest extends BaseFormRequest
             'weeklyTimePatterns.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
             'weeklyTimePatterns.*.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
         ];
+    }
+
+    protected function passedValidation()
+    {
+        $weeklyTimePatterns = $this->only('weeklyTimePatterns');
+        if (!empty($weeklyTimePatterns)) {
+            $weeklyTimePatterns = $weeklyTimePatterns['weeklyTimePatterns'];
+        } else {
+            return;
+        }
+
+        $locale = session()->get('locale', App::getLocale());
+
+        if ($locale === 'en') {
+            return;
+        }
+
+        if ($locale === 'fa') {
+            $weeklyTimePatterns = $this->convertToUTC($weeklyTimePatterns);
+            $tmp = $this->all();
+            $tmp['weeklyTimePatterns'] = $weeklyTimePatterns;
+            $this->replace($tmp);
+        }
     }
 }

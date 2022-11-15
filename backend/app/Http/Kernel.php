@@ -74,6 +74,5 @@ class Kernel extends HttpKernel
         'phonenumber_not_verified' => PhonenumberNotVerified::class,
         'setLocale' => SetLocale::class,
         'setLocaleFromSession' => SetLocaleFromSession::class,
-        'adjustWeeklyTimePatterns' => AdjustWeeklyTimePatterns::class,
     ];
 }

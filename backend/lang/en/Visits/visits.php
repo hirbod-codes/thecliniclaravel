@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'weeklySearchFailure' => '{0} We Failed to find a visit time in the provided time ranges.',
+    'neededTimeOutOfRange' => '{0} There isn\'t enough time in the provided time ranges for this order.',
     'visit_alert' => "{0} Please prepare for your visit due at :visit_date .",
     'visit-not-found' => "{0} There is no visit with such provided information.",
     'destroy' => "{0} The visit successfully deleted.",

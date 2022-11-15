@@ -1,51 +1,11 @@
 <?php
 
-namespace App\Http\Middleware;
+namespace App\Http\Requests;
 
-use App\Http\Requests\Visits\LaserStoreRequest;
-use App\Http\Requests\Visits\RegularStoreRequest;
-use Closure;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 
-class AdjustWeeklyTimePatterns
+trait TimeZoneConversionTrait
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure(\Illuminate\Http\Request): (\Illuminate\Http\Response|\Illuminate\Http\RedirectResponse)  $next
-     * @return \Illuminate\Http\Response|\Illuminate\Http\RedirectResponse
-     */
-    public function handle(Request $request, Closure $next)
-    {
-        if (Str::contains($request->path(), 'laser')) {
-            $validator = Validator::make($t = $request->all(), (new LaserStoreRequest())->rules(), (new LaserStoreRequest())->messages(), (new LaserStoreRequest())->attributes());
-        } else {
-            $validator = Validator::make($t = $request->all(), (new RegularStoreRequest())->rules(), (new RegularStoreRequest())->messages(), (new RegularStoreRequest())->attributes());
-        }
-
-        if ($validator->fails()) {
-            return response()->json($validator->errors()->toArray());
-        }
-
-        $locale = session()->get('locale', App::getLocale());
-
-        if (!isset($request->weeklyTimePatterns) || $locale === 'en') {
-            return $next($request);
-        }
-
-        if ($locale === 'fa') {
-            $request->merge(['weeklyTimePatterns' => $this->convertToUTC($request->weeklyTimePatterns)]);
-            $t = $request->all();
-        }
-
-        return $next($request);
-    }
-
     private function convertToUTC(array $weeklyTimePatterns): array
     {
         $newWeekDaysPeriods = [];

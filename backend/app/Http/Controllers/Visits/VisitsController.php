@@ -26,6 +26,8 @@ use App\Http\Requests\Visits\IndexRequest;
 use App\Http\Requests\Visits\LaserDestroyRequest;
 use App\Http\Requests\Visits\RegularDestroyRequest;
 use App\Http\Requests\Visits\VisitsCountRequest;
+use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
+use App\PoliciesLogic\Exceptions\Visit\VisitTimeSearchFailure;
 use Database\Interactions\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Database\Interactions\Orders\Interfaces\IDataBaseRetrieveLaserOrders;
@@ -267,7 +269,7 @@ class VisitsController extends Controller
 
     public function laserStore(LaserStoreRequest $request): JsonResponse|RedirectResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
         if (isset($validatedInput['weeklyTimePatterns'])) {
             $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
@@ -279,14 +281,20 @@ class VisitsController extends Controller
 
         $iFindVisit = $this->visitsManagement->getLaserVisitFinder($laserOrder, isset($userInput) ? $userInput : null);
 
-        $laserVisit = $this->iDataBaseCreateLaserVisit->createLaserVisit($laserOrder, $iFindVisit);
+        try {
+            $laserVisit = $this->iDataBaseCreateLaserVisit->createLaserVisit($laserOrder, $iFindVisit);
+        } catch (VisitTimeSearchFailure $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.weeklySearchFailure', 0)], 422);
+        } catch (NeededTimeOutOfRange $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.neededTimeOutOfRange', 0)], 422);
+        }
 
         return response()->json($laserVisit->toArray());
     }
 
     public function regularStore(RegularStoreRequest $request): JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
         if (isset($validatedInput['weeklyTimePatterns'])) {
             $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
@@ -298,14 +306,20 @@ class VisitsController extends Controller
 
         $iFindVisit = $this->visitsManagement->getRegularVisitFinder($regularOrder, isset($userInput) ? $userInput : null);
 
-        $regularVisit = $this->iDataBaseCreateRegularVisit->createRegularVisit($regularOrder, $iFindVisit);
+        try {
+            $regularVisit = $this->iDataBaseCreateRegularVisit->createRegularVisit($regularOrder, $iFindVisit);
+        } catch (VisitTimeSearchFailure $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.weeklySearchFailure', 0)], 422);
+        } catch (NeededTimeOutOfRange $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.neededTimeOutOfRange', 0)], 422);
+        }
 
         return response()->json($regularVisit->toArray());
     }
 
     public function laserShowAvailable(LaserShowAvailableRequest $request): JsonResponse|RedirectResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
         if (isset($validatedInput['weeklyTimePatterns'])) {
             $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
@@ -313,14 +327,20 @@ class VisitsController extends Controller
             $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriods']);
         }
 
-        $timestamp = $this->visitsManagement->getLaserVisitFinder($validatedInput['laserOrderId'], isset($userInput) ? $userInput : null)->findVisit();
+        try {
+            $timestamp = $this->visitsManagement->getLaserVisitFinder($validatedInput['laserOrderId'], isset($userInput) ? $userInput : null)->findVisit();
+        } catch (VisitTimeSearchFailure $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.weeklySearchFailure', 0)], 422);
+        } catch (NeededTimeOutOfRange $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.neededTimeOutOfRange', 0)], 422);
+        }
 
         return response()->json(['availableVisitTimestamp' => $timestamp]);
     }
 
     public function regularShowAvailable(RegularShowAvailableRequest $request): JsonResponse|RedirectResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
         if (isset($validatedInput['weeklyTimePatterns'])) {
             $userInput = DSWeeklyTimePatterns::toObject($validatedInput['weeklyTimePatterns']);
@@ -328,7 +348,13 @@ class VisitsController extends Controller
             $userInput = DSDateTimePeriods::toObject($validatedInput['dateTimePeriods']);
         }
 
-        $timestamp = $this->visitsManagement->getRegularVisitFinder($validatedInput['regularOrderId'], isset($userInput) ? $userInput : null)->findVisit();
+        try {
+            $timestamp = $this->visitsManagement->getRegularVisitFinder($validatedInput['regularOrderId'], isset($userInput) ? $userInput : null)->findVisit();
+        } catch (VisitTimeSearchFailure $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.weeklySearchFailure', 0)], 422);
+        } catch (NeededTimeOutOfRange $th) {
+            return response()->json(['message' => trans_choice('Visits/visits.neededTimeOutOfRange', 0)], 422);
+        }
 
         return response()->json(['availableVisitTimestamp' => $timestamp]);
     }

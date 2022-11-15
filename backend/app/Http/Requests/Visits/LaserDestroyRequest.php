@@ -30,7 +30,7 @@ class LaserDestroyRequest extends BaseFormRequest
                 continue;
             }
 
-            if (($isSelf && $deleteVisit->object !== null) || (!$isSelf && (($deleteVisit->object === null || ($deleteVisit->object !== null && $deleteVisit->relatedObject->getKey() !== $targetUser))))) {
+            if (($isSelf && $deleteVisit->object !== null) || (!$isSelf && (($deleteVisit->object === null || ($deleteVisit->object !== null && $deleteVisit->relatedObject->getKey() !== $targetUser->authenticatableRole->role->role->getKey()))))) {
                 continue;
             }
 

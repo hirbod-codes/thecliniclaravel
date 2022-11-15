@@ -6,10 +6,14 @@ use App\Auth\CheckAuthentication;
 use App\Rules\ProhibitExtraFeilds;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Http\Requests\BaseFormRequest;
+use App\Http\Requests\TimeZoneConversionTrait;
 use App\Models\Order\RegularOrder;
+use Illuminate\Support\Facades\App;
 
 class RegularStoreRequest extends BaseFormRequest
 {
+    use TimeZoneConversionTrait;
+
     /**
      * Determine if the user is authorized to make this request.
      *
@@ -52,7 +56,7 @@ class RegularStoreRequest extends BaseFormRequest
     {
         $array = [
             'regularOrderId' => ['required', 'integer', 'numeric', 'min:1'],
-            'weeklyTimePatterns' => ['array', 'min:1', 'max:7', function ($attribute, $value, $fail) {
+            'weeklyTimePatterns' => ['array', 'min:1', 'max:7', 'bail', function ($attribute, $value, $fail) {
                 foreach ($value as $k => $v) {
                     if (!in_array($k, DSWeeklyTimePatterns::$weekDays)) {
                         $fail(trans_choice('validation.in', 0, ['attribute' => trans_choice('validation.attributes.weeklyTimePatterns', 0)]));
@@ -120,5 +124,28 @@ class RegularStoreRequest extends BaseFormRequest
             'weeklyTimePatterns.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
             'weeklyTimePatterns.*.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
         ];
+    }
+
+    protected function passedValidation()
+    {
+        $weeklyTimePatterns = $this->only('weeklyTimePatterns');
+        if (!empty($weeklyTimePatterns)) {
+            $weeklyTimePatterns = $weeklyTimePatterns['weeklyTimePatterns'];
+        } else {
+            return;
+        }
+
+        $locale = session()->get('locale', App::getLocale());
+
+        if ($locale === 'en') {
+            return;
+        }
+
+        if ($locale === 'fa') {
+            $weeklyTimePatterns = $this->convertToUTC($weeklyTimePatterns);
+            $tmp = $this->all();
+            $tmp['weeklyTimePatterns'] = $weeklyTimePatterns;
+            $this->replace($tmp);
+        }
     }
 }

@@ -32,9 +32,9 @@ class WorkScheduleFactory extends Factory
             $this->moveToWeekDay($time, $weekDay);
             $dsDateTimePeriods = new DSTimePatterns;
 
-            $dsDateTimePeriods[] = new DSTimePattern('08:00:00', '15:00:00');
+            $dsDateTimePeriods[] = new DSTimePattern('04:30:00', '11:30:00');
 
-            $dsDateTimePeriods[] = new DSTimePattern('16:00:00', '23:00:00');
+            $dsDateTimePeriods[] = new DSTimePattern('12:20:00', '19:30:00');
 
             $dsWorkSchedule[$weekDay] = $dsDateTimePeriods;
         }
