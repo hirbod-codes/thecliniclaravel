@@ -5,7 +5,7 @@ namespace App\Rules\Orders;
 use Illuminate\Contracts\Validation\DataAwareRule;
 use Illuminate\Contracts\Validation\Rule;
 
-class PartsPackagesRequirement implements Rule, DataAwareRule
+class PartsOrPackagesRequirement implements Rule, DataAwareRule
 {
     /**
      * All of the data under validation.
@@ -34,8 +34,11 @@ class PartsPackagesRequirement implements Rule, DataAwareRule
      */
     public function passes($attribute, $value)
     {
-        return (array_key_exists('parts', $this->data) && !empty($this->data['parts'])) ||
-            (array_key_exists('packages', $this->data) && !empty($this->data['packages']));
+        if (isset($this->data['businessName']) && $this->data['businessName'] !== 'laser') {
+            return true;
+        }
+
+        return (array_key_exists('parts', $this->data) && !empty($this->data['parts'])) || (array_key_exists('packages', $this->data) && !empty($this->data['packages']));
     }
 
     /**

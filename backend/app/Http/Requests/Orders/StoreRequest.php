@@ -5,7 +5,7 @@ namespace App\Http\Requests\Orders;
 use App\Auth\CheckAuthentication;
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Rules\Orders\PartsPackagesRequirement;
+use App\Rules\Orders\PartsOrPackagesRequirement;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Validation\Rule;
 use App\Http\Requests\BaseFormRequest;
@@ -59,9 +59,9 @@ class StoreRequest extends BaseFormRequest
             'accountId' => ['integer', 'numeric', 'min:1', 'exists:' . (new User)->getTable() . ',' . (new User)->getKeyName()],
             'businessName' => (include(base_path() . '/app/Rules/BuiltInRules/business.php'))['businessNames'],
 
-            'packages' => ['prohibited_unless:businessName,laser', 'array'],
+            'packages' => ['prohibited_unless:businessName,laser', 'array', 'min:1'],
             'packages.*' => ['required_unless:packages,null', 'string', Rule::in($packages)],
-            'parts' => ['prohibited_unless:businessName,laser', 'array', 'bail', new PartsPackagesRequirement()],
+            'parts' => ['prohibited_unless:businessName,laser', 'array', 'min:1'],
             'parts.*' => ['required_unless:parts,null', 'string', Rule::in($parts)],
 
             'price' => ['integer', 'numeric', 'min:1', 'prohibited_if:businessName,laser'],
@@ -69,6 +69,7 @@ class StoreRequest extends BaseFormRequest
         ];
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
+        array_unshift($array[array_key_first($array)], new PartsOrPackagesRequirement());
 
         return $array;
     }

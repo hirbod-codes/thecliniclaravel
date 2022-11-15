@@ -4,8 +4,10 @@ namespace Database\Interactions\Business;
 
 use App\DataStructures\Time\DSDownTimes;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
+use App\Models\Business;
 use App\Models\BusinessDefault;
 use Database\Interactions\Business\Interfaces\IDataBaseRetrieveBusinessSettings;
+use Illuminate\Database\Eloquent\Builder;
 
 class DataBaseRetrieveBusinessSettings implements IDataBaseRetrieveBusinessSettings
 {
@@ -21,11 +23,15 @@ class DataBaseRetrieveBusinessSettings implements IDataBaseRetrieveBusinessSetti
 
     public function getDefaultRegularOrderPrice(): int
     {
-        return BusinessDefault::query()->firstOrFail()->default_regular_order_price;
+        return BusinessDefault::query()->whereHas('business', function (Builder $query) {
+            $query->where('name', '=', 'regular');
+        })->firstOrFail()->default_regular_order_price;
     }
 
     public function getDefaultRegularOrderTimeConsumption(): int
     {
-        return BusinessDefault::query()->firstOrFail()->default_regular_order_time_consumption;
+        return BusinessDefault::query()->whereHas('business', function (Builder $query) {
+            $query->where('name', '=', 'regular');
+        })->firstOrFail()->default_regular_order_time_consumption;
     }
 }

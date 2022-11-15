@@ -4,7 +4,7 @@ namespace App\Http\Requests\Orders;
 
 use App\Models\Package\Package;
 use App\Models\Part\Part;
-use App\Rules\Orders\PartsPackagesRequirement;
+use App\Rules\Orders\PartsOrPackagesRequirement;
 use App\Rules\ProhibitExtraFeilds;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -38,7 +38,7 @@ class CalculatePartsAndPackagesRquest extends FormRequest
         $rules = [
             'packages' => ['array'],
             'packages.*' => ['string', Rule::in($packages)],
-            'parts' => ['array', 'bail', new PartsPackagesRequirement()],
+            'parts' => ['array', new PartsOrPackagesRequirement()],
             'parts.*' => ['string', Rule::in($parts)],
 
             'gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender_optional'],

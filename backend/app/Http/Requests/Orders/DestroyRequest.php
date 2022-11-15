@@ -40,7 +40,7 @@ class DestroyRequest extends BaseFormRequest
 
         $isSelf = $targetUser->getKey() === $user->getKey();
 
-        $deleteOrders = $targetUser->authenticatableRole->role->role->deleteOrderSubjects;
+        $deleteOrders = $user->authenticatableRole->role->role->deleteOrderSubjects;
         foreach ($deleteOrders as $deleteOrder) {
             if ($deleteOrder->relatedBusiness->name !== $input['businessName']) {
                 continue;

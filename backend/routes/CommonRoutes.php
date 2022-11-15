@@ -71,7 +71,13 @@ class CommonRoutes
             });
 
         Route::controller(OrdersController::class)
-            ->group(function () {
+            ->group(function () use ($from) {
+                if ($from === 'web') {
+                    Route::get('/dashboard/order', function () {
+                        return view('app');
+                    })->name('order.page');
+                }
+
                 Route::get('/orders/laser/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
                 Route::get('/orders/regular/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
 

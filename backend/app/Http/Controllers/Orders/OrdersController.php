@@ -198,7 +198,7 @@ class OrdersController extends Controller
         return response()->json($orders);
     }
 
-    public function store(StoreRequest $request): JsonResponse|Response
+    public function store(StoreRequest $request): Response
     {
         $validatedInput = $request->safe()->all();
         $authenticated = $this->checkAuthentication->getAuthenticated();
@@ -273,7 +273,7 @@ class OrdersController extends Controller
                 break;
         }
 
-        return response()->json($order->toArray());
+        return response(trans_choice('Orders/create.successful', 0));
     }
 
     public function ordersCount(OrdersCountRequest $request): Response
