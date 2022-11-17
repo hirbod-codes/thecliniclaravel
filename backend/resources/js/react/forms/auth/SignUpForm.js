@@ -16,11 +16,9 @@ import Step from '@mui/material/Step';
 import StepLabel from '@mui/material/StepLabel';
 import Box from '@mui/material/Box';
 import Slide from '@mui/material/Slide';
-import { LocaleContext } from '../../components/localeContext.js';
 import { Alert, IconButton, Snackbar } from '@mui/material';
 import { Navigate } from 'react-router-dom';
 import { get_cities, get_genders, get_states } from '../../components/Http/Api/general.js';
-import { post_account_admin, post_account_patient } from '../../components/Http/Api/accounts.js';
 
 export class SignUpForm extends Component {
     constructor(props) {
@@ -83,6 +81,8 @@ export class SignUpForm extends Component {
                 }
             ],
             activeStep: 0,
+
+            isPhonenumberUnique: true,
 
             firstname: '',
             lastname: '',
@@ -220,7 +220,7 @@ export class SignUpForm extends Component {
                     <Slide direction={this.state.steps[0].animationDirection} timeout={this.duration} in={this.state.steps[0].in} mountOnEnter unmountOnExit>
                         <Box component='form' onSubmit={this.handleSubmitPhonenumber} >
                             <FormControl sx={{ width: '100%' }} >
-                                <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                                <TextField onInput={this.handlePhonenumber} error={!this.state.isPhonenumberUnique} value={this.state.phonenumber} required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
                                 {this.state.isSubmittingPhonenumber && <LoadingButton loading variant="contained">{translate('general/submit/single/allLowerCase')}</LoadingButton>}
                                 {!this.state.isSubmittingPhonenumber && <Button type='submit' fullWidth onClick={this.handleSubmitPhonenumber} variant='contained' >{translate('general/submit/single/ucFirstLetterFirstWord')}</Button>}
@@ -246,7 +246,7 @@ export class SignUpForm extends Component {
                                 <TextField type='email' onInput={this.handleEmail} label={translate('general/email-address/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
                                 <TextField type='password' error={!this.state.passwordsMatch} onInput={this.handlePassword} required label={translate('general/password/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} />
                                 <TextField type='password' error={!this.state.passwordsMatch} onInput={this.handleConfirmPassword} required label={translate('general/confirm-password/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
-                                <TextField onInput={this.handlePhonenumber} value={this.state.phonenumber} disabled required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
+                                <TextField value={this.state.phonenumber} disabled required label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
 
                                 {this.state.loadingGenders && <LoadingButton loading variant='contained'>{translate('general/gender/single/ucFirstLetterFirstWord')}</LoadingButton>}
                                 {!this.state.loadingGenders && <Autocomplete
@@ -254,16 +254,9 @@ export class SignUpForm extends Component {
                                     disablePortal
                                     options={this.genders}
                                     onChange={this.handleGender}
+                                    onClick={this.handleGender}
                                     renderInput={(params) => <TextField {...params} label={translate('general/gender/single/ucFirstLetterFirstWord')} required variant='standard' />}
                                 />}
-
-                                <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
-                                    <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 1, flexGrow: 1 }}>
-                                        {translate('pages/auth/signup/choose-avatar') + (this.state.avatar.name ? (': ' + this.state.avatar.name) : '')}
-                                        <TextField id='avatar' type='file' onInput={this.handleAvatar} required label={translate('general/avatar/single/ucFirstLetterFirstWord')} variant='standard' sx={{ display: 'none' }} />
-                                    </Button>
-                                    <Button variant='contained' type='button' onClick={this.resetAvatar} >{translate('general/reset/single/ucFirstLetterFirstWord')}</Button>
-                                </Box>
 
                                 <TextField type='number' onInput={this.handleAge} required label={translate('general/age/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} min={1} />
 
@@ -384,7 +377,7 @@ export class SignUpForm extends Component {
         this.setState({ isSubmittingPhonenumber: true });
 
         let r = null;
-        r = await fetchData('get', '/auth/phonenumber-availability?phonenumber=' + this.state.phonenumber, {}, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+        r = await fetchData('get', '/auth/phonenumber-availability?phonenumber=' + this.state.phonenumber, {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
         if (r.response.status !== 200) {
             let value = null;
             if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
@@ -396,7 +389,7 @@ export class SignUpForm extends Component {
         }
 
         r = null;
-        r = await fetchData('post', '/auth/send-code-to-phonenumber', { phonenumber: this.state.phonenumber }, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+        r = await fetchData('post', '/auth/send-code-to-phonenumber', { phonenumber: this.state.phonenumber }, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
         if (r.response.status === 200) {
             this.nextStep();
         } else {
@@ -418,7 +411,7 @@ export class SignUpForm extends Component {
         input.phonenumber = this.state.phonenumber;
         input.code = this.state.phonenumberCode;
 
-        let r = await fetchData('post', '/auth/verify-phonenumber', input, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+        let r = await fetchData('post', '/auth/verify-phonenumber', input, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
 
         if (r.response.status === 200) {
             this.nextStep();
@@ -436,27 +429,23 @@ export class SignUpForm extends Component {
         e.preventDefault();
         this.setState({ isSubmittingRegisteration: true });
 
-        let input = new FormData();
-        // let input = {};
+        let input = { userAttributes: {}, userAccountAttributes: {} };
 
-        input.append('firstname', this.state.firstname);
-        input.append('lastname', this.state.lastname);
-        input.append('username', this.state.username);
-        input.append('email', this.state.email);
-        input.append('password', this.state.password);
-        input.append('password_confirmation', this.state.confirmPassword);
-        input.append('gender', this.state.gender);
-        input.append('phonenumber', this.state.phonenumber);
-        if (this.state.avatar) {
-            input.append('avatar', this.state.avatar, this.state.avatar.name);
-        }
+        input.userAttributes.firstname = this.state.firstname;
+        input.userAttributes.lastname = this.state.lastname;
+        input.userAttributes.username = this.state.username;
+        input.userAttributes.email = this.state.email;
+        input.userAttributes.password = this.state.password;
+        input.userAttributes.password_confirmation = this.state.confirmPassword;
+        input.userAttributes.gender = this.state.gender;
+        input.userAttributes.phonenumber = this.state.phonenumber;
 
-        input.append('age', this.state.age);
-        input.append('state', this.state.state);
-        input.append('city', this.state.city);
-        input.append('address', this.state.address);
+        input.userAccountAttributes.age = this.state.age;
+        input.userAccountAttributes.state = this.state.state;
+        input.userAccountAttributes.city = this.state.city;
+        input.userAccountAttributes.address = this.state.address;
 
-        let r = await fetchData('post', '/register', input, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+        let r = await fetchData('post', '/register', input, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
 
         if (r.response.status === 200) {
             if (r.response.redirected) {

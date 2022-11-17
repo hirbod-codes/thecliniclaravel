@@ -11,6 +11,7 @@ generalSentences['send-email-verification-message'].ucFirstLetterFirstWord = 'ل
 generalSentences['send-email-verification-message'].ucFirstLetterAllWords = 'لطفا ایمیل خود را چک کنید و روی لینک تاییدیه کلیک کنید';
 
 generalSentences['server-error'] = 'متاسفانه به یک مشکل غیر منتظره برخوردیم';
+generalSentences['page-expired'] = 'لطفا مرورگر خود را رفرش کنید.';
 
 generalSentences['minimum-time-range-exceeded'] = 'از حداقل زمان عبور کردید.';
 generalSentences['maximum-time-range-exceeded'] = 'از حداکثر زمان عبور کردید.';

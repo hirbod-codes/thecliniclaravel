@@ -3,11 +3,11 @@ import { LocaleContext } from "../localeContext";
 
 function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], isApiRequest = false) {
     if (isApiRequest) {
-        if(headers['Accept']===undefined){
+        if (headers['Accept'] === undefined) {
             headers['Accept'] = 'application/json';
         }
 
-        if(headers['Content-Type']===undefined){
+        if (headers['Content-Type'] === undefined) {
             headers['Content-Type'] = 'application/json';
         }
 
@@ -236,6 +236,10 @@ async function getResponseValue(res) {
         } else {
             return r;
         }
+    }
+
+    if (res.status === 419) { 
+        return translate('generalSentences/page-expired');
     }
 
     if (r.message !== undefined) {

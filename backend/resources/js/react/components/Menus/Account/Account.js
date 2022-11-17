@@ -14,7 +14,7 @@ import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { PrivilegesContext } from '../../privilegesContext';
 import { get_cities, get_genders, get_states } from '../../Http/Api/general';
-import { delete_account, put_account } from '../../Http/Api/accounts';
+import { delete_account, put_account, put_avatar } from '../../Http/Api/accounts';
 
 /**
  * Account
@@ -22,6 +22,7 @@ import { delete_account, put_account } from '../../Http/Api/accounts';
  */
 export class Account extends Component {
     static propTypes = {
+        isSelf: PropTypes.bool,
         account: PropTypes.object.isRequired,
         accountRole: PropTypes.string.isRequired,
         onUpdateSuccess: PropTypes.func,
@@ -43,6 +44,7 @@ export class Account extends Component {
         this.closeSendModal = this.closeSendModal.bind(this);
         this.closeCodeModal = this.closeCodeModal.bind(this);
 
+        this.hsndleAvatarUpdate = this.hsndleAvatarUpdate.bind(this);
         this.hsndleUpdate = this.hsndleUpdate.bind(this);
         this.hsndleDelete = this.hsndleDelete.bind(this);
         this.send = this.send.bind(this);
@@ -56,6 +58,8 @@ export class Account extends Component {
         this.handleGender = this.handleGender.bind(this);
         this.handleState = this.handleState.bind(this);
         this.handleCity = this.handleCity.bind(this);
+
+        this.buildFeedback = this.buildFeedback.bind(this);
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -159,32 +163,62 @@ export class Account extends Component {
         this.setState({ openRegularVisitsViewModal: false });
     }
 
+    buildFeedback(m, i) {
+        return <Snackbar
+            key={i}
+            open={m.open}
+            autoHideDuration={6000}
+            onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+            action={
+                <IconButton
+                    size="small"
+                    onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                >
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            }
+        >
+            <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                {m.message}
+            </Alert>
+        </Snackbar>
+    }
+
     render() {
         return (
             <>
+                {this.state.feedbackMessages.map(this.buildFeedback)}
+
                 <Stack
                     direction='column'
                     spacing={2}
                 >
                     <FormControl sx={{ width: '100%' }} >
-                        <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
-                            <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
-                                {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
-                                <TextField
-                                    disabled={!(this.context.privileges !== undefined && this.context.privileges.editAvatar !== undefined && this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && Number(this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].boolean_value) === 1) || this.state.isUpdating}
-                                    id='avatar'
-                                    type='file'
-                                    onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : ''; return state; })}
-                                    required
-                                    label={translate('general/avatar/single/ucFirstLetterFirstWord')}
-                                    variant='standard'
-                                    sx={{ display: 'none' }}
-                                />
-                            </Button>
-                            <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = ''; return state; })} >{
-                                translate('general/reset/single/ucFirstLetterFirstWord')}
-                            </Button>
-                        </Box>
+                        {
+                            (this.context.privileges !== undefined && this.context.privileges.editAvatar !== undefined && this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && Number(this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].boolean_value) === 1)
+                                ? <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
+                                    <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
+                                        {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
+                                        <TextField
+                                            disabled={this.state.isUpdating}
+                                            id='avatar'
+                                            type='file'
+                                            onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : null; return state; })}
+                                            required
+                                            label={translate('general/avatar/single/ucFirstLetterFirstWord')}
+                                            variant='standard'
+                                            sx={{ display: 'none' }}
+                                        />
+                                    </Button>
+                                    <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = null; return state; })}  sx={{ mr: 1, ml: 0}}>
+                                        {translate('general/reset/single/ucFirstLetterFirstWord')}
+                                    </Button>
+                                    <Button variant='contained' type='button' onClick={this.hsndleAvatarUpdate} >
+                                        {translate('general/update/single/ucFirstLetterFirstWord')}
+                                    </Button>
+                                </Box>
+                                : null
+                        }
 
                         <TextField
                             disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('firstname') !== -1) || this.state.isUpdating}
@@ -245,7 +279,7 @@ export class Account extends Component {
                                 disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('phonenumber') !== -1) || this.state.isUpdating}
                                 variant='contained'
                                 type='button'
-                                onClick={() => this.setState({ isUpdatingPhonenumber: true, openSendModal: true })}
+                                onClick={async () => { await updateState(this, { isUpdatingPhonenumber: true, sendMethod: 'phonenumber' }); this.send(); }}
                             >
                                 {translate('pages/account/account/update-your-phone')}
                             </Button>
@@ -390,6 +424,7 @@ export class Account extends Component {
                     onClose={this.closeSendModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
                         <Stack
                             direction='column'
                             spacing={2}
@@ -405,6 +440,7 @@ export class Account extends Component {
                     onClose={this.closeCodeModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
                         <Stack
                             direction='column'
                             spacing={2}
@@ -416,7 +452,7 @@ export class Account extends Component {
                                 (this.state.isUpdatingPassword ?
                                     <>
                                         <TextField variant='standard' type='text' onInput={(e) => this.setState((state) => { state.inputs.password = e.target.value; return state; })} label={translate('general/password/single/ucFirstLetterAllWords')} sx={{ m: 1 }} />
-                                        <TextField error={this.state.inputs.password === this.state.inputs.password_confirmation}
+                                        <TextField error={this.state.inputs.password !== this.state.inputs.password_confirmation}
                                             variant='standard' type='text' onInput={(e) => this.setState((state) => { state.inputs.password_confirmation = e.target.value; return state; })} label={translate('general/confirm-password/single/ucFirstLetterAllWords')} sx={{ m: 1 }} />
                                     </>
                                     : null)
@@ -432,6 +468,7 @@ export class Account extends Component {
                     onClose={this.closeLaserOrdersViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
                         <SelfLaserOrdersDataGrid account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
@@ -440,6 +477,7 @@ export class Account extends Component {
                     onClose={this.closeRegularOrdersViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
                         <SelfRegularOrdersDataGrid account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
@@ -449,6 +487,7 @@ export class Account extends Component {
                     onClose={this.closeLaserVisitsViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
                         <SelfVisitsDataGrid businessName='laser' account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
@@ -457,30 +496,10 @@ export class Account extends Component {
                     onClose={this.closeRegularVisitsViewModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
                         <SelfVisitsDataGrid businessName='regular' account={this.props.account} accountRole={this.props.accountRole} />
                     </Paper>
                 </Modal>
-
-                {this.state.feedbackMessages.map((m, i) =>
-                    <Snackbar
-                        key={i}
-                        open={m.open}
-                        autoHideDuration={6000}
-                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
-                        action={
-                            <IconButton
-                                size="small"
-                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        }
-                    >
-                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
-                            {m.message}
-                        </Alert>
-                    </Snackbar>
-                )}
             </>
         );
     }
@@ -543,6 +562,34 @@ export class Account extends Component {
         }
     }
 
+    async hsndleAvatarUpdate(e) {
+        if (!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0) || this.state.isUpdating) {
+            return;
+        }
+
+        this.setState({ isUpdating: true });
+
+        let r = await put_avatar(this.props.account.id, this.state.inputs.avatar, this.state.token);
+
+        if (r.response.status === 200) {
+            if (this.props.updateAccount !== undefined) {
+                this.props.updateAccount();
+            }
+
+            this.setState({ feedbackMessages: [{ color: 'success', open: true, message: translate('general/successful/single/ucFirstLetterFirstWord') }] });
+
+            if (this.props.onUpdateSuccess !== undefined) {
+                this.props.onUpdateSuccess();
+            }
+        } else {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            let feedbackMessages = this.state.feedbackMessages;
+            value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } }).forEach((v, i) => feedbackMessages.push(v));
+            this.setState({ feedbackMessages: feedbackMessages });
+        }
+    }
+
     async hsndleUpdate(e) {
         if (!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0) || this.state.isUpdating) {
             return;
@@ -552,9 +599,8 @@ export class Account extends Component {
 
         let data = {};
         let specialData = {};
-        let avatar = null;
         for (const k in this.state.inputs) {
-            if (k === 'phonenumber' || k === 'password' || k === 'password_confirmation' || k === 'code') {
+            if (k === 'phonenumber' || k === 'password' || k === 'password_confirmation' || k === 'code' || k === 'avatar') {
                 continue;
             }
 
@@ -564,12 +610,7 @@ export class Account extends Component {
 
             const v = this.state.inputs[k];
 
-            if (v === '') {
-                continue;
-            }
-
-            if (k === 'avatar') {
-                avatar = v;
+            if (v === '' || v === null) {
                 continue;
             }
 
@@ -590,7 +631,9 @@ export class Account extends Component {
             }
         }
 
-        let r = await put_account(this.props.account.id, Object.keys(data).length !== 0 ? data : null, Object.keys(specialData).length !== 0 ? specialData : null, avatar, this.state.token);
+        let r = await put_account(this.props.account.id, Object.keys(data).length !== 0 ? data : null, Object.keys(specialData).length !== 0 ? specialData : null, this.state.token);
+
+        this.setState({ isUpdating: false });
 
         if (r.response.status === 200) {
             if (this.props.updateAccount !== undefined) {
@@ -605,11 +648,10 @@ export class Account extends Component {
         } else {
             let value = null;
             if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
-            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
-            this.setState({ feedbackMessages: value });
+            let feedbackMessages = this.state.feedbackMessages;
+            value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } }).forEach((v, i) => feedbackMessages.push(v));
+            this.setState({ feedbackMessages: feedbackMessages });
         }
-
-        this.setState({ isUpdating: false });
     }
 
     async hsndleDelete(e) {
@@ -619,10 +661,10 @@ export class Account extends Component {
 
         this.setState({ isDeleting: true });
 
-        let r = await delete_account(this.props.account.idthis.state.token);
+        let r = await delete_account(this.props.account.id, this.state.token);
         if (r.response.status === 200) {
             setTimeout(() => {
-                fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { window.location.href = r.response.url; }, [], false);
+                fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { window.location.href = r.response.url; });
             }, 1000);
         } else {
             let value = null;
@@ -644,7 +686,7 @@ export class Account extends Component {
             data.email = this.props.account.email;
         }
 
-        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.sendMethod === 'phonenumber' ? 'phonenumber' : 'email'), data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+        let r = await fetchData('post', '/auth/send-code-to-' + (this.state.sendMethod === 'phonenumber' ? 'phonenumber' : 'email'), data, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
 
         if (r.response.status === 200) {
             this.setState({ openCodeModal: true });
@@ -706,7 +748,7 @@ export class Account extends Component {
             data.code = this.state.inputs.code;
             data.password = this.state.inputs.password;
             data.password_confirmation = this.state.inputs.password_confirmation;
-            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token });
+            r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
 
             if (r.response.status === 200) {
                 this.closeCodeModal(null, 'code');

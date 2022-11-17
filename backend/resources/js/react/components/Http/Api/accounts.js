@@ -1,6 +1,6 @@
 import { fetchData } from "../fetch";
 
-async function post_account_admin(
+async function post_account_admin({
     roleName,
     phonenumber,
     firstname,
@@ -9,8 +9,7 @@ async function post_account_admin(
     password,
     password_confirmation,
     gender,
-    avatar = null,
-    token) {
+    token }) {
     let data = {
         userAttributes: {
             phonenumber: phonenumber,
@@ -20,16 +19,13 @@ async function post_account_admin(
             password: password,
             password_confirmation: password_confirmation,
             gender: gender
-        },
-        userAccountAttributes: {}
+        }
     };
-
-    if (avatar !== null) { data.avatar = avatar; }
 
     return await fetchData('post', '/account/admin/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
-async function post_account_doctor(
+async function post_account_doctor({
     roleName,
     phonenumber,
     firstname,
@@ -38,8 +34,7 @@ async function post_account_doctor(
     password,
     password_confirmation,
     gender,
-    avatar = null,
-    token) {
+    token }) {
     let data = {
         userAttributes: {
             phonenumber: phonenumber,
@@ -49,16 +44,13 @@ async function post_account_doctor(
             password: password,
             password_confirmation: password_confirmation,
             gender: gender
-        },
-        userAccountAttributes: {}
+        }
     };
-
-    if (avatar !== null) { data.avatar = avatar; }
 
     return await fetchData('post', '/account/doctor/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
-async function post_account_secretary(
+async function post_account_secretary({
     roleName,
     phonenumber,
     firstname,
@@ -67,8 +59,7 @@ async function post_account_secretary(
     password,
     password_confirmation,
     gender,
-    avatar = null,
-    token) {
+    token }) {
     let data = {
         userAttributes: {
             phonenumber: phonenumber,
@@ -78,16 +69,13 @@ async function post_account_secretary(
             password: password,
             password_confirmation: password_confirmation,
             gender: gender
-        },
-        userAccountAttributes: {}
+        }
     };
-
-    if (avatar !== null) { data.avatar = avatar; }
 
     return await fetchData('post', '/account/secretary/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
-async function post_account_operator(
+async function post_account_operator({
     roleName,
     phonenumber,
     firstname,
@@ -96,8 +84,7 @@ async function post_account_operator(
     password,
     password_confirmation,
     gender,
-    avatar = null,
-    token) {
+    token }) {
     let data = {
         userAttributes: {
             phonenumber: phonenumber,
@@ -107,16 +94,13 @@ async function post_account_operator(
             password: password,
             password_confirmation: password_confirmation,
             gender: gender
-        },
-        userAccountAttributes: {}
+        }
     };
-
-    if (avatar !== null) { data.avatar = avatar; }
 
     return await fetchData('post', '/account/operator/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
-async function post_account_patient(
+async function post_account_patient({
     roleName,
     phonenumber,
     firstname,
@@ -125,8 +109,11 @@ async function post_account_patient(
     password,
     password_confirmation,
     gender,
-    avatar = null,
-    token) {
+    age,
+    state,
+    city,
+    address,
+    token}) {
     let data = {
         userAttributes: {
             phonenumber: phonenumber,
@@ -137,10 +124,13 @@ async function post_account_patient(
             password_confirmation: password_confirmation,
             gender: gender
         },
-        userAccountAttributes: {}
+        userAccountAttributes: {
+            age: age,
+            state: state,
+            city: city,
+            address: address
+        }
     };
-
-    if (avatar !== null) { data.avatar = avatar; }
 
     return await fetchData('post', '/account/patient/' + roleName, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
@@ -176,20 +166,25 @@ async function delete_account(accountId, token) {
     return await fetchData('delete', '/account/' + accountId, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
-async function put_account(accountId, userAttributes = null, userAccountAttributes = null, avatar = null, token) {
+async function put_account(accountId, userAttributes = null, userAccountAttributes = null, token) {
     let data = {};
 
     if (userAttributes !== null) { data.userAttributes = userAttributes; }
 
     if (userAccountAttributes !== null) { data.userAccountAttributes = userAccountAttributes; }
 
-    if (avatar !== null) { data.avatar = avatar; }
-
     return await fetchData('put', '/account/' + accountId, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
+async function put_avatar(accountId, avatar, token) {
+    let data = new FormData();
+    data.append('avatar', avatar);
+
+    return await fetchData('post', '/avatar/' + accountId, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
+}
+
 async function get_accountsCount(roleName, token) {
-    return await fetchData('get', '/accountsCount?roleName=' + roleName, {}, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
+    return await fetchData('get', '/accountsCount?roleName=' + roleName, {}, { 'X-CSRF-TOKEN': token });
 }
 
 export {
@@ -199,6 +194,7 @@ export {
     post_account_operator,
     post_account_patient,
     get_account,
+    put_avatar,
     get_account_by,
     get_accounts,
     get_accountsCount,

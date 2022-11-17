@@ -14,6 +14,7 @@ generalSentences['send-email-verification-message'].ucFirstLetterFirstWord = ucF
 generalSentences['send-email-verification-message'].ucFirstLetterAllWords = ucFirstLetterAllWords(generalSentences['send-email-verification-message'].allLowerCase);
 
 generalSentences['server-error'] = 'Unfortunately we encountered an unknown error.';
+generalSentences['page-expired'] = 'Please refresh your browser.';
 
 generalSentences['minimum-time-range-exceeded'] = 'The minimum time exceeded.';
 generalSentences['maximum-time-range-exceeded'] = 'The maximum time exceeded.';

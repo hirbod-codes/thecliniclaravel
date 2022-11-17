@@ -3,14 +3,14 @@ import React, { Component } from 'react'
 import PropTypes from 'prop-types';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, Autocomplete, Box, Button, FormControl, FormControlLabel, FormLabel, IconButton, Radio, RadioGroup, Slide, Snackbar, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
+import { Alert, Autocomplete, Box, Button, FormControl, IconButton, Slide, Snackbar, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import LoadingButton from '@mui/lab/LoadingButton';
-import { LocaleContext } from '../../localeContext';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
 import { post_account_admin, post_account_doctor, post_account_operator, post_account_patient, post_account_secretary } from '../../Http/Api/accounts';
 import { get_cities, get_genders, get_states } from '../../Http/Api/general';
+import { get_dataType } from '../../Http/Api/roles';
 
 /**
  * AccountCreator
@@ -18,7 +18,6 @@ import { get_cities, get_genders, get_states } from '../../Http/Api/general';
  */
 export class AccountCreator extends Component {
     static propTypes = {
-        dataType: PropTypes.string.isRequired,
         rules: PropTypes.arrayOf(PropTypes.string).isRequired,
         onSuccess: PropTypes.func,
         onFailure: PropTypes.func,
@@ -45,6 +44,8 @@ export class AccountCreator extends Component {
         this.handleGender = this.handleGender.bind(this);
         this.handleState = this.handleState.bind(this);
         this.handleCity = this.handleCity.bind(this);
+
+        this.updateDataType = this.updateDataType.bind(this);
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -78,6 +79,7 @@ export class AccountCreator extends Component {
             activeStep: 0,
 
             rule: this.props.rules[0],
+            dataType: '',
 
             isSubmittingPhonenumber: false,
 
@@ -99,17 +101,20 @@ export class AccountCreator extends Component {
                 phonenumber: '',
                 password: '',
                 password_confirmation: '',
-                age: '',
-                avatar: '',
+                gender: '',
             },
 
             patient: {
-                genders: '',
+                age: '',
                 state: '',
                 city: '',
                 address: '',
             },
         };
+    }
+
+    componentDidMount() {
+        this.updateDataType();
     }
 
     componentDidUpdate(prevProps, prevState) {
@@ -197,6 +202,32 @@ export class AccountCreator extends Component {
         });
     }
 
+    async updateDataType(e) {
+        const elm = e.target;
+
+        let v = '';
+        if (elm.tagName === 'INPUT') {
+            v = elm.getAttribute('value');
+        } else {
+            v = elm.innerText;
+        }
+
+        await updateState(this, { rule: v });
+        console.log(this.state.rule);
+
+        let r = await get_dataType(this.state.rule, this.state.token);
+
+        if (r.response.status !== 200) {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
+            return;
+        }
+
+        this.setState({ dataType: r.value });
+    }
+
     render() {
         return (
             <>
@@ -243,31 +274,13 @@ export class AccountCreator extends Component {
 
                     <Slide direction={this.state.steps[2].animationDirection} timeout={this.duration} in={this.state.steps[2].in} mountOnEnter unmountOnExit>
                         <FormControl sx={{ width: '100%' }} >
-                            <FormLabel id="demo-row-radio-buttons-group-label">{translate('general/rule/plural/ucFirstLetterFirstWord')}</FormLabel>
-                            <RadioGroup
-                                value={this.state.rule}
-                                onChange={(e) => this.setState({ rule: e.target.value })}
-                                row
-                                name="row-radio-buttons-group"
-                            >
-                                {this.props.rules.map((v, i) => <FormControlLabel defaultChecked={v === this.props.rules[0]} value={v} control={<Radio />} label={v} key={i} />)}
-                            </RadioGroup>
-
-                            <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
-                                <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
-                                    {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
-                                    <TextField
-                                        id='avatar'
-                                        type='file'
-                                        onInput={(e) => this.setState((state) => { state.inputs.avatar = e.target.files[0] ? e.target.files[0] : ''; return state; })}
-                                        required
-                                        label={translate('general/avatar/single/ucFirstLetterFirstWord')}
-                                        variant='standard'
-                                        sx={{ display: 'none' }}
-                                    />
-                                </Button>
-                                <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = ''; return state; })} >{translate('general/reset/single/ucFirstLetterFirstWord')}</Button>
-                            </Box>
+                            <Autocomplete
+                                sx={{ m: 1 }}
+                                disablePortal
+                                options={this.props.rules}
+                                onChange={this.updateDataType}
+                                renderInput={(params) => <TextField {...params} label={translate('general/rule/plural/ucFirstLetterFirstWord')} required variant='standard' />}
+                            />
 
                             <TextField
                                 value={this.state.inputs.firstname}
@@ -338,12 +351,12 @@ export class AccountCreator extends Component {
                             />
                             }
 
-                            {this.props.dataType === 'admin' ? null : null}
-                            {this.props.dataType === 'doctor' ? null : null}
-                            {this.props.dataType === 'secretary' ? null : null}
-                            {this.props.dataType === 'operator' ? null : null}
+                            {this.state.dataType === 'admin' ? null : null}
+                            {this.state.dataType === 'doctor' ? null : null}
+                            {this.state.dataType === 'secretary' ? null : null}
+                            {this.state.dataType === 'operator' ? null : null}
 
-                            {this.props.dataType === 'patient' ?
+                            {this.state.dataType === 'patient' ?
                                 <>
                                     <TextField type='number' onInput={(e) => this.setState((state) => { state.patient.age = e.target.value; return state; })} required value={this.state.patient.age} label={translate('general/age/single/ucFirstLetterFirstWord')} variant='standard' sx={{ m: 1 }} min={1} />
 
@@ -383,17 +396,17 @@ export class AccountCreator extends Component {
                         key={i}
                         open={m.open}
                         autoHideDuration={6000}
-                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                        onClose={(e, r) => { this.handleFeedbackClose(e, r, i); }}
                         action={
                             <IconButton
                                 size="small"
-                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                                onClick={(e, r) => { this.handleFeedbackClose(e, r, i); }}
                             >
                                 <CloseIcon fontSize="small" />
                             </IconButton>
                         }
                     >
-                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                        <Alert onClose={(e, r) => { this.handleFeedbackClose(e, r, i); }} severity={m.color} sx={{ width: '100%' }}>
                             {m.message}
                         </Alert>
                     </Snackbar>
@@ -418,9 +431,9 @@ export class AccountCreator extends Component {
             }
         }
 
-        for (const j in this.state[this.props.dataType]) {
-            if (Object.hasOwnProperty.call(this.state[this.props.dataType], j)) {
-                const ruleInput = this.state[this.props.dataType][j];
+        for (const j in this.state[this.state.dataType]) {
+            if (Object.hasOwnProperty.call(this.state[this.state.dataType], j)) {
+                const ruleInput = this.state[this.state.dataType][j];
                 if (ruleInput === '' || ruleInput === null) {
                     continue;
                 }
@@ -431,27 +444,28 @@ export class AccountCreator extends Component {
 
         data.roleName = this.state.rule;
         data.token = this.state.token;
+        console.log(data);
 
         let r = null;
         switch (this.state.rule) {
             case 'admin':
-                r = await post_account_admin(...data);
+                r = await post_account_admin(data);
                 break;
 
             case 'doctor':
-                r = await post_account_doctor(...data);
+                r = await post_account_doctor(data);
                 break;
 
             case 'secretary':
-                r = await post_account_secretary(...data);
+                r = await post_account_secretary(data);
                 break;
 
             case 'operator':
-                r = await post_account_operator(...data);
+                r = await post_account_operator(data);
                 break;
 
             case 'patient':
-                r = await post_account_patient(...data);
+                r = await post_account_patient(data);
                 break;
 
             default:
@@ -480,8 +494,21 @@ export class AccountCreator extends Component {
     async submitPhonenumber(e) {
         this.setState({ isSubmittingPhonenumber: true });
 
+        let r = null;
+        r = await fetchData('get', '/auth/phonenumber-availability?phonenumber=' + this.state.inputs.phonenumber, {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
+        if (r.response.status !== 200) {
+            let value = null;
+            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
+            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
+            this.setState({ feedbackMessages: value });
+
+            this.setState({ isSubmittingPhonenumber: false });
+            return;
+        }
+
+        r = null;
         let data = { phonenumber: this.state.inputs.phonenumber };
-        let r = await fetchData('post', '/auth/send-code-to-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
+        r = await fetchData('post', '/auth/send-code-to-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token }, [], false);
         this.setState({ isSubmittingPhonenumber: false });
 
         let value = null;
@@ -584,7 +611,7 @@ export class AccountCreator extends Component {
             v = elm.innerText;
         }
 
-        this.setState((state) => { state.patient.gender = v; return state; });
+        this.setState((state) => { state.inputs.gender = v; return state; });
     }
 
     handleState(e) {

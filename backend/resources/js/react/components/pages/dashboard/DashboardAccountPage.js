@@ -68,7 +68,7 @@ export class DashboardAccountPage extends Component {
                             }
                             {((p.retrieveUser.length > 1) || (p.retrieveUser.length === 1 && p.retrieveUser[0] !== 'self')) &&
                                 <TabPanel value={this.state.accountPageTabsValue} index={1} style={{ height: '100%' }} >
-                                    <AccountsServerDataGrid roles={p.retrieveUser.map((v) => { return v !== 'self' ? v : p.role; })} account={this.props.account} />
+                                    <AccountsServerDataGrid roles={p.retrieveUser.filter((v) => { return v !== 'self'; })} account={this.props.account} />
                                 </TabPanel>
                             }
 

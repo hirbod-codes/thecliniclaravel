@@ -18,7 +18,6 @@ import Account from '../../Menus/Account/Account';
 import { PrivilegesContext } from '../../privilegesContext';
 import { LocaleContext } from '../../localeContext';
 import { delete_account, get_accountsCount } from '../../Http/Api/accounts';
-import { get_dataType } from '../../Http/Api/roles';
 
 /**
  * AccountsServerDataGrid
@@ -44,7 +43,6 @@ export class AccountsServerDataGrid extends Component {
         this.onPageChange = this.onPageChange.bind(this);
         this.onPageSizeChange = this.onPageSizeChange.bind(this);
 
-        this.getDataType = this.getDataType.bind(this);
         this.getRowCount = this.getRowCount.bind(this);
         this.addColumns = this.addColumns.bind(this);
 
@@ -58,7 +56,6 @@ export class AccountsServerDataGrid extends Component {
             feedbackMessages: [],
 
             role: this.props.roles[0],
-            dataType: '',
 
             reload: false,
 
@@ -85,10 +82,6 @@ export class AccountsServerDataGrid extends Component {
         };
     }
 
-    componentDidMount() {
-        this.getDataType();
-    }
-
     getRowCount() {
         return new Promise(async (resolve, reject) => {
             let rowCount = await get_accountsCount(this.state.role, this.state.token);
@@ -101,19 +94,6 @@ export class AccountsServerDataGrid extends Component {
             }
             resolve(rowCount.value);
         })
-    }
-
-    async getDataType() {
-        let r = await get_dataType('get', '/dataType?roleName=' + this.state.role, {}, { 'X-CSRF-TOKEN': this.state.token });
-
-        if (r.response.status !== 200) {
-            let value = null;
-            if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
-            value = value.map((v, i) => { return { open: true, message: v, color: r.response.status === 200 ? 'success' : 'error' } });
-            this.setState({ feedbackMessages: value });
-            return;
-        }
-        this.setState({ dataType: r.value });
     }
 
     addColumns(columns) {
@@ -195,9 +175,32 @@ export class AccountsServerDataGrid extends Component {
         this.setState({ isUpdating: true, openUpdationModal: true });
     }
 
+    buildFeedback(m, i) {
+        return <Snackbar
+            key={i}
+            open={m.open}
+            autoHideDuration={6000}
+            onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+            action={
+                <IconButton
+                    size="small"
+                    onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
+                >
+                    <CloseIcon fontSize="small" />
+                </IconButton>
+            }
+        >
+            <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                {m.message}
+            </Alert>
+        </Snackbar>
+    }
+
     render() {
         return (
             <>
+                {this.state.feedbackMessages.map(this.buildFeedback)}
+
                 <AccountsDataGrid
                     role={this.state.role}
 
@@ -246,6 +249,8 @@ export class AccountsServerDataGrid extends Component {
                                                 } else {
                                                     v = elm.innerText;
                                                 }
+                                                console.log(v);
+                                                if (v === undefined) { return; }
 
                                                 this.setState({ role: v, page: 0, pagesAccountId: [0], lastAccountId: 0, reload: true })
                                             }}
@@ -259,34 +264,14 @@ export class AccountsServerDataGrid extends Component {
                     lastAccountId={this.state.pagesAccountId[this.state.page]}
                 />
 
-                {this.state.feedbackMessages.map((m, i) =>
-                    <Snackbar
-                        key={i}
-                        open={m.open}
-                        autoHideDuration={6000}
-                        onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
-                        action={
-                            <IconButton
-                                size="small"
-                                onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
-                            >
-                                <CloseIcon fontSize="small" />
-                            </IconButton>
-                        }
-                    >
-                        <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
-                            {m.message}
-                        </Alert>
-                    </Snackbar>
-                )}
-
                 {(this.context.createUser !== undefined && this.context.createUser.indexOf(this.state.role) !== -1) &&
                     <Modal
                         open={this.state.openCreationModal}
                         onClose={this.closeCreationModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', overflowY: 'auto', p: 1 }}>
-                            <AccountCreator dataType={this.state.dataType} onSuccess={() => { this.handleOnCreate(); }} rules={this.context.createUser.map((v, i) => v === 'self' ? this.context.role : v)} />
+                            <AccountCreator onSuccess={() => { this.handleOnCreate(); }} rules={this.context.createUser.map((v, i) => v === 'self' ? this.context.role : v)} />
+                            {this.state.feedbackMessages.map(this.buildFeedback)}
                         </Paper>
                     </Modal>
                 }
@@ -297,7 +282,8 @@ export class AccountsServerDataGrid extends Component {
                         onClose={this.closeUpdationModal}
                     >
                         <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1, overflowY: 'auto' }}>
-                            <Account onUpdateSuccess={() => { this.closeUpdationModal(); this.setState({ reload: true }); }} account={this.state.updatingRow} accountRole={this.context.role} />
+                            <Account onUpdateSuccess={() => { this.closeUpdationModal(); this.setState({ reload: true }); }} account={this.state.updatingRow} accountRole={this.state.role} />
+                            {this.state.feedbackMessages.map(this.buildFeedback)}
                         </Paper>
                     </Modal>
                 }
