@@ -33,7 +33,7 @@ class DataBaseCreateAccount implements IDataBaseCreateAccount
 
             $userModel = new User();
             foreach ($input as $key => $value) {
-                $userModel->{$key} = $value;
+                $userModel->{$key} = $key === 'password' ? bcrypt($value) : $value;
             }
 
             $userModel->saveOrFail();

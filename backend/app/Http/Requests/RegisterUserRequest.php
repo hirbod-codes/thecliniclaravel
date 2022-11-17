@@ -3,9 +3,8 @@
 namespace App\Http\Requests;
 
 use App\Rules\ProhibitExtraFeilds;
-use Illuminate\Foundation\Http\FormRequest;
 
-class RegisterUserRequest extends FormRequest
+class RegisterUserRequest extends BaseFormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,15 +23,15 @@ class RegisterUserRequest extends FormRequest
      */
     public function rules()
     {
-        $array['userAttributes'] = ['required_without:userAccountAttributes', 'array', 'min:1'];
-        $array['userAccountAttributes'] = ['required_without:userAttributes', 'array', 'min:1'];
+        $array['userAttributes'] = ['required', 'array', 'min:1'];
+        $array['userAccountAttributes'] = ['required:userAttributes', 'array', 'min:1'];
         $array['avatar'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'];
 
-        foreach ((include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php')) as $key => $value) {
-            if (in_array($key, ['phonenumber', 'password'])) {
-                continue;
-            }
+        $rules = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php'));
+        unset($rules['password_confirmation'][array_search('same:password', $rules['password_confirmation'], true)]);
+        $rules['password_confirmation'][] = 'same:userAttributes.password';
 
+        foreach ($rules as $key => $value) {
             $array['userAttributes.' . $key] = $value;
         }
 
@@ -44,5 +43,12 @@ class RegisterUserRequest extends FormRequest
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
 
         return $array;
+    }
+
+    protected function passedValidation()
+    {
+        $tmp = $this->all();
+        unset($tmp['userAttributes']['password_confirmation']);
+        $this->replace($tmp);
     }
 }

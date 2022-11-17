@@ -30,7 +30,6 @@ use Database\Interactions\Accounts\AccountsManagement;
 use Database\Interactions\Accounts\Interfaces\IDataBaseCreateAccount;
 use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\DataBaseRetrieveAccounts;
-use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -154,7 +153,7 @@ class AuthController extends Controller
 
     public function register(RegisterUserRequest $request): Response|Redirector|RedirectResponse|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
         $session = $request->session();
 
         if ($validatedInput['userAttributes']['phonenumber'] !== $session->get('phonenumber')) {
@@ -175,7 +174,6 @@ class AuthController extends Controller
         $redirecturl = $session->get('redirecturl');
         $session->forget('redirecturl');
 
-        return response()->json(['token' => trans_choice('auth.phonenumber_verification_mismatch', 0)], 422);
         return redirect($redirecturl === null ? '/' : $redirecturl);
     }
 
@@ -203,8 +201,7 @@ class AuthController extends Controller
         }
         $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
-        Notification::route('phonenumber', $validatedInput['phonenumber'])
-            ->notify(new SendPhonenumberVerificationCode($code));
+        Notification::route('phonenumber', $validatedInput['phonenumber'])->notify(new SendPhonenumberVerificationCode($code));
 
         $session->put('code_destination', 'phonenumber');
         $session->put('code', $code);
@@ -220,7 +217,12 @@ class AuthController extends Controller
         $code = $this->generateCode();
 
         $session = $request->session();
-        if ($session->get('code_destination') && $session->get('code_destination') === 'email' && $session->get('code_expiration_timestamp') && ((new \DateTime)->getTimestamp() < intval($session->get('code_expiration_timestamp', 0)))) {
+        if (
+            $session->get('code_destination') &&
+            $session->get('code_destination') === 'email' &&
+            $session->get('code_expiration_timestamp') &&
+            ((new \DateTime)->getTimestamp() < intval($session->get('code_expiration_timestamp', 0)))
+        ) {
             return response(trans_choice('auth.verification_code_not_expired', 0), 422);
         }
         $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
@@ -230,6 +232,7 @@ class AuthController extends Controller
 
         $session->put('code_destination', 'email');
         $session->put('code', $code);
+        $session->put('email', $input['email']);
         $session->put('code_expiration_timestamp', (new \DateTime)->modify('+90 seconds')->getTimestamp());
 
         return response(trans_choice('auth.email_verification_code_sent', 0));
@@ -237,6 +240,7 @@ class AuthController extends Controller
 
     private function generateCode(): int
     {
+        return 333222;
         return rand(100000, 999999);
     }
 
@@ -246,8 +250,8 @@ class AuthController extends Controller
         $session = $request->session();
 
         if (
-            $session->get('code_destination') !== 'phonenumber' ||
-            (intval($session->get('phonenumber', 0)) !== intval($input['phonenumber']))
+            ($t0 = $session->get('code_destination')) !== 'phonenumber' ||
+            (intval(($t1 = $session->get('phonenumber', 0))) !== intval($input['phonenumber']))
         ) {
             $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
             return response(trans_choice('auth.phonenumber_verification_failed', 0), 422);
@@ -310,7 +314,10 @@ class AuthController extends Controller
         } else {
             $identifier = 'email';
         }
-        $identifierValue = $session->get($identifier);
+
+        if (($identifierValue = $session->get($identifier)) === null) {
+            return response(trans_choice('auth.vierfication_code_expired', 0), 422);
+        }
 
         $user = $this->databaseRetrieveAccounts->getAccount($this->accountsManagement->resolveUsername($identifierValue));
         $user->password = bcrypt($input['password']);
