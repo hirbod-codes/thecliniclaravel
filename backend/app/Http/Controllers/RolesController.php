@@ -267,11 +267,11 @@ class RolesController extends Controller
                         }
 
                         $value = ['string_value' => $attributes['string_value'], 'integer_value' => $attributes['integer_value'], 'boolean_value' => $attributes['boolean_value'], 'timestamp_value' => $attributes['timestamp_value'], 'json_value' => $attributes['json_value']];
-                        if ($attributes[$roleForeignKey] === null) {
+                        if ($attributes['object'] === null) {
                             $temp[$this->findPrivilegeName($roles[$privilegeNameTable], $attributes[(new PrivilegeName)->getForeignKey()])['name']]['self'] = $value;
                             continue;
                         }
-                        $temp[$this->findPrivilegeName($roles[$privilegeNameTable], $attributes[(new PrivilegeName)->getForeignKey()])['name']][$this->findRoleName($roles[$roleNameTable], $attributes[$roleForeignKey])['name']] = $value;
+                        $temp[$this->findPrivilegeName($roles[$privilegeNameTable], $attributes[(new PrivilegeName)->getForeignKey()])['name']][$this->findRoleName($roles[$roleNameTable], $attributes['object'])['name']] = $value;
                     }
                     $v = $temp;
                     break;
