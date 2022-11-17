@@ -313,7 +313,7 @@ class VisitsControllerTest extends TestCase
 
         /** @var LaserStoreRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(LaserStoreRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var LaserOrder|\Mockery\MockInterface $laserOrder */
         $laserOrder = Mockery::mock(LaserOrder::class);
@@ -360,12 +360,12 @@ class VisitsControllerTest extends TestCase
     {
         $validatedInput = [
             'laserOrderId' => 10,
-            'dateTimePeriod' => [['start' => '2000-01-01 10:00:00', 'end' => '2000-01-01 20:00:00']],
+            'dateTimePeriods' => [['start' => '2000-01-01 10:00:00', 'end' => '2000-01-01 20:00:00']],
         ];
 
         /** @var LaserStoreRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(LaserStoreRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var LaserOrder|\Mockery\MockInterface $laserOrder */
         $laserOrder = Mockery::mock(LaserOrder::class);
@@ -416,7 +416,7 @@ class VisitsControllerTest extends TestCase
 
         /** @var LaserStoreRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(LaserStoreRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var LaserOrder|\Mockery\MockInterface $laserOrder */
         $laserOrder = Mockery::mock(LaserOrder::class);
@@ -466,7 +466,7 @@ class VisitsControllerTest extends TestCase
 
         /** @var RegularStoreRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(RegularStoreRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var RegularOrder|\Mockery\MockInterface $regularOrder */
         $regularOrder = Mockery::mock(RegularOrder::class);
@@ -513,12 +513,12 @@ class VisitsControllerTest extends TestCase
     {
         $validatedInput = [
             'regularOrderId' => 10,
-            'dateTimePeriod' => [['start' => '2000-01-01 10:00:00', 'end' => '2000-01-01 20:00:00']],
+            'dateTimePeriods' => [['start' => '2000-01-01 10:00:00', 'end' => '2000-01-01 20:00:00']],
         ];
 
         /** @var RegularStoreRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(RegularStoreRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var RegularOrder|\Mockery\MockInterface $regularOrder */
         $regularOrder = Mockery::mock(RegularOrder::class);
@@ -569,7 +569,7 @@ class VisitsControllerTest extends TestCase
 
         /** @var RegularStoreRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(RegularStoreRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var RegularOrder|\Mockery\MockInterface $regularOrder */
         $regularOrder = Mockery::mock(RegularOrder::class);
@@ -618,7 +618,7 @@ class VisitsControllerTest extends TestCase
 
         /** @var LaserShowAvailableRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(LaserShowAvailableRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var FastestVisit|\Mockery\MockInterface $iFindVisit */
         $iFindVisit = Mockery::mock(FastestVisit::class);
@@ -650,7 +650,7 @@ class VisitsControllerTest extends TestCase
 
         /** @var RegularShowAvailableRequest|\Mockery\MockInterface $request */
         $request = Mockery::mock(RegularShowAvailableRequest::class);
-        $request->shouldReceive('safe->all')->once()->andReturn($validatedInput);
+        $request->shouldReceive('all')->once()->andReturn($validatedInput);
 
         /** @var FastestVisit|\Mockery\MockInterface $iFindVisit */
         $iFindVisit = Mockery::mock(FastestVisit::class);

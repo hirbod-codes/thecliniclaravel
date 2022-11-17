@@ -83,7 +83,6 @@ class DataBaseCreateLaserOrderTest extends TestCase
             DB::rollBack();
 
             $this->assertDatabaseMissing($laserOrder->getTable(), [$order->getForeignKey() => $order->getKey(), 'price' => $priceWithoutDiscount, 'price_with_discount' => $price, 'needed_time' => $timeConsumption]);
-            $this->assertDatabaseMissing($order->getTable(), [$user->getForeignKey() => $user->getKey()]);
         } catch (\Throwable $th) {
             DB::rollBack();
             throw $th;

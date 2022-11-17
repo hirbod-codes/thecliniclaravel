@@ -25,6 +25,7 @@ use Database\Interactions\Accounts\Interfaces\IDataBaseDeleteAccount;
 use Database\Interactions\Accounts\Interfaces\IDataBaseRetrieveAccounts;
 use Database\Interactions\Accounts\Interfaces\IDataBaseUpdateAccount;
 use Illuminate\Contracts\Session\Session;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Validator;
 use Tests\TestCase;
 
@@ -97,7 +98,7 @@ class AccountsControllerTest extends TestCase
         $this->dataBaseRetrieveAccounts->shouldReceive("getAccounts")
             ->once()
             ->with($count, $this->ruleName, $lastAccountId)
-            ->andReturn(['a user']);
+            ->andReturn(new Collection(['a user']));
 
         /** @var IndexAccountsRequest|MockInterface $request */
         $request = Mockery::mock(IndexAccountsRequest::class);
@@ -116,7 +117,7 @@ class AccountsControllerTest extends TestCase
         $jsonResponse = $accountsController->index($request);
         $this->assertInstanceOf(JsonResponse::class, $jsonResponse);
 
-        $this->assertIsArray($jsonResponse->original);
+        $this->assertInstanceOf(Collection::class, $jsonResponse->original);
         $this->assertCount(1, $jsonResponse->original);
         $this->assertEquals('a user', $jsonResponse->original[0]);
     }

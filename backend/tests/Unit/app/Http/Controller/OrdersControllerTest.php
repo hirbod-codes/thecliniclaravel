@@ -457,9 +457,8 @@ class OrdersControllerTest extends TestCase
         ];
 
         $response = (new OrdersController(...$controllerArgs))->store($request);
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertIsArray($response->original);
-        $this->assertCount(0, $response->original);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertIsString($response->original);
     }
 
     public function testDefaultRegularStore(): void
@@ -511,9 +510,8 @@ class OrdersControllerTest extends TestCase
         ];
 
         $response = (new OrdersController(...$controllerArgs))->store($request);
-        $this->assertInstanceOf(JsonResponse::class, $response);
-        $this->assertIsArray($response->original);
-        $this->assertCount(0, $response->original);
+        $this->assertInstanceOf(Response::class, $response);
+        $this->assertIsString($response->original);
     }
 
     public function testRegularDestroy(): void

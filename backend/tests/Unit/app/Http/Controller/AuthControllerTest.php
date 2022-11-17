@@ -102,7 +102,7 @@ class AuthControllerTest extends TestCase
 
         /** @var RegisterUserRequest|MockInterface $request */
         $request = Mockery::mock(RegisterUserRequest::class);
-        $request->shouldReceive('safe->all')->andReturn($validatedInput);
+        $request->shouldReceive('all')->andReturn($validatedInput);
         $request->shouldReceive('session')->andReturn($session);
 
         $this->dataBaseCreateAccount->shouldReceive('createAccount')->once()->with('patient', 'patient', $validatedInput['userAttributes'], $validatedInput['userAccountAttributes']);
@@ -176,6 +176,7 @@ class AuthControllerTest extends TestCase
         $session->shouldReceive('put')->with('code', Mockery::on(function ($value) {
             return is_int($value);
         }));
+        $session->shouldReceive('put')->with('email', 'email');
         $session->shouldReceive('put')->with('code_expiration_timestamp', Mockery::on(function ($value) {
             return is_int($value);
         }));

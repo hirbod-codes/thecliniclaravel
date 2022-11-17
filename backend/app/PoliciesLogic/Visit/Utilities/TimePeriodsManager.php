@@ -2,6 +2,7 @@
 
 namespace App\PoliciesLogic\Visit\Utilities;
 
+use App\PoliciesLogic\Exceptions\Visit\InvalidConsumingTime;
 use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
 
 class TimePeriodsManager
@@ -103,7 +104,7 @@ class TimePeriodsManager
                 $startTS = $timePeriodEndTS;
                 try {
                     $this->validateTimeRanges->checkConsumingTimeInTimeRange($startTS, $endTS, $neededTime);
-                } catch (NeededTimeOutOfRange $th) {
+                } catch (InvalidConsumingTime $th) {
                     return yield [];
                 }
                 continue;

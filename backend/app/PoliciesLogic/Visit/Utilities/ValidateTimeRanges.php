@@ -55,7 +55,7 @@ class ValidateTimeRanges
             $lastTS <= $firstTS ||
             ($lastTS - $firstTS) < $consumingTime
         ) {
-            throw new InvalidConsumingTime();
+            throw new InvalidConsumingTime($firstTS . ', '. $lastTS . ', ' . $consumingTime);
         }
     }
 }
