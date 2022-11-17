@@ -32,7 +32,7 @@ return [
     'phonenumber_verification_send_code_request_message' => "{0} لطفا کد شیش رقمی که با گوشی خود دریافت کرده اید را وارد کنید در صورت عدم دریافت از کد دیگری استفاده کنید",
     'phonenumber_verification_text_message_sms' => "{0} این کد شیش رقمی شماست: :code برای حفظ امنیت حساب خود آن را به کسی نشان ندهید. ",
     'phonenumber_verification_code_sent' => "{0} یک پیام حاوی کد شیش رقمی در موبایل خود دریافت خواهید کرد، لطفا کد را به ما بفرستید.",
-    'phonenumber_verification_failed' => "{0} کد یا شماره تلفن ارسال شده با اطلاعات قبلی همخوانی ندارد، لطفا از یک کد جدید استفتده کنید.",
+    'phonenumber_verification_failed' => "{0} کد یا شماره تلفن ارسال شده با اطلاعات قبلی همخوانی ندارد، لطفا از یک کد جدید استفاده کنید.",
     'phonenumber_verification_failed_code' => "{0} کد ارسال شده با اطلاعات قبلی همخوانی ندارد، لطفا از یک کد جدید استفتده کنید. ",
     'phonenumber_not_verification' => "{0} شماره تلفن شما شناخته نشده است، لطفا اول آن را احراز کنید.",
     'phonenumber_already_verification' => "{0} شماره تلفن شما قبلا شناخته شده است. ",
@@ -72,4 +72,6 @@ return [
     'Verify-Email-Send-Message' => 'یک پیام احراز هویت به ایمیل بفرست',
 
     'sending' => 'در حال ارسال...',
+
+    'dublicate-fullname' => '{0} تشابه اسم و فامیل قابل قبول نیست.',
 ];

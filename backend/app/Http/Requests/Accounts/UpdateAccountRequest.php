@@ -27,17 +27,6 @@ class UpdateAccountRequest extends BaseFormRequest
         $isSelf = $user->getKey() === $targetUser->getKey();
 
         $updateUserModels = $user->authenticatableRole->role->role->updateUserSubjects;
-        if (isset($input['avatar'])) {
-            foreach ($user->authenticatableRole->role->role->privilegesSubjects as $privilegeSuject) {
-                if ($privilegeSuject->privilegeName->name === 'editAvatar') {
-                    break;
-                }
-
-                return false;
-            }
-
-            unset($input['avatar']);
-        }
 
         if (isset($input['userAttributes']) && isset($input['userAccountAttributes'])) {
             $input = array_merge($input['userAttributes'], $input['userAccountAttributes']);
@@ -79,8 +68,6 @@ class UpdateAccountRequest extends BaseFormRequest
 
         $userUpdateRuels = include(base_path() . '/app/Rules/BuiltInRules/Models/User/updateRules.php');
         $userAccountUpdateRuels = include(base_path() . '/app/Rules/BuiltInRules/Models/' . class_basename($user->authenticatableRole) . '/updateRules.php');
-
-        $array['avatar'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'];
 
         $array['userAttributes'] = ['required_without:userAccountAttributes', 'array', 'min:1', 'max:' . count($userUpdateRuels), function ($a, $v, $fail) use ($userUpdateRuels) {
             foreach ($v as $key => $value) {

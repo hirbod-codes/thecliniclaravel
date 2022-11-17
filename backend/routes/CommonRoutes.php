@@ -21,7 +21,13 @@ class CommonRoutes
     public function callCommonRoutes(string $from): void
     {
         Route::controller(AccountsController::class)
-            ->group(function () {
+            ->group(function () use ($from) {
+                if ($from === 'web') {
+                    Route::get('/dashboard/account', function () {
+                        return view('app');
+                    })->name('account.page');
+                }
+
                 Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
 
                 Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
@@ -35,7 +41,7 @@ class CommonRoutes
                 Route::get('/account/{placeholder}', 'show')->name('account.show');
                 Route::get('/account', 'showSelf')->name('account.showSelf');
 
-                Route::put('/account/{accountId}', 'update')->name('account.update');
+                Route::post('/account/{accountId}', 'update')->name('account.update');
 
                 Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
             });

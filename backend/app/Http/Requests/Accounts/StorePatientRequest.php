@@ -40,12 +40,19 @@ class StorePatientRequest extends BaseFormRequest
      */
     public function rules()
     {
+        $rules = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php'));
+        $specialRules = include(base_path() . '/app/Rules/BuiltInRules/Models/Patient/rules.php');
+
         $array['roleName'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'];
         $array['userAttributes'] = ['required', 'array'];
-        $array['userAccountAttributes'] = ['required', 'array'];
-        $array['avatar'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'];
+        if (!empty($specialRules)) {
+            $array['userAccountAttributes'] = ['required', 'array'];
+        }
 
-        foreach ((include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php')) as $key => $value) {
+        unset($rules['password_confirmation'][array_search('same:password', $rules['password_confirmation'], true)]);
+        $rules['password_confirmation'][] = 'same:userAttributes.password';
+
+        foreach ($rules as $key => $value) {
             if (in_array($key, ['phonenumber', 'password'])) {
                 continue;
             }
@@ -53,7 +60,7 @@ class StorePatientRequest extends BaseFormRequest
             $array['userAttributes.' . $key] = $value;
         }
 
-        foreach (include(base_path() . '/app/Rules/BuiltInRules/Models/Patient/rules.php') as $key => $value) {
+        foreach ($specialRules as $key => $value) {
             $array['userAccountAttributes.' . $key] = $value;
         }
 
@@ -65,5 +72,12 @@ class StorePatientRequest extends BaseFormRequest
     protected function prepareForValidation()
     {
         $this->replace(array_merge($this->all(), ['roleName' => class_basename($this->path())]));
+    }
+
+    protected function passedValidation()
+    {
+        $tmp = $this->all();
+        unset($tmp['userAttributes']['password_confirmation']);
+        $this->replace($tmp);
     }
 }

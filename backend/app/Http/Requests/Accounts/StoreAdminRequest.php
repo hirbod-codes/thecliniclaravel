@@ -5,7 +5,9 @@ namespace App\Http\Requests\Accounts;
 use App\Auth\CheckAuthentication;
 use App\Helpers\TraitAuthResolver;
 use App\Http\Requests\BaseFormRequest;
+use App\Models\User;
 use App\Rules\ProhibitExtraFeilds;
+use App\Rules\UniqueFullName;
 
 class StoreAdminRequest extends BaseFormRequest
 {
@@ -40,12 +42,19 @@ class StoreAdminRequest extends BaseFormRequest
      */
     public function rules()
     {
+        $rules = (include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php'));
+        $specialRules = include(base_path() . '/app/Rules/BuiltInRules/Models/Admin/rules.php');
+
         $array['roleName'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/role.php'))['roleName'];
         $array['userAttributes'] = ['required', 'array'];
-        $array['userAccountAttributes'] = ['required', 'array'];
-        $array['avatar'] = (include(base_path() . '/app/Rules/BuiltInRules/Models/avatar.php'))['avatar_optional'];
+        if (!empty($specialRules)) {
+            $array['userAccountAttributes'] = ['required', 'array'];
+        }
 
-        foreach ((include(base_path() . '/app/Rules/BuiltInRules/Models/User/rules.php')) as $key => $value) {
+        unset($rules['password_confirmation'][array_search('same:password', $rules['password_confirmation'], true)]);
+        $rules['password_confirmation'][] = 'same:userAttributes.password';
+
+        foreach ($rules as $key => $value) {
             if (in_array($key, ['phonenumber', 'password'])) {
                 continue;
             }
@@ -53,11 +62,12 @@ class StoreAdminRequest extends BaseFormRequest
             $array['userAttributes.' . $key] = $value;
         }
 
-        foreach (include(base_path() . '/app/Rules/BuiltInRules/Models/Admin/rules.php') as $key => $value) {
+        foreach ($specialRules as $key => $value) {
             $array['userAccountAttributes.' . $key] = $value;
         }
 
         array_unshift($array[array_key_first($array)], new ProhibitExtraFeilds($array));
+        array_unshift($array[array_key_first($array)], new UniqueFullName('userAttributes.firstname', 'userAttributes.lastname'));
 
         return $array;
     }
@@ -65,5 +75,12 @@ class StoreAdminRequest extends BaseFormRequest
     protected function prepareForValidation()
     {
         $this->replace(array_merge($this->all(), ['roleName' => class_basename($this->path())]));
+    }
+
+    protected function passedValidation()
+    {
+        $tmp = $this->all();
+        unset($tmp['userAttributes']['password_confirmation']);
+        $this->replace($tmp);
     }
 }

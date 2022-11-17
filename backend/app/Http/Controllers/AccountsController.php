@@ -43,6 +43,8 @@ class AccountsController extends Controller
 
     private IDataBaseDeleteAccount $dataBaseDeleteAccount;
 
+    private AccountDocumentsController $accountDocumentsController;
+
     public function __construct(
         CheckAuthentication|null $checkAuthentication = null,
         AccountsManagement|null $accountsManagement = null,
@@ -50,6 +52,7 @@ class AccountsController extends Controller
         IDataBaseCreateAccount|null $dataBaseCreateAccount = null,
         IDataBaseUpdateAccount|null $dataBaseUpdateAccount = null,
         IDataBaseDeleteAccount|null $dataBaseDeleteAccount = null,
+        AccountDocumentsController|null $accountDocumentsController = null,
     ) {
         $this->checkAuthentication = $checkAuthentication ?: new CheckAuthentication;
         $this->accountsManagement = $accountsManagement ?: new AccountsManagement();
@@ -58,6 +61,8 @@ class AccountsController extends Controller
         $this->dataBaseCreateAccount = $dataBaseCreateAccount ?: new DataBaseCreateAccount;
         $this->dataBaseUpdateAccount = $dataBaseUpdateAccount ?: new DataBaseUpdateAccount;
         $this->dataBaseDeleteAccount = $dataBaseDeleteAccount ?: new DataBaseDeleteAccount;
+
+        $this->accountDocumentsController = $accountDocumentsController ?: new AccountDocumentsController;
 
         parent::__construct();
     }
@@ -98,37 +103,37 @@ class AccountsController extends Controller
 
     public function storeAdmin(StoreAdminRequest $request): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
-        return $this->store($request->session(), 'admin', $validatedInput['roleName'], $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+        return $this->store($request->session(), 'admin', $validatedInput['roleName'], $validatedInput['userAttributes'], isset($validatedInput['userAccountAttributes']) ? $validatedInput['userAccountAttributes'] : [], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
     }
 
     public function storeDoctor(StoreDoctorRequest $request): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
-        return $this->store($request->session(), 'doctor', $validatedInput['roleName'], $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+        return $this->store($request->session(), 'doctor', $validatedInput['roleName'], $validatedInput['userAttributes'], isset($validatedInput['userAccountAttributes']) ? $validatedInput['userAccountAttributes'] : [], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
     }
 
     public function storeSecretary(StoreSecretaryRequest $request): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
-        return $this->store($request->session(), 'secretary', $validatedInput['roleName'], $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+        return $this->store($request->session(), 'secretary', $validatedInput['roleName'], $validatedInput['userAttributes'], isset($validatedInput['userAccountAttributes']) ? $validatedInput['userAccountAttributes'] : [], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
     }
 
     public function storeOperator(StoreOperatorRequest $request): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
-        return $this->store($request->session(), 'operator', $validatedInput['roleName'], $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+        return $this->store($request->session(), 'operator', $validatedInput['roleName'], $validatedInput['userAttributes'], isset($validatedInput['userAccountAttributes']) ? $validatedInput['userAccountAttributes'] : [], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
     }
 
     public function storePatient(StorePatientRequest $request): Response|JsonResponse
     {
-        $validatedInput = $request->safe()->all();
+        $validatedInput = $request->all();
 
-        return $this->store($request->session(), 'patient', $validatedInput['roleName'], $validatedInput['userAttributes'], $validatedInput['userAccountAttributes'], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
+        return $this->store($request->session(), 'patient', $validatedInput['roleName'], $validatedInput['userAttributes'], isset($validatedInput['userAccountAttributes']) ? $validatedInput['userAccountAttributes'] : [], isset($validatedInput['avatar']) ? $validatedInput['avatar'] : null);
     }
 
     public function show(string $placeholder): JsonResponse

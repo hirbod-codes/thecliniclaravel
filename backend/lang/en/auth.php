@@ -72,4 +72,6 @@ return [
     'Verify-Email-Send-Message' => 'Send verification message to my email',
 
     'sending' => 'Sending...',
+
+    'dublicate-fullname' => '{0} Dublicate full name is not allowed.',
 ];
