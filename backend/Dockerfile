@@ -72,14 +72,15 @@ RUN \
 
 # Application source codes are provided by mounted volumes from docker-compose-development.yml file
 
-RUN touch .env
-
-CMD sleep 30 && \
+CMD \
+    sleep 30 && \
     touch /tmp/xdebug-log.log && \
+    chmod g+w /tmp/xdebug-log.log && \
+    rm -f .env && \
     cp .env.example .env &&\
-    php artisan key:generate && \
     php artisan cache:clear && \
     php artisan config:clear && \
+    php artisan key:generate && \
     php artisan config:cache && \
     php artisan initialize-if-needed && \
     docker-php-entrypoint php-fpm
