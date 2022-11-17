@@ -55,4 +55,9 @@ class SetAvatarRequest extends BaseFormRequest
 
         return $array;
     }
+
+    protected function prepareForValidation()
+    {
+        $this->replace(array_merge($this->all(), ['accountId' => array_reverse(explode('/', $this->path()))[0]]));
+    }
 }
