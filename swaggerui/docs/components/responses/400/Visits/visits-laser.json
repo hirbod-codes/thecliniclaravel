@@ -1,0 +1,33 @@
+{
+    "description": "Server-side validation Error",
+    "content": {
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "required": [
+                    "message",
+                    "errors"
+                ],
+                "properties": {
+                    "message": {
+                        "$ref": "../../400.json#/error"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "properties": {
+                            "laserOrderId": {
+                                "$ref": "../../400.json#/errors"
+                            },
+                            "weeklyTimePatterns": {
+                                "$ref": "../../400.json#/errors"
+                            }
+                        },
+                        "additionalProperties": {
+                            "$ref": "../../400.json#/errors"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

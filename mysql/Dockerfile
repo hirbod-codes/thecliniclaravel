@@ -1,0 +1,15 @@
+FROM mysql:5 AS back
+
+ENV MYSQL_SERVICE_NAME=mysql
+ENV MYSQL_ROOT_PASSWORD=password
+ENV MYSQL_USER=hirbod
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_DATABASE=thecliniclaravel
+
+FROM mysql:5 AS front
+
+ENV MYSQL_SERVICE_NAME=mysql_wordpress
+ENV MYSQL_ROOT_PASSWORD=password
+ENV MYSQL_USER=hirbod
+ENV MYSQL_PASSWORD=password
+ENV MYSQL_DATABASE=database

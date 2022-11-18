@@ -1,0 +1,2635 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "The clinic's API",
+        "version": "1"
+    },
+    "servers": [
+        {
+            "url": "https://localhost/api/en",
+            "description": "Optional server description, e.g. Main (production) server"
+        }
+    ],
+    "tags": [
+        {
+            "name": "General"
+        },
+        {
+            "name": "Accounts"
+        },
+        {
+            "name": "Roles"
+        },
+        {
+            "name": "AccountsDocuments"
+        },
+        {
+            "name": "BusinessDefault"
+        },
+        {
+            "name": "Orders"
+        },
+        {
+            "name": "Visits"
+        }
+    ],
+    "paths": {
+        "/isAuthenticated": {
+            "get": {
+                "operationId": "is-authenticated",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "authenticated": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/theme": {
+            "get": {
+                "description": "Gets the current theme that is stored in the users's session.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "theme": {
+                                            "type": "string",
+                                            "example": "dark"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            },
+            "post": {
+                "description": "Changes the current theme",
+                "tags": [
+                    "General"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "theme"
+                                ],
+                                "properties": {
+                                    "theme": {
+                                        "type": "string",
+                                        "example": "dark"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "A massage to confirm the theme change."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/General/theme.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/locale": {
+            "get": {
+                "description": "Gets the current locale option that is stored in the users's session.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "longName": {
+                                            "type": "string",
+                                            "example": "English"
+                                        },
+                                        "shortName": {
+                                            "type": "string",
+                                            "example": "en"
+                                        },
+                                        "direction": {
+                                            "type": "string",
+                                            "description": "The direction in which the language is written.",
+                                            "example": "ltr"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            },
+            "put": {
+                "description": "Changes the current locale option that is stored in the users's session.",
+                "tags": [
+                    "General"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "locale"
+                                ],
+                                "properties": {
+                                    "locale": {
+                                        "type": "string",
+                                        "description": "Either short name or long name of the dsired locale.",
+                                        "example": "en"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "A massage to confirm the locale change."
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/General/locale.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/locales": {
+            "get": {
+                "description": "Gets all the locale options available.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "longName": {
+                                                "type": "string",
+                                                "example": "English"
+                                            },
+                                            "shortName": {
+                                                "type": "string",
+                                                "example": "en"
+                                            },
+                                            "direction": {
+                                                "type": "string",
+                                                "description": "The direction in which the language is written.",
+                                                "example": "ltr"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/genders": {
+            "get": {
+                "description": "Gets all the available genders.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/states": {
+            "get": {
+                "description": "Gets all the available genders.",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/state.json"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/cities": {
+            "get": {
+                "description": "Gets all the available genders.",
+                "tags": [
+                    "General"
+                ],
+                "parameters": [
+                    {
+                        "in": "query",
+                        "name": "stateName",
+                        "required": true,
+                        "schema": {
+                            "$ref": "components/schemas/state.json"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/city.json"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/work-schedule": {
+            "get": {
+                "description": "Gets the business' work schedule",
+                "tags": [
+                    "General"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "longName": {
+                                                "type": "string",
+                                                "example": "English"
+                                            },
+                                            "shortName": {
+                                                "type": "string",
+                                                "example": "en"
+                                            },
+                                            "direction": {
+                                                "type": "string",
+                                                "description": "The direction in which the language is written.",
+                                                "example": "ltr"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/accounts": {
+            "get": {
+                "description": "Retrieve user accounts",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[1-9]{1}[0-9]*$"
+                        }
+                    },
+                    {
+                        "name": "lastAccountId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[1-9]{1}[0-9]*$"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "required": [
+                                            "user"
+                                        ],
+                                        "properties": {
+                                            "user": {
+                                                "$ref": "components/schemas/Accounts/user.json"
+                                            }
+                                        },
+                                        "additionalProperties": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-index.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/accountsCount": {
+            "get": {
+                "description": "Retrieve number of all the user accounts that exist.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string",
+                                    "pattern": "^[0-9]*$"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-accountsCount.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/admin/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/doctor/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/secretary/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/operator/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/patient/{roleName}": {
+            "post": {
+                "description": "Creats a new user based on the provided roleName path variable.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "required": true,
+                        "in": "path",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "userAttributes",
+                                    "userAccountAttributes"
+                                ],
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "required": [
+                                            "phonenumber",
+                                            "firstname",
+                                            "lastname",
+                                            "username",
+                                            "password",
+                                            "password_confirmation",
+                                            "gender"
+                                        ],
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {
+                                            "age": {
+                                                "$ref": "components/schemas/data-types.json#/age"
+                                            },
+                                            "state": {
+                                                "$ref": "components/schemas/data-types.json#/state"
+                                            },
+                                            "city": {
+                                                "$ref": "components/schemas/data-types.json#/city"
+                                            },
+                                            "address": {
+                                                "$ref": "components/schemas/data-types.json#/address"
+                                            }
+                                        }
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-store.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/{placeholder}": {
+            "get": {
+                "description": "Retrieves a user account based on a placeholder",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "placeholder",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "components/schemas/data-types.json#/username"
+                                },
+                                {
+                                    "$ref": "components/schemas/data-types.json#/email"
+                                },
+                                {
+                                    "$ref": "components/schemas/data-types.json#/phonenumber"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-show.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account": {
+            "get": {
+                "description": "Retrieves the authenticated user's account.",
+                "tags": [
+                    "Accounts"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-show.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/account/{accountId}": {
+            "put": {
+                "description": "Updates a user's account.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "components/schemas/data-types.json#/id"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "userAttributes": {
+                                        "type": "object",
+                                        "properties": {
+                                            "phonenumber": {
+                                                "$ref": "components/schemas/data-types.json#/phonenumber"
+                                            },
+                                            "firstname": {
+                                                "$ref": "components/schemas/data-types.json#/firstname"
+                                            },
+                                            "lastname": {
+                                                "$ref": "components/schemas/data-types.json#/lastname"
+                                            },
+                                            "username": {
+                                                "$ref": "components/schemas/data-types.json#/username"
+                                            },
+                                            "email": {
+                                                "$ref": "components/schemas/data-types.json#/email"
+                                            },
+                                            "password": {
+                                                "$ref": "components/schemas/data-types.json#/password"
+                                            },
+                                            "password_confirmation": {
+                                                "$ref": "components/schemas/data-types.json#/password_confirmation"
+                                            },
+                                            "gender": {
+                                                "$ref": "components/schemas/data-types.json#/gender"
+                                            }
+                                        }
+                                    },
+                                    "userAccountAttributes": {
+                                        "type": "object",
+                                        "properties": {}
+                                    },
+                                    "avatar": {
+                                        "$ref": "components/schemas/data-types.json#/avatar"
+                                    }
+                                },
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "The updated user",
+                                    "type": "object",
+                                    "required": [
+                                        "user"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Accounts/user.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-show.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Updates a user's account.",
+                "tags": [
+                    "Accounts"
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "components/schemas/data-types.json#/id"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "example": "message"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Accounts/accounts-show.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/dataType": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Roles"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Roles/dataType.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/role": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Roles"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/role-name": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Roles"
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Roles/role-name.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/avatar": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "AccountsDocuments"
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "byte"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/AccountsDocuments/avatar-get.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            },
+            "post": {
+                "description": "",
+                "tags": [
+                    "AccountsDocuments"
+                ],
+                "parameters": [
+                    {
+                        "name": "accountId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "avatar": {
+                                        "type": "string",
+                                        "format": "byte"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "byte"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/AccountsDocuments/avatar-get.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/settings": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "BusinessDefault"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/setting": {
+            "put": {
+                "description": "",
+                "tags": [
+                    "BusinessDefault"
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "min_age": {
+                                        "type": "integer"
+                                    },
+                                    "visit_alert_deley": {
+                                        "type": "integer"
+                                    },
+                                    "default_regular_order_price": {
+                                        "type": "integer"
+                                    },
+                                    "default_regular_order_time_consumption": {
+                                        "type": "integer"
+                                    },
+                                    "genders": {
+                                        "type": "string"
+                                    },
+                                    "work_schedule": {
+                                        "type": "object"
+                                    },
+                                    "down_times": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/BusinessDefault/setting.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/orders/laser": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priceOtherwiseTime",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lastOrderId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "operator",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "price",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timeConsumption",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "The updated user",
+                                    "type": "object",
+                                    "required": [
+                                        "order"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Orders/laser-order.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/orders-laser.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/orders/regular": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priceOtherwiseTime",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "username",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lastOrderId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "operator",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "price",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timeConsumption",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "description": "The updated user",
+                                    "type": "object",
+                                    "required": [
+                                        "order"
+                                    ],
+                                    "properties": {
+                                        "user": {
+                                            "$ref": "components/schemas/Orders/regular-order.json"
+                                        }
+                                    },
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/orders-regular.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/ordersCount": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "text/plain": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/ordersCount.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/order": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "description": "either parts or packages properties MUST be provided if the businessName property value is equal to 'laser'",
+                                "required": [
+                                    "accountId",
+                                    "businessName"
+                                ],
+                                "properties": {
+                                    "accountId": {
+                                        "type": "integer"
+                                    },
+                                    "businessName": {
+                                        "type": "string"
+                                    },
+                                    "packages": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "components/schemas/Orders/package.json"
+                                        }
+                                    },
+                                    "parts": {
+                                        "type": "array",
+                                        "items": {
+                                            "$ref": "components/schemas/Orders/part.json"
+                                        }
+                                    },
+                                    "price": {
+                                        "type": "integer"
+                                    },
+                                    "timeConsumption": {
+                                        "type": "integer"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "oneOf": [
+                                        {
+                                            "$ref": "components/schemas/Orders/laser-order.json"
+                                        },
+                                        {
+                                            "$ref": "components/schemas/Orders/regular-order.json"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/order-store-post.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/order/{businessName}/{childOrderId}": {
+            "delete": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "$ref": "components/schemas/data-types.json#/businessName"
+                        }
+                    },
+                    {
+                        "name": "childOrderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/order-store-delete.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/laser/parts": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "name": "gender",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Male",
+                                "Female"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/Orders/part.json"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/laser-parts.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/laser/packages": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "parameters": [
+                    {
+                        "name": "gender",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "Male",
+                                "Female"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/Orders/package.json"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/laser-packages.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/laser/time-calculation": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "packages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "parts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Male",
+                                            "Female"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/laser-time-calculation.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/laser/price-calculation": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Orders"
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "packages": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "parts": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Male",
+                                            "Female"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "price",
+                                        "priceWithoutDiscount"
+                                    ],
+                                    "properties": {
+                                        "price": {
+                                            "type": "integer"
+                                        },
+                                        "priceWithoutDiscount": {
+                                            "type": "integer"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Orders/laser-price-calculation.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visits": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "accountId",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sortByTimestamp",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "laserOrderId",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "timestamp",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "operator",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lastVisitTimestamp",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "components/schemas/Visits/visit.json"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visits.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visitsCount": {
+            "get": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "roleName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visitsCount.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visit/laser": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "laserOrderId": {
+                                        "type": "integer"
+                                    },
+                                    "weeklyTimePatterns": {
+                                        "type": "object",
+                                        "properties": {
+                                            "Monday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Tuesday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Wednesday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Thursday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Friday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Saturday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Sunday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visits-laser.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visit/regular": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "requestBody": {
+                    "content": {
+                        "applcation/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "laserOrderId": {
+                                        "type": "integer"
+                                    },
+                                    "weeklyTimePatterns": {
+                                        "type": "object",
+                                        "properties": {
+                                            "Monday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Tuesday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Wednesday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Thursday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Friday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Saturday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            },
+                                            "Sunday": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "array",
+                                                    "maxLength": 2,
+                                                    "minLength": 2,
+                                                    "items": {
+                                                        "type": "string",
+                                                        "pattern": "^(([0-1]{1}[0-9]{1})|(2[0-3]{1})):[0-5]{1}[0-9]{1}:[0-5]{1}[0-9]{1}$"
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visits-regular.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visit/laser/check": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/paths/~1visit~1laser/post/requestBody"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visits-laser.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visit/regular/check": {
+            "post": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "parameters": [
+                    {
+                        "name": "businessName",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "$ref": "#/paths/~1visit~1regular/post/requestBody"
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visits-regular.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visit/laser/{laserVisitId}": {
+            "delete": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "parameters": [
+                    {
+                        "name": "laserVisitId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[1-9]+[0-9]*$"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visit-laser-laserVisitId.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        },
+        "/visit/regular/{regularVisitId}": {
+            "delete": {
+                "description": "",
+                "tags": [
+                    "Visits"
+                ],
+                "parameters": [
+                    {
+                        "name": "regularVisitId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^[1-9]+[0-9]*$"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "components/responses/400/Visits/visit-regular-regularVisitId.json"
+                    },
+                    "500": {
+                        "$ref": "components/responses/500.json#/not-empty"
+                    }
+                }
+            }
+        }
+    }
+}
