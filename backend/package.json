@@ -43,8 +43,13 @@
     },
     "dependencies": {
         "@mui/x-data-grid": "5.13.*",
+        "@reduxjs/toolkit": "^1.9.0",
         "history": "5.3.*",
+        "immer": "^9.0.16",
         "luxon": "2.5.*",
+        "react-redux": "^8.0.5",
+        "redux": "^4.2.0",
+        "redux-thunk": "^2.4.2",
         "stylis-plugin-rtl": "2.1.*"
     }
 }
