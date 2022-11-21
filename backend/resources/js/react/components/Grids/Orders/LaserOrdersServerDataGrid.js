@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-// import PropTypes from 'prop-types';
-
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -16,19 +14,16 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { formatToNumber } from '../formatters';
 import PartsDataGridModal from './Modals/PartsDataGridModal';
 import PackagesDataGridModal from './Modals/PackagesDataGridModal';
-import { PrivilegesContext } from '../../privilegesContext';
-import { LocaleContext } from '../../localeContext';
 import { delete_order, get_ordersCount } from '../../Http/Api/order';
+import { connect } from 'react-redux';
+import { canCreateOrder, canDeleteOrder } from '../../roles/order';
+import store from '../../../../redux/store';
 
 /**
  * LaserOrdersServerDataGrid
  * @augments {Component<Props, State>}
  */
 export class LaserOrdersServerDataGrid extends Component {
-    static propTypes = {}
-
-    static contextType = PrivilegesContext;
-
     constructor(props) {
         super(props);
 
@@ -52,7 +47,7 @@ export class LaserOrdersServerDataGrid extends Component {
 
             reload: false,
 
-            role: null,
+            role: store.getState().role.roles.retrieveOrder.laser.filter((v) => v !== 'self')[0],
 
             page: 0,
             pagesLastOrderId: [0],
@@ -63,13 +58,7 @@ export class LaserOrdersServerDataGrid extends Component {
 
             isCreating: false,
             openCreationModal: false,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
-    }
-
-    componentDidMount() {
-        this.setState({ role: this.context.retrieveOrder.laser[0] });
     }
 
     getRowCount() {
@@ -90,32 +79,32 @@ export class LaserOrdersServerDataGrid extends Component {
     addColumns(columns) {
         columns.push({
             field: 'parts',
-            headerName: translate('pages/orders/order/columns/parts', this.state.locale),
-            description: translate('pages/orders/order/columns/parts', this.state.locale),
+            headerName: translate('pages/orders/order/columns/parts'),
+            description: translate('pages/orders/order/columns/parts'),
             renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.row.parts }} />,
         });
 
         columns.push({
             field: 'packages',
-            headerName: translate('pages/orders/order/columns/packages', this.state.locale),
-            description: translate('pages/orders/order/columns/packages', this.state.locale),
+            headerName: translate('pages/orders/order/columns/packages'),
+            description: translate('pages/orders/order/columns/packages'),
             renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.row.packages }} />,
         });
 
         columns.push({
             field: 'price_with_discount',
-            headerName: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
-            description: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
+            headerName: translate('pages/orders/order/columns/price_with_discount'),
+            description: translate('pages/orders/order/columns/price_with_discount'),
             type: 'number',
             valueFormatter: formatToNumber,
         });
 
-        if (this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf(this.state.role) !== -1) {
+        if (canDeleteOrder(this.state.role, 'laser', store)) {
             columns.push({
                 field: 'actions',
                 description: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => {
                     return [
@@ -165,7 +154,7 @@ export class LaserOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    roleName={this.state.role === null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
+                    roleName={this.state.role}
                     businessName='laser'
 
                     paginationMode='server'
@@ -189,7 +178,7 @@ export class LaserOrdersServerDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.filter((v) => v !== 'self').length > 0) ?
+                                        {(canCreateOrder(this.state.role, 'laser', store)) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -203,8 +192,8 @@ export class LaserOrdersServerDataGrid extends Component {
                                             sx={{ minWidth: '130px' }}
                                             size='small'
                                             disablePortal
-                                            value={this.state.role === null ? this.context.retrieveOrder.laser.filter((v) => v !== 'self')[0] : this.state.role}
-                                            options={this.context.retrieveOrder.laser.filter((v) => v !== 'self')}
+                                            value={this.state.role}
+                                            options={store.getState().role.roles.retrieveOrder.laser.filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;
 
@@ -261,8 +250,6 @@ export class LaserOrdersServerDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf(this.state.role) !== -1)) { throw new Error('user not authorized!'); }
-
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
@@ -289,4 +276,4 @@ export class LaserOrdersServerDataGrid extends Component {
     }
 }
 
-export default LaserOrdersServerDataGrid
+export default connect(null)(LaserOrdersServerDataGrid)
