@@ -13,20 +13,14 @@ export class SignUpPage extends Component {
             <>
                 <Grid container spacing={1} >
                     <Grid item xs={12} >
-                        <Header
-                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/sign-up/single/ucFirstLetterAllWords')}</ Link>}
-                            onLogout={this.props.onLogout}
-                            isAuthenticated={this.props.isAuthenticated}
-                            isAuthenticationLoading={this.props.isAuthenticationLoading}
-                            navigator={this.props.navigator}
-                        />
+                        <Header title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/sign-up/single/ucFirstLetterAllWords')}</ Link>} />
                     </Grid>
                     <Grid item xs={12} >
                         <Grid container >
                             <Grid item xs >
                             </Grid>
                             <Grid item xs={12} sm={9} md={6} >
-                                <SignUpForm onRegister={this.props.onRegister} />
+                                <SignUpForm />
                             </Grid>
                             <Grid item xs >
                             </Grid>
