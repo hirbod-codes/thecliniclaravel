@@ -2,12 +2,13 @@ import React, { Component } from 'react';
 
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Button, Menu, MenuItem } from '@mui/material';
+import { updateState } from '../helpers';
 
 export class Dropdown extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            buttonInnerContent: props.buttonInnerContent,
+            buttonInnerContent: null,
             anchorEl: null,
             open: false
         };
@@ -15,6 +16,14 @@ export class Dropdown extends Component {
         this.setAnchorEl = this.setAnchorEl.bind(this);
         this.dropDownOpenHandler = this.dropDownOpenHandler.bind(this);
         this.dropDownCloseHandler = this.dropDownCloseHandler.bind(this);
+    }
+
+    async shouldComponentUpdate(n) {
+        if (this.state.buttonInnerContent !== null && (this.props.buttonInnerContent === null || this.props.buttonInnerContent === undefined) && n.buttonInnerContent !== null && n.buttonInnerContent !== undefined) {
+            await updateState(this, { buttonInnerContent: null });
+        }
+
+        return true;
     }
 
     setAnchorEl(value) {
@@ -33,7 +42,9 @@ export class Dropdown extends Component {
     }
 
     dropDownClickHandler(e) {
-        this.setState({ buttonInnerContent: e.target.innerText });
+        if (this.props.buttonInnerContent !== undefined && this.props.buttonInnerContent !== null) {
+            this.setState({ buttonInnerContent: e.target.innerText });
+        }
     }
 
     getMenuItem(options, key, disabled = false) {
@@ -64,7 +75,9 @@ export class Dropdown extends Component {
 
         return (
             <>
-                <Button type='button' variant={this.props.variant ? this.props.variant : ''} {...this.props.buttonProps} onClick={this.dropDownOpenHandler}>{(this.state.buttonInnerContent ? this.state.buttonInnerContent : this.props.buttonInnerContent)}</Button>
+                <Button type='button' variant={this.props.variant ? this.props.variant : ''} {...this.props.buttonProps} onClick={this.dropDownOpenHandler}>
+                    {(this.state.buttonInnerContent !== null ? this.state.buttonInnerContent : this.props.buttonInnerContent)}
+                </Button>
                 <Menu
                     anchorEl={this.state.anchorEl}
                     open={this.state.open}

@@ -1,8 +1,10 @@
 import React, { Component } from 'react'
 
 import { Dropdown } from '../Menus/DropDown.js';
-import { LocaleContext } from '../localeContext';
 import { translate } from '../../traslation/translate.js';
+import store from '../../../redux/store.js';
+import { connect } from 'react-redux';
+import { setLocal } from '../../../redux/reducers/local.js';
 
 export class AppLocalButton extends Component {
     constructor(props) {
@@ -15,18 +17,15 @@ export class AppLocalButton extends Component {
     }
 
     render() {
+        let reduxStore = store.getState();
+
         return (
-            <LocaleContext.Consumer>
-                {({ locales, currentLocale, isLocaleLoading, changeLocale }) => {
-                    return <Dropdown
-                        buttonInnerContent={translate('general/' + currentLocale.longName + '/single/ucFirstLetterFirstWord')}
-                        menuItems={this.makeItems(locales)}
-                        isLoading={isLocaleLoading}
-                        buttonProps={this.props.buttonProps}
-                        menuItemClickHandler={(e) => { changeLocale(e.target.getAttribute('value')); }}
-                    />
-                }}
-            </LocaleContext.Consumer>
+            <Dropdown
+                buttonInnerContent={translate('general/' + reduxStore.local.local.longName + '/single/ucFirstLetterFirstWord')}
+                menuItems={this.makeItems(reduxStore.local.locals)}
+                buttonProps={this.props.buttonProps}
+                menuItemClickHandler={(e) => { this.props.dispatch(setLocal(e.target.getAttribute('value'))); }}
+            />
         )
     }
 
@@ -49,6 +48,4 @@ export class AppLocalButton extends Component {
     }
 }
 
-AppLocalButton.contextType = LocaleContext;
-
-export default AppLocalButton
+export default connect(null)(AppLocalButton)

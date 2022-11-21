@@ -9,10 +9,13 @@ import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import LoadingButton from '@mui/lab/LoadingButton';
 import { Button } from '@mui/material';
 import { fetchData } from '../Http/fetch.js';
 import { updateState } from '../helpers.js';
+import { userLoggedOut } from '../../../redux/reducers/auth.js';
+import store from '../../../redux/store.js';
+import UserIconNavigator from '../UserIconNavigator.js';
+import { connect } from 'react-redux';
 
 export class Header extends Component {
     constructor(props) {
@@ -34,11 +37,7 @@ export class Header extends Component {
         }
 
         await updateState(this, { goToWelcomePage: true });
-        if (this.props.onLogout !== undefined) {
-            this.props.onLogout();
-        } else {
-            window.location.href = '/logout';
-        }
+        this.props.dispatch(userLoggedOut());
     }
 
     render() {
@@ -51,6 +50,8 @@ export class Header extends Component {
                 this.setState({ goToWelcomePage: false });
             }
         }
+
+        let reduxStore = store.getState();
 
         return (
             <>
@@ -65,17 +66,15 @@ export class Header extends Component {
 
                             {this.props.rightSide}
 
-                            {this.props.isAuthenticated ?
+                            {reduxStore.auth.isAuthenticated ?
                                 (
-                                    this.props.isAuthenticationLoading ?
-                                        <LoadingButton loading >AuthenticationLoading</LoadingButton> :
-                                        <>
-                                            {this.props.navigator}
+                                    <>
+                                        <UserIconNavigator image={reduxStore.auth.avatar} isEmailVerified={reduxStore.auth.isEmailVerified} />
 
-                                            <Button onClick={this.onLogout} style={{ color: 'white', m: 1 }} >
-                                                {translate('general/log-out/single/ucFirstLetterAllWords')}
-                                            </ Button>
-                                        </>
+                                        <Button onClick={this.onLogout} style={{ color: 'white', m: 1 }} >
+                                            {translate('general/log-out/single/ucFirstLetterAllWords')}
+                                        </ Button>
+                                    </>
                                 ) :
                                 window.location.pathname === '/login' ?
                                     (
@@ -101,4 +100,4 @@ export class Header extends Component {
     }
 }
 
-export default Header
+export default connect(null)(Header)
