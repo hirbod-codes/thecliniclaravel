@@ -1,7 +1,7 @@
-import { LocaleContext } from '../components/localeContext.js';
 import { translations } from './translations.js';
 import { dataGridTranslations as en_dataGridTranslations } from './en/dataGridTranslations';
 import { dataGridTranslations as fa_dataGridTranslations } from './fa/dataGridTranslations';
+import store from '../../redux/store.js';
 
 function translate(address, locale = '') {
     let previousStr, lastFragment, str = '';
@@ -29,7 +29,7 @@ function translate(address, locale = '') {
 
     try {
         if (locale === '') {
-            locale = LocaleContext._currentValue.currentLocale.shortName;
+            locale = store.getState().local.local.shortName;
         }
 
         return seekTranslation(locale);
@@ -113,7 +113,7 @@ function addWordTo(object, single, plural = null, key = null) {
 }
 
 function getDataGridLocaleText() {
-    const locale = LocaleContext._currentValue.currentLocale.shortName;
+    const locale = store.getState().local.local.shortName;
 
     switch (locale) {
         case 'en':
