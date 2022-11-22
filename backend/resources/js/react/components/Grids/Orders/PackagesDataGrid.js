@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-// import PropTypes from 'prop-types';
-
 import CloseIcon from '@mui/icons-material/Close';
 import { DataGrid, GridFooterContainer, GridPagination, GridSelectedRowCount } from '@mui/x-data-grid';
 
@@ -10,7 +8,6 @@ import { formatToNumber } from '../formatters';
 import PartsDataGridModal from './Modals/PartsDataGridModal';
 import { Alert, Button, CircularProgress, IconButton, Snackbar } from '@mui/material';
 import { localizeDate, updateState } from '../../helpers';
-import { LocaleContext } from '../../localeContext';
 import { get_laser_price_calculation, get_laser_time_calculation, get_orders_laser, get_orders_regular, get_packages } from '../../Http/Api/order';
 
 /**
@@ -18,8 +15,6 @@ import { get_laser_price_calculation, get_laser_time_calculation, get_orders_las
  * @augments {Component<Props, State>}
  */
 export class PackagesDataGrid extends Component {
-    static propTypes = {}
-
     constructor(props) {
         super(props);
 
@@ -48,8 +43,6 @@ export class PackagesDataGrid extends Component {
             isCalculatingPackages: false,
             totalPrice: 0,
             totalNeddedTime: 0,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -153,42 +146,42 @@ export class PackagesDataGrid extends Component {
 
                     switch (k) {
                         case 'id':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'number';
                             column.valueFormatter = formatToNumber;
                             break;
 
                         case 'parts':
-                            column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
+                            column.headerName = translate('pages/orders/order/columns/' + k);
                             column.renderCell = (params) => <PartsDataGridModal gridProps={{ rows: params.value.parts }} />;
                             break;
 
                         case 'price':
-                            column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
+                            column.headerName = translate('pages/orders/order/columns/' + k);
                             column.type = 'number';
                             column.valueFormatter = formatToNumber;
                             break;
 
                         case 'name':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             break;
 
                         case 'created_at':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'dateTime';
-                            column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
+                            column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, true); };
                             column.minWidth = 170;
                             break;
 
                         case 'updated_at':
-                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                            column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                             column.type = 'dateTime';
-                            column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
+                            column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, true); };
                             column.minWidth = 170;
                             break;
 
                         case 'gender':
-                            column.headerName = translate('general/columns/account/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                            column.headerName = translate('general/columns/account/' + k + '/single/ucFirstLetterFirstWord');
                             break;
 
                         default:
