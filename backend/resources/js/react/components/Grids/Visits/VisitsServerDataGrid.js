@@ -13,17 +13,16 @@ import VisitsDataGrid from './VisitsDataGrid';
 import { translate } from '../../../traslation/translate';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
-import { PrivilegesContext } from '../../privilegesContext';
-import { LocaleContext } from '../../localeContext';
 import { delete_visit_laser, delete_visit_regular, get_visitsCount } from '../../Http/Api/visits';
+import store from '../../../../redux/store';
+import { canCreateVisit, canDeleteVisit } from '../../roles/visit';
+import { connect } from 'react-redux';
 
 /**
  * VisitsServerDataGrid
  * @augments {Component<Props, State>}
  */
 export class VisitsServerDataGrid extends Component {
-    static contextType = PrivilegesContext;
-
     static propTypes = {
         businessName: PropTypes.string.isRequired,
     }
@@ -52,7 +51,7 @@ export class VisitsServerDataGrid extends Component {
             feedbackMessage: '',
             feedbackColor: 'info',
 
-            role: null,
+            role: store.getState().role.roles.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0],
 
             page: 0,
             pagesLastVisitId: [0],
@@ -71,14 +70,12 @@ export class VisitsServerDataGrid extends Component {
             isRefreshingWeeklyVisit: false,
             isSubmittingWeeklyVisit: false,
             weeklyVisitRefresh: null,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         }
     }
 
     getRowCount() {
         return new Promise(async (resolve, reject) => {
-            let rowCount = await get_visitsCount(this.props.businessName, (this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role), this.state.token);
+            let rowCount = await get_visitsCount(this.props.businessName, this.state.role, this.state.token);
             if (rowCount.response.status !== 200) {
                 let value = null;
                 if (Array.isArray(rowCount.value)) { value = rowCount.value; } else { value = [rowCount.value]; }
@@ -91,11 +88,11 @@ export class VisitsServerDataGrid extends Component {
     }
 
     addColumns(columns) {
-        if (this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf(this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role) !== -1) {
+        if (canDeleteVisit(this.state.role, this.props.businessName, store)) {
             columns.push({
                 field: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -147,7 +144,7 @@ export class VisitsServerDataGrid extends Component {
                 <VisitsDataGrid
                     paginationMode='server'
 
-                    roleName={this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role}
+                    roleName={this.state.role}
                     businessName={this.props.businessName}
                     sort='asc'
                     operator='>='
@@ -173,7 +170,7 @@ export class VisitsServerDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {(this.context.createVisit !== undefined && this.context.createVisit[this.props.businessName] !== undefined && this.context.createVisit[this.props.businessName].indexOf(this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role) !== -1) ?
+                                        {(canCreateVisit(this.state.role, this.props.businessName, store)) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -187,8 +184,8 @@ export class VisitsServerDataGrid extends Component {
                                             sx={{ minWidth: '130px' }}
                                             size='small'
                                             disablePortal
-                                            value={this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role}
-                                            options={this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')}
+                                            value={this.state.role}
+                                            options={store.getState().role.roles.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;
 
@@ -228,7 +225,7 @@ export class VisitsServerDataGrid extends Component {
                             }}
 
                             businessName={this.props.businessName}
-                            targetRoleName={this.state.role === null ? this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0] : this.state.role}
+                            targetRoleName={this.state.role}
                         />
                     </Paper>
                 </Modal>
@@ -255,8 +252,6 @@ export class VisitsServerDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf(this.context.retrieveVisit[this.props.businessName].filter((v) => v !== 'self')[0]) !== -1)) { throw new Error('user not authorized!'); }
-
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
@@ -289,4 +284,4 @@ export class VisitsServerDataGrid extends Component {
     }
 }
 
-export default VisitsServerDataGrid
+export default connect(null)(VisitsServerDataGrid)
