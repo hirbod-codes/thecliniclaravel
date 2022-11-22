@@ -12,6 +12,9 @@ import { Alert, Divider, IconButton, Snackbar } from '@mui/material';
 import { translate } from '../../traslation/translate.js';
 import { fetchData } from '../../components/Http/fetch.js';
 import SlidingDialog from '../../components/Menus/SlidingDialog.js';
+import { userLoggedIn } from '../../../redux/reducers/auth.js';
+import { connect } from 'react-redux';
+import { updateState } from '../../components/helpers.js';
 
 export class LogInForm extends Component {
     constructor(props) {
@@ -103,12 +106,8 @@ export class LogInForm extends Component {
 
         if (r.response.status === 200) {
             if (r.response.redirected) {
-                this.setState({ goToWelcomePage: true });
-                if (this.props.onLogin !== undefined) {
-                    this.props.onLogin();
-                } else {
-                    window.location.href = r.response.url;
-                }
+                await updateState(this, { goToWelcomePage: true });
+                this.props.dispatch(userLoggedIn());
             }
         } else {
             let value = null;
@@ -264,4 +263,4 @@ export class LogInForm extends Component {
     }
 }
 
-export default LogInForm
+export default connect(null)(LogInForm)

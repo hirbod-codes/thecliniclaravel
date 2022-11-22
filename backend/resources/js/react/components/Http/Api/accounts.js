@@ -173,7 +173,7 @@ async function put_account(accountId, userAttributes = null, userAccountAttribut
 
     if (userAccountAttributes !== null) { data.userAccountAttributes = userAccountAttributes; }
 
-    return await fetchData('put', '/account/' + accountId, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
+    return await fetchData('post', '/account/' + accountId, data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }
 
 async function put_avatar(accountId, avatar, token) {

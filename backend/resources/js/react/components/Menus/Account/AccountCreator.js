@@ -11,6 +11,8 @@ import { updateState } from '../../helpers';
 import { post_account_admin, post_account_doctor, post_account_operator, post_account_patient, post_account_secretary } from '../../Http/Api/accounts';
 import { get_cities, get_genders, get_states } from '../../Http/Api/general';
 import { get_dataType } from '../../Http/Api/roles';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * AccountCreator
@@ -18,7 +20,6 @@ import { get_dataType } from '../../Http/Api/roles';
  */
 export class AccountCreator extends Component {
     static propTypes = {
-        rules: PropTypes.arrayOf(PropTypes.string).isRequired,
         onSuccess: PropTypes.func,
         onFailure: PropTypes.func,
     }
@@ -78,7 +79,7 @@ export class AccountCreator extends Component {
             ],
             activeStep: 0,
 
-            rule: this.props.rules[0],
+            rule: store.getState().role.roles.createUser[0],
             dataType: '',
 
             isSubmittingPhonenumber: false,
@@ -213,7 +214,6 @@ export class AccountCreator extends Component {
         }
 
         await updateState(this, { rule: v });
-        console.log(this.state.rule);
 
         let r = await get_dataType(this.state.rule, this.state.token);
 
@@ -277,7 +277,7 @@ export class AccountCreator extends Component {
                             <Autocomplete
                                 sx={{ m: 1 }}
                                 disablePortal
-                                options={this.props.rules}
+                                options={store.getState().role.roles.createUser}
                                 onChange={this.updateDataType}
                                 renderInput={(params) => <TextField {...params} label={translate('general/rule/plural/ucFirstLetterFirstWord')} required variant='standard' />}
                             />
@@ -444,7 +444,6 @@ export class AccountCreator extends Component {
 
         data.roleName = this.state.rule;
         data.token = this.state.token;
-        console.log(data);
 
         let r = null;
         switch (this.state.rule) {
@@ -642,4 +641,4 @@ export class AccountCreator extends Component {
     }
 }
 
-export default AccountCreator
+export default connect(null)(AccountCreator)

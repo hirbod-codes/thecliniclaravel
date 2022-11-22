@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-import PropTypes from 'prop-types';
-
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -16,22 +14,16 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import { formatToNumber } from '../formatters';
 import PartsDataGridModal from './Modals/PartsDataGridModal';
 import PackagesDataGridModal from './Modals/PackagesDataGridModal';
-import { PrivilegesContext } from '../../privilegesContext';
-import { LocaleContext } from '../../localeContext';
 import { delete_order } from '../../Http/Api/order';
+import { canCreateSelfOrder, canDeleteSelfOrder } from '../../roles/order';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * SelfLaserOrdersDataGrid
  * @augments {Component<Props, State>}
  */
 export class SelfLaserOrdersDataGrid extends Component {
-    static propTypes = {
-        account: PropTypes.object.isRequired,
-        accountRole: PropTypes.string.isRequired,
-    }
-
-    static contextType = PrivilegesContext;
-
     constructor(props) {
         super(props);
 
@@ -55,40 +47,38 @@ export class SelfLaserOrdersDataGrid extends Component {
 
             isCreating: false,
             openCreationModal: false,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
     addColumns(columns) {
         columns.push({
             field: 'parts',
-            headerName: translate('pages/orders/order/columns/parts', this.state.locale),
-            description: translate('pages/orders/order/columns/parts', this.state.locale),
+            headerName: translate('pages/orders/order/columns/parts'),
+            description: translate('pages/orders/order/columns/parts'),
             renderCell: (params) => <PartsDataGridModal gridProps={{ rows: params.row.parts }} />,
         });
 
         columns.push({
             field: 'packages',
-            headerName: translate('pages/orders/order/columns/packages', this.state.locale),
-            description: translate('pages/orders/order/columns/packages', this.state.locale),
+            headerName: translate('pages/orders/order/columns/packages'),
+            description: translate('pages/orders/order/columns/packages'),
             renderCell: (params) => <PackagesDataGridModal gridProps={{ rows: params.row.packages }} />,
         });
 
         columns.push({
             field: 'price_with_discount',
-            headerName: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
-            description: translate('pages/orders/order/columns/price_with_discount', this.state.locale),
+            headerName: translate('pages/orders/order/columns/price_with_discount'),
+            description: translate('pages/orders/order/columns/price_with_discount'),
             type: 'number',
             valueFormatter: formatToNumber,
         });
 
-        if (this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1) {
+        if (canDeleteSelfOrder('laser', store)) {
             columns.push({
                 field: 'actions',
-                description: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                description: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -118,12 +108,13 @@ export class SelfLaserOrdersDataGrid extends Component {
     }
 
     render() {
+        const reduxState = store.getState();
         return (
             <>
                 <OrdersDataGrid
                     businessName='laser'
 
-                    username={this.props.account.username}
+                    username={reduxState.auth.account.username}
 
                     addColumns={this.addColumns}
 
@@ -139,7 +130,7 @@ export class SelfLaserOrdersDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf('self') !== -1) ?
+                                        {canCreateSelfOrder('laser', store) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -181,7 +172,7 @@ export class SelfLaserOrdersDataGrid extends Component {
                     onClose={this.closeCreationModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
-                        <LaserOrderCreation accountRole={this.props.accountRole} account={this.props.account} onCreated={this.handleOnCreate} isSelf/>
+                        <LaserOrderCreation onCreated={this.handleOnCreate} isSelf />
                     </Paper>
                 </Modal>
             </>
@@ -189,8 +180,6 @@ export class SelfLaserOrdersDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.laser !== undefined && this.context.deleteOrder.laser.indexOf('self') !== -1)) { throw new Error('user not authorized!'); }
-
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
@@ -217,4 +206,4 @@ export class SelfLaserOrdersDataGrid extends Component {
     }
 }
 
-export default SelfLaserOrdersDataGrid
+export default connect(null)(SelfLaserOrdersDataGrid)

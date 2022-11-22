@@ -19,6 +19,8 @@ import Slide from '@mui/material/Slide';
 import { Alert, IconButton, Snackbar } from '@mui/material';
 import { Navigate } from 'react-router-dom';
 import { get_cities, get_genders, get_states } from '../../components/Http/Api/general.js';
+import { userLoggedIn } from '../../../redux/reducers/auth.js';
+import { connect } from 'react-redux';
 
 export class SignUpForm extends Component {
     constructor(props) {
@@ -450,11 +452,7 @@ export class SignUpForm extends Component {
         if (r.response.status === 200) {
             if (r.response.redirected) {
                 this.setState({ goToWelcomePage: true });
-                if (this.props.onRegister !== undefined) {
-                    this.props.onRegister();
-                } else {
-                    window.location.href = r.response.url;
-                }
+                this.props.dispatch(userLoggedIn());
             }
         } else {
             let value = null;
@@ -559,4 +557,4 @@ export class SignUpForm extends Component {
     }
 }
 
-export default SignUpForm
+export default connect(null)(SignUpForm) 

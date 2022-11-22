@@ -9,17 +9,17 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { createTheme } from '@mui/material/styles';
-import { ThemeProvider } from '@emotion/react';
 import { Alert, GlobalStyles, IconButton, Snackbar } from '@mui/material';
-import rtlPlugin from "stylis-plugin-rtl";
-import { CacheProvider } from "@emotion/react";
-import createCache from "@emotion/cache";
+
 import { prefixer } from "stylis";
+import rtlPlugin from "stylis-plugin-rtl";
+import createCache from "@emotion/cache";
+import { CacheProvider } from "@emotion/react";
 
+import { createTheme } from '@mui/material/styles';
 
-import { ThemeContext, resolveTheme, resolveLocalization } from './components/themeContenxt.js';
-import { LocaleContext } from './components/localeContext.js';
+import { ThemeProvider } from '@emotion/react';
+import { resolveTheme, resolveLocalization } from './components/themeContenxt.js';
 
 import WelcomePage from "./components/pages/WelcomePage.js";
 import LogInPage from "./components/pages/auth/LogInPage.js";
@@ -29,9 +29,14 @@ import DashboardAccountPage from './components/pages/dashboard/DashboardAccountP
 import { fetchData } from './components/Http/fetch';
 import DashboardOrderPage from './components/pages/dashboard/DashboardOrderPage';
 import DashboardVisitPage from './components/pages/dashboard/DashboardVisitPage';
-import UserIconNavigator from './components/UserIconNavigator';
 import { updateState } from './components/helpers';
-import { formatPrivileges, PrivilegesContext } from './components/privilegesContext';
+
+import store, { observeStore } from '../redux/store';
+import { gotAccount, gotAvatar, isAuthenticated, isEmailVerified, isNotAuthenticated } from '../redux/reducers/auth';
+import { connect } from 'react-redux';
+import { gotLocal, gotLocals } from '../redux/reducers/local';
+import { gotTheme } from '../redux/reducers/theme';
+import { gotRoles } from '../redux/reducers/role';
 
 class App extends Component {
     constructor(props) {
@@ -41,26 +46,16 @@ class App extends Component {
 
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
 
+        this.onLocalChange = this.onLocalChange.bind(this);
+        this.onThemeChange = this.onThemeChange.bind(this);
+        this.onLogUserLog = this.onLogUserLog.bind(this);
         this.onLogout = this.onLogout.bind(this);
         this.onLogin = this.onLogin.bind(this);
-        this.onRegister = this.onRegister.bind(this);
         this.resetAuthInfo = this.resetAuthInfo.bind(this);
 
         this.updateAccount = this.updateAccount.bind(this);
 
-        this.changeLocale = async (name) => {
-            let r = await fetchData('put', '/locale', { 'locale': name }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': '*/*' });
-            if (r.response.status === 200) {
-                document.location.reload();
-            }
-        };
-
-        this.changeTheme = async (name) => {
-            let r = await fetchData('post', '/theme', { theme: name }, { 'X-CSRF-TOKEN': this.state.token });
-            if (r.response.status === 200) {
-                document.location.reload();
-            }
-        };
+        this.reload = this.reload.bind(this);
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -68,52 +63,42 @@ class App extends Component {
             feedbackMessages: [],
 
             finishStatus: {
-                locales: false,
-                locale: false,
-                themeData: false,
+                isAuthenticationLoading: true,
+                isAccountLoading: true,
+                isAvatarLoading: true,
+                isThemeLoading: true,
+                isLocaleLoading: true,
+                areLocalesLoading: true,
+                arePrivilegesLoading: true,
             },
+            forceUpdate: false,
 
-            isAuthenticationLoading: true,
             isAuthenticated: false,
-            isAccountLoading: true,
             account: null,
-            arePrivilegesLoading: true,
             privileges: null,
-
             isEmailVerified: false,
-            isAvatarLoading: true,
             image: null,
 
-            themeContext: {
-                theme: {},
-                changeTheme: this.changeTheme,
-                currentTheme: '',
-                isThemeLoading: true,
-            },
-            localeContext: {
-                locales: {},
-                currentLocale: null,
-                isLocaleLoading: true,
-                changeLocale: this.changeLocale
-            }
+            theme: null,
         };
     }
 
-    shouldComponentUpdate() {
-        for (const k in this.state.finishStatus) {
-            if (Object.hasOwnProperty.call(this.state.finishStatus, k)) {
-                const v = this.state.finishStatus[k];
-
-                if (!v) {
-                    return false;
-                }
-            }
+    async shouldComponentUpdate() {
+        if (this.state.forceUpdate === true) {
+            await updateState(this, { forceUpdate: false });
+            return true;
         }
-        return true;
+        return false;
     }
 
-    componentDidMount() {
-        this.getDataSynchronously();
+    async componentDidMount() {
+        await this.getDataSynchronously();
+        await updateState(this, { forceUpdate: true });
+
+        observeStore(store, state => state.theme.theme, store.getState().theme.theme, this.onThemeChange);
+        observeStore(store, state => state.local.localName, store.getState().local.localName, this.onLocalChange);
+        observeStore(store, state => state.auth.userLogged, store.getState().auth.userLogged, this.onLogUserLog);
+        observeStore(store, state => state.auth.userLogged, store.getState().auth.userLogged, this.onLogout);
     }
 
     handleFeedbackClose(event, reason, key) {
@@ -129,65 +114,75 @@ class App extends Component {
     getDataSynchronously() {
         return new Promise((resolve) => {
             fetchData('get', '/isAuthenticated', {}, { 'X-CSRF-TOKEN': this.state.token }).then((isAuthenticatedResponse) => {
+                updateState(this, (state) => {
+                    state.finishStatus.isAuthenticationLoading = false;
+                    return state;
+                });
+
                 if (isAuthenticatedResponse.response.status !== 200 || isAuthenticatedResponse.value.authenticated !== true) {
                     return;
                 }
 
-                updateState(this, { isAuthenticationLoading: false, isAuthenticated: isAuthenticatedResponse.value.authenticated });
+                this.props.dispatch(isAuthenticated());
 
                 this.updateAccount();
 
                 fetchData('get', '/role', {}, { 'X-CSRF-TOKEN': this.state.token }).then((privilegesResponse) => {
+                    updateState(this, (state) => {
+                        state.finishStatus.arePrivilegesLoading = false;
+                        return state;
+                    });
+
                     if (privilegesResponse.response.status === 200) {
-                        updateState(this, { privileges: privilegesResponse.value, arePrivilegesLoading: false });
+                        this.props.dispatch(gotRoles(privilegesResponse.value));
                     }
-                    updateState(this, { arePrivilegesLoading: false });
                 });
 
                 fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token }).then((emailResponse) => {
                     if (emailResponse.response.status === 200) {
-                        updateState(this, { isEmailVerified: emailResponse.value });
+                        this.props.dispatch(isEmailVerified(emailResponse.value));
                     }
                 });
             });
 
             fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((localeResponse) => {
+                updateState(this, (state) => {
+                    state.finishStatus.isLocaleLoading = false;
+                    return state;
+                });
+
                 let locale = localeResponse.value;
                 if (localeResponse.response.status !== 200) {
                     return;
                 }
-                updateState(this, (state) => {
-                    state.finishStatus.locale = true;
-                    state.localeContext.currentLocale = locale;
-                    state.localeContext.isLocaleLoading = false;
-                    return state;
-                });
+                this.props.dispatch(gotLocal(locale));
 
                 document.dir = locale.direction;
                 document.body.setAttribute('dir', locale.direction);
 
                 fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((themeResponse) => {
+                    updateState(this, (state) => {
+                        state.finishStatus.isThemeLoading = false;
+                        return state;
+                    });
+
                     let themeData = themeResponse.value;
+                    themeData.locale = locale;
                     if (themeResponse.response.status === 200) {
-                        updateState(this, (state) => {
-                            state.finishStatus.themeData = true;
-                            state.themeContext.theme = createTheme(resolveTheme(themeData.theme + '-' + locale.direction), resolveLocalization(locale.shortName));
-                            state.themeContext.currentTheme = themeData.theme;
-                            state.themeContext.isThemeLoading = false;
-                            return state;
-                        });
+                        this.props.dispatch(gotTheme(themeData.theme));
                     }
                 });
             });
 
             fetchData('get', '/locales', {}, { 'X-CSRF-TOKEN': this.state.token }, [], true).then((localesResponse) => {
+                updateState(this, (state) => {
+                    state.finishStatus.areLocalesLoading = false;
+                    return state;
+                });
+
                 let locales = localesResponse.value;
                 if (localesResponse.response.status === 200) {
-                    updateState(this, (state) => {
-                        state.finishStatus.locales = true;
-                        state.localeContext.locales = locales;
-                        return state;
-                    });
+                    this.props.dispatch(gotLocals(locales));
                 }
             });
 
@@ -195,46 +190,108 @@ class App extends Component {
         });
     }
 
-    onLogout() {
-        this.resetAuthInfo();
-    }
-
-    resetAuthInfo() {
-        this.setState({
-            isAuthenticated: false,
-            account: null,
-            privileges: null,
-            isEmailVerified: null,
-            image: null,
-        });
-    }
-
-    async onLogin() {
-        this.resetAuthInfo();
-        await this.getDataSynchronously();
-    }
-
-    async onRegister() {
-        this.resetAuthInfo();
-        await this.getDataSynchronously();
-    }
-
     updateAccount() {
-        updateState(this, { isAccountLoading: true, isAvatarLoading: true });
+        updateState(this, (state) => {
+            state.finishStatus.isAccountLoading = true;
+            state.finishStatus.isAvatarLoading = true;
+            return state;
+        });
+
         fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': this.state.token }).then((accountResponse) => {
-            updateState(this, { isAccountLoading: false });
+            updateState(this, (state) => {
+                state.finishStatus.isAccountLoading = false;
+                return state;
+            });
 
             if (accountResponse.response.status !== 200) {
                 return;
             }
-            updateState(this, { account: accountResponse.value });
+            this.props.dispatch(gotAccount(accountResponse.value));
 
             fetchData('get', '/avatar?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((avatarResponse) => {
+                updateState(this, (state) => {
+                    state.finishStatus.isAvatarLoading = false;
+                    return state;
+                });
+
                 if (avatarResponse.response.status === 200) {
-                    updateState(this, { isAvatarLoading: false, image: 'data:image/png;base64,' + avatarResponse.value });
+                    this.props.dispatch(gotAvatar('data:image/png;base64,' + avatarResponse.value));
+                } else {
+                    // In case there is actually no avatar for this user we send undefined so that it doesn't stop the render method.
+                    this.props.dispatch(gotAvatar(undefined));
                 }
             });
         });
+    }
+
+    onThemeChange() {
+        let locale = store.getState().local.local;
+        let theme = store.getState().theme.theme;
+
+        updateState(this, { theme: createTheme(resolveTheme(theme + '-' + locale.direction), resolveLocalization(locale.shortName)) });
+        fetchData('post', '/theme', { theme: theme }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': 'application/json', 'Accept': 'application/json' });
+    }
+
+    async onLocalChange() {
+        let locale = store.getState().local.localName;
+
+        let r = await fetchData('put', '/locale', { 'locale': locale }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': 'application/json', 'Accept': 'application/json' });
+        if (r.response.status !== 200) {
+            return;
+        }
+        r = null;
+
+        r = await fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': 'application/json', 'Accept': 'application/json' });
+        if (r.response.status !== 200) {
+            return;
+        }
+
+        this.props.dispatch(gotLocal(r.value));
+
+        document.dir = r.value.direction;
+        document.body.setAttribute('dir', r.value.direction);
+
+        this.setState(this.state);
+    }
+
+    onLogUserLog() {
+        let userLogged = store.getState().auth.userLogged;
+
+        if (userLogged === 'in') {
+            this.onLogin();
+        } else {
+            if (userLogged === 'out') {
+                this.onLogout();
+            }
+        }
+    }
+
+    onLogout() {
+        this.resetAuthInfo();
+    }
+
+    onLogin() {
+        this.resetAuthInfo();
+        this.reload();
+    }
+
+    async reload() {
+        let finishStatus = this.state.finishStatus;
+        for (const k in finishStatus) {
+            finishStatus[k] = true;
+        }
+
+        await updateState(this, { finishStatus: finishStatus });
+        await this.getDataSynchronously();
+        await updateState(this, { forceUpdate: true });
+    }
+
+    resetAuthInfo() {
+        this.props.dispatch(isNotAuthenticated());
+        this.props.dispatch(gotAvatar(null));
+        this.props.dispatch(gotRoles(null));
+        this.props.dispatch(gotAvatar(null));
+        this.props.dispatch(isEmailVerified(false));
     }
 
     render() {
@@ -254,74 +311,59 @@ class App extends Component {
             }
         })} />;
 
-        let authProps = {
-            isAuthenticationLoading: this.state.isAuthenticationLoading,
-            isAuthenticated: this.state.isAuthenticated,
-            onLogout: this.onLogout,
-            account: this.state.account,
-            privileges: this.state.privileges,
-        };
-
-        let navigator = null;
-        if (!this.state.localeContext.isLocaleLoading && !this.state.themeContext.isThemeLoading) {
-            navigator = <UserIconNavigator image={this.state.image} isAvatarLoading={this.state.isAvatarLoading} isEmailVerified={this.state.isEmailVerified} />;
-        }
-
         const cacheLtr = createCache({ key: "muiltr" });
 
         const cacheRtl = createCache({ key: "muirtl", stylisPlugins: [prefixer, rtlPlugin] });
 
+        const reduxState = store.getState();
+
         return (
-            (this.state.localeContext.isLocaleLoading || this.state.themeContext.isThemeLoading || (this.state.isAuthenticated && (this.state.isAccountLoading || this.state.arePrivilegesLoading))) ?
+            (reduxState.local.local === null || reduxState.theme.theme === null || (reduxState.auth.isAuthenticated === true && (reduxState.auth.account === null || reduxState.role.roles === null || reduxState.auth.avatar === null))) ?
                 <>
                     {inputGlobalStyles}
                     < div >!!!</div >
                 </> :
-                <CacheProvider value={this.state.localeContext.currentLocale.direction === 'rtl' ? cacheRtl : cacheLtr}>
-                    <LocaleContext.Provider value={this.state.localeContext}>
-                        <ThemeContext.Provider value={this.state.themeContext}>
-                            <ThemeProvider theme={this.state.themeContext.theme}>
-                                <PrivilegesContext.Provider value={formatPrivileges(this.state.privileges)}>
-                                    {inputGlobalStyles}
-                                    <BrowserRouter>
-                                        <Routes>
-                                            <Route path='/' element={<WelcomePage navigator={navigator} {...authProps} />} />
-                                            <Route path='/login' element={<LogInPage navigator={navigator} {...authProps} onLogin={this.onLogin} />} />
-                                            <Route path='/register' element={<SignUpPage navigator={navigator} {...authProps} onRegister={this.onRegister} />} />
+                <>
+                    <ThemeProvider theme={this.state.theme}>
+                        <CacheProvider value={store.getState().local.local.direction === 'rtl' ? cacheRtl : cacheLtr}>
+                            {inputGlobalStyles}
+                            <BrowserRouter>
+                                <Routes>
+                                    <Route path='/' element={<WelcomePage />} />
+                                    <Route path='/login' element={<LogInPage />} />
+                                    <Route path='/register' element={<SignUpPage />} />
 
-                                            <Route path='/dashboard/account' element={<DashboardAccountPage navigator={navigator} {...authProps} updateAccount={this.updateAccount} />} />
-                                            <Route path='/dashboard/order' element={<DashboardOrderPage navigator={navigator} {...authProps} />} />
-                                            <Route path='/dashboard/visit' element={<DashboardVisitPage navigator={navigator} {...authProps} />} />
-                                        </Routes>
-                                    </BrowserRouter>
+                                    <Route path='/dashboard/account' element={<DashboardAccountPage />} />
+                                    <Route path='/dashboard/order' element={<DashboardOrderPage />} />
+                                    <Route path='/dashboard/visit' element={<DashboardVisitPage />} />
+                                </Routes>
+                            </BrowserRouter>
 
-                                    {this.state.feedbackMessages.map((m, i) =>
-                                        <Snackbar
-                                            key={i}
-                                            open={m.open}
-                                            autoHideDuration={6000}
-                                            onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
-                                            action={
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
-                                                >
-                                                    <CloseIcon fontSize="small" />
-                                                </IconButton>
-                                            }
+                            {this.state.feedbackMessages.map((m, i) =>
+                                <Snackbar
+                                    key={i}
+                                    open={m.open}
+                                    autoHideDuration={6000}
+                                    onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                                    action={
+                                        <IconButton
+                                            size="small"
+                                            onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
                                         >
-                                            <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
-                                                {m.message}
-                                            </Alert>
-                                        </Snackbar>
-                                    )}
-                                </PrivilegesContext.Provider>
-                            </ThemeProvider>
-                        </ThemeContext.Provider>
-                    </LocaleContext.Provider>
-                </CacheProvider>
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    }
+                                >
+                                    <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                                        {m.message}
+                                    </Alert>
+                                </Snackbar>
+                            )}
+                        </CacheProvider>
+                    </ThemeProvider>
+                </>
         );
     }
 }
 
-export default App
+export default connect(null)(App);

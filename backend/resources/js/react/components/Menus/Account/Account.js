@@ -12,9 +12,13 @@ import SelfVisitsDataGrid from '../../Grids/Visits/SelfVisitsDataGrid';
 import { translate } from '../../../traslation/translate';
 import { fetchData } from '../../Http/fetch';
 import { updateState } from '../../helpers';
-import { PrivilegesContext } from '../../privilegesContext';
 import { get_cities, get_genders, get_states } from '../../Http/Api/general';
 import { delete_account, put_account, put_avatar } from '../../Http/Api/accounts';
+import { connect } from 'react-redux';
+import store from '../../../../redux/store';
+import { canDeleteSelfUser, canDeleteUser, canEditAvatar, canSelfEditAvatar, canUpdateSelfUser, canUpdateSelfUserColumn, canUpdateUserColumn, canUpdateUsers } from '../../roles/account';
+import { canReadOrder, canReadSelfOrder } from '../../roles/order';
+import { canReadSelfVisit, canReadVisit } from '../../roles/visit';
 
 /**
  * Account
@@ -23,12 +27,11 @@ import { delete_account, put_account, put_avatar } from '../../Http/Api/accounts
 export class Account extends Component {
     static propTypes = {
         isSelf: PropTypes.bool,
-        account: PropTypes.object.isRequired,
-        accountRole: PropTypes.string.isRequired,
+        account: PropTypes.object,
+        accountRole: PropTypes.string,
+        updateAccount: PropTypes.func,
         onUpdateSuccess: PropTypes.func,
     }
-
-    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -89,6 +92,9 @@ export class Account extends Component {
             loadingGenders: true,
             error: null,
 
+            account: null,
+            accountRole: null,
+
             inputs: {
                 firstname: '',
                 lastname: '',
@@ -109,12 +115,27 @@ export class Account extends Component {
         };
     }
 
-    componentDidMount() {
-        if (this.props.account.gender !== undefined) {
+    shouldComponentUpdate() {
+        return this.state.account !== null && this.state.accountRole !== null;
+    }
+
+    async componentDidMount() {
+        const reduxState = store.getState();
+        if (this.props.isSelf === true) {
+            await updateState(this, { accountRole: reduxState.role.roles.role, account: reduxState.auth.account });
+        } else {
+            if (this.props.account === undefined || this.props.account === null || this.props.accountRole === undefined || this.props.accountRole === null) {
+                throw new Error('No account provided');
+            }
+
+            await updateState(this, { accountRole: this.props.accountRole, account: this.props.account });
+        }
+
+        if (this.state.account.gender !== undefined) {
             this.getGenders();
         }
 
-        if (this.props.account.state !== undefined) {
+        if (this.state.account.state !== undefined) {
             this.getStates();
         }
     }
@@ -185,6 +206,8 @@ export class Account extends Component {
     }
 
     render() {
+        if (this.state.account === null || this.state.accountRole === null) { return null; }
+
         return (
             <>
                 {this.state.feedbackMessages.map(this.buildFeedback)}
@@ -195,7 +218,7 @@ export class Account extends Component {
                 >
                     <FormControl sx={{ width: '100%' }} >
                         {
-                            (this.context.privileges !== undefined && this.context.privileges.editAvatar !== undefined && this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && Number(this.context.privileges.editAvatar[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].boolean_value) === 1)
+                            ((this.props.isSelf === true && canSelfEditAvatar(store)) || (this.props.isSelf !== true && canEditAvatar(this.state.accountRole, store)))
                                 ? <Box sx={{ mt: 1, mb: 1, display: 'flex' }}>
                                     <Button component='label' htmlFor='avatar' variant='contained' sx={{ mr: 1, ml: 0, flexGrow: 1 }}>
                                         {translate('pages/auth/signup/choose-avatar')} {((this.state.inputs.avatar !== undefined && this.state.inputs.avatar !== null && this.state.inputs.avatar.name !== undefined && this.state.inputs.avatar.name !== null) ? (': ' + this.state.inputs.avatar.name) : '')}
@@ -210,7 +233,7 @@ export class Account extends Component {
                                             sx={{ display: 'none' }}
                                         />
                                     </Button>
-                                    <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = null; return state; })}  sx={{ mr: 1, ml: 0}}>
+                                    <Button variant='contained' type='button' onClick={(e) => this.setState((state) => { state.inputs.avatar = null; return state; })} sx={{ mr: 1, ml: 0 }}>
                                         {translate('general/reset/single/ucFirstLetterFirstWord')}
                                     </Button>
                                     <Button variant='contained' type='button' onClick={this.hsndleAvatarUpdate} >
@@ -221,35 +244,35 @@ export class Account extends Component {
                         }
 
                         <TextField
-                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('firstname') !== -1) || this.state.isUpdating}
+                            disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('firstname', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'firstname', store))) || this.state.isUpdating}
                             onInput={(e) => this.setState((state) => { state.inputs.firstname = e.target.value; return state; })}
                             label={translate('general/firstname/single/ucFirstLetterAllWords')}
-                            value={this.state.inputs.firstname !== '' ? this.state.inputs.firstname : (this.props.account.firstname === null ? '' : this.props.account.firstname)}
+                            value={this.state.inputs.firstname !== '' ? this.state.inputs.firstname : (this.state.account.firstname === null ? '' : this.state.account.firstname)}
                             required
                             variant='standard'
                             sx={{ m: 1 }}
                         />
                         <TextField
-                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('lastname') !== -1) || this.state.isUpdating}
+                            disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('lastname', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'lastname', store))) || this.state.isUpdating}
                             onInput={(e) => this.setState((state) => { state.inputs.lastname = e.target.value; return state; })}
                             label={translate('general/lastname/single/ucFirstLetterAllWords')}
-                            value={this.state.inputs.lastname !== '' ? this.state.inputs.lastname : (this.props.account.lastname === null ? '' : this.props.account.lastname)}
+                            value={this.state.inputs.lastname !== '' ? this.state.inputs.lastname : (this.state.account.lastname === null ? '' : this.state.account.lastname)}
                             required
                             variant='standard'
                             sx={{ m: 1 }} />
                         <TextField
-                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('username') !== -1) || this.state.isUpdating}
+                            disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('username', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'username', store))) || this.state.isUpdating}
                             onInput={(e) => this.setState((state) => { state.inputs.username = e.target.value; return state; })}
                             label={translate('general/username/single/ucFirstLetterAllWords')}
-                            value={this.state.inputs.username !== '' ? this.state.inputs.username : (this.props.account.username === null ? '' : this.props.account.username)}
+                            value={this.state.inputs.username !== '' ? this.state.inputs.username : (this.state.account.username === null ? '' : this.state.account.username)}
                             required
                             variant='standard'
                             sx={{ m: 1 }} />
                         <TextField
-                            disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('email') !== -1) || this.state.isUpdating}
+                            disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('email', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'email', store))) || this.state.isUpdating}
                             onInput={(e) => this.setState((state) => { state.inputs.email = e.target.value; return state; })}
                             label={translate('general/email-address/single/ucFirstLetterFirstWord')}
-                            value={this.state.inputs.email !== '' ? this.state.inputs.email : (this.props.account.email === null ? '' : this.props.account.email)}
+                            value={this.state.inputs.email !== '' ? this.state.inputs.email : (this.state.account.email === null ? '' : this.state.account.email)}
                             type='email'
                             variant='standard'
                             sx={{ m: 1 }} />
@@ -257,7 +280,7 @@ export class Account extends Component {
                         {this.state.isUpdating
                             ? <LoadingButton loading variant='contained'>{translate('pages/account/account/update-your-password')}</LoadingButton>
                             : <Button
-                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('password') !== -1) || this.state.isUpdating}
+                                disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('password', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'password', store))) || this.state.isUpdating}
                                 variant='contained'
                                 type='button'
                                 onClick={() => this.setState({ isUpdatingPassword: true, openSendModal: true })}
@@ -269,14 +292,14 @@ export class Account extends Component {
                         <TextField
                             disabled
                             label={translate('general/phonenumber/single/ucFirstLetterAllWords')}
-                            value={(this.props.account.phonenumber === null ? '' : this.props.account.phonenumber)}
+                            value={(this.state.account.phonenumber === null ? '' : this.state.account.phonenumber)}
                             required
                             variant='standard'
                             sx={{ m: 1 }}
                         />
                         {this.state.isUpdating ? <LoadingButton loading variant='contained'>{translate('pages/account/account/update-your-phone')}</LoadingButton>
                             : <Button
-                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('phonenumber') !== -1) || this.state.isUpdating}
+                                disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('phonenumber', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'phonenumber', store))) || this.state.isUpdating}
                                 variant='contained'
                                 type='button'
                                 onClick={async () => { await updateState(this, { isUpdatingPhonenumber: true, sendMethod: 'phonenumber' }); this.send(); }}
@@ -289,12 +312,12 @@ export class Account extends Component {
                         {!this.state.loadingGenders && <Autocomplete
                             sx={{ m: 1 }}
                             disablePortal
-                            defaultValue={(this.props.account.gender === null ? '' : this.props.account.gender)}
+                            defaultValue={(this.state.account.gender === null ? '' : this.state.account.gender)}
                             options={this.genders !== undefined ? this.genders : []}
                             onChange={this.handleGender}
                             renderInput={(params) => <TextField
                                 {...params}
-                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('gender') !== -1) || this.state.isUpdating}
+                                disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('gender', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'gender', store))) || this.state.isUpdating}
                                 label={translate('general/gender/single/ucFirstLetterFirstWord')}
                                 required
                                 variant='standard'
@@ -303,12 +326,12 @@ export class Account extends Component {
 
                         {/* ------------------------------------------------------------------ */}
 
-                        {this.props.account.age !== undefined ?
+                        {this.state.account.age !== undefined ?
                             <TextField
-                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('age') !== -1) || this.state.isUpdating}
+                                disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('age', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'age', store))) || this.state.isUpdating}
                                 type='number'
                                 onInput={(e) => this.setState((state) => { state.inputs.age = e.target.value; return state; })}
-                                required value={this.state.inputs.age !== '' ? this.state.inputs.age : (this.props.account.age === null ? '' : this.props.account.age)}
+                                required value={this.state.inputs.age !== '' ? this.state.inputs.age : (this.state.account.age === null ? '' : this.state.account.age)}
                                 label={translate('general/age/single/ucFirstLetterFirstWord')}
                                 variant='standard'
                                 sx={{ m: 1 }}
@@ -317,18 +340,18 @@ export class Account extends Component {
                             : null
                         }
 
-                        {this.props.account.state !== undefined ?
+                        {this.state.account.state !== undefined ?
                             <>
                                 {this.state.loadingStates && <LoadingButton loading variant='contained' sx={{ m: 1 }} >{translate('general/state/single/ucFirstLetterFirstWord')}</LoadingButton>}
                                 {!this.state.loadingStates && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
-                                    defaultValue={(this.props.account.state === null ? '' : this.props.account.state)}
+                                    defaultValue={(this.state.account.state === null ? '' : this.state.account.state)}
                                     options={this.states !== undefined ? this.states : []}
                                     onChange={this.handleState}
                                     renderInput={(params) => <TextField
                                         {...params}
-                                        disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('state') !== -1) || this.state.isUpdating}
+                                        disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('state', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'state', store))) || this.state.isUpdating}
                                         label={translate('general/state/single/ucFirstLetterFirstWord')}
                                         required
                                         variant='standard'
@@ -339,18 +362,18 @@ export class Account extends Component {
                         }
 
 
-                        {this.props.account.city !== undefined ?
+                        {this.state.account.city !== undefined ?
                             <>
                                 {this.state.loadingCities && <LoadingButton loading variant='contained' sx={{ m: 1 }} >{translate('general/city/single/ucFirstLetterFirstWord')}</LoadingButton>}
                                 {!this.state.loadingCities && <Autocomplete
                                     sx={{ m: 1 }}
                                     disablePortal
-                                    defaultValue={(this.props.account.city === null ? '' : this.props.account.city)}
+                                    defaultValue={(this.state.account.city === null ? '' : this.state.account.city)}
                                     options={this.cities !== undefined ? this.cities : []}
                                     onChange={this.handleCity}
                                     renderInput={(params) => <TextField
                                         {...params}
-                                        disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('city') !== -1) || this.state.isUpdating}
+                                        disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('city', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'city', store))) || this.state.isUpdating}
                                         label={translate('general/city/single/ucFirstLetterFirstWord')}
                                         required
                                         variant='standard'
@@ -360,12 +383,12 @@ export class Account extends Component {
                             : null
                         }
 
-                        {this.props.account.address !== undefined ?
+                        {this.state.account.address !== undefined ?
                             <TextField
-                                disabled={!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].indexOf('address') !== -1) || this.state.isUpdating}
+                                disabled={!((this.props.isSelf === true && canUpdateSelfUserColumn('address', store)) || (this.props.isSelf !== true && canUpdateUserColumn(this.state.accountRole, 'address', store))) || this.state.isUpdating}
                                 onInput={(e) => this.setState((state) => { state.inputs.address = e.target.value; return state; })}
                                 multiline
-                                value={this.state.inputs.address !== '' ? this.state.inputs.address : (this.props.account.address === null ? '' : this.props.account.address)}
+                                value={this.state.inputs.address !== '' ? this.state.inputs.address : (this.state.account.address === null ? '' : this.state.account.address)}
                                 label={translate('general/address/single/ucFirstLetterFirstWord')}
                                 variant='standard'
                                 sx={{ m: 1 }}
@@ -373,12 +396,7 @@ export class Account extends Component {
                             : null
                         }
 
-                        {(
-                            this.context.updatableColumns !== undefined &&
-                            this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined &&
-                            this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0 &&
-                            !this.state.isUpdating
-                        ) ?
+                        {((this.props.isSelf === true && canUpdateSelfUser(store)) || (this.props.isSelf !== true && canUpdateUsers(store)) || !this.state.isUpdating) ?
                             <Button type='submit' variant='contained' onClick={this.hsndleUpdate} fullWidth>
                                 {translate('general/update/single/ucFirstLetterFirstWord')}
                             </Button> :
@@ -386,31 +404,31 @@ export class Account extends Component {
                         }
                     </FormControl>
 
-                    {(this.context.retrieveOrder.laser !== undefined && this.context.retrieveOrder.laser.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                    {((this.props.isSelf === true && canReadSelfOrder('laser', store)) || (this.props.isSelf !== true && canReadOrder(this.state.accountRole, 'laser', store))) &&
                         <Button type='button' variant='contained' onClick={(e) => { this.setState({ openLaserOrdersViewModal: true }); }} fullWidth>
                             {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/orders/order/laser-orders')}
                         </Button>
                     }
 
-                    {(this.context.retrieveOrder.regular !== undefined && this.context.retrieveOrder.regular.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                    {((this.props.isSelf === true && canReadSelfOrder('regular', store)) || (this.props.isSelf !== true && canReadOrder(this.state.accountRole, 'regular', store))) &&
                         <Button type='button' variant='contained' onClick={(e) => { this.setState({ openRegularOrdersViewModal: true }); }} fullWidth>
                             {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/orders/order/regular-orders')}
                         </Button>
                     }
 
-                    {(this.context.retrieveVisit.laser !== undefined && this.context.retrieveVisit.laser.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                    {((this.props.isSelf === true && canReadSelfVisit('laser', store)) || (this.props.isSelf !== true && canReadVisit(this.state.accountRole, 'laser', store))) &&
                         <Button type='button' variant='contained' onClick={(e) => { this.setState({ openLaserVisitsViewModal: true }); }} fullWidth>
                             {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/visits/visit/laser-visit')}
                         </Button>
                     }
 
-                    {(this.context.retrieveVisit.regular !== undefined && this.context.retrieveVisit.regular.length > 0 && this.context.retrieveOrder.laser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) &&
+                    {((this.props.isSelf === true && canReadSelfVisit('regular', store)) || (this.props.isSelf !== true && canReadVisit(this.state.accountRole, 'regular', store))) &&
                         <Button type='button' variant='contained' onClick={(e) => { this.setState({ openRegularVisitsViewModal: true }); }} fullWidth>
                             {translate('general/show/single/ucFirstLetterFirstWord')} {translate('pages/visits/visit/regular-visit')}
                         </Button>
                     }
 
-                    {(this.context.deleteUser !== undefined && this.context.deleteUser.length > 0 && this.context.deleteUser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1 && !this.state.isDeleting) ?
+                    {((this.props.isSelf === true && canDeleteSelfUser(store)) || (this.props.isSelf !== true && canDeleteUser(this.state.accountRole, store))) ?
                         <Button type='submit' variant='contained' onClick={this.hsndleDelete} fullWidth color='error' >
                             {translate('general/delete/single/ucFirstLetterFirstWord')}
                         </Button>
@@ -469,7 +487,7 @@ export class Account extends Component {
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         {this.state.feedbackMessages.map(this.buildFeedback)}
-                        <SelfLaserOrdersDataGrid account={this.props.account} accountRole={this.props.accountRole} />
+                        <SelfLaserOrdersDataGrid />
                     </Paper>
                 </Modal>
                 <Modal
@@ -478,7 +496,7 @@ export class Account extends Component {
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         {this.state.feedbackMessages.map(this.buildFeedback)}
-                        <SelfRegularOrdersDataGrid account={this.props.account} accountRole={this.props.accountRole} />
+                        <SelfRegularOrdersDataGrid />
                     </Paper>
                 </Modal>
 
@@ -488,7 +506,7 @@ export class Account extends Component {
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         {this.state.feedbackMessages.map(this.buildFeedback)}
-                        <SelfVisitsDataGrid businessName='laser' account={this.props.account} accountRole={this.props.accountRole} />
+                        <SelfVisitsDataGrid businessName='laser' />
                     </Paper>
                 </Modal>
                 <Modal
@@ -497,7 +515,7 @@ export class Account extends Component {
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         {this.state.feedbackMessages.map(this.buildFeedback)}
-                        <SelfVisitsDataGrid businessName='regular' account={this.props.account} accountRole={this.props.accountRole} />
+                        <SelfVisitsDataGrid businessName='regular' />
                     </Paper>
                 </Modal>
             </>
@@ -563,13 +581,9 @@ export class Account extends Component {
     }
 
     async hsndleAvatarUpdate(e) {
-        if (!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0) || this.state.isUpdating) {
-            return;
-        }
-
         this.setState({ isUpdating: true });
 
-        let r = await put_avatar(this.props.account.id, this.state.inputs.avatar, this.state.token);
+        let r = await put_avatar(this.state.account.id, this.state.inputs.avatar, this.state.token);
 
         if (r.response.status === 200) {
             if (this.props.updateAccount !== undefined) {
@@ -591,10 +605,6 @@ export class Account extends Component {
     }
 
     async hsndleUpdate(e) {
-        if (!(this.context.updatableColumns !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole] !== undefined && this.context.updatableColumns[this.props.accountRole === this.context.role ? 'self' : this.props.accountRole].length > 0) || this.state.isUpdating) {
-            return;
-        }
-
         this.setState({ isUpdating: true });
 
         let data = {};
@@ -631,7 +641,7 @@ export class Account extends Component {
             }
         }
 
-        let r = await put_account(this.props.account.id, Object.keys(data).length !== 0 ? data : null, Object.keys(specialData).length !== 0 ? specialData : null, this.state.token);
+        let r = await put_account(this.state.account.id, Object.keys(data).length !== 0 ? data : null, Object.keys(specialData).length !== 0 ? specialData : null, this.state.token);
 
         this.setState({ isUpdating: false });
 
@@ -655,13 +665,9 @@ export class Account extends Component {
     }
 
     async hsndleDelete(e) {
-        if (!(this.context.deleteUser !== undefined && this.context.deleteUser.length > 0 && this.context.deleteUser.indexOf(this.props.accountRole === this.context.role ? 'self' : this.props.accountRole) !== -1) || this.state.isDeleting) {
-            return;
-        }
-
         this.setState({ isDeleting: true });
 
-        let r = await delete_account(this.props.account.id, this.state.token);
+        let r = await delete_account(this.state.account.id, this.state.token);
         if (r.response.status === 200) {
             setTimeout(() => {
                 fetchData('get', '/logout', {}, { 'X-CSRF-TOKEN': this.state.token }).then((res) => { window.location.href = r.response.url; });
@@ -681,9 +687,9 @@ export class Account extends Component {
 
         let data = {};
         if (this.state.sendMethod === 'phonenumber') {
-            data.phonenumber = this.props.account.phonenumber;
+            data.phonenumber = this.state.account.phonenumber;
         } else {
-            data.email = this.props.account.email;
+            data.email = this.state.account.email;
         }
 
         let r = await fetchData('post', '/auth/send-code-to-' + (this.state.sendMethod === 'phonenumber' ? 'phonenumber' : 'email'), data, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
@@ -712,15 +718,19 @@ export class Account extends Component {
         if (this.state.isUpdatingPhonenumber) {
             let data = {};
             data.code = this.state.inputs.code;
-            data.phonenumber = this.props.account.phonenumber;
+            data.phonenumber = this.state.account.phonenumber;
 
             r = await fetchData('post', '/auth/verify-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
 
             if (r.response.status === 200) {
                 let data = {};
-                data.phonenumber = this.props.account.phonenumber;
+                data.phonenumber = this.state.account.phonenumber;
                 data.newPhonenumber = this.state.inputs.phonenumber;
                 r = await fetchData('put', '/auth/update-phonenumber', data, { 'X-CSRF-TOKEN': this.state.token });
+
+                if (this.props.updateAccount !== undefined) {
+                    this.props.updateAccount();
+                }
 
                 if (r.response.status === 200) {
                     this.setState({ feedbackOpen: true, feedbackMessage: translate('general/successful/single/ucFirstLetterFirstWord'), feedbackColor: 'success' });
@@ -728,8 +738,9 @@ export class Account extends Component {
                     setTimeout(() => {
                         document.window.href = document.window.location.pathname;
                     }, 200);
-                    if (this.props.updateAccount !== undefined) {
-                        this.props.updateAccount();
+
+                    if (this.props.onUpdateSuccess !== undefined) {
+                        this.props.onUpdateSuccess();
                     }
                 } else {
                     let value = null;
@@ -750,13 +761,18 @@ export class Account extends Component {
             data.password_confirmation = this.state.inputs.password_confirmation;
             r = await fetchData('put', '/auth/reset-password', data, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
 
+            if (this.props.updateAccount !== undefined) {
+                this.props.updateAccount();
+            }
+
             if (r.response.status === 200) {
                 this.closeCodeModal(null, 'code');
                 setTimeout(() => {
                     document.window.href = document.window.location.pathname;
                 }, 200);
-                if (this.props.updateAccount !== undefined) {
-                    this.props.updateAccount();
+
+                if (this.props.onUpdateSuccess !== undefined) {
+                    this.props.onUpdateSuccess();
                 }
             } else {
                 let value = null;
@@ -810,4 +826,4 @@ export class Account extends Component {
     }
 }
 
-export default Account
+export default connect(null)(Account)

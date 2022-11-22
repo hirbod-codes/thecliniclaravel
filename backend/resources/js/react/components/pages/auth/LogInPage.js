@@ -13,20 +13,14 @@ export class LogInPage extends Component {
             <>
                 <Grid container spacing={1} sx={{ minHeight: '100vh' }}>
                     <Grid item xs={12} >
-                        <Header
-                            title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords')}</ Link>}
-                            onLogout={this.props.onLogout}
-                            isAuthenticated={this.props.isAuthenticated}
-                            isAuthenticationLoading={this.props.isAuthenticationLoading}
-                            navigator={this.props.navigator}
-                        />
+                        <Header title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('general/log-in/single/ucFirstLetterAllWords')}</ Link>} />
                     </Grid>
                     <Grid item xs={12} >
                         <Grid container >
                             <Grid item xs >
                             </Grid>
                             <Grid item xs={12} sm={9} md={6} >
-                                <LogInForm onLogin={this.props.onLogin} />
+                                <LogInForm />
                             </Grid>
                             <Grid item xs >
                             </Grid>

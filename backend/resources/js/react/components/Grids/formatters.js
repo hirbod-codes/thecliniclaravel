@@ -1,6 +1,6 @@
+import store from "../../../redux/store";
 import { translate } from "../../traslation/translate";
 import { localizeDate } from "../helpers";
-import { LocaleContext } from "../localeContext";
 
 function formatToNumber(params) {
     if (params.value === undefined) {
@@ -15,7 +15,7 @@ function formatToTime(params) {
         return '';
     }
 
-    const locale = LocaleContext._currentValue.currentLocale.shortName;
+    const locale = store.getState().local.local.shortName;
     let date = null;
     switch (params.field) {
         case 'consuming_time':

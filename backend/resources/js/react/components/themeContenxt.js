@@ -12,7 +12,6 @@ function resolveTheme(name) {
 };
 
 function resolveLocalization(locale) {
-    console.log('locale', locale);
     switch (locale) {
         case 'fa':
             return faIR;

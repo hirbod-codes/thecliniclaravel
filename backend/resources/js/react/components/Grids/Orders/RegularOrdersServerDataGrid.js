@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-// import PropTypes from 'prop-types';
-
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -13,19 +11,16 @@ import OrdersDataGrid from './OrdersDataGrid';
 import { translate } from '../../../traslation/translate';
 import FindAccount from '../../Menus/Account/FindAccount';
 import { updateState } from '../../helpers';
-import { PrivilegesContext } from '../../privilegesContext';
-import { LocaleContext } from '../../localeContext';
 import { delete_order, get_ordersCount, post_order } from '../../Http/Api/order';
+import { connect } from 'react-redux';
+import store from '../../../../redux/store';
+import { canCreateOrder, canDeleteOrder, canEditRegularOrderNeededTime, canEditRegularOrderPrice } from '../../roles/order';
 
 /**
  * RegularOrdersServerDataGrid
  * @augments {Component<Props, State>}
  */
 export class RegularOrdersServerDataGrid extends Component {
-    static propTypes = {}
-
-    static contextType = PrivilegesContext;
-
     constructor(props) {
         super(props);
 
@@ -52,7 +47,7 @@ export class RegularOrdersServerDataGrid extends Component {
 
             reload: false,
 
-            role: null,
+            role: store.getState().role.roles.retrieveOrder.regular.filter((v) => v !== 'self')[0],
 
             page: 0,
             pagesLastOrderId: [0],
@@ -65,13 +60,7 @@ export class RegularOrdersServerDataGrid extends Component {
             isCreating: false,
             price: '',
             timeConsumption: '',
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
-    }
-
-    componentDidMount() {
-        this.setState({ role: this.context.retrieveOrder.laser[0] });
     }
 
     getRowCount() {
@@ -89,12 +78,12 @@ export class RegularOrdersServerDataGrid extends Component {
     }
 
     addColumns(columns) {
-        if (this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf(this.state.role) !== -1) {
+        if (canDeleteOrder(this.state.role, 'regular', store)) {
             columns.push({
                 field: 'actions',
-                description: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                description: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => {
                     return [
@@ -151,7 +140,7 @@ export class RegularOrdersServerDataGrid extends Component {
         return (
             <>
                 <OrdersDataGrid
-                    roleName={this.state.role === null ? this.context.retrieveOrder.regular.filter((v) => v !== 'self')[0] : this.state.role}
+                    roleName={this.state.role}
                     businessName='regular'
 
                     paginationMode='server'
@@ -175,21 +164,21 @@ export class RegularOrdersServerDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {(this.context.createOrder !== undefined && this.context.createOrder.regular !== undefined && this.context.createOrder.regular.filter((v) => v !== 'self').length > 0) ?
+                                        {(canCreateOrder(this.state.role, 'regular', store)) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
                                                 <>
-                                                    {this.context.privileges !== undefined && this.context.privileges.editRegularOrderPrice !== undefined && this.context.privileges.editRegularOrderNeededTime !== undefined &&
+                                                    {canEditRegularOrderPrice(this.state.role, store) && canEditRegularOrderNeededTime(this.state.role, store) &&
                                                         <>
                                                             <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
                                                             <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/needed_time')} value={this.state.timeConsumption} />
+                                                            <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>
+                                                                {translate('general/create/single/ucFirstLetterFirstWord')}
+                                                            </Button>
                                                         </>
                                                     }
-                                                    <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>
-                                                        {translate('general/create/single/ucFirstLetterFirstWord')}
-                                                    </Button>
                                                 </>
                                             ) : null
                                         }
@@ -197,8 +186,8 @@ export class RegularOrdersServerDataGrid extends Component {
                                             sx={{ minWidth: '130px' }}
                                             size='small'
                                             disablePortal
-                                            value={this.state.role === null ? this.context.retrieveOrder.regular.filter((v) => v !== 'self')[0] : this.state.role}
-                                            options={this.context.retrieveOrder.regular.filter((v) => v !== 'self')}
+                                            value={this.state.role}
+                                            options={store.getState().role.roles.retrieveOrder.regular.filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;
 
@@ -257,10 +246,6 @@ export class RegularOrdersServerDataGrid extends Component {
     async handleOnCreate(account) {
         this.closeCreationModal();
 
-        if (!(this.context.createOrder !== undefined && this.context.createOrder.regular !== undefined && this.context.createOrder.regular.filter((v) => v !== 'self').length > 0)) {
-            return;
-        }
-
         this.setState({ isCreating: true });
 
         let result = await post_order(
@@ -284,8 +269,6 @@ export class RegularOrdersServerDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteOrder !== undefined && this.context.deleteOrder.regular !== undefined && this.context.deleteOrder.regular.indexOf(this.state.role) !== -1)) { throw new Error('user not authorized!'); }
-
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
@@ -307,4 +290,4 @@ export class RegularOrdersServerDataGrid extends Component {
     }
 }
 
-export default RegularOrdersServerDataGrid
+export default connect(null)(RegularOrdersServerDataGrid)

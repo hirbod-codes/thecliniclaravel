@@ -108,7 +108,6 @@ async function post_order(
     if (timeConsumption !== null) {
         data.timeConsumption = timeConsumption;
     }
-    console.log(data);
 
     return await fetchData('post', '/order', data, { 'X-CSRF-TOKEN': token, 'Accept': 'application/json' });
 }

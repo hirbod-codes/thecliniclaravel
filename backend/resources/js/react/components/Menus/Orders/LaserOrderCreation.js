@@ -11,8 +11,9 @@ import PackagesDataGrid from '../../Grids/Orders/PackagesDataGrid'
 import { updateState } from '../../helpers'
 import LoadingButton from '@mui/lab/LoadingButton';
 import FindAccount from '../Account/FindAccount';
-import { PrivilegesContext } from '../../privilegesContext';
 import { get_laser_price_calculation, get_laser_time_calculation, post_order } from '../../Http/Api/order';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * LaserOrderCreation
@@ -25,8 +26,6 @@ export class LaserOrderCreation extends Component {
         accountRole: PropTypes.string,
         onCreated: PropTypes.func,
     }
-
-    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
@@ -74,8 +73,8 @@ export class LaserOrderCreation extends Component {
             movementDisabled: false,
 
             accountModalOpen: false,
-            account: null,
-            accountRole: null,
+            account: store.getState().auth.account,
+            accountRole: store.getState().role.roles.role,
 
             selectedParts: [],
             selectedPackages: [],
@@ -95,8 +94,8 @@ export class LaserOrderCreation extends Component {
         if (this.props.account !== undefined && this.props.accountRole !== undefined) {
             this.setState({ account: this.props.account, accountRole: this.props.accountRole });
         } else {
-            if (this.props.isSelf !== undefined && this.props.isSelf === true) { throw new Error('account information is not provided for order self creation!'); }
-            
+            if (this.props.isSelf === true) { throw new Error('account information is not provided for order self creation!'); }
+
             this.setState({ accountModalOpen: true });
         }
     }
@@ -202,7 +201,7 @@ export class LaserOrderCreation extends Component {
     render() {
         return (
             <>
-                {(this.state.account === null || this.state.accountRole === null) ? null :
+                {(this.props.isSelf === true) &&
                     <Stack sx={{ height: '100%' }} >
                         <Stepper >
                             <Step key={0} completed={this.state.steps[0].completed} active={true}>
@@ -317,10 +316,6 @@ export class LaserOrderCreation extends Component {
     }
 
     async calculate() {
-        if (this.state.selectedPackages.length === 0 && this.state.selectedParts.length === 0) {
-            return;
-        }
-
         await updateState(this, { isCalculating: true });
 
         let prices = await get_laser_price_calculation(
@@ -358,10 +353,6 @@ export class LaserOrderCreation extends Component {
     }
 
     async submit(e) {
-        console.log('this.state', this.state);
-        console.log('this.props', this.props);
-        if (!(this.context.createOrder !== undefined && this.context.createOrder.laser !== undefined && this.context.createOrder.laser.indexOf(this.props.isSelf !== undefined ? 'self' : this.state.accountRole) !== -1)) { throw new Error('user not authorized!'); }
-
         this.setState({ isCalculating: true });
 
         let r = await post_order(
@@ -373,7 +364,9 @@ export class LaserOrderCreation extends Component {
             null,
             this.state.token);
         if (r.response.status === 200) {
-            this.props.onCreated();
+            if (this.props.onCreated !== undefined) {
+                this.props.onCreated();
+            }
         } else {
             let value = null;
             if (Array.isArray(r.value)) { value = r.value; } else { value = [r.value]; }
@@ -385,4 +378,4 @@ export class LaserOrderCreation extends Component {
     }
 }
 
-export default LaserOrderCreation
+export default connect(null)(LaserOrderCreation)

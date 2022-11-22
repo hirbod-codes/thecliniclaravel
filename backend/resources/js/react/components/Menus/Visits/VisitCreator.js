@@ -12,19 +12,19 @@ import TabPanel from '../TabPanel';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponents from './WeekDayInputComponents';
 import { localizeDate, updateState } from '../../helpers';
-import { LocaleContext } from '../../localeContext';
-import { PrivilegesContext } from '../../privilegesContext';
 import { DateTime } from 'luxon';
 import { post_visit_laser, post_visit_laser_check, post_visit_regular, post_visit_regular_check } from '../../Http/Api/visits';
 import { get_work_schedule } from '../../Http/Api/general';
+import store from '../../../../redux/store';
+import { canCreateOrder, canReadOrder } from '../../roles/order';
+import { canReadUser } from '../../roles/account';
+import { connect } from 'react-redux';
 
 /**
  * VisitCreator
  * @augments {Component<Props, State>}
  */
 export class VisitCreator extends Component {
-    static contextType = PrivilegesContext;
-
     static propTypes = {
         businessName: PropTypes.string.isRequired,
         targetRoleName: PropTypes.string.isRequired,
@@ -83,8 +83,6 @@ export class VisitCreator extends Component {
             isRefreshingWeeklyVisit: false,
             weeklyVisitRefresh: null,
             weeklyTImePatterns: null,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -199,7 +197,7 @@ export class VisitCreator extends Component {
             <>
                 {this.state.feedbackMessages.map((m, i) => this.buildFeedbacks(m, i))}
 
-                {(this.context.retrieveUser !== undefined && this.context.retrieveUser.indexOf(this.props.targetRoleName) !== -1) &&
+                {(canReadUser(this.props.targetRoleName, store)) &&
                     <Modal
                         open={this.state.openAccountSearchModal}
                         onClose={this.closeAccountSearchModal}
@@ -211,7 +209,7 @@ export class VisitCreator extends Component {
                     </Modal>
                 }
 
-                {(this.context.retrieveOrder !== undefined && this.context.retrieveOrder[this.props.businessName] !== undefined && this.context.retrieveOrder[this.props.businessName].indexOf(this.props.targetRoleName) !== -1) &&
+                {(canReadOrder(this.props.targetRoleName, this.props.businessName, store)) &&
                     <Modal
                         open={this.state.openOrderSearchModal}
                         onClose={this.closeOrderSearchModal}
@@ -223,7 +221,7 @@ export class VisitCreator extends Component {
                     </Modal>
                 }
 
-                {(this.context.createOrder !== undefined && this.context.createOrder[this.props.businessName] !== undefined && this.context.createOrder[this.props.businessName].indexOf(this.props.targetRoleName) !== -1) &&
+                {(canCreateOrder(this.props.targetRoleName, this.props.businessName, store)) &&
                     <Modal
                         open={this.state.openVisitInfoModal}
                         onClose={this.closeVisitInfoModal}
@@ -412,4 +410,4 @@ export class VisitCreator extends Component {
     }
 }
 
-export default VisitCreator
+export default connect(null)(VisitCreator)

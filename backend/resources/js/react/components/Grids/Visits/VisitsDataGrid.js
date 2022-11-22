@@ -9,19 +9,17 @@ import DataGridComponent from '../DataGridComponent';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import { convertWeeklyTimePatterns, localizeDate, resolveTimeZone } from '../../helpers';
-import { LocaleContext } from '../../localeContext';
-import { PrivilegesContext } from '../../privilegesContext';
 import { DateTime } from 'luxon';
 import WeeklyTimePatterns from '../../Menus/Time/WeeklyTimePatterns';
 import { get_visits_by_order, get_visits_by_timestamp, get_visits_by_user } from '../../Http/Api/visits';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * VisitsDataGrid
  * @augments {Component<Props, State>}
  */
 export class VisitsDataGrid extends Component {
-    static contextType = PrivilegesContext;
-
     static propTypes = {
         businessName: PropTypes.string.isRequired,
 
@@ -73,8 +71,6 @@ export class VisitsDataGrid extends Component {
             pageSize: 10,
 
             openWeeklyTimePatterns: [],
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -152,7 +148,7 @@ export class VisitsDataGrid extends Component {
             return [{ field: 'id' }];
         }
 
-        const locale = this.state.locale;
+        const locale = store.getState().local.local.shortName;
         let columns = [];
         for (const k in rows[0]) {
             if (Object.hasOwnProperty.call(rows[0], k)) {
@@ -162,24 +158,24 @@ export class VisitsDataGrid extends Component {
 
                 switch (k) {
                     case 'id':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'number';
                         column.valueFormatter = formatToNumber;
                         break;
 
                     case 'consuming_time':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.type = 'number';
                         column.valueFormatter = formatToTime;
                         break;
 
                     case 'date_time_period':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.valueFormatter = ({ value }) => { if (!value) { return 'N/A'; } else { return value; } };
                         break;
 
                     case 'weekly_time_patterns':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.renderCell = (params) => {
                             const weeklyTimePatterns = params.row.weekly_time_patterns;
                             if (!weeklyTimePatterns) {
@@ -221,21 +217,21 @@ export class VisitsDataGrid extends Component {
                         break;
 
                     case 'visit_timestamp':
-                        column.headerName = translate('pages/visits/visit/columns/' + k, this.state.locale);
+                        column.headerName = translate('pages/visits/visit/columns/' + k);
                         column.type = 'dateTime';
                         column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', DateTime.fromSeconds(Number(props.value), { zone: 'utc' }).toISO(), locale, true); };
                         column.minWidth = 330;
                         break;
 
                     case 'created_at':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
                         column.minWidth = 200;
                         break;
 
                     case 'updated_at':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
                         column.minWidth = 200;
@@ -340,4 +336,4 @@ export class VisitsDataGrid extends Component {
     }
 }
 
-export default VisitsDataGrid
+export default connect(null)(VisitsDataGrid)

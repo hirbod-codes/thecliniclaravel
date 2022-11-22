@@ -1,7 +1,5 @@
 import React, { Component } from 'react'
 
-import PropTypes from 'prop-types';
-
 import UpdateIcon from '@mui/icons-material/Update';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -15,22 +13,15 @@ import LoadingButton from '@mui/lab/LoadingButton';
 import AccountCreator from '../../Menus/Account/AccountCreator';
 import { updateState } from '../../helpers';
 import Account from '../../Menus/Account/Account';
-import { PrivilegesContext } from '../../privilegesContext';
-import { LocaleContext } from '../../localeContext';
 import { delete_account, get_accountsCount } from '../../Http/Api/accounts';
+import store from '../../../../redux/store';
+import { canCreateUsers, canDeleteUser, canUpdateUser } from '../../roles/account';
 
 /**
  * AccountsServerDataGrid
  * @augments {Component<Props, State>}
  */
 export class AccountsServerDataGrid extends Component {
-    static propTypes = {
-        account: PropTypes.object.isRequired,
-        roles: PropTypes.arrayOf(PropTypes.string).isRequired,
-    }
-
-    static contextType = PrivilegesContext;
-
     constructor(props) {
         super(props);
 
@@ -55,7 +46,7 @@ export class AccountsServerDataGrid extends Component {
 
             feedbackMessages: [],
 
-            role: this.props.roles[0],
+            role: store.getState().role.roles.retrieveUser.filter((v) => v !== 'self')[0],
 
             reload: false,
 
@@ -77,8 +68,6 @@ export class AccountsServerDataGrid extends Component {
 
             isCreating: false,
             openCreationModal: false,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -99,8 +88,8 @@ export class AccountsServerDataGrid extends Component {
     addColumns(columns) {
         let isDeletable, isUpdatable = false;
 
-        if (this.context.deleteUser !== undefined && this.context.deleteUser.length > 0 && this.context.deleteUser.indexOf(this.state.role) !== -1) { isDeletable = true; }
-        if (this.context.updatableColumns !== undefined && this.context.updatableColumns[this.state.role] !== undefined && this.context.updatableColumns[this.state.role].length > 0) { isUpdatable = true; }
+        if (canDeleteUser(this.state.role, store)) { isDeletable = true; }
+        if (canUpdateUser(this.state.role, store)) { isUpdatable = true; }
 
         if (!isDeletable && !isUpdatable) {
             return columns;
@@ -124,9 +113,9 @@ export class AccountsServerDataGrid extends Component {
 
         columns.push({
             field: 'actions',
-            description: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+            description: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
             type: 'actions',
-            headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+            headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
             width: 100,
             getActions: getActions,
         });
@@ -204,7 +193,7 @@ export class AccountsServerDataGrid extends Component {
                 <AccountsDataGrid
                     role={this.state.role}
 
-                    account={this.props.account}
+                    account={store.getState().auth.account}
 
                     paginationMode='server'
 
@@ -227,7 +216,7 @@ export class AccountsServerDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {(this.context.createUser !== undefined && this.context.createUser.indexOf(this.state.role) !== -1) ?
+                                        {(canCreateUsers(store)) ?
                                             (!this.state.isCreating ?
                                                 <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>{translate('general/create/single/ucFirstLetterFirstWord')}</Button>
                                                 :
@@ -239,7 +228,7 @@ export class AccountsServerDataGrid extends Component {
                                             size='small'
                                             disablePortal
                                             value={this.state.role}
-                                            options={this.props.roles}
+                                            options={store.getState().role.roles.retrieveUser.filter((v) => v !== 'self')}
                                             onChange={(e) => {
                                                 const elm = e.target;
 
@@ -249,7 +238,6 @@ export class AccountsServerDataGrid extends Component {
                                                 } else {
                                                     v = elm.innerText;
                                                 }
-                                                console.log(v);
                                                 if (v === undefined) { return; }
 
                                                 this.setState({ role: v, page: 0, pagesAccountId: [0], lastAccountId: 0, reload: true })
@@ -264,38 +252,30 @@ export class AccountsServerDataGrid extends Component {
                     lastAccountId={this.state.pagesAccountId[this.state.page]}
                 />
 
-                {(this.context.createUser !== undefined && this.context.createUser.indexOf(this.state.role) !== -1) &&
-                    <Modal
-                        open={this.state.openCreationModal}
-                        onClose={this.closeCreationModal}
-                    >
-                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', overflowY: 'auto', p: 1 }}>
-                            <AccountCreator onSuccess={() => { this.handleOnCreate(); }} rules={this.context.createUser.map((v, i) => v === 'self' ? this.context.role : v)} />
-                            {this.state.feedbackMessages.map(this.buildFeedback)}
-                        </Paper>
-                    </Modal>
-                }
+                <Modal
+                    open={this.state.openCreationModal}
+                    onClose={this.closeCreationModal}
+                >
+                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', overflowY: 'auto', p: 1 }}>
+                        <AccountCreator onSuccess={() => { this.handleOnCreate(); }} />
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
+                    </Paper>
+                </Modal>
 
-                {this.context.updatableColumns !== undefined && this.context.updatableColumns[this.state.role] !== undefined && this.context.updatableColumns[this.state.role].length > 0 &&
-                    <Modal
-                        open={this.state.openUpdationModal}
-                        onClose={this.closeUpdationModal}
-                    >
-                        <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1, overflowY: 'auto' }}>
-                            <Account onUpdateSuccess={() => { this.closeUpdationModal(); this.setState({ reload: true }); }} account={this.state.updatingRow} accountRole={this.state.role} />
-                            {this.state.feedbackMessages.map(this.buildFeedback)}
-                        </Paper>
-                    </Modal>
-                }
+                <Modal
+                    open={this.state.openUpdationModal}
+                    onClose={this.closeUpdationModal}
+                >
+                    <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1, overflowY: 'auto' }}>
+                        <Account onUpdateSuccess={() => { this.closeUpdationModal(); this.setState({ reload: true }); }} account={this.state.updatingRow} accountRole={this.state.role} />
+                        {this.state.feedbackMessages.map(this.buildFeedback)}
+                    </Paper>
+                </Modal>
             </>
         )
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteUser !== undefined && this.context.deleteUser.indexOf(this.state.role) !== -1)) {
-            return;
-        }
-
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });

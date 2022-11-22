@@ -13,19 +13,17 @@ import VisitsDataGrid from './VisitsDataGrid';
 import { translate } from '../../../traslation/translate';
 import { updateState } from '../../helpers';
 import VisitCreator from '../../Menus/Visits/VisitCreator';
-import { PrivilegesContext } from '../../privilegesContext';
-import { LocaleContext } from '../../localeContext';
 import { delete_visit_laser, delete_visit_regular } from '../../Http/Api/visits';
+import { canCreateSelfVisit, canDeleteSelfVisit } from '../../roles/visit';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * SelfVisitsDataGrid
  * @augments {Component<Props, State>}
  */
 export class SelfVisitsDataGrid extends Component {
-    static contextType = PrivilegesContext;
-
     static propTypes = {
-        account: PropTypes.object.isRequired,
         businessName: PropTypes.string.isRequired,
     }
 
@@ -52,17 +50,15 @@ export class SelfVisitsDataGrid extends Component {
 
             openVisitCreatorModal: false,
             isCreating: false,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         }
     }
 
     addColumns(columns) {
-        if (this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf('self') !== -1) {
+        if (canDeleteSelfVisit(this.props.businessName, store)) {
             columns.push({
                 field: 'actions',
                 type: 'actions',
-                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord', this.state.locale),
+                headerName: translate('general/columns/action/plural/ucFirstLetterFirstWord'),
                 width: 100,
                 getActions: (params) => [
                     <GridActionsCellItem icon={this.state.deletingRowIds.indexOf(params.row.id) === -1 ? <DeleteIcon /> : <CircularProgress size='2rem' />} onClick={async (e) => { this.handleDeletedRow(e, params); }} label="Delete" />,
@@ -95,7 +91,7 @@ export class SelfVisitsDataGrid extends Component {
             <>
                 <VisitsDataGrid
                     businessName={this.props.businessName}
-                    accountId={this.props.account.id}
+                    accountId={store.getState().auth.account.id}
                     sort={'asc'}
 
                     reload={this.state.reload}
@@ -112,7 +108,7 @@ export class SelfVisitsDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {this.context.createVisit !== undefined && this.context.createVisit[this.props.businessName] !== undefined && this.context.createVisit[this.props.businessName].indexOf('self') !== -1 ?
+                                        {canCreateSelfVisit(this.props.businessName, store) ?
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
@@ -134,7 +130,7 @@ export class SelfVisitsDataGrid extends Component {
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         <VisitCreator
-                            account={this.props.account}
+                            account={store.getState().auth.account}
 
                             onSuccess={() => {
                                 this.closeVisitCreatorModal();
@@ -149,7 +145,7 @@ export class SelfVisitsDataGrid extends Component {
                             }}
 
                             businessName={this.props.businessName}
-                            targetRoleName='self'
+                            targetRoleName={'self'}
                         />
                     </Paper>
                 </Modal>
@@ -179,10 +175,6 @@ export class SelfVisitsDataGrid extends Component {
     }
 
     async handleDeletedRow(e, params) {
-        if (!(this.context.deleteVisit !== undefined && this.context.deleteVisit[this.props.businessName] !== undefined && this.context.deleteVisit[this.props.businessName].indexOf('self') !== -1)) {
-            return;
-        }
-
         let deletingRowIds = this.state.deletingRowIds;
         deletingRowIds.push(params.row.id);
         await updateState(this, { deletingRowIds: deletingRowIds });
@@ -215,4 +207,4 @@ export class SelfVisitsDataGrid extends Component {
     }
 }
 
-export default SelfVisitsDataGrid
+export default connect(null)(SelfVisitsDataGrid)
