@@ -76,7 +76,6 @@ export class FindAccount extends Component {
             }
         }
 
-        console.log(placeholder);
         let r = await get_account_by(placeholder, this.state.token);
         if (r.response.status === 200) {
             let role = await get_role_name(r.value.id, this.state.token);

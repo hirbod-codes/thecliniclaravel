@@ -12,11 +12,9 @@ export const local = createSlice({
             state.locals = action.payload;
         },
         gotLocal: (state, action) => {
-            console.log('gotLocal action :>> ', action);
             state.local = action.payload;
         },
         setLocal: (state, action) => {
-            console.log('setLocal action :>> ', action);
             state.localName = action.payload;
         }
     }

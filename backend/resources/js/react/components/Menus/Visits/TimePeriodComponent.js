@@ -74,7 +74,6 @@ export class TimePeriodComponent extends Component {
                     return temp[0];
                 }
             });
-            console.log('array', array);
             this.setState({ minTime: array[0], maxTime: array[1] });
         }
     }

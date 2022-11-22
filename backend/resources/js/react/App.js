@@ -95,11 +95,6 @@ class App extends Component {
         await this.getDataSynchronously();
         await updateState(this, { forceUpdate: true });
 
-        setTimeout(() => {
-            console.log('this.props', this.props);
-            console.log('timeout redux state: ', store.getState());
-        }, 3000);
-
         observeStore(store, state => state.theme.theme, store.getState().theme.theme, this.onThemeChange);
         observeStore(store, state => state.local.localName, store.getState().local.localName, this.onLocalChange);
         observeStore(store, state => state.auth.userLogged, store.getState().auth.userLogged, this.onLogUserLog);
@@ -283,11 +278,9 @@ class App extends Component {
     async reload() {
         let finishStatus = this.state.finishStatus;
         for (const k in finishStatus) {
-            console.log('state k', k);
             finishStatus[k] = true;
         }
 
-        console.log('finishStatus', finishStatus);
         await updateState(this, { finishStatus: finishStatus });
         await this.getDataSynchronously();
         await updateState(this, { forceUpdate: true });

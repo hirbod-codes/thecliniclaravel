@@ -444,7 +444,6 @@ export class AccountCreator extends Component {
 
         data.roleName = this.state.rule;
         data.token = this.state.token;
-        console.log(data);
 
         let r = null;
         switch (this.state.rule) {

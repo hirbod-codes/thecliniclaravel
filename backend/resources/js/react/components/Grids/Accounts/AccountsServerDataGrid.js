@@ -238,7 +238,6 @@ export class AccountsServerDataGrid extends Component {
                                                 } else {
                                                     v = elm.innerText;
                                                 }
-                                                console.log(v);
                                                 if (v === undefined) { return; }
 
                                                 this.setState({ role: v, page: 0, pagesAccountId: [0], lastAccountId: 0, reload: true })
