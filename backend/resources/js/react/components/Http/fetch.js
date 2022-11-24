@@ -1,5 +1,5 @@
+import store from "../../../redux/store";
 import { translate } from "../../traslation/translate";
-import { LocaleContext } from "../localeContext";
 
 function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], isApiRequest = false) {
     if (isApiRequest) {
@@ -11,7 +11,14 @@ function fetchData(method, url, data = {}, headers = {}, excludeHeaders = [], is
             headers['Content-Type'] = 'application/json';
         }
 
-        url = backendURL() + '/api/' + LocaleContext._currentValue.currentLocale.shortName + url;
+        let local = null;
+        if (store.getState().local.local !== null && store.getState().local.local.shortName !== undefined) {
+            local = store.getState().local.local.shortName;
+        } else {
+            local = 'en';
+        }
+
+        url = backendURL() + '/api/' + local + url;
     } else {
         url = backendURL() + url;
     }
@@ -238,7 +245,7 @@ async function getResponseValue(res) {
         }
     }
 
-    if (res.status === 419) { 
+    if (res.status === 419) {
         return translate('generalSentences/page-expired');
     }
 

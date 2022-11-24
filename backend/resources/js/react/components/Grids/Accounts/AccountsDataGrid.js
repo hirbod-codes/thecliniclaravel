@@ -8,10 +8,10 @@ import DataGridComponent from '../DataGridComponent';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber } from '../formatters';
 import { Alert, IconButton, Snackbar } from '@mui/material';
-import { LocaleContext } from '../../localeContext';
 import { localizeDate } from '../../helpers';
 import { get_accounts } from '../../Http/Api/accounts';
 import { connect } from 'react-redux';
+import store from '../../../../redux/store';
 
 /**
  * AccountsDataGrid
@@ -63,8 +63,6 @@ export class AccountsDataGrid extends Component {
             openOrdersModal: [],
 
             pageSize: 10,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -118,6 +116,8 @@ export class AccountsDataGrid extends Component {
             valueFormatter: formatToNumber,
         }];
 
+        const locale = store.getState().local.local.shortName;
+
         for (const k in rows[0]) {
             if (Object.hasOwnProperty.call(rows[0], k)) {
                 if (k.indexOf('id') !== -1) {
@@ -130,71 +130,71 @@ export class AccountsDataGrid extends Component {
 
                 switch (k) {
                     case 'firstname':
-                        column.headerName = translate('general/columns/account/firstname/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/firstname/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'lastname':
-                        column.headerName = translate('general/columns/account/lastname/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/lastname/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'username':
-                        column.headerName = translate('general/columns/account/username/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/username/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'email':
-                        column.headerName = translate('general/email/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/email/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'emailVerifiedAt':
-                        column.headerName = translate('general/columns/account/emailVerifiedAt/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/emailVerifiedAt/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => value && new Date(value);
                         column.minWidth = 170;
                         break;
 
                     case 'phonenumber':
-                        column.headerName = translate('general/columns/account/phonenumber/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/phonenumber/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'phonenumberVerifiedAt':
-                        column.headerName = translate('general/columns/account/phonenumberVerifiedAt/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/phonenumberVerifiedAt/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
                         column.valueGetter = ({ value }) => value && new Date(value);
                         column.minWidth = 170;
                         break;
 
                     case 'gender':
-                        column.headerName = translate('general/gender/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/gender/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'age':
-                        column.headerName = translate('general/columns/account/age/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/age/single/ucFirstLetterFirstWord');
                         column.type = 'number';
                         break;
 
                     case 'state':
-                        column.headerName = translate('general/columns/account/state/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/state/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'city':
-                        column.headerName = translate('general/columns/account/city/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/city/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'address':
-                        column.headerName = translate('general/columns/account/address/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/account/address/single/ucFirstLetterFirstWord');
                         break;
 
                     case 'created_at':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
-                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
                         column.minWidth = 170;
                         break;
 
                     case 'updated_at':
-                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                        column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                         column.type = 'dateTime';
-                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
+                        column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
                         column.minWidth = 170;
                         break;
 

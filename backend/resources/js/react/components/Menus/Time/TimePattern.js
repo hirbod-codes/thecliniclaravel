@@ -6,7 +6,7 @@ import { TextField } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import { resolveTimeZone, updateState } from '../../helpers';
 import { DateTime } from 'luxon';
-import { LocaleContext } from '../../localeContext';
+import store from '../../../../redux/store';
 import { connect } from 'react-redux';
 
 /**
@@ -45,8 +45,6 @@ export class TimePattern extends Component {
 
             minTime: '',
             maxTime: '',
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -105,7 +103,7 @@ export class TimePattern extends Component {
 
     checkCompletion() {
         if (this.state.start && this.state.end) {
-            let date = DateTime.local({ zone: resolveTimeZone(this.state.locale) });
+            let date = DateTime.local({ zone: resolveTimeZone(store.getState().local.local.shortName) });
             let safety = 0
             while (date.weekdayLong !== this.props.weekDayName && safety < 500) {
                 date = date.plus({ days: 1 });

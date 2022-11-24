@@ -12,6 +12,7 @@ import { localizeDate } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
 import { get_orders_laser, get_orders_regular } from '../../Http/Api/order';
 import { connect } from 'react-redux';
+import store from '../../../../redux/store';
 
 /**
  * OrdersDataGrid
@@ -69,8 +70,6 @@ export class OrdersDataGrid extends Component {
             openVisitsModal: [],
 
             pageSize: 10,
-
-            locale: LocaleContext._currentValue.currentLocale.shortName,
         };
     }
 
@@ -147,6 +146,7 @@ export class OrdersDataGrid extends Component {
         }
 
         let columns = [];
+        const locale = store.getState().local.local.shortName;
         for (const k in rows[0]) {
             if (!Object.hasOwnProperty.call(rows[0], k)) {
                 continue;
@@ -159,35 +159,35 @@ export class OrdersDataGrid extends Component {
 
             switch (k) {
                 case 'id':
-                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                     column.type = 'number';
                     column.valueFormatter = formatToNumber;
                     break;
 
                 case 'needed_time':
-                    column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
+                    column.headerName = translate('pages/orders/order/columns/' + k);
                     column.type = 'number';
                     column.valueFormatter = formatToTime;
                     column.minWidth = 170;
                     break;
 
                 case 'price':
-                    column.headerName = translate('pages/orders/order/columns/' + k, this.state.locale);
+                    column.headerName = translate('pages/orders/order/columns/' + k);
                     column.type = 'number';
                     column.valueFormatter = formatToNumber;
                     break;
 
                 case 'created_at':
-                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                     column.type = 'dateTime';
-                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
+                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
                     column.minWidth = 200;
                     break;
 
                 case 'updated_at':
-                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord', this.state.locale);
+                    column.headerName = translate('general/columns/' + k + '/single/ucFirstLetterFirstWord');
                     column.type = 'dateTime';
-                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, this.state.locale, true); };
+                    column.valueFormatter = (props) => { if (!props.value) { return null; } return localizeDate('utc', props.value, locale, true); };
                     column.minWidth = 200;
                     break;
 
