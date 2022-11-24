@@ -27,6 +27,7 @@ export class LogInForm extends Component {
 
             feedbackMessages: [],
             goToWelcomePage: false,
+            toRegister: false,
 
             username: '',
             email: '',
@@ -142,7 +143,7 @@ export class LogInForm extends Component {
                             target={true}
                             open={this.state.fpOpen}
                             slideTriggerInner={translate('pages/auth/login/forgot-password')}
-                            slideTriggerProps={{ variant: 'outlined' }}
+                            slideTriggerProps={{ variant: 'text' }}
                         >
                             <FormControl sx={{ backgroundColor: theme => theme.palette.secondary }}>
                                 <TextField fullWidth onInput={this.handleFPPhonenumber} label={translate('general/phonenumber/single/ucFirstLetterAllWords')} variant='standard' sx={{ m: 1 }} />
@@ -165,8 +166,14 @@ export class LogInForm extends Component {
                                 {!this.state.isRPLoading && <Button type='submit' fullWidth onClick={this.handleSubmitRP} variant='contained' >{translate('general/submit/single/ucFirstLetterAllWords')}</Button>}
                             </FormControl>
                         </SlidingDialog>
+
+                        <Button variant='text' type='button' onClick={() => { this.setState({ toRegister: true }); }}>
+                            {translate('pages/auth/login/new-user')}
+                        </Button>
                     </FormControl>
                 </Stack>
+
+                {this.state.toRegister === true && <Navigate to='/register' />}
 
                 {this.state.feedbackMessages.map((m, i) =>
                     <Snackbar
@@ -263,4 +270,8 @@ export class LogInForm extends Component {
     }
 }
 
-export default connect(null)(LogInForm)
+const mapStateToProps = state => ({
+    redux: state
+})
+
+export default connect(mapStateToProps)(LogInForm)
