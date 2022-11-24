@@ -42,10 +42,8 @@ export class Dropdown extends Component {
         this.setAnchorEl(null);
     }
 
-    dropDownClickHandler(e) {
-        if (this.props.buttonInnerContent !== undefined && this.props.buttonInnerContent !== null) {
-            this.setState({ buttonInnerContent: e.target.innerText });
-        }
+    dropDownClickHandler(innerText) {
+        this.setState({ buttonInnerContent: innerText });
     }
 
     getMenuItem(options, key, disabled = false) {
@@ -58,7 +56,7 @@ export class Dropdown extends Component {
             innerText = options.innerText;
         }
 
-        return <MenuItem key={key} onClick={(e) => { this.props.menuItemClickHandler(e); this.dropDownCloseHandler(); this.dropDownClickHandler(e) }} {...props} {...{ disabled: disabled }}>{innerText}</MenuItem>;
+        return <MenuItem key={key} onClick={(e) => { this.props.menuItemClickHandler(e); this.dropDownCloseHandler(); this.dropDownClickHandler(innerText) }} {...props} {...{ disabled: disabled }}>{innerText}</MenuItem>;
     }
 
     render() {
@@ -76,8 +74,8 @@ export class Dropdown extends Component {
 
         return (
             <>
-                <Button type='button' variant={this.props.variant ? this.props.variant : ''} {...this.props.buttonProps} onClick={this.dropDownOpenHandler}>
-                    {(this.state.buttonInnerContent !== null ? this.state.buttonInnerContent : this.props.buttonInnerContent)}
+                <Button type='button' {...this.props.buttonProps} onClick={this.dropDownOpenHandler}>
+                    {this.props.buttonInnerContent ? this.props.buttonInnerContent : (this.state.buttonInnerContent ? this.state.buttonInnerContent : this.props.menuItems[0])}
                 </Button>
                 <Menu
                     anchorEl={this.state.anchorEl}

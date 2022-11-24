@@ -30,6 +30,7 @@ general = addWordTo(general, 'بروزرسانی', null, 'update');
 general = addWordTo(general, 'نمایش', null, 'show');
 general = addWordTo(general, 'حذف', null, 'delete');
 general = addWordTo(general, 'خوش آمدید', null, 'welcome');
+general = addWordTo(general, 'الماس', null, 'diamond');
 general = addWordTo(general, 'ورود', null, 'log-in');
 general = addWordTo(general, 'ثبت نام', null, 'sign-up');
 general = addWordTo(general, 'خروج', null, 'log-out');
