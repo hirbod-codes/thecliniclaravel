@@ -392,12 +392,16 @@ function convertWeeklyTimePatterns(weeklyTimePatterns, fromTimezone, toTimezone)
                 let startDateConverted = null;
                 if (toTimezone !== fromTimezone) {
                     startDateConverted = startDate.setZone(toTimezone);
+                } else {
+                    startDateConverted = startDate;
                 }
 
                 let endDate = DateTime.fromFormat(timePattern.end + ' ' + weekDay, "HH:mm:ss cccc", { zone: fromTimezone, setZone: true });
                 let endDateConverted = null;
                 if (toTimezone !== fromTimezone) {
                     endDateConverted = endDate.setZone(toTimezone);
+                } else {
+                    endDateConverted = endDate;
                 }
 
                 if (startDateConverted.weekdayLong !== weekDay && endDateConverted.weekdayLong !== weekDay) {
