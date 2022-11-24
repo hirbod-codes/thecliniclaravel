@@ -1,18 +1,14 @@
-import light from './light.js';
-import dark from './dark.js';
+import { light_ltr, light_rtl } from "./light";
+import { dark_ltr, dark_rtl } from "./dark";
 
 let themes = {};
 
-light.direction = 'ltr';
-themes['light-ltr'] = light;
+themes['light_ltr'] = light_ltr;
 
-light.direction = 'rtl';
-themes['light-rtl'] = light;
+themes['light_rtl'] = light_rtl;
 
-dark.direction = 'ltr';
-themes['dark-ltr'] = dark;
+themes['dark_ltr'] = dark_ltr;
 
-dark.direction = 'rtl';
-themes['dark-rtl'] = dark;
+themes['dark_rtl'] = dark_rtl;
 
 export default themes;

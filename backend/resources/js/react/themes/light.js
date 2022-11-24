@@ -1,7 +1,23 @@
-import { createTheme } from '@mui/material/styles';
+const light = {
+    palette: {
+        mode: 'light',
+        primary: {
+            main: '#fbc02d',
+        },
+        secondary: {
+            main: '#fff59d',
+        }
+    }
+};
 
-let theme = {};
+const light_ltr = {
+    direction: 'ltr',
+    ...light
+};
 
-theme = createTheme({ palette: { mode: 'light' } });
+const light_rtl = {
+    direction: 'rtl',
+    ...light
+};
 
-export default theme;
+export { light_ltr, light_rtl };
