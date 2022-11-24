@@ -6,10 +6,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import { translate } from '../../../traslation/translate';
 import { formatToNumber, formatToTime } from '../formatters';
 import DataGridComponent from '../DataGridComponent';
-import { PrivilegesContext } from '../../privilegesContext';
 import { Alert, IconButton, Snackbar } from '@mui/material';
 import { localizeDate } from '../../helpers';
-import { LocaleContext } from '../../localeContext';
 import { get_orders_laser, get_orders_regular } from '../../Http/Api/order';
 import { connect } from 'react-redux';
 import store from '../../../../redux/store';
@@ -49,8 +47,6 @@ export class OrdersDataGrid extends Component {
         onSelectionModelChange: PropTypes.func,
         selectionModel: PropTypes.arrayOf(PropTypes.number),
     }
-
-    static contextType = PrivilegesContext;
 
     constructor(props) {
         super(props);
