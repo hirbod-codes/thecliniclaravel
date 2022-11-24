@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
-import { Avatar, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
+import { Avatar, Button, IconButton, Menu, MenuItem, Tooltip } from '@mui/material'
 
 import { translate } from '../traslation/translate';
 import { fetchData } from './Http/fetch';
@@ -25,6 +25,10 @@ export class UserIconNavigator extends Component {
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+
+            toDashboardAccount: false,
+            toDashboardOrder: false,
+            toDashboardVisit: false,
 
             anchorEl: null,
             open: false,
@@ -72,44 +76,43 @@ export class UserIconNavigator extends Component {
                             onClose={this.handleModalClose}
                             timeout={this.state.emailVerificationSlideTimeout}
                             slideTrigger={
-                                <MenuItem onClick={(e) => { this.handleModalOpen(); this.sendEmailVerificationCode(); }}>
-                                    <Link to='/#' style={{ textDecoration: 'none' }} >
+                                <MenuItem >
+                                    <Button onClick={(e) => { this.handleModalOpen(); this.sendEmailVerificationCode(); }}>
                                         {translate('generalSentences/verify-email-address/ucFirstLetterFirstWord')}
-                                    </Link>
+                                    </Button>
                                 </MenuItem>
                             }
                         >
                             {translate('generalSentences/send-email-verification-message/ucFirstLetterFirstWord')}
                         </SlidingDialog>
                     }
+
                     {window.location.pathname !== '/dashboard/account' &&
                         <MenuItem>
-                            <Link to='/dashboard/account' style={{ textDecoration: 'none' }} >
+                            <Button onClick={() => { this.setState({ toDashboardAccount: true }); }} >
                                 {translate('pages/account/account/account/single/ucFirstLetterFirstWord')}
-                            </Link>
+                            </Button>
                         </MenuItem>
                     }
+                    {this.state.toDashboardAccount && <Navigate to='/dashboard/account' />}
+
                     {window.location.pathname !== '/dashboard/order' &&
                         <MenuItem>
-                            <Link to='/dashboard/order' style={{ textDecoration: 'none' }} >
+                            <Button onClick={() => { this.setState({ toDashboardOrder: true }); }} >
                                 {translate('pages/orders/order/order/single/ucFirstLetterFirstWord')}
-                            </Link>
+                            </Button>
                         </MenuItem>
                     }
+                    {this.state.toDashboardOrder && <Navigate to='/dashboard/order' />}
+
                     {window.location.pathname !== '/dashboard/visit' &&
                         <MenuItem>
-                            <Link to='/dashboard/visit' style={{ textDecoration: 'none' }} >
+                            <Button onClick={() => { this.setState({ toDashboardVisit: true }); }} >
                                 {translate('pages/visits/visit/visit/single/ucFirstLetterFirstWord')}
-                            </Link>
+                            </Button>
                         </MenuItem>
                     }
-                    {/* {window.location.pathname !== '/settings' &&
-                                <MenuItem >
-                                    <Link to='/settings' style={{ textDecoration: 'none' }} >
-                                        {translate('general/setting/plural/ucFirstLetterFirstWord')}
-                                    </Link>
-                                </MenuItem>
-                            } */}
+                    {this.state.toDashboardVisit && <Navigate to='/dashboard/visit' />}
                 </Menu>
 
                 <SlidingDialog
