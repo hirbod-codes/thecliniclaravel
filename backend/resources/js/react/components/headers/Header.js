@@ -100,4 +100,8 @@ export class Header extends Component {
     }
 }
 
-export default connect(null)(Header)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(Header)

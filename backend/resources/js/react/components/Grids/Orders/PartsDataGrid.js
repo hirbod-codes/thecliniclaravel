@@ -8,6 +8,7 @@ import { formatToNumber, formatToTime } from '../formatters';
 import { localizeDate, updateState } from '../../helpers';
 import { Alert, Button, CircularProgress, IconButton, Snackbar } from '@mui/material';
 import { get_laser_price_calculation, get_laser_time_calculation, get_orders_laser, get_orders_regular, get_parts } from '../../Http/Api/order';
+import { connect } from 'react-redux';
 
 /**
  * PartsDataGrid
@@ -332,4 +333,8 @@ export class PartsDataGrid extends Component {
     }
 }
 
-export default PartsDataGrid
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(PartsDataGrid)

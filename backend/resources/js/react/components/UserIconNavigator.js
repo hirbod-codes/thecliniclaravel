@@ -7,6 +7,7 @@ import { translate } from '../traslation/translate';
 import { fetchData } from './Http/fetch';
 import { updateState } from './helpers';
 import SlidingDialog from './Menus/SlidingDialog';
+import { connect } from 'react-redux';
 
 export class UserIconNavigator extends Component {
     constructor(props) {
@@ -143,4 +144,8 @@ export class UserIconNavigator extends Component {
     }
 }
 
-export default UserIconNavigator
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(UserIconNavigator)

@@ -11,6 +11,7 @@ import { Alert, IconButton, Snackbar } from '@mui/material';
 import { localizeDate } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
 import { get_orders_laser, get_orders_regular } from '../../Http/Api/order';
+import { connect } from 'react-redux';
 
 /**
  * OrdersDataGrid
@@ -292,4 +293,8 @@ export class OrdersDataGrid extends Component {
     }
 }
 
-export default OrdersDataGrid
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(OrdersDataGrid)

@@ -9,6 +9,7 @@ import { translate } from '../../../traslation/translate';
 import { formatToNumber } from '../../Grids/formatters';
 import PackagesDataGridModal from '../../Grids/Orders/Modals/PackagesDataGridModal';
 import PartsDataGridModal from '../../Grids/Orders/Modals/PartsDataGridModal';
+import { connect } from 'react-redux';
 
 /**
  * SelfVisitsDataGrid
@@ -98,4 +99,8 @@ export class FindOrder extends Component {
     }
 }
 
-export default FindOrder
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(FindOrder)

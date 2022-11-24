@@ -30,13 +30,8 @@ export class ThemeButton extends Component {
             }
         }
 
-        return items.map((item, k) => {
-            return {
-                props: { value: item },
-                innerText: translate('general/' + item + '/single/ucFirstLetterFirstWord')
-            }
-        });
-    }
-}
+const mapStateToProps = state => ({
+    redux: state
+});
 
-export default connect(null)(ThemeButton)
+export default connect(mapStateToProps)(ThemeButton)

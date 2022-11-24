@@ -6,6 +6,7 @@ import Header from '../../headers/Header.js';
 
 import { Grid } from '@mui/material';
 import { translate } from '../../../traslation/translate.js';
+import { connect } from 'react-redux';
 
 export class LogInPage extends Component {
     render() {
@@ -35,4 +36,8 @@ export class LogInPage extends Component {
     }
 }
 
-export default LogInPage
+const mapStateToProps = state => ({
+    redux: state
+})
+
+export default connect(mapStateToProps)(LogInPage)

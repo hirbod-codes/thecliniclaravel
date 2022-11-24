@@ -378,4 +378,8 @@ export class LaserOrderCreation extends Component {
     }
 }
 
-export default connect(null)(LaserOrderCreation)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(LaserOrderCreation)

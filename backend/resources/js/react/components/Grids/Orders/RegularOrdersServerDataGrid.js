@@ -290,4 +290,8 @@ export class RegularOrdersServerDataGrid extends Component {
     }
 }
 
-export default connect(null)(RegularOrdersServerDataGrid)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(RegularOrdersServerDataGrid)

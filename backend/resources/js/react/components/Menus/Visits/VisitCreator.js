@@ -410,4 +410,8 @@ export class VisitCreator extends Component {
     }
 }
 
-export default connect(null)(VisitCreator)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(VisitCreator)

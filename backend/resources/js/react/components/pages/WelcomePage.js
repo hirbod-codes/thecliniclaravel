@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import { connect } from 'react-redux'
 
 import { translate } from '../../traslation/translate'
 import Header from '../headers/Header'
@@ -13,4 +14,8 @@ export class WelcomePage extends Component {
     }
 }
 
-export default WelcomePage
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(WelcomePage)

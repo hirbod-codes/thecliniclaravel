@@ -3,6 +3,7 @@ import React, { Component } from 'react';
 import LoadingButton from '@mui/lab/LoadingButton';
 import { Button, Menu, MenuItem } from '@mui/material';
 import { updateState } from '../helpers';
+import { connect } from 'react-redux';
 
 export class Dropdown extends Component {
     constructor(props) {
@@ -90,4 +91,8 @@ export class Dropdown extends Component {
     }
 }
 
-export default Dropdown;
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(Dropdown);

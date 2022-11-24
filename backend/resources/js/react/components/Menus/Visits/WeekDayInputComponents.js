@@ -10,6 +10,7 @@ import { translate } from '../../../traslation/translate';
 import WeekDayInputComponent from './WeekDayInputComponent';
 import { convertWeekDays, resolveTimeZone, updateState } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
+import { connect } from 'react-redux';
 
 /**
  * WeekDayInputComponents
@@ -207,4 +208,8 @@ export class WeekDayInputComponents extends Component {
     }
 }
 
-export default WeekDayInputComponents
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(WeekDayInputComponents)

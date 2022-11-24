@@ -7,6 +7,7 @@ import { translate } from '../../../traslation/translate';
 import { resolveTimeZone, updateState } from '../../helpers';
 import { DateTime } from 'luxon';
 import { LocaleContext } from '../../localeContext';
+import { connect } from 'react-redux';
 
 /**
  * TimePeriodComponent
@@ -156,4 +157,8 @@ export class TimePeriodComponent extends Component {
     }
 }
 
-export default TimePeriodComponent
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(TimePeriodComponent)

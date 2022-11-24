@@ -16,6 +16,7 @@ import Account from '../../Menus/Account/Account';
 import { delete_account, get_accountsCount } from '../../Http/Api/accounts';
 import store from '../../../../redux/store';
 import { canCreateUsers, canDeleteUser, canUpdateUser } from '../../roles/account';
+import { connect } from 'react-redux';
 
 /**
  * AccountsServerDataGrid
@@ -302,4 +303,8 @@ export class AccountsServerDataGrid extends Component {
     }
 }
 
-export default AccountsServerDataGrid
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(AccountsServerDataGrid)

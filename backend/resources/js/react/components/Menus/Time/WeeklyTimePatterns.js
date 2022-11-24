@@ -10,6 +10,7 @@ import { translate } from '../../../traslation/translate';
 import { convertWeeklyTimePatterns, resolveTimeZone, updateState } from '../../helpers';
 import { LocaleContext } from '../../localeContext';
 import WeeklyTimePattern from './WeeklyTimePattern';
+import { connect } from 'react-redux';
 
 /**
  * WeeklyTimePatterns
@@ -191,4 +192,8 @@ export class WeeklyTimePatterns extends Component {
     }
 }
 
-export default WeeklyTimePatterns
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(WeeklyTimePatterns)

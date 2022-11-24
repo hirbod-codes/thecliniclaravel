@@ -48,4 +48,8 @@ export class AppLocalButton extends Component {
     }
 }
 
-export default connect(null)(AppLocalButton)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(AppLocalButton)

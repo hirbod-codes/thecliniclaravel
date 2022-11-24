@@ -336,4 +336,8 @@ export class VisitsDataGrid extends Component {
     }
 }
 
-export default connect(null)(VisitsDataGrid)
+const mapStateToProps = state => ({
+    redux:state
+});
+
+export default connect(mapStateToProps)(VisitsDataGrid)

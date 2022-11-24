@@ -11,6 +11,7 @@ import { Alert, IconButton, Snackbar } from '@mui/material';
 import { LocaleContext } from '../../localeContext';
 import { localizeDate } from '../../helpers';
 import { get_accounts } from '../../Http/Api/accounts';
+import { connect } from 'react-redux';
 
 /**
  * AccountsDataGrid
@@ -307,4 +308,8 @@ export class AccountsDataGrid extends Component {
     }
 }
 
-export default AccountsDataGrid
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(AccountsDataGrid)

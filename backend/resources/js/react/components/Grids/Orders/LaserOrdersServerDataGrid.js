@@ -276,4 +276,8 @@ export class LaserOrdersServerDataGrid extends Component {
     }
 }
 
-export default connect(null)(LaserOrdersServerDataGrid)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(LaserOrdersServerDataGrid)
