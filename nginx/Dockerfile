@@ -10,7 +10,7 @@ WORKDIR /nginx
 COPY . .
 
 RUN apt-get update
-RUN apt-get install -y openssl
+RUN apt-get install -y openssl acl
 
 RUN openssl req -x509 -nodes -days 1024 -newkey rsa:2048 -keyout ./local_ssl/localhost.key -out ./local_ssl/localhost.crt -config ./local_ssl/open_ssl.conf -extensions 'v3_req'
 
@@ -20,7 +20,7 @@ RUN cp ./local_ssl/localhost.crt /etc/ssl/certs/localhost.crt && \
     cp ./nginx.conf /etc/nginx/nginx.conf
 
 WORKDIR /var/www/html
-RUN chmod -R g=rwx ./
+RUN chown -R root:root ./ && chmod -R g=rwx ./ && setfacl -Rm g:root:rwx ./
 
 EXPOSE 80 443
 
