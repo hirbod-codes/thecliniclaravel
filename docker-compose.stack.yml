@@ -1,46 +1,43 @@
-version: "3"
+version: "3.8"
 
 services:
-  laravel:
-    image: 5.182.44.231:5000/hirb0d/thecliniclaravel:latest
-    volumes:
-      - theclinicapp:/var/www/html/laravel
-    depends_on:
-      - mysql
-    networks:
-      - theclinic
-
   nginx:
-    image: 5.182.44.231:5000/hirb0d/thecliniclaravel_nginx:latest
+    container_name: nginx
+    image: nginx
     volumes:
       - theclinicapp:/var/www/html/laravel
     ports:
       - "80:80"
       - "443:443"
+    networks:
+      - frontend
     depends_on:
       - laravel
-      - mysql
-    networks:
-      - theclinic
-
-  mysql:
-    image: 5.182.44.231:5000/mysql:5
-    command: mysqld --default-authentication-plugin=mysql_native_password
+  laravel:
+    container_name: laravel
+    image: laravel
     volumes:
-      - theclinicdata:/var/lib/mysql
-    env_file:
-      - ./.env
-    environment:
-      MYSQL_SERVICE_NAME: ${{ DB_HOST }}
-      MYSQL_ROOT_PASSWORD: ${{ DB_ROOT_PASSWORD }}
-      MYSQL_PASSWORD: ${{ DB_PASSWORD }}
-      MYSQL_USER: ${{ DB_USERNAME }}
-      MYSQL_DATABASE: ${{ DB_DATABASE }}
+      - theclinicapp:/var/www/html/laravel
     networks:
-      - theclinic
+      - frontend
+      - backend
+    depends_on:
+      - mysql
+  mysql:
+    container_name: mysql
+    image: mysql
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    tty: true
+    volumes:
+      - data:/var/lib/mysql
+    networks:
+      - backend
 
 volumes:
-  theclinicdata:
-  theclinicapp:
+  theclinicapp: {}
+  data: {}
 networks:
-  theclinic:
+  backend:
+    driver: overlay
+  frontend:
+    driver: overlay
