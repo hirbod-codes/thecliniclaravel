@@ -207,4 +207,8 @@ export class SelfVisitsDataGrid extends Component {
     }
 }
 
-export default connect(null)(SelfVisitsDataGrid)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(SelfVisitsDataGrid)

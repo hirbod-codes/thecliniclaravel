@@ -557,4 +557,8 @@ export class SignUpForm extends Component {
     }
 }
 
-export default connect(null)(SignUpForm) 
+const mapStateToProps = state => ({
+    redux: state
+})
+
+export default connect(mapStateToProps)(SignUpForm) 

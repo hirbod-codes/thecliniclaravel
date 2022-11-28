@@ -9,16 +9,14 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 import CloseIcon from '@mui/icons-material/Close';
-import { Alert, GlobalStyles, IconButton, Snackbar } from '@mui/material';
+import { Alert, Backdrop, CircularProgress, CssBaseline, GlobalStyles, IconButton, Snackbar } from '@mui/material';
 
 import { prefixer } from "stylis";
 import rtlPlugin from "stylis-plugin-rtl";
 import createCache from "@emotion/cache";
 import { CacheProvider } from "@emotion/react";
+import { createTheme, ThemeProvider } from '@mui/material/styles';
 
-import { createTheme } from '@mui/material/styles';
-
-import { ThemeProvider } from '@emotion/react';
 import { resolveTheme, resolveLocalization } from './components/themeContenxt.js';
 
 import WelcomePage from "./components/pages/WelcomePage.js";
@@ -62,17 +60,6 @@ class App extends Component {
 
             feedbackMessages: [],
 
-            finishStatus: {
-                isAuthenticationLoading: true,
-                isAccountLoading: true,
-                isAvatarLoading: true,
-                isThemeLoading: true,
-                isLocaleLoading: true,
-                areLocalesLoading: true,
-                arePrivilegesLoading: true,
-            },
-            forceUpdate: false,
-
             isAuthenticated: false,
             account: null,
             privileges: null,
@@ -80,20 +67,13 @@ class App extends Component {
             image: null,
 
             theme: null,
+            isResolved: false
         };
-    }
-
-    async shouldComponentUpdate() {
-        if (this.state.forceUpdate === true) {
-            await updateState(this, { forceUpdate: false });
-            return true;
-        }
-        return false;
     }
 
     async componentDidMount() {
         await this.getDataSynchronously();
-        await updateState(this, { forceUpdate: true });
+        await updateState(this, { isResolved: true });
 
         observeStore(store, state => state.theme.theme, store.getState().theme.theme, this.onThemeChange);
         observeStore(store, state => state.local.localName, store.getState().local.localName, this.onLocalChange);
@@ -112,45 +92,34 @@ class App extends Component {
     }
 
     getDataSynchronously() {
-        return new Promise((resolve) => {
-            fetchData('get', '/isAuthenticated', {}, { 'X-CSRF-TOKEN': this.state.token }).then((isAuthenticatedResponse) => {
-                updateState(this, (state) => {
-                    state.finishStatus.isAuthenticationLoading = false;
-                    return state;
-                });
+        return new Promise(async (resolve) => {
+            let finishArray = [];
+            const targetLength = 3;
 
+            fetchData('get', '/isAuthenticated', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' }).then(async (isAuthenticatedResponse) => {
                 if (isAuthenticatedResponse.response.status !== 200 || isAuthenticatedResponse.value.authenticated !== true) {
                     return;
                 }
 
                 this.props.dispatch(isAuthenticated());
 
-                this.updateAccount();
+                await this.updateAccount();
 
-                fetchData('get', '/role', {}, { 'X-CSRF-TOKEN': this.state.token }).then((privilegesResponse) => {
-                    updateState(this, (state) => {
-                        state.finishStatus.arePrivilegesLoading = false;
-                        return state;
-                    });
+                const privilegesResponse = await fetchData('get', '/role', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
+                if (privilegesResponse.response.status === 200) {
+                    this.props.dispatch(gotRoles(privilegesResponse.value));
+                }
 
-                    if (privilegesResponse.response.status === 200) {
-                        this.props.dispatch(gotRoles(privilegesResponse.value));
-                    }
-                });
-
-                fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token }).then((emailResponse) => {
-                    if (emailResponse.response.status === 200) {
-                        this.props.dispatch(isEmailVerified(emailResponse.value));
-                    }
-                });
+                const emailResponse = await fetchData('get', '/isEmailVerified', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' });
+                if (emailResponse.response.status === 200) {
+                    this.props.dispatch(isEmailVerified(emailResponse.value));
+                }
+            }).then(() => {
+                finishArray.push(finishArray.length);
+                if (finishArray.length >= targetLength) { resolve(); }
             });
 
-            fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((localeResponse) => {
-                updateState(this, (state) => {
-                    state.finishStatus.isLocaleLoading = false;
-                    return state;
-                });
-
+            fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' }, [], false).then(async (localeResponse) => {
                 let locale = localeResponse.value;
                 if (localeResponse.response.status !== 200) {
                     return;
@@ -160,98 +129,94 @@ class App extends Component {
                 document.dir = locale.direction;
                 document.body.setAttribute('dir', locale.direction);
 
-                fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token }, [], false).then((themeResponse) => {
-                    updateState(this, (state) => {
-                        state.finishStatus.isThemeLoading = false;
-                        return state;
-                    });
+                let themeResponse = await fetchData('get', '/theme', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' }, [], false);
+                let themeData = themeResponse.value;
+                themeData.locale = locale;
 
-                    let themeData = themeResponse.value;
-                    themeData.locale = locale;
-                    if (themeResponse.response.status === 200) {
-                        this.props.dispatch(gotTheme(themeData.theme));
-                    }
-                });
-            });
+                if (themeResponse.response.status !== 200) {
+                    return;
+                }
 
-            fetchData('get', '/locales', {}, { 'X-CSRF-TOKEN': this.state.token }, [], true).then((localesResponse) => {
-                updateState(this, (state) => {
-                    state.finishStatus.areLocalesLoading = false;
+                this.props.dispatch(gotTheme(themeData.theme));
+
+                await updateState(this, (state) => {
+                    state.theme = this.createTheme(themeData.theme, locale);
                     return state;
                 });
+            }).then(() => {
+                finishArray.push(finishArray.length);
+                if (finishArray.length >= targetLength) { resolve(); }
+            });
 
+            fetchData('get', '/locales', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' }, [], true).then(async (localesResponse) => {
                 let locales = localesResponse.value;
                 if (localesResponse.response.status === 200) {
                     this.props.dispatch(gotLocals(locales));
                 }
+            }).then(() => {
+                finishArray.push(finishArray.length);
+                if (finishArray.length >= targetLength) { resolve(); }
             });
-
-            resolve();
         });
     }
 
-    updateAccount() {
-        updateState(this, (state) => {
-            state.finishStatus.isAccountLoading = true;
-            state.finishStatus.isAvatarLoading = true;
-            return state;
-        });
-
-        fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': this.state.token }).then((accountResponse) => {
-            updateState(this, (state) => {
-                state.finishStatus.isAccountLoading = false;
-                return state;
-            });
-
-            if (accountResponse.response.status !== 200) {
-                return;
-            }
-            this.props.dispatch(gotAccount(accountResponse.value));
-
-            fetchData('get', '/avatar?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token }).then((avatarResponse) => {
-                updateState(this, (state) => {
-                    state.finishStatus.isAvatarLoading = false;
-                    return state;
-                });
-
-                if (avatarResponse.response.status === 200) {
-                    this.props.dispatch(gotAvatar('data:image/png;base64,' + avatarResponse.value));
-                } else {
-                    // In case there is actually no avatar for this user we send undefined so that it doesn't stop the render method.
-                    this.props.dispatch(gotAvatar(undefined));
+    async updateAccount() {
+        return new Promise(async (resolve) => {
+            fetchData('get', '/account', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' }).then(async (accountResponse) => {
+                if (accountResponse.response.status !== 200) {
+                    resolve();
+                    return;
                 }
+                this.props.dispatch(gotAccount(accountResponse.value));
+
+                fetchData('get', '/avatar?accountId=' + accountResponse.value.id, {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json' }).then(async (avatarResponse) => {
+                    if (avatarResponse.response.status === 200) {
+                        this.props.dispatch(gotAvatar('data:image/png;base64,' + avatarResponse.value));
+                    } else {
+                        // In case there is actually no avatar for this user we send undefined so that it doesn't stop the render method.
+                        this.props.dispatch(gotAvatar(undefined));
+                    }
+                    resolve();
+                }, () => {
+                    resolve();
+                });
+            }, () => {
+                resolve();
             });
         });
     }
 
-    onThemeChange() {
+    async onThemeChange() {
         let locale = store.getState().local.local;
         let theme = store.getState().theme.theme;
 
-        updateState(this, { theme: createTheme(resolveTheme(theme + '-' + locale.direction), resolveLocalization(locale.shortName)) });
-        fetchData('post', '/theme', { theme: theme }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': 'application/json', 'Accept': 'application/json' });
+        await updateState(this, { theme: this.createTheme(theme, locale) });
+        await fetchData('post', '/theme', { theme: theme }, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json', 'Content-type': 'application/json' });
+    }
+
+    createTheme(theme, locale) {
+        return createTheme(resolveTheme(theme + '_' + locale.direction), resolveLocalization(locale.shortName));
     }
 
     async onLocalChange() {
         let locale = store.getState().local.localName;
 
-        let r = await fetchData('put', '/locale', { 'locale': locale }, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': 'application/json', 'Accept': 'application/json' });
+        let r = await fetchData('put', '/locale', { 'locale': locale }, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json', 'Content-type': 'application/json' });
         if (r.response.status !== 200) {
             return;
         }
         r = null;
 
-        r = await fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token, 'Content-type': 'application/json', 'Accept': 'application/json' });
+        r = await fetchData('get', '/locale', {}, { 'X-CSRF-TOKEN': this.state.token, 'Accept': 'application/json', 'Content-type': 'application/json' });
         if (r.response.status !== 200) {
             return;
         }
 
-        this.props.dispatch(gotLocal(r.value));
-
         document.dir = r.value.direction;
         document.body.setAttribute('dir', r.value.direction);
 
-        this.setState(this.state);
+        await this.props.dispatch(gotLocal(r.value));
+        this.forceUpdate();
     }
 
     onLogUserLog() {
@@ -266,35 +231,56 @@ class App extends Component {
         }
     }
 
-    onLogout() {
-        this.resetAuthInfo();
+    async onLogout() {
+        await this.resetAuthInfo();
+        window.location.replace('/');
     }
 
-    onLogin() {
-        this.resetAuthInfo();
-        this.reload();
+    async onLogin() {
+        await this.resetAuthInfo();
+        await this.reload();
     }
 
     async reload() {
-        let finishStatus = this.state.finishStatus;
-        for (const k in finishStatus) {
-            finishStatus[k] = true;
-        }
+        return new Promise(async (resolve) => {
+            let finishStatus = this.state.finishStatus;
+            for (const k in finishStatus) {
+                finishStatus[k] = true;
+            }
 
-        await updateState(this, { finishStatus: finishStatus });
-        await this.getDataSynchronously();
-        await updateState(this, { forceUpdate: true });
+            await updateState(this, { isResolved: false });
+            await this.getDataSynchronously();
+            await updateState(this, { isResolved: true });
+
+            resolve();
+        })
     }
 
     resetAuthInfo() {
-        this.props.dispatch(isNotAuthenticated());
-        this.props.dispatch(gotAvatar(null));
-        this.props.dispatch(gotRoles(null));
-        this.props.dispatch(gotAvatar(null));
-        this.props.dispatch(isEmailVerified(false));
+        return new Promise(async (resolve) => {
+            this.props.dispatch(isNotAuthenticated());
+            this.props.dispatch(gotAvatar(null));
+            this.props.dispatch(gotRoles(null));
+            this.props.dispatch(gotAvatar(null));
+            this.props.dispatch(isEmailVerified(false));
+
+            resolve();
+        })
     }
 
     render() {
+        console.warn('this.props :>> ', this.props);
+        if (this.state.isResolved === false) {
+            return (
+                <Backdrop
+                    sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                    open={true}
+                >
+                    <CircularProgress color="inherit" />
+                </Backdrop>
+            );
+        }
+
         const inputGlobalStyles = <GlobalStyles styles={theme => ({
             body: {
                 overflowX: 'hidden'
@@ -315,55 +301,51 @@ class App extends Component {
 
         const cacheRtl = createCache({ key: "muirtl", stylisPlugins: [prefixer, rtlPlugin] });
 
-        const reduxState = store.getState();
-
         return (
-            (reduxState.local.local === null || reduxState.theme.theme === null || (reduxState.auth.isAuthenticated === true && (reduxState.auth.account === null || reduxState.role.roles === null || reduxState.auth.avatar === null))) ?
-                <>
+            <ThemeProvider theme={this.state.theme}>
+                <CacheProvider value={store.getState().local.local.direction === 'rtl' ? cacheRtl : cacheLtr}>
+                    <CssBaseline />
                     {inputGlobalStyles}
-                    < div >!!!</div >
-                </> :
-                <>
-                    <ThemeProvider theme={this.state.theme}>
-                        <CacheProvider value={store.getState().local.local.direction === 'rtl' ? cacheRtl : cacheLtr}>
-                            {inputGlobalStyles}
-                            <BrowserRouter>
-                                <Routes>
-                                    <Route path='/' element={<WelcomePage />} />
-                                    <Route path='/login' element={<LogInPage />} />
-                                    <Route path='/register' element={<SignUpPage />} />
+                    <BrowserRouter>
+                        <Routes>
+                            <Route path='/' element={<WelcomePage />} />
+                            <Route path='/login' element={<LogInPage />} />
+                            <Route path='/register' element={<SignUpPage />} />
 
-                                    <Route path='/dashboard/account' element={<DashboardAccountPage />} />
-                                    <Route path='/dashboard/order' element={<DashboardOrderPage />} />
-                                    <Route path='/dashboard/visit' element={<DashboardVisitPage />} />
-                                </Routes>
-                            </BrowserRouter>
+                            <Route path='/dashboard/account' element={<DashboardAccountPage />} />
+                            <Route path='/dashboard/order' element={<DashboardOrderPage />} />
+                            <Route path='/dashboard/visit' element={<DashboardVisitPage />} />
+                        </Routes>
+                    </BrowserRouter>
 
-                            {this.state.feedbackMessages.map((m, i) =>
-                                <Snackbar
-                                    key={i}
-                                    open={m.open}
-                                    autoHideDuration={6000}
-                                    onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
-                                    action={
-                                        <IconButton
-                                            size="small"
-                                            onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
-                                        >
-                                            <CloseIcon fontSize="small" />
-                                        </IconButton>
-                                    }
+                    {this.state.feedbackMessages.map((m, i) =>
+                        <Snackbar
+                            key={i}
+                            open={m.open}
+                            autoHideDuration={6000}
+                            onClose={(e, r) => this.handleFeedbackClose(e, r, i)}
+                            action={
+                                <IconButton
+                                    size="small"
+                                    onClick={(e, r) => this.handleFeedbackClose(e, r, i)}
                                 >
-                                    <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
-                                        {m.message}
-                                    </Alert>
-                                </Snackbar>
-                            )}
-                        </CacheProvider>
-                    </ThemeProvider>
-                </>
+                                    <CloseIcon fontSize="small" />
+                                </IconButton>
+                            }
+                        >
+                            <Alert onClose={(e, r) => this.handleFeedbackClose(e, r, i)} severity={m.color} sx={{ width: '100%' }}>
+                                {m.message}
+                            </Alert>
+                        </Snackbar>
+                    )}
+                </CacheProvider>
+            </ThemeProvider>
         );
     }
 }
 
-export default connect(null)(App);
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(App);

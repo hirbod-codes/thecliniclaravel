@@ -1,21 +1,26 @@
 import React, { Component } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 
 import ThemeButton from '../buttons/ThemeButton.js';
 import AppLocalButton from '../buttons/AppLocalButton.js';
-import { translate } from '../../traslation/translate.js';
+
+import LogoutIcon from '@mui/icons-material/Logout';
+import LoginIcon from '@mui/icons-material/Login';
 
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { Button } from '@mui/material';
+import { Button, ButtonGroup } from '@mui/material';
+
 import { fetchData } from '../Http/fetch.js';
 import { updateState } from '../helpers.js';
 import { userLoggedOut } from '../../../redux/reducers/auth.js';
 import store from '../../../redux/store.js';
 import UserIconNavigator from '../UserIconNavigator.js';
 import { connect } from 'react-redux';
+
+import DiamondOutlinedIcon from '@mui/icons-material/DiamondOutlined';
 
 export class Header extends Component {
     constructor(props) {
@@ -27,6 +32,8 @@ export class Header extends Component {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
             goToWelcomePage: false,
+            goToRegister: false,
+            goToLogIn: false
         };
     }
 
@@ -41,24 +48,16 @@ export class Header extends Component {
     }
 
     render() {
-        if (this.state.goToWelcomePage && window.location.pathname !== '/') {
-            return (
-                <Navigate to='/' />
-            );
-        } else {
-            if (this.state.goToWelcomePage && window.location.pathname === '/') {
-                this.setState({ goToWelcomePage: false });
-            }
-        }
-
         let reduxStore = store.getState();
 
         return (
             <>
                 <Box sx={{ flexGrow: 1 }}>
-                    <AppBar position="fixed">
-                        <Toolbar>
+                    <AppBar position="static">
+                        <Toolbar sx={{ flexWrap: 'wrap' }}>
                             {this.props.leftSide}
+
+                            <DiamondOutlinedIcon fontSize="large" sx={{ m: 0.5 }} />
 
                             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
                                 {this.props.title}
@@ -71,33 +70,37 @@ export class Header extends Component {
                                     <>
                                         <UserIconNavigator image={reduxStore.auth.avatar} isEmailVerified={reduxStore.auth.isEmailVerified} />
 
-                                        <Button onClick={this.onLogout} style={{ color: 'white', m: 1 }} >
-                                            {translate('general/log-out/single/ucFirstLetterAllWords')}
+                                        <Button sx={{ m: 1 }} size='small' variant={'contained'} onClick={this.onLogout} >
+                                            <LogoutIcon size='small' />
                                         </ Button>
                                     </>
                                 ) :
-                                window.location.pathname === '/login' ?
-                                    (
-                                        <Link to='/register' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
-                                            {translate('general/sign-up/single/ucFirstLetterAllWords')}
-                                        </ Link>
-                                    ) :
-                                    (
-                                        <Link to='/login' style={{ textDecoration: 'none', color: 'white', m: 1 }} >
-                                            {translate('general/log-in/single/ucFirstLetterAllWords')}
-                                        </ Link>
-                                    )
+                                window.location.pathname !== '/login' &&
+                                (
+                                    <Button sx={{ m: 1 }} size='small' variant={'contained'} onClick={(e) => { this.setState({ goToLogIn: true }) }}>
+                                        <LoginIcon size='small' />
+                                    </ Button>
+                                )
                             }
 
-                            <ThemeButton buttonProps={{ sx: { m: 1 } }} />
-                            <AppLocalButton buttonProps={{ sx: { m: 1 } }} />
+                            <ButtonGroup variant="contained" size='small'>
+                                <ThemeButton />
+                                <AppLocalButton />
+                            </ButtonGroup>
                         </Toolbar>
                     </AppBar>
-                    <Toolbar />
+                    {/* <Toolbar /> */}
+                    {this.state.goToRegister && <Navigate to={'/register'} />}
+                    {this.state.goToLogIn && <Navigate to={'/login'} />}
+                    {this.state.goToWelcomePage && window.location.pathname !== '/' && <Navigate to='/' />}
                 </Box>
             </>
         )
     }
 }
 
-export default connect(null)(Header)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(Header)

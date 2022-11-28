@@ -12,6 +12,7 @@ import AccountsServerDataGrid from '../../Grids/Accounts/AccountsServerDataGrid'
 import { connect } from 'react-redux';
 import { canReadSelfUser, canReadUsers } from '../../roles/account';
 import store from '../../../../redux/store';
+import { Box } from '@mui/system';
 
 export class DashboardAccountPage extends Component {
     constructor(props) {
@@ -47,24 +48,26 @@ export class DashboardAccountPage extends Component {
                     <Header title={<Link to='/' style={{ textDecoration: 'none', color: 'white' }} >{translate('pages/account/account/account/plural/ucFirstLetterFirstWord')}</ Link>} />
                 </Grid>
                 <Grid item xs={12} style={{ minHeight: '70vh' }} >
-                    <Tabs value={this.state.accountPageTabsValue} onChange={this.handleAccountPageTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Box sx={{ m: 1, p: 1, height: '100%' }}>
+                        <Tabs value={this.state.accountPageTabsValue} onChange={this.handleAccountPageTabChange} variant="scrollable" scrollButtons={true} allowScrollButtonsMobile sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                            {canReadSelfUser(store) &&
+                                <Tab label={translate('pages/account/account/your-account')} />
+                            }
+                            {canReadUsers(store) &&
+                                <Tab label={translate('pages/account/account/others-accounts')} />
+                            }
+                        </Tabs>
                         {canReadSelfUser(store) &&
-                            <Tab label={translate('pages/account/account/your-account')} />
+                            <TabPanel value={this.state.accountPageTabsValue} index={0} style={{ height: '100%' }} >
+                                <Account isSelf={true} />
+                            </TabPanel>
                         }
                         {canReadUsers(store) &&
-                            <Tab label={translate('pages/account/account/others-accounts')} />
+                            <TabPanel value={this.state.accountPageTabsValue} index={1} style={{ height: '100%' }} >
+                                <AccountsServerDataGrid />
+                            </TabPanel>
                         }
-                    </Tabs>
-                    {canReadSelfUser(store) &&
-                        <TabPanel value={this.state.accountPageTabsValue} index={0} style={{ height: '100%' }} >
-                            <Account isSelf={true}/>
-                        </TabPanel>
-                    }
-                    {canReadUsers(store) &&
-                        <TabPanel value={this.state.accountPageTabsValue} index={1} style={{ height: '100%' }} >
-                            <AccountsServerDataGrid />
-                        </TabPanel>
-                    }
+                    </Box>
 
                     <Snackbar
                         open={this.state.feedbackOpen}
@@ -92,4 +95,8 @@ export class DashboardAccountPage extends Component {
     }
 }
 
-export default connect(null)(DashboardAccountPage)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(DashboardAccountPage)

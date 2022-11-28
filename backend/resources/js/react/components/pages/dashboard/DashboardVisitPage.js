@@ -144,4 +144,8 @@ export class DashboardVisitPage extends Component {
     }
 }
 
-export default connect(null)(DashboardVisitPage)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(DashboardVisitPage)

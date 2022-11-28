@@ -826,4 +826,8 @@ export class Account extends Component {
     }
 }
 
-export default connect(null)(Account)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(Account)

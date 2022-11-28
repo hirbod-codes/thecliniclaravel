@@ -8,8 +8,9 @@ import { Box, Button, Divider, Fab, Stack } from '@mui/material';
 
 import { translate } from '../../../traslation/translate';
 import { convertWeeklyTimePatterns, resolveTimeZone, updateState } from '../../helpers';
-import { LocaleContext } from '../../localeContext';
 import WeeklyTimePattern from './WeeklyTimePattern';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * WeeklyTimePatterns
@@ -117,7 +118,7 @@ export class WeeklyTimePatterns extends Component {
 
         if (this.props.handleVisitInfo !== undefined) {
             let weeklyTimePatterns = this.state.weeklyTimePatterns;
-            const locale = LocaleContext._currentValue.currentLocale.shortName;
+            const locale = store.getState().local.local.shortName;
 
             weeklyTimePatterns = convertWeeklyTimePatterns(weeklyTimePatterns, resolveTimeZone(locale), 'UTC');
 
@@ -191,4 +192,8 @@ export class WeeklyTimePatterns extends Component {
     }
 }
 
-export default WeeklyTimePatterns
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(WeeklyTimePatterns)

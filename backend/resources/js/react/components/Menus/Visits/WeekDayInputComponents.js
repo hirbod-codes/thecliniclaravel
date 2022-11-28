@@ -9,7 +9,8 @@ import { Box, Button, Divider, Fab, Stack } from '@mui/material';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponent from './WeekDayInputComponent';
 import { convertWeekDays, resolveTimeZone, updateState } from '../../helpers';
-import { LocaleContext } from '../../localeContext';
+import store from '../../../../redux/store';
+import { connect } from 'react-redux';
 
 /**
  * WeekDayInputComponents
@@ -127,7 +128,7 @@ export class WeekDayInputComponents extends Component {
             weekDays.forEach((v, i) => {
                 newWeekDays[v.weekDay] = v.timePeriods;
             });
-            const locale = LocaleContext._currentValue.currentLocale.shortName;
+            const locale = store.getState().local.local.shortName;
 
             weekDays = convertWeekDays(newWeekDays, resolveTimeZone(locale), 'UTC');
             this.props.handleVisitInfo(weekDays);
@@ -207,4 +208,8 @@ export class WeekDayInputComponents extends Component {
     }
 }
 
-export default WeekDayInputComponents
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(WeekDayInputComponents)

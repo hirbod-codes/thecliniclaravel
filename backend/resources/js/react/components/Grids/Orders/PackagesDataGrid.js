@@ -9,6 +9,7 @@ import PartsDataGridModal from './Modals/PartsDataGridModal';
 import { Alert, Button, CircularProgress, IconButton, Snackbar } from '@mui/material';
 import { localizeDate, updateState } from '../../helpers';
 import { get_laser_price_calculation, get_laser_time_calculation, get_orders_laser, get_orders_regular, get_packages } from '../../Http/Api/order';
+import { connect } from 'react-redux';
 
 /**
  * PackagesDataGrid
@@ -330,4 +331,8 @@ export class PackagesDataGrid extends Component {
     }
 }
 
-export default PackagesDataGrid
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(PackagesDataGrid)

@@ -140,4 +140,8 @@ export class DashboardOrderPage extends Component {
     }
 }
 
-export default connect(null)(DashboardOrderPage)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(DashboardOrderPage)

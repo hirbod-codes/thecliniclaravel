@@ -6,6 +6,8 @@ import store from '../../../redux/store.js';
 import { connect } from 'react-redux';
 import { setLocal } from '../../../redux/reducers/local.js';
 
+import LanguageIcon from '@mui/icons-material/Language';
+
 export class AppLocalButton extends Component {
     constructor(props) {
         super(props);
@@ -21,9 +23,8 @@ export class AppLocalButton extends Component {
 
         return (
             <Dropdown
-                buttonInnerContent={translate('general/' + reduxStore.local.local.longName + '/single/ucFirstLetterFirstWord')}
+                buttonInnerContent={<LanguageIcon size='small' />}
                 menuItems={this.makeItems(reduxStore.local.locals)}
-                buttonProps={this.props.buttonProps}
                 menuItemClickHandler={(e) => { this.props.dispatch(setLocal(e.target.getAttribute('value'))); }}
             />
         )
@@ -48,4 +49,8 @@ export class AppLocalButton extends Component {
     }
 }
 
-export default connect(null)(AppLocalButton)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(AppLocalButton)

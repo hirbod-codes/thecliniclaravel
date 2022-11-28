@@ -641,4 +641,8 @@ export class AccountCreator extends Component {
     }
 }
 
-export default connect(null)(AccountCreator)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(AccountCreator)

@@ -32,6 +32,7 @@ general = addWordTo(general, 'update');
 general = addWordTo(general, 'show');
 general = addWordTo(general, 'delete');
 general = addWordTo(general, 'welcome');
+general = addWordTo(general, 'diamond');
 general = addWordTo(general, 'log in', null, 'log-in');
 general = addWordTo(general, 'sign up', null, 'sign-up');
 general = addWordTo(general, 'log out', null, 'log-out');

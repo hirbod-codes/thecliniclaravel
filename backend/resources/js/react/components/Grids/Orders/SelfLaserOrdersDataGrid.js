@@ -206,4 +206,8 @@ export class SelfLaserOrdersDataGrid extends Component {
     }
 }
 
-export default connect(null)(SelfLaserOrdersDataGrid)
+const mapStateToProps = state => ({
+    redux: state
+});
+
+export default connect(mapStateToProps)(SelfLaserOrdersDataGrid)
