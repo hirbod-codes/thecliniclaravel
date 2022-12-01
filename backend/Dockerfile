@@ -35,6 +35,67 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
+FROM base_with_composer AS unit-test
+
+WORKDIR /
+COPY --from=node_base . .
+WORKDIR /var/www/html
+
+COPY . .
+COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
+
+RUN apt-get update
+RUN apt-get install -y acl
+
+RUN chown -R root:root ./ && chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
+
+RUN composer install
+
+RUN npm install && \
+    npm run dev
+
+CMD \
+    rm -f .env && \
+    cp .env.example .env &&\
+    php artisan cache:clear && \
+    php artisan config:clear && \
+    php artisan key:generate && \
+    php artisan config:cache && \
+    php artisan test tests/Unit
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+FROM base_with_composer AS feature-test
+
+WORKDIR /
+COPY --from=node_base . .
+WORKDIR /var/www/html
+
+COPY . .
+COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
+
+RUN apt-get update
+RUN apt-get install -y acl
+
+RUN chown -R root:root ./ && chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
+
+RUN composer install
+
+RUN npm install && \
+    npm run dev
+
+CMD \
+    rm -f .env && \
+    cp .env.example .env &&\
+    php artisan cache:clear && \
+    php artisan config:clear && \
+    php artisan key:generate && \
+    php artisan config:cache && \
+    php artisan initialize-if-needed && \
+    php artisan test tests/Feature/
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
 FROM base AS development
 
 RUN apt-get install -y \
@@ -87,11 +148,6 @@ CMD \
     sleep 30 && \
     touch /tmp/xdebug-log.log && \
     chmod g+w /tmp/xdebug-log.log && \
-    rm -f .env && \
-    cp .env.example .env &&\
-    php artisan cache:clear && \
-    php artisan config:clear && \
-    php artisan key:generate && \
     php artisan config:cache && \
     php artisan route:cache && \
     php artisan initialize-if-needed && \
