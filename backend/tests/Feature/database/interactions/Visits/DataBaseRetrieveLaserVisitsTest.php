@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Visits;
+namespace Tests\Feature\database\interactions\Visits;
 
 use App\Auth\CheckAuthentication;
 use App\Models\Auth\Patient;

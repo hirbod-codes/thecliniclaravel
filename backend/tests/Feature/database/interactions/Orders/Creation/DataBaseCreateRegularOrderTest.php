@@ -1,23 +1,22 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Orders\Creation;
+namespace Tests\Feature\database\interactions\Orders\Creation;
 
-use App\Models\Order\Order;
 use App\Models\Order\RegularOrder;
 use App\Models\User;
 use Database\Interactions\Business\Interfaces\IDataBaseRetrieveBusinessSettings;
-use Database\Interactions\Orders\Creation\DatabaseCreateDefaultRegularOrder;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
+use Database\Interactions\Orders\Creation\DatabaseCreateRegularOrder;
 use Mockery;
 use Mockery\MockInterface;
-use Tests\TestCase;
 
 /**
- * @covers \Database\Interactions\Orders\Creation\DatabaseCreateDefaultRegularOrder
+ * @covers \Database\Interactions\Orders\Creation\DatabaseCreateRegularOrder
  */
-class DataBaseCreateDefaultRegularOrderTest extends TestCase
+class DataBaseCreateRegularOrderTest extends TestCase
 {
     private Generator $faker;
 
@@ -28,25 +27,27 @@ class DataBaseCreateDefaultRegularOrderTest extends TestCase
         $this->faker = Factory::create();
     }
 
-    public function testCreateDefaultRegularOrder()
+    public function testCreateRegularOrder()
     {
         try {
             DB::beginTransaction();
 
             /** @var IDataBaseRetrieveBusinessSettings|MockInterface $iDataBaseRetrieveBusinessSettings */
             $iDataBaseRetrieveBusinessSettings = Mockery::mock(IDataBaseRetrieveBusinessSettings::class);
-            $iDataBaseRetrieveBusinessSettings->shouldReceive('getDefaultRegularOrderPrice')->once()->andReturn(10);
-            $iDataBaseRetrieveBusinessSettings->shouldReceive('getDefaultRegularOrderTimeConsumption')->once()->andReturn(10);
+
+            $price = $this->faker->numberBetween(1000000, 8000000);
+            $timeConsumption = $this->faker->numberBetween(600, 3600);
 
             /** @var User $user */
             $user = User::query()->firstOrFail();
-            $regularOrder = (new DatabaseCreateDefaultRegularOrder($iDataBaseRetrieveBusinessSettings))->createDefaultRegularOrder($user);
+
+            $regularOrder = (new DatabaseCreateRegularOrder($iDataBaseRetrieveBusinessSettings))->createRegularOrder($user, $price, $timeConsumption);
             /** @var Order $order */
             $order = $regularOrder->order;
 
             $this->assertInstanceOf(RegularOrder::class, $regularOrder);
             $this->assertDatabaseHas($order->getTable(), [$order->getKeyName() => $order->getKey(), $user->getForeignKey() => $user->getKey()]);
-            $this->assertDatabaseHas($regularOrder->getTable(), [$regularOrder->getKeyName() => $regularOrder->getKey(), $order->getForeignKey() => $order->getKey()]);
+            $this->assertDatabaseHas($regularOrder->getTable(), [$regularOrder->getKeyName() => $regularOrder->getKey(), $order->getForeignKey() => $order->getKey(), 'price' => $price, 'needed_time' => $timeConsumption]);
 
             DB::rollBack();
 

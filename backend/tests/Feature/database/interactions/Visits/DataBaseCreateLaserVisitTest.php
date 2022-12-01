@@ -1,26 +1,26 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Visits;
+namespace Tests\Feature\database\interactions\Visits;
 
 use App\DataStructures\Time\DSDateTimePeriods;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\Models\Auth\Patient;
-use App\Models\Visit\RegularVisit;
+use App\Models\Visit\LaserVisit;
 use App\PoliciesLogic\Visit\CustomVisit;
-use App\PoliciesLogic\Visit\IFindVisit;
-use App\PoliciesLogic\Visit\WeeklyVisit;
-use Database\Interactions\Visits\Creation\DataBaseCreateRegularVisit;
 use Faker\Factory;
 use Faker\Generator;
 use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
+use App\PoliciesLogic\Visit\IFindVisit;
+use App\PoliciesLogic\Visit\WeeklyVisit;
+use Database\Interactions\Visits\Creation\DataBaseCreateLaserVisit;
 use Mockery;
 use Mockery\MockInterface;
-use Tests\TestCase;
 
 /**
- * @covers \Database\Interactions\Visits\Creation\DataBaseCreateRegularVisit
+ * @covers \Database\Interactions\Visits\Creation\DataBaseCreateLaserVisit
  */
-class DataBaseCreateRegularVisitTest extends TestCase
+class DataBaseCreateLaserVisitTest extends TestCase
 {
     private Generator $faker;
 
@@ -31,7 +31,7 @@ class DataBaseCreateRegularVisitTest extends TestCase
         $this->faker = Factory::create();
     }
 
-    public function testCreateRegularVisit(): void
+    public function testCreateLaserVisit(): void
     {
         try {
             DB::beginTransaction();
@@ -40,7 +40,7 @@ class DataBaseCreateRegularVisitTest extends TestCase
             $user = $patient->user;
 
             foreach ($user->orders as $order) {
-                if (($regularOrder = $order->regularOrder) !== null) {
+                if (($laserOrder = $order->laserOrder) !== null) {
                     $found = true;
                     break;
                 }
@@ -53,14 +53,14 @@ class DataBaseCreateRegularVisitTest extends TestCase
             $iFindVisit = Mockery::mock(IFindVisit::class);
             $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
 
-            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
 
-            $this->assertInstanceOf(RegularVisit::class, $regularVisit);
-            $this->assertDatabaseHas($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+            $this->assertInstanceOf(LaserVisit::class, $laserVisit);
+            $this->assertDatabaseHas($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
 
             DB::rollback();
 
-            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+            $this->assertDatabaseMissing($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
 
             // ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -70,7 +70,7 @@ class DataBaseCreateRegularVisitTest extends TestCase
             $user = $patient->user;
 
             foreach ($user->orders as $order) {
-                if (($regularOrder = $order->regularOrder) !== null) {
+                if (($laserOrder = $order->laserOrder) !== null) {
                     $found = true;
                     break;
                 }
@@ -84,14 +84,14 @@ class DataBaseCreateRegularVisitTest extends TestCase
             $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
             $iFindVisit->shouldReceive('getDSTimePatterns')->once()->andReturn(new DSWeeklyTimePatterns('Monday'));
 
-            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
 
-            $this->assertInstanceOf(RegularVisit::class, $regularVisit);
-            $this->assertDatabaseHas($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+            $this->assertInstanceOf(LaserVisit::class, $laserVisit);
+            $this->assertDatabaseHas($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
 
             DB::rollback();
 
-            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+            $this->assertDatabaseMissing($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
 
             // ------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -101,7 +101,7 @@ class DataBaseCreateRegularVisitTest extends TestCase
             $user = $patient->user;
 
             foreach ($user->orders as $order) {
-                if (($regularOrder = $order->regularOrder) !== null) {
+                if (($laserOrder = $order->laserOrder) !== null) {
                     $found = true;
                     break;
                 }
@@ -115,14 +115,14 @@ class DataBaseCreateRegularVisitTest extends TestCase
             $iFindVisit->shouldReceive('findVisit')->once()->andReturn($timestamp = (new \DateTime)->modify("+100 days")->getTimestamp());
             $iFindVisit->shouldReceive('getDSDateTimePeriods')->once()->andReturn(new DSDateTimePeriods);
 
-            $regularVisit = (new DataBaseCreateRegularVisit)->createRegularVisit($regularOrder, $iFindVisit);
+            $laserVisit = (new DataBaseCreateLaserVisit)->createLaserVisit($laserOrder, $iFindVisit);
 
-            $this->assertInstanceOf(RegularVisit::class, $regularVisit);
-            $this->assertDatabaseHas($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+            $this->assertInstanceOf(LaserVisit::class, $laserVisit);
+            $this->assertDatabaseHas($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
 
             DB::rollback();
 
-            $this->assertDatabaseMissing($regularVisit->getTable(), ['visit_timestamp' => $timestamp]);
+            $this->assertDatabaseMissing($laserVisit->getTable(), ['visit_timestamp' => $timestamp]);
         } catch (\Throwable $th) {
             DB::rollback();
             throw $th;

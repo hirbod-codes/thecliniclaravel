@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Visits;
+namespace Tests\Feature\database\interactions\Visits;
 
 use App\Models\Visit\LaserVisit;
 use Database\Interactions\Visits\Deletion\DataBaseDeleteLaserVisit;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Business;
+namespace Tests\Feature\database\interactions\Business;
 
 use App\DataStructures\Time\DSDownTimes;
 use App\DataStructures\Time\DSWeeklyTimePatterns;

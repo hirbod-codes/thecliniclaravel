@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Orders\Retrieval;
+namespace Tests\Feature\database\interactions\Orders\Retrieval;
 
 use App\DataStructures\Order\DSPackages;
 use App\DataStructures\Order\DSPart;

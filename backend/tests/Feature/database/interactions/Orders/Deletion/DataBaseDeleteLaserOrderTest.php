@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Orders\Deletion;
+namespace Tests\Feature\database\interactions\Orders\Deletion;
 
 use App\Models\Auth\Patient;
 use App\Models\Order\LaserOrder;

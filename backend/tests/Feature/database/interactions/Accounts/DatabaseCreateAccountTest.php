@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Accounts;
+namespace Tests\Feature\database\interactions\Accounts;
 
 use App\Models\Auth\Patient;
 use App\Models\Role;

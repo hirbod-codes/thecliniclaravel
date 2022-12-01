@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit\database\interactions\Orders\Creation;
+namespace Tests\Feature\database\interactions\Orders\Creation;
 
 use App\DataStructures\Order\DSPackage;
 use App\DataStructures\Order\DSPart;
