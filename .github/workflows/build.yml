@@ -7,6 +7,12 @@ on:
   workflow_dispatch:
 
 jobs:
+  on-failure:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - run: echo 'The triggering workflow failed'
+
   build:
     name: Deploy the final application in the host server
     runs-on: ubuntu-latest
@@ -25,36 +31,47 @@ jobs:
       - name: set up QEMU
         uses: docker/setup-qemu-action@v1
 
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: |
+            ${{github.repository_owner}}/laravel
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+
       - name: Build and Push the laravel image to GHCR
         uses: docker/build-push-action@v2
         with:
-          push: true
+          push: ${{ github.event_name == 'release' }}
           context: ./backend
-          tags: ghcr.io/hirbod-codes/laravel:${{ github.ref }}
+          tags: ${{ steps.meta.outputs.tags }}
           target: production
           platforms: linux/amd64
 
       - name: Build and Push the nginx image to GHCR
         uses: docker/build-push-action@v2
         with:
-          push: true
+          push: ${{ github.event_name == 'release' }}
           context: ./nginx
-          tags: ghcr.io/hirbod-codes/nginx:1.23.1
+          tags: ghcr.io/${{github.repository_owner}}/nginx:1.23.1
           target: production
           platforms: linux/amd64
 
       - name: Build and Push the mysql image to GHCR
         uses: docker/build-push-action@v2
         with:
-          push: true
+          push: ${{ github.event_name == 'release' }}
           context: ./mysql
-          tags: ghcr.io/hirbod-codes/mysql:5
+          tags: ghcr.io/${{github.repository_owner}}/mysql:5
           target: back
           platforms: linux/amd64
 
   ftp:
     name: send new configuration files
     runs-on: ubuntu-latest
+    needs: [build]
 
     steps:
       - name: Sync files
@@ -71,6 +88,7 @@ jobs:
   deploy:
     name: Deploy the final application in the host server
     runs-on: ubuntu-latest
+    needs: [ftp]
 
     steps:
       - name: SSH to server and redeploythe application in swarm
