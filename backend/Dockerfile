@@ -85,6 +85,7 @@ RUN npm install && \
     npm run dev
 
 CMD \
+    sleep 30 && \
     rm -f .env && \
     cp .env.example .env &&\
     php artisan cache:clear && \
