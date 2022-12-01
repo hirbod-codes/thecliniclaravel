@@ -7,19 +7,18 @@ public/fonts
 .idea
 .vscode
 workspace
-tests
 
 .rnd
 .styleci.yml
 .phpunit.result.cache
-phpunit.xml
+.phpunit.cache
 
 .gitignore
 .gitattributes
 
-encrypted.env
-.env.example
 *.md
+composer.lock
+package-lock.json
 
 .dockerignore
 Dockerfile
