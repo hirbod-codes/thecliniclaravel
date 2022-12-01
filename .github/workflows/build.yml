@@ -2,40 +2,92 @@ name: build
 
 on:
   workflow_run:
-    workflows: ["ci"]
-    types:
-      - completed
+    workflows: [test]
+    types: [completed]
   workflow_dispatch:
 
 jobs:
-  deploy:
+  build:
     name: Deploy the final application in the host server
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: checkout the git repo
+        uses: actions/checkout@v3
 
-      - name: Set the .env file
-        env:
-          ENV_FILE: ${{secrets.ENV}}
-        run: |
-          touch .env
-          echo $ENV_FILE | base64 -d > .env
+      - name: Login to ghcr.io registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.MY_GITHUB_TOKEN }}
 
+      - name: set up QEMU
+        uses: docker/setup-qemu-action@v1
+
+      - name: Build and Push the laravel image to GHCR
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./backend
+          tags: ghcr.io/hirbod-codes/laravel:${{ github.ref }}
+          target: production
+          platforms: linux/amd64
+
+      - name: Build and Push the nginx image to GHCR
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./nginx
+          tags: ghcr.io/hirbod-codes/nginx:1.23.1
+          target: production
+          platforms: linux/amd64
+
+      - name: Build and Push the mysql image to GHCR
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          context: ./mysql
+          tags: ghcr.io/hirbod-codes/mysql:5
+          target: back
+          platforms: linux/amd64
+
+  ftp:
+    name: send new configuration files
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@4.3.2
         with:
           server: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_FTP_USERNAME }}
           password: ${{ secrets.HOST_FTP_PASSWORD }}
-          local-dir: ./
-          server-dir: ./application/
+          local-dir: |
+            ./build.sh
+            ./docker-compose.stack.yml
+          server-dir: ./tmp/app
 
-      - name: SSH to server and run deploy.sh bash script
+  deploy:
+    name: Deploy the final application in the host server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH to server and redeploythe application in swarm
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_USERNAME }}
           password: ${{ secrets.HOST_PASSWORD }}
           port: ${{ secrets.HOST_PORT }}
-          script: chmod u+x /home/hirbod/application/deploy.sh && /home/hirbod/application/deploy.sh
+          script: |
+            echo "${{ secrets.ENV_FILE }}" > .env
+            echo MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} >> .env
+            echo MYSQL_USER=${{ secrets.MYSQL_USER }} >> .env
+            echo MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} >> .env
+
+            chmod u+x ./build.sh
+            ./build.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
+
+            echo ${{ secrets.MY_GITHUB_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin 
+            docker stack deploy -c docker-compose.stack.yml theclinic

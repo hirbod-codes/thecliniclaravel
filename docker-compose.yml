@@ -19,11 +19,15 @@ services:
             - mysql
     mysql:
         container_name: mysql
-        build:
-            context: ./mysql
-            target: back
+        image: mysql:5
         command: mysqld --default-authentication-plugin=mysql_native_password
         tty: true
+        environment:
+            - MYSQL_SERVICE_NAME=mysql
+            - MYSQL_ROOT_PASSWORD=password
+            - MYSQL_USER=hirbod
+            - MYSQL_PASSWORD=password
+            - MYSQL_DATABASE=thecliniclaravel
         volumes:
             - data:/var/lib/mysql
         networks:

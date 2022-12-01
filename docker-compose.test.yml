@@ -1,32 +1,32 @@
 version: "3.8"
 
 services:
-  nginx:
-    build:
-      context: ./
-      dockerfile: Dockerfile.nginx
-      target: production
-    volumes_from:
-      - laravel:rw
-
   laravel:
-    image: "${TESTING_IMAGE}"
-    working_dir: /var/www/html/laravel
+    container_name: laravel
+    build:
+      context: ./backend
+      target: feature-test
+    networks:
+      - backend
+    depends_on:
+      - mysql
     volumes:
-      - thecliniclaravel_app:/var/www/html/laravel:rw
-      - thecliniclaravel_public:/var/www/html/laravel/public:rw
-      - thecliniclaravel_vendor:/var/www/html/laravel/vendor:rw
-      - thecliniclaravel_node_modules:/var/www/html/laravel/node_modules:rw
-
+      - ./backend:/var/www/html:rw
+      - ./backend/addon.ini:/usr/local/etc/php/conf.d/addon.ini:rw
   mysql:
+    container_name: mysql
+    image: mysql:5
+    command: mysqld --default-authentication-plugin=mysql_native_password
+    tty: true
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_DATABASE: ${DB_DATABASE}
+      - MYSQL_SERVICE_NAME=mysql
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_USER=hirbod
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=thecliniclaravel
+    networks:
+      - backend
 
-volumes:
-  thecliniclaravel_app: {}
-  thecliniclaravel_public: {}
-  thecliniclaravel_vendor: {}
-  thecliniclaravel_node_modules: {}
+networks:
+  backend:
+    driver: bridge

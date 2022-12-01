@@ -1,28 +1,9 @@
+FROM node:19 AS node_base
+
+RUN echo "NODE Version:" && node --version
+RUN echo "NPM Version:" && npm --version
+
 FROM php:8.1.9-fpm-buster AS base
-
-USER root
-
-RUN usermod -aG root www-data
-
-RUN apt-get update
-RUN apt-get install -y \
-    git \
-    curl \
-    zip \
-    unzip
-
-RUN docker-php-ext-install \
-    pdo \
-    pdo_mysql \
-    mysqli
-
-WORKDIR /var/www/html
-
-EXPOSE 9000
-
-# ------------------------------------------------------------------------------------------------------------------------------
-
-FROM 5.182.44.231:5000/php:8.1.9-fpm-buster AS production_base
 
 USER root
 
@@ -54,9 +35,64 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
-FROM production_base AS production_base_with_composer
+FROM base_with_composer AS unit-test
 
-COPY --from=5.182.44.231:5000/composer:latest /usr/bin/composer /usr/bin/
+WORKDIR /
+COPY --from=node_base . .
+WORKDIR /var/www/html
+
+COPY . .
+COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
+
+RUN apt-get update
+RUN apt-get install -y acl
+
+RUN chown -R root:root ./ && chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
+
+RUN composer install
+
+RUN npm install && \
+    npm run dev
+
+CMD \
+    rm -f .env && \
+    cp .env.example .env &&\
+    php artisan cache:clear && \
+    php artisan config:clear && \
+    php artisan key:generate && \
+    php artisan config:cache && \
+    php artisan test tests/Unit
+
+# ------------------------------------------------------------------------------------------------------------------------------
+
+FROM base_with_composer AS feature-test
+
+WORKDIR /
+COPY --from=node_base . .
+WORKDIR /var/www/html
+
+COPY . .
+COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
+
+RUN apt-get update
+RUN apt-get install -y acl
+
+RUN chown -R root:root ./ && chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
+
+RUN composer install
+
+RUN npm install && \
+    npm run dev
+
+CMD \
+    rm -f .env && \
+    cp .env.example .env &&\
+    php artisan cache:clear && \
+    php artisan config:clear && \
+    php artisan key:generate && \
+    php artisan config:cache && \
+    php artisan initialize-if-needed && \
+    php artisan test tests/Feature/
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
@@ -87,57 +123,32 @@ CMD \
 
 # ------------------------------------------------------------------------------------------------------------------------------
 
-FROM base_with_composer AS tests
-
-RUN apt-get install -y \
-    acl
-
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-
-COPY . .
-COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
-
-RUN chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
-
-RUN composer install
-
-# ------------------------------------------------------------------------------------------------------------------------------
-
-FROM production_base_with_composer AS production
+FROM base_with_composer AS production
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 RUN apt-get install -y \
-    acl \
-    nodejs \
-    npm
+    acl
 
-ENV NODE_VERSION=16.13.0
-
-RUN mkdir -p ./
-COPY ./install.sh ./
-
-RUN ./install.sh
-
-ENV NVM_DIR=/root/.nvm
-
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION} && \
-    . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION} && \
-    . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
+WORKDIR /
+COPY --from=node_base . .
+WORKDIR /var/www/html
 
 COPY . .
 COPY ./addon.ini /usr/local/etc/php/conf.d/addon.ini
 
-RUN chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
+RUN chown -R root:root ./ && chmod -R g=rwxs ./ && setfacl -Rm g:root:rwx ./
 
 RUN composer install --optimize-autoloader --no-dev
 
 RUN npm install && \
     npm run production
 
-RUN php artisan config:cache && \
-    php artisan route:cache
-
-CMD echo "the working directory" && ls -al ./ && echo "waiting for 30 seconds..." && sleep 30 && php artisan initialize-if-needed && docker-php-entrypoint php-fpm
+CMD \
+    sleep 30 && \
+    touch /tmp/xdebug-log.log && \
+    chmod g+w /tmp/xdebug-log.log && \
+    php artisan config:cache && \
+    php artisan route:cache && \
+    php artisan initialize-if-needed && \
+    docker-php-entrypoint php-fpm
