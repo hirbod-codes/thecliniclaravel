@@ -1,0 +1,30 @@
+name: test
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  tests:
+    name: Unit tests in Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v3
+
+      - name: Unit Testing in Docker
+        run: |
+          docker build --target unit-test --tag unittest:latest backend/
+          docker run --rm -it unittest:latest
+
+      - name: Feature Testing in Docker
+        run: docker compose -f docker-compose.test.yml up --build --remove-orphan --exit-code-from laravel
+
+      - name: Run Trivy for all CVEs (non-blocking)
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ github.run_id }}
+          exit-code: 0
+          format: table
