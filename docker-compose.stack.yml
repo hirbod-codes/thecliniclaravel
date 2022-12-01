@@ -3,7 +3,7 @@ version: "3.8"
 services:
   nginx:
     container_name: nginx
-    image: nginx
+    image: ghcr.io/hirbod-codes/nginx:1.23.1
     volumes:
       - theclinicapp:/var/www/html/laravel
     ports:
@@ -15,7 +15,7 @@ services:
       - laravel
   laravel:
     container_name: laravel
-    image: laravel
+    image: ghcr.io/hirbod-codes/laravel:latest
     volumes:
       - theclinicapp:/var/www/html/laravel
     networks:
@@ -25,14 +25,31 @@ services:
       - mysql
   mysql:
     container_name: mysql
-    image: mysql
+    image: mysql:5
     command: mysqld --default-authentication-plugin=mysql_native_password
     tty: true
     volumes:
       - data:/var/lib/mysql
+    secrets:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    environment:
+      - MYSQL_SERVICE_NAME=mysql
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/MYSQL_ROOT_PASSWORD
+      - MYSQL_USER_FILE=/run/secrets/MYSQL_USER
+      - MYSQL_PASSWORD_FILE=/run/secrets/MYSQL_PASSWORD
+      - MYSQL_DATABASE=thecliniclaravel
     networks:
       - backend
 
+secrets:
+  MYSQL_ROOT_PASSWORD:
+    external: true
+  MYSQL_USER:
+    external: true
+  MYSQL_PASSWORD:
+    external: true
 volumes:
   theclinicapp: {}
   data: {}
