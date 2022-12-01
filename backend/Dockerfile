@@ -1,8 +1,3 @@
-FROM node:19 AS node_base
-
-RUN echo "NODE Version:" && node --version
-RUN echo "NPM Version:" && npm --version
-
 FROM php:8.1.9-fpm-buster AS base
 
 USER root
@@ -38,7 +33,12 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/
 FROM base_with_composer AS unit-test
 
 WORKDIR /
-COPY --from=node_base . .
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    npm
+RUN npm install npm@latest -g && \
+    npm install n -g && \
+    n latest
 WORKDIR /var/www/html
 
 COPY . .
@@ -68,7 +68,12 @@ CMD \
 FROM base_with_composer AS feature-test
 
 WORKDIR /
-COPY --from=node_base . .
+RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    npm
+RUN npm install npm@latest -g && \
+    npm install n -g && \
+    n latest
 WORKDIR /var/www/html
 
 COPY . .
