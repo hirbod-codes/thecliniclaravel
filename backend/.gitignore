@@ -11,4 +11,3 @@ node_modules/
 .phpunit.cache/
 composer.lock
 package-lock.json
-phpunit.xml
