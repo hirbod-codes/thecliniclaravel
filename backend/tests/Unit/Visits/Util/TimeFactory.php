@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Visits\Util;
+namespace Tests\Unit\Visits\Util;
 
 use App\DataStructures\Time\DSDateTimePeriod;
 use App\DataStructures\Time\DSDateTimePeriods;

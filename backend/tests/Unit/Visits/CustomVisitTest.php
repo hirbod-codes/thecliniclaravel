@@ -1,21 +1,22 @@
 <?php
 
-namespace Tests\Feature\Visits;
+namespace Tests\Unit\Visits;
 
 use App\DataStructures\Time\DSDateTimePeriods;
 use App\DataStructures\Time\DSDownTimes;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\DataStructures\Visit\DSVisits;
 use App\DataStructures\Visit\Laser\DSLaserVisit;
+use App\PoliciesLogic\Visit\CustomVisit;
 use Faker\Factory;
 use Faker\Generator;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
-use App\PoliciesLogic\Visit\FastestVisit;
-use Tests\Feature\Visits\Util\TimeFactory;
+use App\PoliciesLogic\Exceptions\Visit\VisitTimeSearchFailure;
+use Tests\Unit\Visits\Util\TimeFactory;
 
-class FastestVisitTest extends TestCase
+class CustomVisitTest extends TestCase
 {
     use TimeFactory;
 
@@ -36,14 +37,15 @@ class FastestVisitTest extends TestCase
     {
         $futureVisits = new DSVisits();
 
-        $folderAddress = __DIR__ . "/FastestVisitTestLogs";
+        $folderAddress = __DIR__ . "/CustomVisitTestLogs";
         $safety = 0;
-        while (count($futureVisits) < 500 && $safety < 50000) {
-            $R = $this->findVisit($futureVisits, $folderAddress);
+        $count = 200;
+        while (count($futureVisits) < $count && $safety < 50000) {
+            $r = $this->findVisit($futureVisits, $folderAddress);
             $safety++;
         }
 
-        $this->assertCount(500, $futureVisits);
+        $this->assertCount($count, $futureVisits);
 
         $totalLogs = "";
         $content = "";
@@ -72,31 +74,35 @@ class FastestVisitTest extends TestCase
 
         $workSchedule = $workSchedule ?: $this->buildWrokSchedule();
         $dsDownTimes = $dsDownTimes ?: $this->buildRandomDSDownTimes($consumingTime, 5, 3 * 60 * 60);
+        $dsDateTimePeriods = $dsDateTimePeriods ?: $this->buildRandomDSDateTimePeriods($consumingTime);
 
         $workScheduleArray = $workSchedule->toArray();
         $dsDownTimesArray = $dsDownTimes->toArray();
+        $dsDateTimePeriodsArray = $dsDateTimePeriods->toArray();
 
         $fileAddress = $folderAddress . "/$id.log";
         file_put_contents($fileAddress, json_encode(
             [
+                "dsDateTimePeriodsArray" => $dsDateTimePeriodsArray,
                 "dsDownTimesArray" => $dsDownTimesArray,
                 "workScheduleArray" => $workScheduleArray,
             ],
             JSON_PRETTY_PRINT
-        ));
+        ) . "\n");
 
         $timestamp = $message = null;
         try {
-            $timestamp = (new FastestVisit(
-                new \DateTime(),
+            $timestamp = (new CustomVisit(
+                $dsDateTimePeriods,
                 $consumingTime,
                 $futureVisits,
                 $workSchedule,
-                $dsDownTimes,
+                $dsDownTimes
             ))->findVisit();
         } catch (NeededTimeOutOfRange $th) {
             $message = "NeededTimeOutOfRange Exception has been thrown.";
-            return ["timestamp" => $timestamp, "message" => $message];
+        } catch (VisitTimeSearchFailure $th) {
+            $message = "VisitTimeSearchFailure Exception has been thrown.";
         }
 
         if ($timestamp !== null) {
@@ -111,6 +117,10 @@ class FastestVisitTest extends TestCase
             $content .= $message;
             file_put_contents($fileAddress, $content);
         }
+
+        $content = file_get_contents($fileAddress);
+        $content .= "\n-----------------------------------------------------------END----------------------------------------------------------------------\n";
+        file_put_contents($fileAddress, $content);
 
         return ["timestamp" => $timestamp, "message" => $message];
     }

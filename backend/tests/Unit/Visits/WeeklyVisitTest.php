@@ -1,22 +1,22 @@
 <?php
 
-namespace Tests\Feature\Visits;
+namespace Tests\Unit\Visits;
 
 use App\DataStructures\Time\DSDateTimePeriods;
 use App\DataStructures\Time\DSDownTimes;
 use App\DataStructures\Time\DSWeeklyTimePatterns;
 use App\DataStructures\Visit\DSVisits;
 use App\DataStructures\Visit\Laser\DSLaserVisit;
-use App\PoliciesLogic\Visit\CustomVisit;
 use Faker\Factory;
 use Faker\Generator;
 use Tests\TestCase;
 use Illuminate\Support\Str;
 use App\PoliciesLogic\Exceptions\Visit\NeededTimeOutOfRange;
 use App\PoliciesLogic\Exceptions\Visit\VisitTimeSearchFailure;
-use Tests\Feature\Visits\Util\TimeFactory;
+use App\PoliciesLogic\Visit\WeeklyVisit;
+use Tests\Unit\Visits\Util\TimeFactory;
 
-class CustomVisitTest extends TestCase
+class WeeklyVisitTest extends TestCase
 {
     use TimeFactory;
 
@@ -37,9 +37,9 @@ class CustomVisitTest extends TestCase
     {
         $futureVisits = new DSVisits();
 
-        $folderAddress = __DIR__ . "/CustomVisitTestLogs";
+        $folderAddress = __DIR__ . "/WeeklyVisitTestLogs";
         $safety = 0;
-        while (count($futureVisits) < 500 && $safety < 50000) {
+        while (count($futureVisits) < 500 && $safety < 10000) {
             $r = $this->findVisit($futureVisits, $folderAddress);
             $safety++;
         }
@@ -66,18 +66,18 @@ class CustomVisitTest extends TestCase
         null|int $consumingTime = null,
         null|DSWeeklyTimePatterns $workSchedule = null,
         null|DSDownTimes $dsDownTimes = null,
-        null|DSDateTimePeriods $dsDateTimePeriods = null
+        null|DSDateTimePeriods $dsWeeklyTimePatterns = null
     ): array {
         $id = count($futureVisits) === 0 ? 1 : count($futureVisits);
         $consumingTime = $consumingTime ?: $this->faker->numberBetween(600, 7200);
 
         $workSchedule = $workSchedule ?: $this->buildWrokSchedule();
         $dsDownTimes = $dsDownTimes ?: $this->buildRandomDSDownTimes($consumingTime, 5, 3 * 60 * 60);
-        $dsDateTimePeriods = $dsDateTimePeriods ?: $this->buildRandomDSDateTimePeriods($consumingTime);
+        $dsWeeklyTimePatterns = $dsWeeklyTimePatterns ?: $this->buildRandomDSWeeklyTimePatterns();
 
         $workScheduleArray = $workSchedule->toArray();
         $dsDownTimesArray = $dsDownTimes->toArray();
-        $dsDateTimePeriodsArray = $dsDateTimePeriods->toArray();
+        $dsDateTimePeriodsArray = $dsWeeklyTimePatterns->toArray();
 
         $fileAddress = $folderAddress . "/$id.log";
         file_put_contents($fileAddress, json_encode(
@@ -91,8 +91,8 @@ class CustomVisitTest extends TestCase
 
         $timestamp = $message = null;
         try {
-            $timestamp = (new CustomVisit(
-                $dsDateTimePeriods,
+            $timestamp = (new WeeklyVisit(
+                $dsWeeklyTimePatterns,
                 $consumingTime,
                 $futureVisits,
                 $workSchedule,
