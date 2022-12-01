@@ -60,15 +60,6 @@ jobs:
           target: production
           platforms: linux/amd64
 
-      - name: Build and Push the mysql image to GHCR
-        uses: docker/build-push-action@v2
-        with:
-          push: ${{ github.event_name == 'release' }}
-          context: ./mysql
-          tags: ghcr.io/${{github.repository_owner}}/mysql:5
-          target: back
-          platforms: linux/amd64
-
   ftp:
     name: send new configuration files
     runs-on: ubuntu-latest
