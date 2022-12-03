@@ -72,6 +72,7 @@ jobs:
       - name: make ftp directory
         run: |
           mkdir ./ftp
+          ls -al .
           cp ./backend/deploy.sh ./ftp
           cp ./docker-compose.stack.yml ./ftp
           ls -al .
