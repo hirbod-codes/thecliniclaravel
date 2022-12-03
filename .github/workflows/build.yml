@@ -72,10 +72,8 @@ jobs:
       - name: make ftp directory
         run: |
           mkdir ./ftp
-          ls -al .
           cp ./deploy.sh ./ftp
           cp ./docker-compose.stack.yml ./ftp
-          ls -al .
 
       - name: Sync files
         uses: SamKirkland/FTP-Deploy-Action@4.3.2
@@ -83,7 +81,7 @@ jobs:
           server: ${{ secrets.HOST_IP }}
           username: ${{ secrets.HOST_FTP_USERNAME }}
           password: ${{ secrets.HOST_FTP_PASSWORD }}
-          local-dir: ./ftp
+          local-dir: ./ftp/
 
   deploy:
     name: Deploy the final application in the host server
