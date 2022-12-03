@@ -73,9 +73,8 @@ jobs:
           username: ${{ secrets.HOST_FTP_USERNAME }}
           password: ${{ secrets.HOST_FTP_PASSWORD }}
           local-dir: |
-            ./build.sh
+            ./deploy.sh
             ./docker-compose.stack.yml
-          server-dir: ./tmp/app
 
   deploy:
     name: Deploy the final application in the host server
@@ -96,8 +95,8 @@ jobs:
             echo MYSQL_USER=${{ secrets.MYSQL_USER }} >> .env
             echo MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} >> .env
 
-            chmod u+x ./build.sh
-            ./build.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
+            chmod u+x /home/admin/build.sh
+            /home/admin/build.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
 
             echo ${{ secrets.MY_GITHUB_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin 
-            docker stack deploy -c docker-compose.stack.yml theclinic
+            docker stack deploy -c /home/admin/docker-compose.stack.yml theclinic
