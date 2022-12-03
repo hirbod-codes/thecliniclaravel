@@ -73,7 +73,7 @@ jobs:
         run: |
           mkdir ./ftp
           ls -al .
-          cp ./backend/deploy.sh ./ftp
+          cp ./deploy.sh ./ftp
           cp ./docker-compose.stack.yml ./ftp
           ls -al .
 
@@ -104,8 +104,8 @@ jobs:
             echo MYSQL_USER=${{ secrets.MYSQL_USER }} >> .env
             echo MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} >> .env
 
-            chmod u+x /home/admin/build.sh
-            /home/admin/build.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
+            chmod u+x /home/admin/deploy.sh
+            /home/admin/deploy.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
 
             echo ${{ secrets.MY_GITHUB_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin 
             docker stack deploy -c /home/admin/docker-compose.stack.yml theclinic
