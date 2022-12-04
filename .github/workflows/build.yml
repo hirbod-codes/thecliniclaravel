@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:
-      - run: echo 'The triggering workflow failed'
+      - run: exit 1
 
   build:
     name: Deploy the final application in the host server
@@ -37,7 +37,7 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           flavor: |
-            latest=auto
+            latest=true
           images: |
             ghcr.io/${{github.repository_owner}}/laravel
           tags: |
@@ -46,9 +46,9 @@ jobs:
 
       - run: |
           echo "${{ secrets.ENV_FILE }}" >  ./backend/.env
-          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >>  ./backend/.env
-          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >>  ./backend/.env
-          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >>  ./backend/.env
+          echo "DB_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >>  ./backend/.env
+          echo "DB_USERNAME=${{ secrets.MYSQL_USER }}" >>  ./backend/.env
+          echo "DB_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >>  ./backend/.env
 
       - name: Build and Push the laravel image to GHCR
         uses: docker/build-push-action@v2
