@@ -28,15 +28,15 @@ done
 if [[ $secretList != *"MYSQL_ROOT_PASSWORD"* ]]; then
     echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
 else
-    echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
     docker secret rm MYSQL_ROOT_PASSWORD
+    echo $MYSQL_ROOT_PASSWORD | docker secret create MYSQL_ROOT_PASSWORD -
 fi
 
 if [[ $secretList != *"MYSQL_USER"* ]]; then
     echo $MYSQL_USER | docker secret create MYSQL_USER -
 else
-    echo $MYSQL_USER | docker secret create MYSQL_USER -
     docker secret rm MYSQL_USER
+    echo $MYSQL_USER | docker secret create MYSQL_USER -
 fi
 
 if [[ $secretList != *"MYSQL_PASSWORD"* ]]; then
