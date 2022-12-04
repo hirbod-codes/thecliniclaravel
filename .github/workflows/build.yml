@@ -90,6 +90,7 @@ jobs:
           username: ${{ secrets.HOST_FTP_USERNAME }}
           password: ${{ secrets.HOST_FTP_PASSWORD }}
           local-dir: ./ftp/
+          dangerous-clean-slate: true
 
   deploy:
     name: Deploy the final application in the host server
