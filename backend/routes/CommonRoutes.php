@@ -25,55 +25,55 @@ class CommonRoutes
                 if ($from === 'web') {
                     Route::get('/dashboard/account', function () {
                         return view('app');
-                    })->name('account.page');
+                    })->name($from . '.account.page');
                 }
 
-                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name('accounts.index');
+                Route::get('/accounts/{roleName?}/{count?}/{lastAccountId?}', 'index')->name($from . '.accounts.index');
 
-                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name('accounts.accountsCount');
+                Route::get('/accountsCount/{roleName?}', 'accountsCount')->name($from . '.accounts.accountsCount');
 
-                Route::post('/account/admin/{roleName}', 'storeAdmin')->name('account.storeAdmin');
-                Route::post('/account/doctor/{roleName}', 'storeDoctor')->name('account.storeDoctor');
-                Route::post('/account/secretary/{roleName}', 'storeSecretary')->name('account.storeSecretary');
-                Route::post('/account/operator/{roleName}', 'storeOperator')->name('account.storeOperator');
-                Route::post('/account/patient/{roleName}', 'storePatient')->name('account.storePatient');
+                Route::post('/account/admin/{roleName}', 'storeAdmin')->name($from . '.account.storeAdmin');
+                Route::post('/account/doctor/{roleName}', 'storeDoctor')->name($from . '.account.storeDoctor');
+                Route::post('/account/secretary/{roleName}', 'storeSecretary')->name($from . '.account.storeSecretary');
+                Route::post('/account/operator/{roleName}', 'storeOperator')->name($from . '.account.storeOperator');
+                Route::post('/account/patient/{roleName}', 'storePatient')->name($from . '.account.storePatient');
 
-                Route::get('/account/{placeholder}', 'show')->name('account.show');
-                Route::get('/account', 'showSelf')->name('account.showSelf');
+                Route::get('/account/{placeholder}', 'show')->name($from . '.account.show');
+                Route::get('/account', 'showSelf')->name($from . '.account.showSelf');
 
-                Route::post('/account/{accountId}', 'update')->name('account.update');
+                Route::post('/account/{accountId}', 'update')->name($from . '.account.update');
 
-                Route::delete('/account/{accountId}', 'destroy')->name('account.destroy');
+                Route::delete('/account/{accountId}', 'destroy')->name($from . '.account.destroy');
             });
 
         Route::controller(RolesController::class)
-            ->group(function () {
-                Route::get('/dataType/{roleName?}', 'dataType')->name('roles.dataType');
+            ->group(function () use ($from) {
+                Route::get('/dataType/{roleName?}', 'dataType')->name($from . '.roles.dataType');
 
-                Route::get('/roles', 'index')->name('roles.index');
+                Route::get('/roles', 'index')->name($from . '.roles.index');
 
-                Route::post('/role', 'store')->name('role.store');
+                Route::post('/role', 'store')->name($from . '.role.store');
 
-                Route::get('/role-name/{accountId?}', 'showRoleName')->name('role.showRoleName');
-                Route::get('/role', 'show')->name('role.show');
+                Route::get('/role-name/{accountId?}', 'showRoleName')->name($from . '.role.showRoleName');
+                Route::get('/role', 'show')->name($from . '.role.show');
 
-                Route::put('/role', 'update')->name('roles.update');
+                Route::put('/role', 'update')->name($from . '.roles.update');
 
-                Route::delete('/role/{roleName?}', 'destroy')->name('roles.destroy');
+                Route::delete('/role/{roleName?}', 'destroy')->name($from . '.roles.destroy');
             });
 
         Route::controller(AccountDocumentsController::class)
-            ->group(function () {
-                Route::post('/avatar/{accountId?}', 'setAvatar')->name('document.setAvatar');
+            ->group(function () use ($from) {
+                Route::post('/avatar/{accountId?}', 'setAvatar')->name($from . '.document.setAvatar');
 
-                Route::get('/avatar/{accountId?}', 'getAvatar')->name('document.getAvatar');
+                Route::get('/avatar/{accountId?}', 'getAvatar')->name($from . '.document.getAvatar');
             });
 
         Route::controller(BusinessDefault::class)
-            ->group(function () {
-                Route::get('/settings', 'index')->name('document.index');
+            ->group(function () use ($from) {
+                Route::get('/settings', 'index')->name($from . '.document.index');
 
-                Route::put('/setting', 'update')->name('document.update');
+                Route::put('/setting', 'update')->name($from . '.document.update');
             });
 
         Route::controller(OrdersController::class)
@@ -81,17 +81,17 @@ class CommonRoutes
                 if ($from === 'web') {
                     Route::get('/dashboard/order', function () {
                         return view('app');
-                    })->name('order.page');
+                    })->name($from . '.order.page');
                 }
 
-                Route::get('/orders/laser/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name('orders.laserIndex');
-                Route::get('/orders/regular/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name('orders.regularIndex');
+                Route::get('/orders/laser/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'laserIndex')->name($from . '.orders.laserIndex');
+                Route::get('/orders/regular/{roleName?}/{priceOtherwiseTime?}/{username?}/{lastOrderId?}/{count?}/{operator?}/{price?}/{timeConsumption?}', 'regularIndex')->name($from . '.orders.regularIndex');
 
-                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name('orders.ordersCount');
+                Route::get('/ordersCount/{businessName?}/{roleName?}', 'ordersCount')->name($from . '.orders.ordersCount');
 
-                Route::post('/order', 'store')->name('orders.store');
+                Route::post('/order', 'store')->name($from . '.orders.store');
 
-                Route::delete('/order/{businessName}/{childOrderId}', 'destroy')->name('orders.destroy');
+                Route::delete('/order/{businessName}/{childOrderId}', 'destroy')->name($from . '.orders.destroy');
 
                 Route::get('/laser/parts/{gender?}', function (Request $request) {
                     $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
@@ -106,7 +106,7 @@ class CommonRoutes
                     }
 
                     return $dsParts->toArray();
-                })->name('orders.laser.parts');
+                })->name($from . '.orders.laser.parts');
 
                 Route::get('/laser/packages/{gender?}', function (Request $request) {
                     $validator = Validator::make($request->all(), ['gender' => (include(base_path() . '/app/Rules/BuiltInRules/Models/User/gender.php'))['gender']]);
@@ -121,10 +121,10 @@ class CommonRoutes
                     }
 
                     return response()->json($dsPackages->toArray());
-                })->name('orders.laser.packages');
+                })->name($from . '.orders.laser.packages');
 
-                Route::post('/laser/time-calculation', 'calculateTime')->name('timeCalculation');
-                Route::post('/laser/price-calculation', 'calculatePrice')->name('priceCalculation');
+                Route::post('/laser/time-calculation', 'calculateTime')->name($from . '.timeCalculation');
+                Route::post('/laser/price-calculation', 'calculatePrice')->name($from . '.priceCalculation');
             });
 
         Route::controller(VisitsController::class)
@@ -132,20 +132,20 @@ class CommonRoutes
                 if ($from === 'web') {
                     Route::get('/dashboard/visit', function () {
                         return view('app');
-                    })->name('visit.page');
+                    })->name($from . '.visit.page');
                 }
 
-                Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name('visits.index');
-                Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name('visits.visitsCount');
+                Route::get('/visits/{businessName?}/{roleName?}/{accountId?}/{sortByTimestamp?}/{laserOrderId?}/{timestamp?}/{operator?}/{count?}/{lastVisitTimestamp?}', 'index')->name($from . '.visits.index');
+                Route::get('/visitsCount/{businessName?}/{roleName?}', 'visitsCount')->name($from . '.visits.visitsCount');
 
-                Route::post('/visit/laser', 'laserStore')->name('visits.laserStore');
-                Route::post('/visit/regular', 'regularStore')->name('visits.regularStore');
+                Route::post('/visit/laser', 'laserStore')->name($from . '.visits.laserStore');
+                Route::post('/visit/regular', 'regularStore')->name($from . '.visits.regularStore');
 
-                Route::post('/visit/laser/check', 'laserShowAvailable')->name('visits.laserShowAvailable');
-                Route::post('/visit/regular/check', 'regularShowAvailable')->name('visits.regularShowAvailable');
+                Route::post('/visit/laser/check', 'laserShowAvailable')->name($from . '.visits.laserShowAvailable');
+                Route::post('/visit/regular/check', 'regularShowAvailable')->name($from . '.visits.regularShowAvailable');
 
-                Route::delete('/visit/laser/{visitId}', 'laserDestroy')->name('visits.laserDestroy');
-                Route::delete('/visit/regular/{visitId}', 'regularDestroy')->name('visits.regularDestroy');
+                Route::delete('/visit/laser/{visitId}', 'laserDestroy')->name($from . '.visits.laserDestroy');
+                Route::delete('/visit/regular/{visitId}', 'regularDestroy')->name($from . '.visits.regularDestroy');
             });
     }
 }
