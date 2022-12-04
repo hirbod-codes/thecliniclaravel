@@ -44,9 +44,9 @@ jobs:
 
       - run: |
           echo "${{ secrets.ENV_FILE }}" >  ./backend/.env
-          echo MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }} >>  ./backend/.env
-          echo MYSQL_USER=${{ secrets.MYSQL_USER }} >>  ./backend/.env
-          echo MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }} >>  ./backend/.env
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >>  ./backend/.env
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >>  ./backend/.env
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >>  ./backend/.env
 
       - name: Build and Push the laravel image to GHCR
         uses: docker/build-push-action@v2
