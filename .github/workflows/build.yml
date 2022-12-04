@@ -117,4 +117,4 @@ jobs:
             /home/admin/deploy.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
 
             echo ${{ secrets.MY_GITHUB_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin 
-            docker stack deploy -c /home/admin/docker-compose.stack.yml theclinic
+            docker stack deploy -c /home/admin/docker-compose.stack.yml theclinic --with-registry-auth
