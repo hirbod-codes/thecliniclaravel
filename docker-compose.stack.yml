@@ -4,7 +4,7 @@ services:
   nginx:
     image: ghcr.io/hirbod-codes/nginx:1.23.1
     volumes:
-      - theclinicapp:/var/www/html/laravel
+      - theclinicapp:/var/www/html
     ports:
       - "80:80"
       - "443:443"
@@ -15,7 +15,7 @@ services:
   laravel:
     image: ghcr.io/hirbod-codes/laravel:latest
     volumes:
-      - theclinicapp:/var/www/html/laravel
+      - theclinicapp:/var/www/html
     networks:
       - frontend
       - backend
