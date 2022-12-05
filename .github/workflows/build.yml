@@ -16,7 +16,7 @@ jobs:
   build:
     name: Deploy the final application in the host server
     runs-on: ubuntu-latest
-    # needs: [on-failure]
+    needs: [on-failure]
 
     steps:
       - name: checkout the git repo
