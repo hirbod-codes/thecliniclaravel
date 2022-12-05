@@ -7,16 +7,16 @@ on:
   workflow_dispatch:
 
 jobs:
-  on-failure:
+  on-success:
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - run: exit 1
+      - run: exit 0
 
   build:
     name: Deploy the final application in the host server
     runs-on: ubuntu-latest
-    needs: [on-failure]
+    needs: [on-success]
 
     steps:
       - name: checkout the git repo
