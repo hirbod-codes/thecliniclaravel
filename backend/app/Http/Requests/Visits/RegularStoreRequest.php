@@ -69,8 +69,8 @@ class RegularStoreRequest extends BaseFormRequest
             $array = array_merge($array, [
                 'weeklyTimePatterns.' . $weekDay . '' => ['array', 'min:1'],
                 'weeklyTimePatterns.' . $weekDay . '.*' => ['required_array_keys:start,end', 'array', 'size:2'],
-                'weeklyTimePatterns.' . $weekDay . '.*.start' => ['string', 'date_format:Y-m-d H:i:s'],
-                'weeklyTimePatterns.' . $weekDay . '.*.end' => ['string', 'date_format:Y-m-d H:i:s'],
+                'weeklyTimePatterns.' . $weekDay . '.*.start' => ['string', 'date_format:H:i:s'],
+                'weeklyTimePatterns.' . $weekDay . '.*.end' => ['string', 'date_format:H:i:s'],
             ]);
         }
 
@@ -124,28 +124,5 @@ class RegularStoreRequest extends BaseFormRequest
             'weeklyTimePatterns.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
             'weeklyTimePatterns.*.*.*' => trans_choice('validation.attributes.weeklyTimePatterns', 0),
         ];
-    }
-
-    protected function passedValidation()
-    {
-        $weeklyTimePatterns = $this->only('weeklyTimePatterns');
-        if (!empty($weeklyTimePatterns)) {
-            $weeklyTimePatterns = $weeklyTimePatterns['weeklyTimePatterns'];
-        } else {
-            return;
-        }
-
-        $locale = session()->get('locale', App::getLocale());
-
-        if ($locale === 'en') {
-            return;
-        }
-
-        if ($locale === 'fa') {
-            $weeklyTimePatterns = $this->convertToUTC($weeklyTimePatterns);
-            $tmp = $this->all();
-            $tmp['weeklyTimePatterns'] = $weeklyTimePatterns;
-            $this->replace($tmp);
-        }
     }
 }

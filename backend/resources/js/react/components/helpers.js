@@ -273,11 +273,11 @@ function convertWeekDays(weekDaysPeriods, fromTimezone, toTimezone) {
                     weekDays.forEach((v, j) => {
                         if (v.weekDay === startDate.weekdayLong) {
                             found = true;
-                            weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                            weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('HH:mm:ss'), end: endDateConverted.toFormat('HH:mm:ss') });
                         }
                     });
                     if (!found) {
-                        timePeriods.push({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                        timePeriods.push({ start: startDateConverted.toFormat('HH:mm:ss'), end: endDateConverted.toFormat('HH:mm:ss') });
                     }
                 } else {
                     if ((startDateConverted.day < startDate.day && endDateConverted.day < startDate.day) || (startDateConverted.day > startDate.day && endDateConverted.day > startDate.day)) {
@@ -286,22 +286,22 @@ function convertWeekDays(weekDaysPeriods, fromTimezone, toTimezone) {
                             if (v.weekDay === startDateConverted.weekdayLong) {
                                 found = true;
                                 if (startDateConverted.day < startDate.day && endDateConverted.day < startDate.day) {
-                                    if (weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end === (startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'))) {
-                                        weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end = endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss');
+                                    if (weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end === (startDateConverted.toFormat('HH:mm:ss'))) {
+                                        weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end = endDateConverted.toFormat('HH:mm:ss');
                                     } else {
-                                        weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                                        weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('HH:mm:ss'), end: endDateConverted.toFormat('HH:mm:ss') });
                                     }
                                 } else {
-                                    if (weekDays[j].timePeriods[0].start === (endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'))) {
-                                        weekDays[j].timePeriods[0].start = startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss');
+                                    if (weekDays[j].timePeriods[0].start === (endDateConverted.toFormat('HH:mm:ss'))) {
+                                        weekDays[j].timePeriods[0].start = startDateConverted.toFormat('HH:mm:ss');
                                     } else {
-                                        weekDays[j].timePeriods.unshift({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                                        weekDays[j].timePeriods.unshift({ start: startDateConverted.toFormat('HH:mm:ss'), end: endDateConverted.toFormat('HH:mm:ss') });
                                     }
                                 }
                             }
                         });
                         if (!found) {
-                            weekDays.push({ weekDay: startDateConverted.weekdayLong, timePeriods: [{ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') }] });
+                            weekDays.push({ weekDay: startDateConverted.weekdayLong, timePeriods: [{ start: startDateConverted.toFormat('HH:mm:ss'), end: endDateConverted.toFormat('HH:mm:ss') }] });
                         }
                     } else {
                         if (startDateConverted.day < startDate.day) {
@@ -309,37 +309,37 @@ function convertWeekDays(weekDaysPeriods, fromTimezone, toTimezone) {
                             weekDays.forEach((v, j) => {
                                 if (v.weekDay === startDate.weekdayLong) {
                                     found = true;
-                                    weekDays[j].timePeriods.unshift({ start: endDateConverted.toFormat('yyyy-MM-dd') + ' 00:00:00', end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                                    weekDays[j].timePeriods.unshift({ start: '00:00:00', end: endDateConverted.toFormat('HH:mm:ss') });
                                 }
                             });
                             if (!found) {
-                                timePeriods.unshift({ start: endDateConverted.toFormat('yyyy-MM-dd') + ' 00:00:00', end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                                timePeriods.unshift({ start: '00:00:00', end: endDateConverted.toFormat('HH:mm:ss') });
                             }
 
                             found = false;
                             weekDays.forEach((v, j) => {
                                 if (v.weekDay === startDateConverted.weekdayLong) {
                                     found = true;
-                                    if (weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end === (startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'))) {
-                                        weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end = startDateConverted.toFormat('yyyy-MM-dd') + ' 23:59:59';
+                                    if (weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end === (startDateConverted.toFormat('HH:mm:ss'))) {
+                                        weekDays[j].timePeriods[weekDays[j].timePeriods.length - 1].end = '23:59:59';
                                     } else {
-                                        weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: startDateConverted.toFormat('yyyy-MM-dd') + ' 23:59:59' });
+                                        weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('HH:mm:ss'), end: '23:59:59' });
                                     }
                                 }
                             });
                             if (!found) {
-                                weekDays.push({ weekDay: startDateConverted.weekdayLong, timePeriods: [{ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: startDateConverted.toFormat('yyyy-MM-dd') + ' 23:59:59' }] });
+                                weekDays.push({ weekDay: startDateConverted.weekdayLong, timePeriods: [{ start: startDateConverted.toFormat('HH:mm:ss'), end: '23:59:59' }] });
                             }
                         } else {
                             let found = false;
                             weekDays.forEach((v, j) => {
                                 if (v.weekDay === startDate.weekdayLong) {
                                     found = true;
-                                    weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: startDateConverted.toFormat('yyyy-MM-dd') + ' 23:59:59' });
+                                    weekDays[j].timePeriods.push({ start: startDateConverted.toFormat('HH:mm:ss'), end: '23:59:59' });
                                 }
                             });
                             if (!found) {
-                                timePeriods.push({ start: startDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'), end: startDateConverted.toFormat('yyyy-MM-dd') + ' 23:59:59' });
+                                timePeriods.push({ start: startDateConverted.toFormat('HH:mm:ss'), end: '23:59:59' });
                             }
 
 
@@ -347,15 +347,15 @@ function convertWeekDays(weekDaysPeriods, fromTimezone, toTimezone) {
                             weekDays.forEach((v, j) => {
                                 if (v.weekDay === endDateConverted.weekdayLong) {
                                     found = true;
-                                    if (weekDays[j].timePeriods[0].start === (endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss'))) {
-                                        weekDays[j].timePeriods[0].start = endDateConverted.toFormat('yyyy-MM-dd') + ' 00:00:00';
+                                    if (weekDays[j].timePeriods[0].start === (endDateConverted.toFormat('HH:mm:ss'))) {
+                                        weekDays[j].timePeriods[0].start = '00:00:00';
                                     } else {
-                                        weekDays[j].timePeriods.unshift({ start: endDateConverted.toFormat('yyyy-MM-dd') + ' 00:00:00', end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') });
+                                        weekDays[j].timePeriods.unshift({ start: '00:00:00', end: endDateConverted.toFormat('HH:mm:ss') });
                                     }
                                 }
                             });
                             if (!found) {
-                                weekDays.unshift({ weekDay: endDateConverted.weekdayLong, timePeriods: [{ start: endDateConverted.toFormat('yyyy-MM-dd') + ' 00:00:00', end: endDateConverted.toFormat('yyyy-MM-dd HH:mm:ss') }] });
+                                weekDays.unshift({ weekDay: endDateConverted.weekdayLong, timePeriods: [{ start: '00:00:00', end: endDateConverted.toFormat('HH:mm:ss') }] });
                             }
                         }
                     }

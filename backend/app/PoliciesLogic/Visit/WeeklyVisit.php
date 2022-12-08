@@ -190,7 +190,7 @@ class WeeklyVisit implements IFindVisit
                 return $smallestTimestamp;
             }
 
-            throw new VisitTimeSearchFailure('', 404);
+            throw new VisitTimeSearchFailure(trans_choice('Visits/visits.visit-not-found', 0), 404);
         } finally {
             $this->futureVisits->setSort($this->oldSort);
         }

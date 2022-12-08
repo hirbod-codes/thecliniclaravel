@@ -11,13 +11,13 @@ import FindOrder from '../Orders/FindOrder';
 import TabPanel from '../TabPanel';
 import { translate } from '../../../traslation/translate';
 import WeekDayInputComponents from './WeekDayInputComponents';
-import { localizeDate, updateState } from '../../helpers';
+import { convertWeeklyTimePatterns, localizeDate, resolveTimeZone, updateState } from '../../helpers';
 import { DateTime } from 'luxon';
 import { post_visit_laser, post_visit_laser_check, post_visit_regular, post_visit_regular_check } from '../../Http/Api/visits';
 import { get_work_schedule } from '../../Http/Api/general';
 import store from '../../../../redux/store';
-import { canCreateOrder, canReadOrder } from '../../roles/order';
-import { canReadUser } from '../../roles/account';
+import { canCreateOrder, canCreateSelfOrder, canReadOrder, canReadSelfOrder } from '../../roles/order';
+import { canReadSelfUser, canReadUser } from '../../roles/account';
 import { connect } from 'react-redux';
 
 /**
@@ -62,7 +62,7 @@ export class VisitCreator extends Component {
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
-            feedbackMessages: [{ open: true, message: 'hiii', color: 'success' }],
+            feedbackMessages: [],
 
             workSchdule: {},
 
@@ -105,7 +105,9 @@ export class VisitCreator extends Component {
     async getWorkSchdule() {
         let r = await get_work_schedule(this.state.token);
         if (r.response.status === 200) {
-            this.setState({ workSchdule: r.value });
+            let convertedWeeklyTimePatterns = convertWeeklyTimePatterns(r.value, 'UTC', resolveTimeZone(this.props.redux.local.local.shortName), "HH:mm:ss");
+
+            this.setState({ workSchdule: convertedWeeklyTimePatterns });
         }
     }
 
@@ -197,7 +199,7 @@ export class VisitCreator extends Component {
             <>
                 {this.state.feedbackMessages.map((m, i) => this.buildFeedbacks(m, i))}
 
-                {(canReadUser(this.props.targetRoleName, store)) &&
+                {((this.props.targetRoleName !== 'self' && canReadUser(this.props.targetRoleName, store)) || (this.props.targetRoleName === 'self' && canReadSelfUser(store))) &&
                     <Modal
                         open={this.state.openAccountSearchModal}
                         onClose={this.closeAccountSearchModal}
@@ -209,7 +211,7 @@ export class VisitCreator extends Component {
                     </Modal>
                 }
 
-                {(canReadOrder(this.props.targetRoleName, this.props.businessName, store)) &&
+                {((this.props.targetRoleName !== 'self' && canReadOrder(this.props.targetRoleName, this.props.businessName, store)) || (this.props.targetRoleName === 'self' && canReadSelfOrder(this.props.businessName, store))) &&
                     <Modal
                         open={this.state.openOrderSearchModal}
                         onClose={this.closeOrderSearchModal}
@@ -221,7 +223,7 @@ export class VisitCreator extends Component {
                     </Modal>
                 }
 
-                {(canCreateOrder(this.props.targetRoleName, this.props.businessName, store)) &&
+                {((this.props.targetRoleName === 'self' && canCreateSelfOrder(this.props.businessName, store)) || (this.props.targetRoleName !== 'self' && canCreateOrder(this.props.targetRoleName, this.props.businessName, store))) &&
                     <Modal
                         open={this.state.openVisitInfoModal}
                         onClose={this.closeVisitInfoModal}
@@ -307,7 +309,7 @@ export class VisitCreator extends Component {
         }
 
         if (closestVisitRefresh.response.status === 200) {
-            this.setState({ closestVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(closestVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.state.locale, true) });
+            this.setState({ closestVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(closestVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.props.redux.local.local.shortName, true) });
         } else {
             let value = null;
             if (Array.isArray(closestVisitRefresh.value)) { value = closestVisitRefresh.value; } else { value = [closestVisitRefresh.value]; }
@@ -347,7 +349,7 @@ export class VisitCreator extends Component {
         }
 
         if (weeklyVisitRefresh.response.status === 200) {
-            this.setState({ weeklyVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(weeklyVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.state.locale, true) });
+            this.setState({ weeklyVisitRefresh: localizeDate('utc', DateTime.fromSeconds(Number(weeklyVisitRefresh.value.availableVisitTimestamp), { zone: 'utc' }).toISO(), this.props.redux.local.local.shortName, true) });
         } else {
             let value = null;
             if (Array.isArray(weeklyVisitRefresh.value)) { value = weeklyVisitRefresh.value; } else { value = [weeklyVisitRefresh.value]; }

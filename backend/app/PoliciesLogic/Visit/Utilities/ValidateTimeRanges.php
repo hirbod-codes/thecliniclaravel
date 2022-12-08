@@ -37,7 +37,7 @@ class ValidateTimeRanges
         }
 
         if (!$found) {
-            throw new NeededTimeOutOfRange('There is not enough time for this order in the given work schedule.', 500);
+            throw new NeededTimeOutOfRange(trans_choice('Visits/visits.no_time_in_work_schedule', 0), 500);
         }
     }
 
@@ -55,7 +55,7 @@ class ValidateTimeRanges
             $lastTS <= $firstTS ||
             ($lastTS - $firstTS) < $consumingTime
         ) {
-            throw new InvalidConsumingTime($firstTS . ', '. $lastTS . ', ' . $consumingTime);
+            throw new InvalidConsumingTime($firstTS . ', ' . $lastTS . ', ' . $consumingTime);
         }
     }
 }
