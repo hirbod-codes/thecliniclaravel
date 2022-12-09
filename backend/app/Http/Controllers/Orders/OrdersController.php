@@ -259,10 +259,8 @@ class OrdersController extends Controller
                     }
                 }
 
-                if ($editRegularOrderPrice && $editRegularOrderNeededTime && isset($validatedInput['price'])  && isset($validatedInput['timeConsumption'])) {
-                    $order = $this->iDataBaseCreateRegularOrder->createRegularOrder($user, $validatedInput['price'], $validatedInput['timeConsumption']);
-                } elseif (isset($validatedInput['price'])  || isset($validatedInput['timeConsumption'])) {
-                    return response(trans_choice('auth.User-Not-Authorized', 0), 403);
+                if (isset($validatedInput['price'])  || isset($validatedInput['timeConsumption'])) {
+                    $order = $this->iDataBaseCreateRegularOrder->createRegularOrder($user, isset($validatedInput['price']) ? $validatedInput['price'] : null, isset($validatedInput['timeConsumption']) ? $validatedInput['timeConsumption'] : null);
                 } else {
                     $order = $this->iDataBaseCreateDefaultRegularOrder->createDefaultRegularOrder($user);
                 }

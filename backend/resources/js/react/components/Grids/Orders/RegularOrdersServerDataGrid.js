@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, GridToolbarDensitySelector, GridToolbarExport, GridToolbarFilterButton } from '@mui/x-data-grid';
-import { Alert, Autocomplete, Button, CircularProgress, IconButton, Modal, Paper, Snackbar, Stack, TextField } from '@mui/material';
+import { Alert, Autocomplete, Button, CircularProgress, Divider, IconButton, Modal, Paper, Snackbar, Stack, TextField } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import OrdersDataGrid from './OrdersDataGrid';
@@ -25,8 +25,8 @@ export class RegularOrdersServerDataGrid extends Component {
         super(props);
 
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
-        this.closeCreationModal = this.closeCreationModal.bind(this);
-        this.openCreationModal = this.openCreationModal.bind(this);
+        this.closeFindAccountModal = this.closeFindAccountModal.bind(this);
+        this.openFindAccountModal = this.openFindAccountModal.bind(this);
 
         this.onPageChange = this.onPageChange.bind(this);
         this.onPageSizeChange = this.onPageSizeChange.bind(this);
@@ -37,8 +37,8 @@ export class RegularOrdersServerDataGrid extends Component {
         this.handleOnCreate = this.handleOnCreate.bind(this);
         this.handleDeletedRow = this.handleDeletedRow.bind(this);
 
-        this.handlePrice = this.handlePrice.bind(this);
-        this.handleTimeConsumption = this.handleTimeConsumption.bind(this);
+        // this.handlePrice = this.handlePrice.bind(this);
+        // this.handleTimeConsumption = this.handleTimeConsumption.bind(this);
 
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -57,6 +57,7 @@ export class RegularOrdersServerDataGrid extends Component {
             deletingRowIds: [],
 
             openCreationModal: false,
+            openFindAccountModal: false,
             isCreating: false,
             price: '',
             timeConsumption: '',
@@ -120,25 +121,18 @@ export class RegularOrdersServerDataGrid extends Component {
         this.setState({ feedbackMessages: feedbackMessages });
     }
 
-    closeCreationModal(e) {
-        this.setState({ isCreating: false, openCreationModal: false });
+    closeFindAccountModal(e) {
+        this.setState({ isCreating: false, openFindAccountModal: false });
     }
 
-    openCreationModal(e) {
-        this.setState({ isCreating: true, openCreationModal: true });
-    }
-
-    handlePrice(e) {
-        this.setState({ price: e.target.value });
-    }
-
-    handleTimeConsumption(e) {
-        this.setState({ timeConsumption: e.target.value });
+    openFindAccountModal(e) {
+        this.setState({ isCreating: true, openFindAccountModal: true });
     }
 
     render() {
         return (
             <>
+                <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
                 <OrdersDataGrid
                     roleName={this.state.role}
                     businessName='regular'
@@ -164,23 +158,21 @@ export class RegularOrdersServerDataGrid extends Component {
                                         <GridToolbarFilterButton />
                                         <GridToolbarDensitySelector />
                                         <GridToolbarExport />
-                                        {(canCreateOrder(this.state.role, 'regular', store)) ?
+                                        {canCreateOrder(this.state.role, 'regular', store) &&
                                             (this.state.isCreating ?
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
-                                                <>
-                                                    {canEditRegularOrderPrice(this.state.role, store) && canEditRegularOrderNeededTime(this.state.role, store) &&
-                                                        <>
-                                                            <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
-                                                            <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/needed_time')} value={this.state.timeConsumption} />
-                                                            <Button variant='text' onClick={this.openCreationModal} size='small' startIcon={<AddIcon />}>
-                                                                {translate('general/create/single/ucFirstLetterFirstWord')}
-                                                            </Button>
-                                                        </>
+                                                <Button onClick={(e) => {
+                                                    if (!canEditRegularOrderPrice(this.state.role, store) && !canEditRegularOrderNeededTime(this.state.role, store)) {
+                                                        this.setState({ openFindAccountModal: true });
+                                                    } else {
+                                                        this.setState({ openCreationModal: true });
                                                     }
-                                                </>
-                                            ) : null
+                                                }} startIcon={<AddIcon />}>
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
+                                                </Button>
+                                            )
                                         }
                                         <Autocomplete
                                             sx={{ minWidth: '130px' }}
@@ -231,9 +223,32 @@ export class RegularOrdersServerDataGrid extends Component {
                     </Snackbar>
                 )}
 
+                <Modal open={this.state.openCreationModal} onClose={() => this.setState({ openCreationModal: false })}>
+                    <Paper sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        minWidth: '50vw'
+                    }}>
+                        <Stack>
+                            {canEditRegularOrderPrice(this.state.role, store) &&
+                                <TextField onInput={(e) => { this.setState({ price: e.target.value }, () => console.log('this.price', this.state.price)) }} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
+                            }
+                            {canEditRegularOrderNeededTime(this.state.role, store) &&
+                                <TextField onInput={(e) => this.setState({ timeConsumption: e.target.value })} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/needed_time')} value={this.state.timeConsumption} />
+                            }
+                            <Divider />
+                            <Button variant='text' onClick={(e) => this.setState({ openCreationModal: false, openFindAccountModal: true })} size='small' >
+                                {translate('general/create/single/ucFirstLetterFirstWord')}
+                            </Button>
+                        </Stack>
+                    </Paper>
+                </Modal>
+
                 <Modal
-                    open={this.state.openCreationModal}
-                    onClose={this.closeCreationModal}
+                    open={this.state.openFindAccountModal}
+                    onClose={this.closeFindAccountModal}
                 >
                     <Paper sx={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', position: 'absolute', height: '70%', width: '70%', p: 1 }}>
                         <FindAccount handleAccount={this.handleOnCreate} />
@@ -244,7 +259,7 @@ export class RegularOrdersServerDataGrid extends Component {
     }
 
     async handleOnCreate(account) {
-        this.closeCreationModal();
+        this.closeFindAccountModal();
 
         this.setState({ isCreating: true });
 

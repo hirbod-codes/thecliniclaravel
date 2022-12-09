@@ -14,6 +14,7 @@ import FindAccount from '../Account/FindAccount';
 import { get_laser_price_calculation, get_laser_time_calculation, post_order } from '../../Http/Api/order';
 import store from '../../../../redux/store';
 import { connect } from 'react-redux';
+import { canCreateOrder, canCreateSelfOrder } from '../../roles/order';
 
 /**
  * LaserOrderCreation
@@ -94,9 +95,11 @@ export class LaserOrderCreation extends Component {
         if (this.props.account !== undefined && this.props.accountRole !== undefined) {
             this.setState({ account: this.props.account, accountRole: this.props.accountRole });
         } else {
-            if (this.props.isSelf === true) { throw new Error('account information is not provided for order self creation!'); }
-
-            this.setState({ accountModalOpen: true });
+            if (this.props.isSelf === true) {
+                this.setState({ account: this.props.redux.auth.account, accountRole: this.props.redux.role.roles.role });
+            } else {
+                this.setState({ accountModalOpen: true });
+            }
         }
     }
 
@@ -201,7 +204,7 @@ export class LaserOrderCreation extends Component {
     render() {
         return (
             <>
-                {(this.props.isSelf === true) &&
+                {((this.props.isSelf === true && canCreateSelfOrder('laser', store)) || (this.props.isSelf !== true && canCreateOrder(this.state.accountRole, 'laser', store))) &&
                     <Stack sx={{ height: '100%' }} >
                         <Stepper >
                             <Step key={0} completed={this.state.steps[0].completed} active={true}>

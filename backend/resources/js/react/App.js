@@ -269,7 +269,6 @@ class App extends Component {
     }
 
     render() {
-        console.warn('this.props :>> ', this.props);
         if (this.state.isResolved === false) {
             return (
                 <Backdrop

@@ -56,12 +56,12 @@ function canDeleteOrder(role, business, store) {
 
 function canEditRegularOrderPrice(role, store) {
     let roles = store.getState().role.roles.privileges.editRegularOrderPrice;
-    return roles[role] !== undefined && Array.isArray(roles[role]) === true && Boolean(roles[role].boolean_value) === true;
+    return roles[role] !== undefined && Boolean(roles[role].boolean_value) === true;
 }
 
 function canEditRegularOrderNeededTime(role, store) {
     let roles = store.getState().role.roles.privileges.editRegularOrderNeededTime;
-    return roles[role] !== undefined && Array.isArray(roles[role]) === true && Boolean(roles[role].boolean_value) === true;
+    return roles[role] !== undefined && Boolean(roles[role].boolean_value) === true;
 }
 
 export {

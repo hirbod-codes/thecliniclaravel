@@ -35,10 +35,37 @@ class StoreRequest extends BaseFormRequest
                 continue;
             }
 
+            break;
+        }
+
+        if (!isset($validatedInput['price']) && !isset($validatedInput['timeConsumption'])) {
             return true;
         }
 
-        return false;
+        $editRegularOrderPrice = $editRegularOrderNeededTime = false;
+        foreach ($user->authenticatableRole->role->role->privilegesSubjects as $privilege) {
+            $privilegeName = $privilege->privilegeName->name;
+
+            if (!in_array($privilegeName, ['editRegularOrderPrice', 'editRegularOrderNeededTime'])) {
+                continue;
+            }
+
+            if (($isSelf && $privilege->object !== null) || (!$isSelf && ($privilege->object === null || ($privilege->object !== null && $privilege->relatedObject->childRoleModel->role->getKey() !== $targetUser->authenticatableRole->role->role->getKey())))) {
+                continue;
+            }
+
+            if ($privilegeName === 'editRegularOrderPrice') {
+                $editRegularOrderPrice = true;
+            } elseif ($privilegeName === 'editRegularOrderNeededTime') {
+                $editRegularOrderNeededTime = true;
+            }
+
+            if ($editRegularOrderPrice && $editRegularOrderNeededTime) {
+                break;
+            }
+        }
+
+        return !((!$editRegularOrderPrice && isset($input['price'])) || (!$editRegularOrderNeededTime && isset($input['timeConsumption'])));
     }
 
     /**

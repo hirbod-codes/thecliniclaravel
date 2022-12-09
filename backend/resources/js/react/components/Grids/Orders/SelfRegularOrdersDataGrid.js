@@ -4,7 +4,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { GridActionsCellItem, GridToolbarColumnsButton, GridToolbarContainer, GridToolbarDensitySelector, GridToolbarExport, GridToolbarFilterButton } from '@mui/x-data-grid';
-import { Alert, Button, CircularProgress, IconButton, Snackbar, Stack, TextField } from '@mui/material';
+import { Alert, Button, CircularProgress, Divider, IconButton, Modal, Paper, Snackbar, Stack, TextField } from '@mui/material';
 import LoadingButton from '@mui/lab/LoadingButton';
 
 import OrdersDataGrid from './OrdersDataGrid';
@@ -30,9 +30,6 @@ export class SelfRegularOrdersDataGrid extends Component {
         this.handleOnCreate = this.handleOnCreate.bind(this);
         this.handleDeletedRow = this.handleDeletedRow.bind(this);
 
-        this.handlePrice = this.handlePrice.bind(this);
-        this.handleTimeConsumption = this.handleTimeConsumption.bind(this);
-
         this.state = {
             token: document.head.querySelector('meta[name="csrf-token"]').getAttribute('content'),
 
@@ -43,9 +40,13 @@ export class SelfRegularOrdersDataGrid extends Component {
             deletingRowIds: [],
 
             isCreating: false,
+            openCreationMenu: false,
             price: '',
             timeConsumption: '',
         };
+
+        this.price = '';
+        this.timeConsumption = '';
     }
 
     addColumns(columns) {
@@ -74,22 +75,13 @@ export class SelfRegularOrdersDataGrid extends Component {
         this.setState({ feedbackMessages: feedbackMessages });
     }
 
-    handlePrice(e) {
-        this.setState({ price: e.target.value });
-    }
-
-    handleTimeConsumption(e) {
-        this.setState({ timeConsumption: e.target.value });
-    }
-
     render() {
-        const reduxState = store.getState();
         return (
             <>
                 <OrdersDataGrid
                     businessName='regular'
 
-                    username={reduxState.auth.account.username}
+                    username={this.props.redux.auth.account.username}
 
                     addColumns={this.addColumns}
 
@@ -110,18 +102,15 @@ export class SelfRegularOrdersDataGrid extends Component {
                                                 <LoadingButton loading variant='text' size='small' >
                                                     {translate('general/create/single/ucFirstLetterFirstWord')}
                                                 </LoadingButton> :
-                                                <>
-                                                    {canEditRegularOrderPrice('self', store) &&
-                                                        <TextField onInput={this.handlePrice} sx={{ m: 1 }} size='small' type='text' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
+                                                <Button onClick={(e) => {
+                                                    if (!canEditRegularOrderPrice('self', store) && !canEditRegularOrderNeededTime('self', store)) {
+                                                        this.handleOnCreate(this.props.redux.auth.account);
+                                                    } else {
+                                                        this.setState({ openCreationModal: true });
                                                     }
-                                                    {canEditRegularOrderNeededTime('self', store) &&
-                                                        <TextField onInput={this.handleTimeConsumption} sx={{ m: 1 }} size='small' type='text' variant='standard' label={translate('pages/orders/order/columns/needed_time')} value={this.state.timeConsumption} />
-                                                    }
-
-                                                    <Button variant='text' onClick={(e) => this.handleOnCreate(reduxState.auth.account)} size='small' startIcon={<AddIcon />}>
-                                                        {translate('general/create/single/ucFirstLetterFirstWord')}
-                                                    </Button>
-                                                </>
+                                                }} startIcon={<AddIcon />}>
+                                                    {translate('general/create/single/ucFirstLetterFirstWord')}
+                                                </Button>
                                             ) : null
                                         }
                                     </Stack>
@@ -129,6 +118,29 @@ export class SelfRegularOrdersDataGrid extends Component {
                         }
                     }}
                 />
+
+                <Modal open={this.state.openCreationModal} onClose={() => this.setState({ openCreationModal: false })}>
+                    <Paper sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        minWidth: '50vw'
+                    }}>
+                        <Stack>
+                            {canEditRegularOrderPrice('self', store) &&
+                                <TextField onInput={(e) => { this.setState({ price: e.target.value }, () => console.log('this.price', this.price)) }} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/price')} value={this.state.price} />
+                            }
+                            {canEditRegularOrderNeededTime('self', store) &&
+                                <TextField onInput={(e) => this.setState({ timeConsumption: e.target.value })} sx={{ m: 1 }} size='small' type='number' variant='standard' label={translate('pages/orders/order/columns/needed_time')} value={this.state.timeConsumption} />
+                            }
+                            <Divider />
+                            <Button variant='text' onClick={(e) => { this.handleOnCreate(this.props.redux.auth.account); this.setState({ openCreationModal: false }); }} size='small' >
+                                {translate('general/create/single/ucFirstLetterFirstWord')}
+                            </Button>
+                        </Stack>
+                    </Paper>
+                </Modal>
 
                 {this.state.feedbackMessages.map((m, i) =>
                     <Snackbar
