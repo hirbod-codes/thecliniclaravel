@@ -201,7 +201,7 @@ class AuthController extends Controller
         }
         $session->forget(['code_destination', 'code', 'code_expiration_timestamp']);
 
-        Notification::route('phonenumber', $validatedInput['phonenumber'])->notify(new SendPhonenumberVerificationCode($code));
+        // Notification::route('phonenumber', $validatedInput['phonenumber'])->notify(new SendPhonenumberVerificationCode($code));
 
         $session->put('code_destination', 'phonenumber');
         $session->put('code', $code);

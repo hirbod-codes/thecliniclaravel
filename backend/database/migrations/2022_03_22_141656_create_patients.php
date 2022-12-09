@@ -49,7 +49,7 @@ return new class extends Migration
 
             $table->string('state');
             $table->string('city');
-            $table->string('address')->nullable();
+            $table->string('address', 2550)->nullable();
             $table->string('laser_grade')->nullable();
         });
     }

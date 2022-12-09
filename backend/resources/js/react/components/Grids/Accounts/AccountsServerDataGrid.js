@@ -26,6 +26,7 @@ export class AccountsServerDataGrid extends Component {
     constructor(props) {
         super(props);
 
+        this.buildFeedback = this.buildFeedback.bind(this);
         this.handleFeedbackClose = this.handleFeedbackClose.bind(this);
         this.closeCreationModal = this.closeCreationModal.bind(this);
         this.openCreationModal = this.openCreationModal.bind(this);
