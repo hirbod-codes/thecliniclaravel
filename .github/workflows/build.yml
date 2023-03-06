@@ -76,7 +76,7 @@ jobs:
           tags: ghcr.io/${{github.repository_owner}}/mysql:5
           platforms: linux/amd64
 
-  ftp:
+  scp:
     name: send new configuration files
     runs-on: ubuntu-latest
     needs: [build]
@@ -85,25 +85,26 @@ jobs:
       - name: checkout the git repo
         uses: actions/checkout@v3
 
-      - name: make ftp directory
+      - name: make scp directory
         run: |
-          mkdir ./ftp
-          cp ./deploy.sh ./ftp
-          cp ./docker-compose.stack.yml ./ftp
+          mkdir ./scp
+          cp ./deploy.sh ./scp
+          cp ./docker-compose.stack.yml ./scp
 
-      - name: Sync files
-        uses: SamKirkland/FTP-Deploy-Action@4.3.2
+      - name: copy file via ssh password
+        uses: appleboy/scp-action@master
         with:
-          server: ${{ secrets.HOST_IP }}
-          username: ${{ secrets.HOST_FTP_USERNAME }}
-          password: ${{ secrets.HOST_FTP_PASSWORD }}
-          local-dir: ./ftp/
-          dangerous-clean-slate: true
+          host: ${{ secrets.HOST_IP }}
+          username: ${{ secrets.HOST_SCP_USERNAME }}
+          password: ${{ secrets.HOST_SCP_PASSWORD }}
+          port: ${{ secrets.PORT }}
+          source: "./scp/"
+          target: "~/scripts"
 
   deploy:
     name: Deploy the final application in the host server
     runs-on: ubuntu-latest
-    needs: [ftp]
+    needs: [scp]
 
     steps:
       - name: SSH to server and redeploythe application in swarm
@@ -116,8 +117,8 @@ jobs:
           timeout: 60s
           command_timeout: 30m
           script: |
-            chmod u+x /home/admin/deploy.sh
-            /home/admin/deploy.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
+            chmod u+x /home/${{secrets.HOST_SCP_USERNAME }}/deploy.sh
+            /home/${{secrets.HOST_SCP_USERNAME }}/deploy.sh --MYSQL_ROOT_PASSWORD ${{secrets.MYSQL_ROOT_PASSWORD}} --MYSQL_USER ${{secrets.MYSQL_USER}} --MYSQL_PASSWORD ${{secrets.MYSQL_PASSWORD}}
 
             echo ${{ secrets.MY_GITHUB_TOKEN }} | docker login ghcr.io --username ${{ github.actor }} --password-stdin 
-            docker stack deploy -c /home/admin/docker-compose.stack.yml theclinic --with-registry-auth
+            docker stack deploy -c /home/${{secrets.HOST_SCP_USERNAME }}/docker-compose.stack.yml theclinic --with-registry-auth
